@@ -2,6 +2,18 @@
 
 Three-phase review pipeline: correctness swarm, claim verification, skeptical review, then merge + dedup.
 
+## Table of Contents
+
+- [Pre-Pass Cleanup (MANDATORY)](#pre-pass-cleanup-mandatory)
+- [Agent Manifest](#agent-manifest)
+- [Prerequisites](#prerequisites)
+- [Phase 1: Code Correctness Swarm](#phase-1-code-correctness-swarm)
+- [Phase 2: Claim Verification](#phase-2-claim-verification)
+- [Phase 3: Skeptical Review](#phase-3-skeptical-review)
+- [Phase 4: Merge Reports + Deduplicate](#phase-4-merge-reports--deduplicate)
+- [Phase 5: Present Results](#phase-5-present-results)
+- [Procedure 1 Checklist](#procedure-1-checklist)
+
 ## Pre-Pass Cleanup (MANDATORY)
 
 Before spawning ANY agents, run this cleanup to prevent stale file pollution:

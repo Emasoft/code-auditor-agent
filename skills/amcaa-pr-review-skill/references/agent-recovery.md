@@ -1,5 +1,19 @@
 # Agent Recovery Protocol
 
+## Table of Contents
+
+- [Failure Modes & Detection](#failure-modes--detection)
+- [Step 1: Detect the Loss](#step-1-detect-the-loss)
+- [Step 2: Verify the Loss](#step-2-verify-the-loss)
+- [Step 3: Clean Up Partial Artifacts](#step-3-clean-up-partial-artifacts)
+- [Step 4: Re-Spawn the Task](#step-4-re-spawn-the-task)
+- [Step 5: Record the Failure](#step-5-record-the-failure)
+- [Special Cases](#special-cases)
+  - [Lost during context compaction](#lost-during-context-compaction)
+  - [Agent wrote report with wrong pass number](#agent-wrote-report-with-wrong-pass-number-versioncache-collision)
+  - [Multiple correctness agents for the same domain](#multiple-correctness-agents-for-the-same-domain-domain-label-collision)
+- [Checklist](#checklist)
+
 This protocol applies to ALL agents spawned by the orchestrator: correctness swarm, claim verification,
 skeptical review, and dedup agent. When an agent is lost for any reason, the orchestrator MUST follow
 these steps to ensure the task is completed and no corrupt artifacts remain.

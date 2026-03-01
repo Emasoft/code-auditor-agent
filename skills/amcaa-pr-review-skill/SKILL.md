@@ -364,6 +364,9 @@ See [Agent Recovery Protocol](references/agent-recovery.md) for full recovery pr
 - How to handle special cases: compaction recovery, wrong pass number, domain collision
 
 ### Recovery Checklist
+
+Copy this checklist and track your progress:
+
 - [ ] Check all agent reports exist in docs_dev/
 - [ ] Verify merge script produced intermediate report
 - [ ] Confirm dedup agent produced final report
@@ -409,6 +412,9 @@ See [Lessons Learned](references/lessons-learned.md) for the full list with cont
 - Why the stranger's perspective catches what familiarity misses
 
 ### Lessons Checklist
+
+Copy this checklist and track your progress:
+
 - [ ] All three phases (correctness, claims, skeptical) are included in every review
 - [ ] PR description claims are verified against actual code, not trusted at face value
 - [ ] Cross-file consistency is checked (version strings, shared constants, API contracts)

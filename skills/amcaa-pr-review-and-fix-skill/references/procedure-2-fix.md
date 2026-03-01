@@ -1,5 +1,14 @@
 # Procedure 2: Code Fix
 
+## Table of Contents
+
+- [Agent Selection (Dynamic)](#agent-selection-dynamic)
+- [Fix Protocol](#fix-protocol)
+- [Linting Step (Docker Required)](#linting-step-docker-required)
+- [Commit After Fixes](#commit-after-fixes)
+- [Procedure 2 Output](#procedure-2-output)
+- [Procedure 2 Checklist](#procedure-2-checklist)
+
 Swarm of fixing agents that resolve all findings from Procedure 1, run tests, lint, and commit.
 
 ## Agent Selection (Dynamic)

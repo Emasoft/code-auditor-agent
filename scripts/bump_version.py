@@ -142,7 +142,7 @@ def main() -> int:
         print(f"ERROR reading {plugin_json_path}: {exc}", file=sys.stderr)
         return 1
 
-    current_version_str: str = plugin_data.get("version", "")
+    current_version_str = str(plugin_data.get("version", ""))
     if not current_version_str:
         print("ERROR: 'version' key not found in plugin.json", file=sys.stderr)
         return 1

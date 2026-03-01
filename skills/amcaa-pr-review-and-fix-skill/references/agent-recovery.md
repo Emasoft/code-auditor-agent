@@ -1,5 +1,20 @@
 # Agent Recovery Protocol
 
+## Table of Contents
+
+- [Failure Modes & Detection](#failure-modes--detection)
+- [Step 1: Detect the Loss](#step-1-detect-the-loss)
+- [Step 2: Verify the Loss](#step-2-verify-the-loss)
+- [Step 3: Clean Up Partial Artifacts](#step-3-clean-up-partial-artifacts)
+- [Step 4: Re-Spawn the Task](#step-4-re-spawn-the-task)
+- [Step 5: Record the Failure](#step-5-record-the-failure)
+- [Special Cases](#special-cases)
+  - [Lost during context compaction](#lost-during-context-compaction)
+  - [Agent wrote report with wrong pass number (version/cache collision)](#agent-wrote-report-with-wrong-pass-number-versioncache-collision)
+  - [Multiple correctness agents for the same domain (domain label collision)](#multiple-correctness-agents-for-the-same-domain-domain-label-collision)
+  - [Test runner left no report but tests actually ran](#test-runner-left-no-report-but-tests-actually-ran)
+- [Agent Recovery Checklist](#agent-recovery-checklist)
+
 Protocol for recovering from agent failures during the review-and-fix pipeline. Applies to ALL
 agents: correctness swarm, claim verification, skeptical review, dedup, fix agents, and test runner.
 

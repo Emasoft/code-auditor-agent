@@ -1,6 +1,6 @@
 ---
 name: amcaa-codebase-audit-and-fix-skill
-description: "Codebase audit pipeline with discovery, verification, gap-fill, consolidation, TODO generation and fix loop. Trigger with /audit-codebase."
+description: "Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes. Trigger with /audit-codebase, 'audit the codebase', or 'compliance audit'."
 version: 1.0.0
 author: Emasoft
 license: MIT
@@ -40,6 +40,19 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 - Sufficient disk space for report artifacts in `REPORT_DIR`
 
 ## Instructions
+
+Follow these steps to run the audit pipeline:
+
+1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path
+2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
+3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4
+4. Run Phase 1: spawn `amcaa-domain-auditor-agent` for each batch (concurrency 20)
+5. Run Phase 2: spawn `amcaa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
+6. Run Phase 3: gap-fill missed files, re-verify, loop max 3 times until 100% coverage
+7. Run Phase 4: consolidate per-domain reports (max 5 inputs per agent, hierarchical if more)
+8. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
+9. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes
+10. Run Phase 8: compile final merged report with stats and links to all artifacts
 
 ### Parameters
 

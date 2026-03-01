@@ -289,7 +289,7 @@ def _git_default_branch(repo_dir: Path) -> str:
     if p.returncode == 0:
         ref = p.stdout.strip()
         if ref.startswith("refs/remotes/origin/"):
-            return ref.split("refs/remotes/origin/", 1)[1]
+            return str(ref.split("refs/remotes/origin/", 1)[1])
 
     # fallback: parse remote show
     p = _run(["git", "remote", "show", "origin"], cwd=repo_dir, check=False)
