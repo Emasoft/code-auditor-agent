@@ -99,7 +99,7 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def _fetch_upstream_file_info(upstream_path: str) -> dict:
+def _fetch_upstream_file_info(upstream_path: str) -> dict[str, object]:
     """Fetch file metadata (sha, content) from the upstream repo via gh api.
 
     Returns the parsed JSON dict with at least 'sha' and 'content' keys.
