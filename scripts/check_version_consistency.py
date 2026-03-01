@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Check that version in .claude-plugin/plugin.json matches version in pyproject.toml."""
 
+from __future__ import annotations
+
 import json
 import re
 import sys

@@ -1,4 +1,7 @@
 #!/bin/bash
+# DEPRECATED: Use amcaa-merge-reports-v2.sh instead. This v1 script is retained for
+# backward-compatible reference only. It will be removed in a future release.
+#
 # Requires bash 4+ (for associative arrays). macOS ships bash 3.2 — install bash via Homebrew.
 # AMCAA Merge Reports — Combines findings from all 3 review phases into one final report.
 #
@@ -116,7 +119,12 @@ for report in "${REPORTS[@]}"; do
 
         # Extract finding IDs like [CC-001], [CV-001], [SR-001]
         if [[ "$line" =~ ^#{2,5}[[:space:]]*\[ ]]; then
-            finding_id=$(echo "$line" | grep -oE '\[[A-Z]{2}(-P[0-9]+)?-[0-9]+\]' | head -1)
+            if [[ "$line" =~ \[([A-Z]{2}(-P[0-9]+)?-[0-9]+)\] ]]; then
+                finding_id="[${BASH_REMATCH[1]}]"
+            else
+                finding_id=""
+            fi
+            # (replaced echo|grep -oE with bash regex)
         fi
 
         # Route content to appropriate category

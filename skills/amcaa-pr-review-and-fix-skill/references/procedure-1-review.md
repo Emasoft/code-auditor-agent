@@ -1,5 +1,7 @@
 # Procedure 1: Code Review
 
+> **Maintenance Note:** The review protocol below is shared with `amcaa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
+
 Three-phase review pipeline: correctness swarm, claim verification, skeptical review, then merge + dedup.
 
 **Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call. See the parent SKILL.md for full worktree protocol.

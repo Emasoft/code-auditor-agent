@@ -152,19 +152,21 @@ for report in "${ORDERED_REPORTS[@]}"; do
 
     while IFS= read -r line; do
         # Detect section headers
-        if echo "$line" | grep -qiE '^#{1,3}\s*(MUST.FIX|FAILED CLAIMS)'; then
+        # Detect section headers using bash regex instead of echo|grep
+        local line_lower="${line,,}"
+        if [[ "$line" =~ ^#{1,3}[[:space:]] ]] && [[ "$line_lower" =~ (must.fix|failed\ claims) ]]; then
             in_section="must-fix"
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*SHOULD.FIX|^#{1,3}\s*PARTIALLY IMPLEMENTED'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]] ]] && [[ "$line_lower" =~ (should.fix|partially\ implemented) ]]; then
             in_section="should-fix"
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*NIT|^#{1,3}\s*CONSISTENCY ISSUES'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]] ]] && [[ "$line_lower" =~ (nit|consistency\ issues) ]]; then
             in_section="nit"
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*CLEAN|^#{1,3}\s*VERIFIED'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]] ]] && [[ "$line_lower" =~ (clean|verified) ]]; then
             in_section="clean"
             continue
-        elif echo "$line" | grep -qiE '^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]' && [ "$in_section" != "" ]; then
+        elif [[ "$line" =~ ^#{1,2}[[:space:]]*[0-9A-Z] ]] && [ "$in_section" != "" ]; then
             # New top-level section, exit current parsing
             in_section=""
             continue
@@ -172,8 +174,12 @@ for report in "${ORDERED_REPORTS[@]}"; do
 
         # Count finding IDs (raw count — NO dedup, that's the agent's job)
         # Pattern matches: [CC-P4-A0-001], [CV-P4-001], [SR-P4-001], [CC-001], etc.
-        if echo "$line" | grep -qE '^\#{2,5}\s*\['; then
-            finding_id=$(echo "$line" | grep -oE '\[[A-Z]{2}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]' | head -1)
+        if [[ "$line" =~ ^#{2,5}[[:space:]]*\[ ]]; then
+            if [[ "$line" =~ \[([A-Z]{2}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+)\] ]]; then
+                finding_id="[${BASH_REMATCH[1]}]"
+            else
+                finding_id=""
+            fi
             if [ -n "$finding_id" ]; then
                 case "$in_section" in
                     must-fix) RAW_MUST_FIX=$((RAW_MUST_FIX + 1)) ;;

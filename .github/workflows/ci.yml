@@ -43,3 +43,6 @@ jobs:
 
       - name: Check version consistency
         run: python scripts/check_version_consistency.py
+
+      - name: Plugin integrity validation
+        run: python scripts/validate_plugin_integrity.py
