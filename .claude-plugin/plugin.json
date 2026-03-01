@@ -1,0 +1,27 @@
+{
+  "name": "ai-maestro-code-auditor-agent",
+  "version": "2.0.0",
+  "description": "Three-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review with iterative fix loop. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.",
+  "author": {
+    "name": "Emasoft",
+    "email": "713559+Emasoft@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/Emasoft/ai-maestro-code-auditor-agent",
+  "repository": "https://github.com/Emasoft/ai-maestro-code-auditor-agent",
+  "license": "MIT",
+  "keywords": ["code-review", "audit", "pr-review", "code-quality", "correctness", "claim-verification", "codebase-audit", "compliance", "todo-generation"],
+  "commands": "./commands/",
+  "agents": [
+    "./agents/amcaa-code-correctness-agent.md",
+    "./agents/amcaa-claim-verification-agent.md",
+    "./agents/amcaa-skeptical-reviewer-agent.md",
+    "./agents/amcaa-dedup-agent.md",
+    "./agents/amcaa-domain-auditor-agent.md",
+    "./agents/amcaa-verification-agent.md",
+    "./agents/amcaa-consolidation-agent.md",
+    "./agents/amcaa-todo-generator-agent.md",
+    "./agents/amcaa-fix-agent.md",
+    "./agents/amcaa-fix-verifier-agent.md"
+  ],
+  "skills": "./skills/"
+}

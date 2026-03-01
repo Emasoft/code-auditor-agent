@@ -1,0 +1,324 @@
+#!/bin/bash
+# AMCAA Merge Reports v2 — Concatenation merger with NO deduplication.
+# Deduplication is handled by the amcaa-dedup-agent (an AI agent).
+#
+# Changes from v1:
+#   - UUID-based input filenames (no collision between agents)
+#   - Agent-prefixed finding IDs (no ID overlap)
+#   - No dedup logic (delegated to AI dedup agent)
+#   - Atomic write via tmp file + mv
+#   - Raw counts only (dedup agent produces final accurate counts)
+#   - Byte-size integrity verification (merged >= sum of sources)
+#   - Source file deletion only after successful verification
+#
+# Usage:
+#   amcaa-merge-reports-v2.sh <output_dir> <pass_number> [run_id]
+#
+# Arguments:
+#   output_dir           Directory containing phase reports
+#   pass_number          Current pass number (1-10)
+#   run_id               Optional run ID to scope to a single invocation
+#                        When provided, only merges files matching R{run_id}
+#                        When omitted, merges all files for this pass (legacy behavior)
+#
+# Input files (UUID-named by agents):
+#   amcaa-correctness-P{N}-{uuid}.md  (Phase 1 — may be multiple)
+#   amcaa-claims-P{N}-{uuid}.md       (Phase 2 — one)
+#   amcaa-review-P{N}-{uuid}.md       (Phase 3 — one)
+#
+# Output:
+#   pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
+#
+# Exit codes:
+#   0 — Merge complete (dedup agent determines final verdict)
+#   2 — Error (missing reports, invalid input)
+
+set -eo pipefail
+
+# ── Configuration ──────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+OUTPUT_DIR="${1:-.}"
+PASS_NUMBER="${2:?Error: pass_number is required as second argument}"
+RUN_ID="${3:-}"
+TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
+
+# Build glob pattern: if run_id provided, scope to that run only
+if [ -n "$RUN_ID" ]; then
+    PATTERN="amcaa-*-P${PASS_NUMBER}-R${RUN_ID}-*.md"
+    echo -e "${CYAN}Run ID: ${RUN_ID} (scoped merge)${NC}"
+else
+    PATTERN="amcaa-*-P${PASS_NUMBER}-*.md"
+    echo -e "${YELLOW}No run ID — merging ALL files for pass ${PASS_NUMBER} (legacy mode)${NC}"
+fi
+
+INTERMEDIATE_REPORT="${OUTPUT_DIR}/pr-review-P${PASS_NUMBER}-intermediate-${TIMESTAMP}.md"
+TMP_REPORT="${INTERMEDIATE_REPORT}.tmp"
+
+# ── Validate input ────────────────────────────────────────────────────────────
+if [ ! -d "$OUTPUT_DIR" ]; then
+    echo -e "${RED}Error: Output directory '${OUTPUT_DIR}' does not exist${NC}"
+    exit 2
+fi
+
+# ── Find all phase reports for this pass ──────────────────────────────────────
+REPORTS=()
+while IFS= read -r -d '' file; do
+    basename_file=$(basename "$file")
+    # Skip non-phase reports (intermediate, final, fixes, tests, lint, checkpoints, stale)
+    if [[ "$basename_file" == pr-review-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-fixes-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-tests-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-lint-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-checkpoint-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-agents-* ]]; then
+        continue
+    fi
+    if [[ "$basename_file" == amcaa-recovery-* ]]; then
+        continue
+    fi
+    # Skip files manually marked as stale
+    if [[ "$basename_file" == *-STALE* ]]; then
+        echo -e "  ${YELLOW}Skipping stale: ${basename_file}${NC}"
+        continue
+    fi
+    REPORTS+=("$file")
+done < <(find "$OUTPUT_DIR" -maxdepth 1 -name "$PATTERN" -print0 | sort -z)
+
+if [ ${#REPORTS[@]} -eq 0 ]; then
+    echo -e "${RED}Error: No reports matching '${PATTERN}' found in '${OUTPUT_DIR}'${NC}"
+    exit 2
+fi
+
+echo -e "${CYAN}AMCAA Report Merger v2 (no-dedup, UUID-aware)${NC}"
+echo -e "Found ${#REPORTS[@]} reports to merge for pass ${PASS_NUMBER}"
+echo ""
+
+# ── Sort reports by phase: correctness → claims → review ─────────────────────
+CORRECTNESS_REPORTS=()
+CLAIMS_REPORTS=()
+REVIEW_REPORTS=()
+OTHER_REPORTS=()
+
+for report in "${REPORTS[@]}"; do
+    basename_file=$(basename "$report")
+    if [[ "$basename_file" == amcaa-correctness-* ]]; then
+        CORRECTNESS_REPORTS+=("$report")
+    elif [[ "$basename_file" == amcaa-claims-* ]]; then
+        CLAIMS_REPORTS+=("$report")
+    elif [[ "$basename_file" == amcaa-review-* ]]; then
+        REVIEW_REPORTS+=("$report")
+    else
+        OTHER_REPORTS+=("$report")
+    fi
+done
+
+ORDERED_REPORTS=("${CORRECTNESS_REPORTS[@]}" "${CLAIMS_REPORTS[@]}" "${REVIEW_REPORTS[@]}" "${OTHER_REPORTS[@]}")
+
+# ── Temporary files for severity sections ────────────────────────────────────
+MUST_FIX_FINDINGS=$(mktemp)
+SHOULD_FIX_FINDINGS=$(mktemp)
+NIT_FINDINGS=$(mktemp)
+CLEAN_FILES=$(mktemp)
+
+trap 'rm -f "$MUST_FIX_FINDINGS" "$SHOULD_FIX_FINDINGS" "$NIT_FINDINGS" "$CLEAN_FILES" "$TMP_REPORT"' EXIT
+
+# ── Raw finding counts (pre-dedup) ───────────────────────────────────────────
+RAW_MUST_FIX=0
+RAW_SHOULD_FIX=0
+RAW_NIT=0
+RAW_TOTAL=0
+
+# ── Process each report ──────────────────────────────────────────────────────
+for report in "${ORDERED_REPORTS[@]}"; do
+    report_name=$(basename "$report")
+    echo -e "  Processing: ${report_name}"
+
+    in_section=""
+
+    while IFS= read -r line; do
+        # Detect section headers
+        if echo "$line" | grep -qiE '^#{1,3}\s*(MUST.FIX|FAILED CLAIMS)'; then
+            in_section="must-fix"
+            continue
+        elif echo "$line" | grep -qiE '^#{1,3}\s*SHOULD.FIX|^#{1,3}\s*PARTIALLY IMPLEMENTED'; then
+            in_section="should-fix"
+            continue
+        elif echo "$line" | grep -qiE '^#{1,3}\s*NIT|^#{1,3}\s*CONSISTENCY ISSUES'; then
+            in_section="nit"
+            continue
+        elif echo "$line" | grep -qiE '^#{1,3}\s*CLEAN|^#{1,3}\s*VERIFIED'; then
+            in_section="clean"
+            continue
+        elif echo "$line" | grep -qiE '^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]' && [ "$in_section" != "" ]; then
+            # New top-level section, exit current parsing
+            in_section=""
+            continue
+        fi
+
+        # Count finding IDs (raw count — NO dedup, that's the agent's job)
+        # Pattern matches: [CC-P4-A0-001], [CV-P4-001], [SR-P4-001], [CC-001], etc.
+        if echo "$line" | grep -qE '^\#{2,5}\s*\['; then
+            finding_id=$(echo "$line" | grep -oE '\[[A-Z]{2}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]' | head -1)
+            if [ -n "$finding_id" ]; then
+                case "$in_section" in
+                    must-fix) RAW_MUST_FIX=$((RAW_MUST_FIX + 1)) ;;
+                    should-fix) RAW_SHOULD_FIX=$((RAW_SHOULD_FIX + 1)) ;;
+                    nit) RAW_NIT=$((RAW_NIT + 1)) ;;
+                esac
+                RAW_TOTAL=$((RAW_TOTAL + 1))
+            fi
+        fi
+
+        # Route content to severity temp files (no dedup — just concatenate)
+        case "$in_section" in
+            must-fix)   echo "$line" >> "$MUST_FIX_FINDINGS" ;;
+            should-fix) echo "$line" >> "$SHOULD_FIX_FINDINGS" ;;
+            nit)        echo "$line" >> "$NIT_FINDINGS" ;;
+            clean)      echo "$line" >> "$CLEAN_FILES" ;;
+        esac
+    done < "$report"
+done
+
+# ── Write intermediate report (atomic: write to tmp, then mv) ─────────────────
+cat > "$TMP_REPORT" << HEADER
+# AMCAA Merged Report (Pre-Deduplication)
+
+**Generated:** ${TIMESTAMP}
+**Pass:** ${PASS_NUMBER}
+**Run ID:** ${RUN_ID:-"(none — legacy mode)"}
+**Reports merged:** ${#ORDERED_REPORTS[@]}
+**Pipeline:** Code Correctness → Claim Verification → Skeptical Review
+**Status:** INTERMEDIATE — awaiting deduplication by amcaa-dedup-agent
+
+---
+
+## Raw Counts (Pre-Dedup)
+
+| Severity | Raw Count |
+|----------|-----------|
+| **MUST-FIX** | ${RAW_MUST_FIX} |
+| **SHOULD-FIX** | ${RAW_SHOULD_FIX} |
+| **NIT** | ${RAW_NIT} |
+| **Total** | ${RAW_TOTAL} |
+
+**Note:** These counts may include duplicates. The amcaa-dedup-agent will produce final accurate counts.
+
+HEADER
+
+# MUST-FIX section
+if [ -s "$MUST_FIX_FINDINGS" ]; then
+    {
+        echo "---"
+        echo ""
+        echo "## MUST-FIX Issues"
+        echo ""
+        cat "$MUST_FIX_FINDINGS"
+        echo ""
+    } >> "$TMP_REPORT"
+fi
+
+# SHOULD-FIX section
+if [ -s "$SHOULD_FIX_FINDINGS" ]; then
+    {
+        echo "---"
+        echo ""
+        echo "## SHOULD-FIX Issues"
+        echo ""
+        cat "$SHOULD_FIX_FINDINGS"
+        echo ""
+    } >> "$TMP_REPORT"
+fi
+
+# NIT section
+if [ -s "$NIT_FINDINGS" ]; then
+    {
+        echo "---"
+        echo ""
+        echo "## Nits & Suggestions"
+        echo ""
+        cat "$NIT_FINDINGS"
+        echo ""
+    } >> "$TMP_REPORT"
+fi
+
+# Source reports section
+{
+    echo "---"
+    echo ""
+    echo "## Source Reports"
+    echo ""
+    for report in "${ORDERED_REPORTS[@]}"; do
+        echo "- \`$(basename "$report")\`"
+    done
+    echo ""
+} >> "$TMP_REPORT"
+
+# Atomic rename: tmp → final (prevents partial reads during concurrent access)
+mv "$TMP_REPORT" "$INTERMEDIATE_REPORT"
+
+# ── Verify merged file integrity (byte-size check) ──────────────────────────
+# The merged file's content-bearing size must equal the sum of all source report
+# sizes. We measure actual byte counts (not disk sectors) using wc -c.
+# Only delete source files if verification passes.
+
+MERGED_SIZE=$(wc -c < "$INTERMEDIATE_REPORT")
+SOURCE_TOTAL=0
+for report in "${ORDERED_REPORTS[@]}"; do
+    file_size=$(wc -c < "$report")
+    SOURCE_TOTAL=$((SOURCE_TOTAL + file_size))
+done
+
+# The merged file includes a header + severity section headings + source reports
+# listing that are NOT in the source files, so merged > sum of sources is expected.
+# The critical invariant: merged file must be >= sum of sources (all source content
+# is present). If merged < sum, content was lost during concatenation.
+if [ "$MERGED_SIZE" -ge "$SOURCE_TOTAL" ]; then
+    echo -e "${GREEN}Integrity check PASSED: merged=${MERGED_SIZE} bytes >= sources=${SOURCE_TOTAL} bytes${NC}"
+    echo -e "  (Overhead: $((MERGED_SIZE - SOURCE_TOTAL)) bytes from report header/structure)"
+    echo ""
+
+    # Safe to delete source files — all content verified present in merged output
+    echo -e "Cleaning up ${#ORDERED_REPORTS[@]} source report(s)..."
+    for report in "${ORDERED_REPORTS[@]}"; do
+        rm -f "$report"
+        echo -e "  Deleted: $(basename "$report")"
+    done
+else
+    echo -e "${RED}Integrity check FAILED: merged=${MERGED_SIZE} bytes < sources=${SOURCE_TOTAL} bytes${NC}"
+    echo -e "${RED}Source files NOT deleted — investigate data loss.${NC}"
+    echo -e "${YELLOW}Source files preserved for manual inspection:${NC}"
+    for report in "${ORDERED_REPORTS[@]}"; do
+        echo -e "  $(basename "$report") ($(wc -c < "$report") bytes)"
+    done
+fi
+
+# ── Print summary to stdout ──────────────────────────────────────────────────
+echo ""
+echo -e "${CYAN}═══════════════════════════════════════════${NC}"
+echo -e "${CYAN}  AMCAA Intermediate Report: ${INTERMEDIATE_REPORT}${NC}"
+echo -e "${CYAN}═══════════════════════════════════════════${NC}"
+echo ""
+echo -e "  Raw MUST-FIX:    ${RAW_MUST_FIX}"
+echo -e "  Raw SHOULD-FIX:  ${RAW_SHOULD_FIX}"
+echo -e "  Raw NIT:         ${RAW_NIT}"
+echo -e "  Raw Total:       ${RAW_TOTAL}"
+echo ""
+echo -e "${YELLOW}Awaiting amcaa-dedup-agent for final counts and verdict.${NC}"
+
+# Always exit 0 — the dedup agent determines the final verdict
+exit 0
