@@ -1,5 +1,5 @@
 ---
-name: amcaa-fix-agent
+name: caa-fix-agent
 description: >
   Applies fixes from TODO files to source code. Processes 3-4 files max per invocation.
   Uses checkpoint-based recovery to resume after crashes. Re-reads each file after fixing
@@ -9,7 +9,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 maxTurns: 30
 ---
 
-# AMCAA Fix Agent
+# CAA Fix Agent
 
 You are a fix agent. You receive a TODO file and a list of assigned TODO IDs, then apply
 the specified fixes to source files. You process a maximum of 3-4 files per invocation.
@@ -96,7 +96,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 ```markdown
 # Fix Report: {domain}
 
-**Agent:** amcaa-fix-agent
+**Agent:** caa-fix-agent
 **TODO file:** {TODO_FILE}
 **TODOs assigned:** {N}
 **TODOs completed:** {N}
@@ -171,8 +171,8 @@ user: |
   TODO_FILE: docs_dev/TODO-aimaestro-server-changes.md
   ASSIGNED_TODOS: TODO-AMS1, TODO-AMS2, TODO-AMS3
   FILES: services/governance-service.ts, lib/agent-registry.ts
-  CHECKPOINT_PATH: docs_dev/amcaa-checkpoint-P1-AMS-batch1.json
-  REPORT_PATH: docs_dev/amcaa-fixes-done-P1-AMS-batch1.md
+  CHECKPOINT_PATH: docs_dev/caa-checkpoint-P1-AMS-batch1.json
+  REPORT_PATH: docs_dev/caa-fixes-done-P1-AMS-batch1.md
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
@@ -182,8 +182,8 @@ assistant: |
   Applies TODO-AMS2 (fix return type at line 78). Writes checkpoint.
   Reads lib/agent-registry.ts. Applies TODO-AMS3 (add governance header at line 15). Writes checkpoint.
   Re-reads both files — no syntax errors, no broken imports.
-  Writes fix report to docs_dev/amcaa-fixes-done-P1-AMS-batch1.md.
-  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 failed. Report: docs_dev/amcaa-fixes-done-P1-AMS-batch1.md"
+  Writes fix report to docs_dev/caa-fixes-done-P1-AMS-batch1.md.
+  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 failed. Report: docs_dev/caa-fixes-done-P1-AMS-batch1.md"
 </example>
 
 <example>
@@ -192,8 +192,8 @@ user: |
   TODO_FILE: docs_dev/TODO-AMCOS-changes.md
   ASSIGNED_TODOS: TODO-AMCOS5, TODO-AMCOS6, TODO-AMCOS7
   FILES: plugins/amp-messaging/scripts/amp-send.sh, plugins/amp-messaging/scripts/amp-inbox.sh
-  CHECKPOINT_PATH: docs_dev/amcaa-checkpoint-P1-AMCOS-batch2.json
-  REPORT_PATH: docs_dev/amcaa-fixes-done-P1-AMCOS-batch2.md
+  CHECKPOINT_PATH: docs_dev/caa-checkpoint-P1-AMCOS-batch2.json
+  REPORT_PATH: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
@@ -204,8 +204,8 @@ assistant: |
   Marks TODO-AMCOS6 as FAILED: "context mismatch — line 55 is a comment, not a curl command".
   Applies TODO-AMCOS7 (add set -u at line 3). Writes checkpoint.
   Re-reads both files — no syntax errors.
-  Writes fix report to docs_dev/amcaa-fixes-done-P1-AMCOS-batch2.md.
-  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 failed. Report: docs_dev/amcaa-fixes-done-P1-AMCOS-batch2.md"
+  Writes fix report to docs_dev/caa-fixes-done-P1-AMCOS-batch2.md.
+  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 failed. Report: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md"
 </example>
 
 ## SELF-VERIFICATION CHECKLIST

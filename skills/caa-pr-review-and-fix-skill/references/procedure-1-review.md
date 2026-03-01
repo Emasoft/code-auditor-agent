@@ -1,6 +1,6 @@
 # Procedure 1: Code Review
 
-> **Maintenance Note:** The review protocol below is shared with `amcaa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
+> **Maintenance Note:** The review protocol below is shared with `caa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
 
 Three-phase review pipeline: correctness swarm, claim verification, skeptical review, then merge + dedup.
 
@@ -25,15 +25,15 @@ Before spawning ANY agents, run this cleanup to prevent stale file pollution:
 ```bash
 # Archive any leftover phase reports from prior interrupted runs of the SAME pass
 mkdir -p docs_dev/archive
-for f in docs_dev/amcaa-correctness-P${PASS_NUMBER}-*.md \
-         docs_dev/amcaa-claims-P${PASS_NUMBER}-*.md \
-         docs_dev/amcaa-review-P${PASS_NUMBER}-*.md \
-         docs_dev/amcaa-agents-P${PASS_NUMBER}-*.json \
-         docs_dev/amcaa-checkpoint-P${PASS_NUMBER}-*.json; do
+for f in docs_dev/caa-correctness-P${PASS_NUMBER}-*.md \
+         docs_dev/caa-claims-P${PASS_NUMBER}-*.md \
+         docs_dev/caa-review-P${PASS_NUMBER}-*.md \
+         docs_dev/caa-agents-P${PASS_NUMBER}-*.json \
+         docs_dev/caa-checkpoint-P${PASS_NUMBER}-*.json; do
   [ -f "$f" ] && mv "$f" docs_dev/archive/
 done
 # Also archive any stale intermediate reports for this pass
-for f in docs_dev/amcaa-pr-review-P${PASS_NUMBER}-intermediate-*.md; do
+for f in docs_dev/caa-pr-review-P${PASS_NUMBER}-intermediate-*.md; do
   [ -f "$f" ] && mv "$f" docs_dev/archive/
 done
 ```
@@ -45,7 +45,7 @@ This ensures a clean slate. Files are archived (not deleted) for audit purposes.
 After determining domains and generating RUN_ID, write an agent manifest file:
 
 ```
-docs_dev/amcaa-agents-P{N}-R{RUN_ID}.json
+docs_dev/caa-agents-P{N}-R{RUN_ID}.json
 ```
 
 ```json
@@ -77,7 +77,7 @@ Before starting, gather:
 
 ## Phase 1: Code Correctness Swarm
 
-Spawn **one `amcaa-code-correctness-agent` per domain** in parallel.
+Spawn **one `caa-code-correctness-agent` per domain** in parallel.
 
 Group changed files by domain. Examine the project files to identify the domains of the various source files. Examples of domain splits for a common TypeScript app:
 
@@ -109,7 +109,7 @@ for i, domain in enumerate(domains):
 ```
 For each domain with changed files (using assigned AGENT_PREFIX):
   Task(
-    subagent_type: "amcaa-code-correctness-agent",
+    subagent_type: "caa-code-correctness-agent",
     prompt: """
       DOMAIN: {domain_name}
       FILES: {file_list}
@@ -122,7 +122,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
         UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-      Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+      Write your report to: {ABSOLUTE_REPORT_DIR}/caa-correctness-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
       Use finding IDs starting with {FINDING_ID_PREFIX}-001.
@@ -148,7 +148,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
 
 ## Phase 2: Claim Verification
 
-Spawn **one `amcaa-claim-verification-agent`** (single instance, not a swarm).
+Spawn **one `caa-claim-verification-agent`** (single instance, not a swarm).
 
 This agent needs:
 - The full PR description (get via `gh pr view {number} --json body --jq .body`)
@@ -159,7 +159,7 @@ This agent needs:
 
 ```
 Task(
-  subagent_type: "amcaa-claim-verification-agent",
+  subagent_type: "caa-claim-verification-agent",
   prompt: """
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (read from `gh pr view {number} --json body --jq .body`)
@@ -172,7 +172,7 @@ Task(
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-claims-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
     Verify each claim against the actual code.
@@ -197,7 +197,7 @@ correctness agents check different things than claim verification.
 
 ## Phase 3: Skeptical Review
 
-Spawn **one `amcaa-skeptical-reviewer-agent`** (single instance).
+Spawn **one `caa-skeptical-reviewer-agent`** (single instance).
 
 This agent needs:
 - The full PR diff (get via `gh pr diff {number}`)
@@ -208,13 +208,13 @@ This agent needs:
 
 ```
 Task(
-  subagent_type: "amcaa-skeptical-reviewer-agent",
+  subagent_type: "caa-skeptical-reviewer-agent",
   prompt: """
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (provide the text or path)
     DIFF: (save `gh pr diff {number}` to docs_dev/pr-diff.txt and provide path)
-    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-*.md
-    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-*.md
+    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/caa-correctness-P{PASS_NUMBER}-R{RUN_ID}-*.md
+    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/caa-claims-P{PASS_NUMBER}-R{RUN_ID}-*.md
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     FINDING_ID_PREFIX: SR-P{PASS_NUMBER}
@@ -223,7 +223,7 @@ Task(
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-review-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.
     Read the full diff holistically. Check for UX concerns, breaking changes,
@@ -248,13 +248,13 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (Python script -- simple concatenation, no dedup)**
 
 ```bash
-uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
+uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
 ```
 
-This produces an intermediate report at `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md`.
+This produces an intermediate report at `docs_dev/caa-pr-review-P{N}-intermediate-{timestamp}.md`.
 The merge script:
-- When RUN_ID is provided, only collects files matching `amcaa-*-P{N}-R{RUN_ID}-*.md`
-- When RUN_ID is omitted, collects all `amcaa-*-P{N}-*.md` files (legacy mode)
+- When RUN_ID is provided, only collects files matching `caa-*-P{N}-R{RUN_ID}-*.md`
+- When RUN_ID is omitted, collects all `caa-*-P{N}-*.md` files (legacy mode)
 - Skips files with `-STALE` in the name
 - Skips checkpoint, agent manifest, recovery, lint, fix, and test files
 - Sorts by phase (correctness -> claims -> review)
@@ -268,12 +268,12 @@ The merge script:
 
 ```
 Task(
-  subagent_type: "amcaa-dedup-agent",
+  subagent_type: "caa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
     PASS_NUMBER: {PASS_NUMBER}
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
-    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
+    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md
 
     Read the intermediate merged report.
     Deduplicate findings semantically (see agent instructions).
@@ -290,7 +290,7 @@ Task(
 ```
 
 Wait for the dedup agent to complete. The dedup agent produces:
-- Final report: `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md`
+- Final report: `docs_dev/caa-pr-review-P{N}-{timestamp}.md`
 - Verdict: REQUEST CHANGES / APPROVE WITH NITS / APPROVE
 - Deduplication log showing which findings were merged and why
 
@@ -312,7 +312,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P{N}-A1-005)
 
-### Full report: docs_dev/amcaa-pr-review-P{N}-{timestamp}.md
+### Full report: docs_dev/caa-pr-review-P{N}-{timestamp}.md
 ```
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: amcaa-pr-review-skill
+name: caa-pr-review-skill
 description: >
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
@@ -7,7 +7,7 @@ version: 2.0.0
 author: Emasoft
 license: MIT
 tags:
-  - amcaa-pr-review
+  - caa-pr-review
   - code-audit
   - claim-verification
   - quality-gate
@@ -25,7 +25,7 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 - `gh` CLI installed and authenticated (for `gh pr view`, `gh pr diff`)
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output
-- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` must exist
+- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` must exist
 - $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes)
 
@@ -35,7 +35,7 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 |-------|-----|------|---------|-------------|
 | `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
-| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` | Path to merge script |
+| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees for isolation |
 
 ### Worktree Mode
@@ -67,7 +67,7 @@ issues:
 
 ## Protocol
 
-> **Maintenance Note:** This protocol is also used by `amcaa-pr-review-and-fix-skill` via `references/procedure-1-review.md`. When updating shared steps below, also update that reference file. Key differences: this skill uses single-pass (P1 hardcoded, no RUN_ID), while pr-review-and-fix uses multi-pass (variable PASS_NUMBER, with RUN_ID).
+> **Maintenance Note:** This protocol is also used by `caa-pr-review-and-fix-skill` via `references/procedure-1-review.md`. When updating shared steps below, also update that reference file. Key differences: this skill uses single-pass (P1 hardcoded, no RUN_ID), while pr-review-and-fix uses multi-pass (variable PASS_NUMBER, with RUN_ID).
 
 ### Prerequisites
 
@@ -78,7 +78,7 @@ Before starting, gather:
 
 ### Phase 1: Code Correctness Swarm
 
-Spawn **one `amcaa-code-correctness-agent` per domain** in parallel.
+Spawn **one `caa-code-correctness-agent` per domain** in parallel.
 
 Group changed files by domain. Common domain splits:
 
@@ -110,7 +110,7 @@ for i, domain in enumerate(domains):
 ```
 For each domain with changed files (using assigned AGENT_PREFIX):
   Task(
-    subagent_type: "amcaa-code-correctness-agent",
+    subagent_type: "caa-code-correctness-agent",
     prompt: """
       DOMAIN: {domain_name}
       FILES: {file_list}
@@ -121,7 +121,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
         UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-      Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P1-${UUID}.md
+      Write your report to: {ABSOLUTE_REPORT_DIR}/caa-correctness-P1-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
       Use finding IDs starting with {FINDING_ID_PREFIX}-001.
@@ -141,7 +141,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
 
 ### Phase 2: Claim Verification
 
-Spawn **one `amcaa-claim-verification-agent`** (single instance, not a swarm).
+Spawn **one `caa-claim-verification-agent`** (single instance, not a swarm).
 
 This agent needs:
 - The full PR description (get via `gh pr view {number} --json body --jq .body`)
@@ -152,7 +152,7 @@ This agent needs:
 
 ```
 Task(
-  subagent_type: "amcaa-claim-verification-agent",
+  subagent_type: "caa-claim-verification-agent",
   prompt: """
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (read from `gh pr view {number} --json body --jq .body`)
@@ -163,7 +163,7 @@ Task(
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P1-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-claims-P1-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
     Verify each claim against the actual code.
@@ -187,7 +187,7 @@ correctness agents check different things than claim verification.
 
 ### Phase 3: Skeptical Review
 
-Spawn **one `amcaa-skeptical-reviewer-agent`** (single instance).
+Spawn **one `caa-skeptical-reviewer-agent`** (single instance).
 
 This agent needs:
 - The full PR diff (get via `gh pr diff {number}`)
@@ -198,20 +198,20 @@ This agent needs:
 
 ```
 Task(
-  subagent_type: "amcaa-skeptical-reviewer-agent",
+  subagent_type: "caa-skeptical-reviewer-agent",
   prompt: """
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (provide the text or path)
     DIFF: (save `gh pr diff {number}` to {ABSOLUTE_REPORT_DIR}/pr-diff.txt and provide path)
-    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P1-*.md
-    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P1-*.md
+    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/caa-correctness-P1-*.md
+    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/caa-claims-P1-*.md
     FINDING_ID_PREFIX: SR-P1
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P1-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-review-P1-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.
     Read the full diff holistically. Check for UX concerns, breaking changes,
@@ -235,21 +235,21 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (Python script — simple concatenation, no dedup)**
 
 ```bash
-uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py ${REPORT_DIR} 1
+uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py ${REPORT_DIR} 1
 ```
 
-This produces an intermediate report at `${REPORT_DIR}/amcaa-pr-review-P1-intermediate-{timestamp}.md`.
+This produces an intermediate report at `${REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md`.
 The v2 script verifies merged file integrity and deletes source files after verification.
 
 **Stage 2: Deduplicate (AI agent — semantic analysis)**
 
 ```
 Task(
-  subagent_type: "amcaa-dedup-agent",
+  subagent_type: "caa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P1-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md
     PASS_NUMBER: 1
-    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P1-{timestamp}.md
+    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P1-{timestamp}.md
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     Read the intermediate merged report.
@@ -284,7 +284,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P1-A1-005)
 
-### Full report: docs_dev/amcaa-pr-review-P1-{timestamp}.md
+### Full report: docs_dev/caa-pr-review-P1-{timestamp}.md
 ```
 
 ## CRITICAL RULES
@@ -301,7 +301,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
    Full findings go in the report files. This prevents context flooding and file collisions.
 
 4. **Two-stage merge pipeline.** Stage 1 (bash script) concatenates without dedup.
-   Stage 2 (amcaa-dedup-agent) performs semantic deduplication. The bash script handles
+   Stage 2 (caa-dedup-agent) performs semantic deduplication. The bash script handles
    simple concatenation; the AI agent handles complex same-line-different-bug decisions.
 
 5. **Agent prefix assignment.** Each Phase 1 agent gets a unique hex prefix (A0, A1, ...)
@@ -330,10 +330,10 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 /pr-review 206
 
 # Just claim verification (fastest, catches the most common misses)
-# Spawn amcaa-claim-verification-agent manually
+# Spawn caa-claim-verification-agent manually
 
 # Just skeptical review (for a quick holistic check)
-# Spawn amcaa-skeptical-reviewer-agent manually
+# Spawn caa-skeptical-reviewer-agent manually
 ```
 
 ## Instructions
@@ -341,24 +341,24 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 Follow the 5-phase protocol strictly:
 
 1. Gather the PR number, description, and list of changed files grouped by domain.
-2. Assign unique prefixes (A0, A1, ...) to each domain. Spawn one `amcaa-code-correctness-agent` per domain in parallel (Phase 1 swarm). Each agent generates a UUID for its output filename.
+2. Assign unique prefixes (A0, A1, ...) to each domain. Spawn one `caa-code-correctness-agent` per domain in parallel (Phase 1 swarm). Each agent generates a UUID for its output filename.
 3. Wait for all Phase 1 agents to complete before proceeding.
-4. Spawn a single `amcaa-claim-verification-agent` with the PR description and commit messages (Phase 2). Agent generates UUID filename.
+4. Spawn a single `caa-claim-verification-agent` with the PR description and commit messages (Phase 2). Agent generates UUID filename.
 5. Wait for Phase 2 to complete before proceeding.
-6. Spawn a single `amcaa-skeptical-reviewer-agent` with the full diff and earlier reports (Phase 3). Agent generates UUID filename.
+6. Spawn a single `caa-skeptical-reviewer-agent` with the full diff and earlier reports (Phase 3). Agent generates UUID filename.
 7. Wait for Phase 3 to complete.
-8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py docs_dev/ 1` (Stage 1), then spawn `amcaa-dedup-agent` on the intermediate report (Stage 2).
+8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1), then spawn `caa-dedup-agent` on the intermediate report (Stage 2).
 9. Read the final deduplicated report and present the verdict summary to the user.
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 
 ## Output
 
 The pipeline produces:
-- Per-domain correctness reports: `docs_dev/amcaa-correctness-P1-{uuid}.md` (deleted after merge verification)
-- Claim verification report: `docs_dev/amcaa-claims-P1-{uuid}.md` (deleted after merge verification)
-- Skeptical review report: `docs_dev/amcaa-review-P1-{uuid}.md` (deleted after merge verification)
-- Intermediate merged report: `docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md`
-- Final deduplicated report: `docs_dev/amcaa-pr-review-P1-{timestamp}.md`
+- Per-domain correctness reports: `docs_dev/caa-correctness-P1-{uuid}.md` (deleted after merge verification)
+- Claim verification report: `docs_dev/caa-claims-P1-{uuid}.md` (deleted after merge verification)
+- Skeptical review report: `docs_dev/caa-review-P1-{uuid}.md` (deleted after merge verification)
+- Intermediate merged report: `docs_dev/caa-pr-review-P1-intermediate-{timestamp}.md`
+- Final deduplicated report: `docs_dev/caa-pr-review-P1-{timestamp}.md`
 
 Final report includes: verdict (APPROVE/REQUEST CHANGES/APPROVE WITH NITS), all
 deduplicated issues with severity (MUST-FIX/SHOULD-FIX/NIT), deduplication log, and
@@ -409,7 +409,7 @@ User: "review PR 206"
 
 # Quick claim check only
 User: "just verify the claims in PR 206"
-→ Spawn only amcaa-claim-verification-agent
+→ Spawn only caa-claim-verification-agent
 
 # Re-run after fixes
 User: "re-run the PR review"
@@ -418,8 +418,8 @@ User: "re-run the PR review"
 
 ## Resources
 
-- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py`
-- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/amcaa-dedup-agent.md`
+- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py`
+- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/caa-dedup-agent.md`
 - Agents: `$CLAUDE_PLUGIN_ROOT/agents/`
 - Report output directory: `docs_dev/`
 

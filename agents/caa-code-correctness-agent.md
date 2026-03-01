@@ -1,5 +1,5 @@
 ---
-name: amcaa-code-correctness-agent
+name: caa-code-correctness-agent
 description: >
   Per-domain code correctness auditor. Spawned as a SWARM — one instance per file group
   or domain. Checks type safety, logic bugs, API contracts, test coverage, security, and
@@ -20,7 +20,7 @@ capabilities:
   - Verify new code paths have corresponding tests
 ---
 
-# AMCAA Code Correctness Agent
+# CAA Code Correctness Agent
 
 You are a per-domain code correctness auditor. You receive a set of changed files (a "domain")
 and audit them exhaustively for bugs, type errors, logic flaws, security issues, and missing
@@ -117,7 +117,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 ```markdown
 # Code Correctness Report: {DOMAIN}
 
-**Agent:** amcaa-code-correctness-agent
+**Agent:** caa-code-correctness-agent
 **Domain:** {DOMAIN}
 **Files audited:** {count}
 **Date:** {ISO timestamp}
@@ -164,7 +164,7 @@ Context: Orchestrator spawns this agent to audit messaging domain files.
 user: |
   DOMAIN: messaging
   FILES: lib/messageQueue.ts, app/api/messages/route.ts
-  REPORT_PATH: docs_dev/amcaa-correctness-messaging.md
+  REPORT_PATH: docs_dev/caa-correctness-messaging.md
 
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
@@ -172,8 +172,8 @@ assistant: |
   Reads lib/messageQueue.ts completely. Checks type safety, null handling, return types.
   Reads app/api/messages/route.ts completely. Checks API contracts, error handling, security.
   Finds that convertAMPToMessage() declares fromLabel in return type but never assigns it.
-  Writes detailed report to docs_dev/amcaa-correctness-messaging.md.
-  Returns: "[DONE] correctness-messaging - 2 issues (1 must-fix). Report: docs_dev/amcaa-correctness-messaging.md"
+  Writes detailed report to docs_dev/caa-correctness-messaging.md.
+  Returns: "[DONE] correctness-messaging - 2 issues (1 must-fix). Report: docs_dev/caa-correctness-messaging.md"
 </example>
 
 <example>
@@ -181,7 +181,7 @@ Context: Orchestrator spawns this agent to audit shell scripts domain.
 user: |
   DOMAIN: shell-scripts
   FILES: scripts/bump-version.sh, install-messaging.sh
-  REPORT_PATH: docs_dev/amcaa-correctness-shell-scripts.md
+  REPORT_PATH: docs_dev/caa-correctness-shell-scripts.md
 
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
@@ -189,8 +189,8 @@ assistant: |
   Reads scripts/bump-version.sh completely. Checks quoting (SC2086), set -e, variable initialization.
   Reads install-messaging.sh completely. Checks temp file cleanup, atomic writes, error paths.
   Finds unquoted variable expansion on line 42 of bump-version.sh.
-  Writes detailed report to docs_dev/amcaa-correctness-shell-scripts.md.
-  Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: docs_dev/amcaa-correctness-shell-scripts.md"
+  Writes detailed report to docs_dev/caa-correctness-shell-scripts.md.
+  Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: docs_dev/caa-correctness-shell-scripts.md"
 </example>
 
 ## Special Cases
@@ -216,7 +216,7 @@ assistant: |
       SHOULD-FIX = bugs that don't crash but produce incorrect behavior
       NIT = style, convention, minor improvement
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: amcaa-correctness-P{N}-{uuid}.md (filename includes `R{RUN_ID}` when provided by the orchestrator in multi-pass mode; single-pass mode omits `R{RUN_ID}`)
+- [ ] My report file uses the UUID filename: caa-correctness-P{N}-{uuid}.md (filename includes `R{RUN_ID}` when provided by the orchestrator in multi-pass mode; single-pass mode omits `R{RUN_ID}`)
 - [ ] I did NOT report issues outside my assigned domain files
 - [ ] I noted code paths that appear to lack test coverage (tests may be in another domain — flag, don't verify)
 - [ ] My report has all required sections: MUST-FIX, SHOULD-FIX, NIT, CLEAN

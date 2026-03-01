@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AMCAA Plugin Integrity Validator — 30 automated checks across 8 categories.
+"""CAA Plugin Integrity Validator — 30 automated checks across 8 categories.
 
 Prevents the categories of issues found in the deep audit by validating
 cross-file consistency, reference integrity, structural completeness,
@@ -336,7 +336,7 @@ def check_report_filename_pattern(ctx: Context) -> list[CheckResult]:
 
     # Check pr-review-and-fix files use R{RUN_ID}
     for fc in prfix_files:
-        report_patterns = re.findall(r"amcaa-\w+-P\{[^}]+\}[^.]*\.md", fc.text)
+        report_patterns = re.findall(r"caa-\w+-P\{[^}]+\}[^.]*\.md", fc.text)
         for pat in report_patterns:
             if (
                 "R{RUN_ID}" not in pat
@@ -407,7 +407,7 @@ def check_maintenance_notes_bidirectional(ctx: Context) -> list[CheckResult]:
     note_pat = re.compile(r"Maintenance Note.*?`([^`]+\.md)`", re.IGNORECASE)
     # Also capture skill names mentioned before the path
     skill_ref_pat = re.compile(
-        r"Maintenance Note.*?`(amcaa-[a-z-]+-skill)`.*?`([^`]+\.md)`",
+        r"Maintenance Note.*?`(caa-[a-z-]+-skill)`.*?`([^`]+\.md)`",
         re.IGNORECASE,
     )
     notes_found: list[tuple[FileContent, str, str]] = []
@@ -753,7 +753,7 @@ def check_agent_names_in_spawning_patterns(ctx: Context) -> list[CheckResult]:
         if "name" in fm:
             known_names.add(fm["name"])
     # Search for agent type references in skill/reference files
-    agent_ref_pat = re.compile(r'subagent_type.*?["\']?(amcaa-[a-z0-9-]+)')
+    agent_ref_pat = re.compile(r'subagent_type.*?["\']?(caa-[a-z0-9-]+)')
     for fc in ctx.skill_md_files + ctx.reference_files:
         for m in agent_ref_pat.finditer(fc.text):
             ref_name = m.group(1)
@@ -1247,9 +1247,9 @@ def check_no_leaked_model_names(ctx: Context) -> list[CheckResult]:
 
 @register("IC-NC-001", Severity.MAJOR, "naming")
 def check_agent_filename_convention(ctx: Context) -> list[CheckResult]:
-    """Agent filenames match 'amcaa-{kebab-name}-agent.md' pattern."""
+    """Agent filenames match 'caa-{kebab-name}-agent.md' pattern."""
     results: list[CheckResult] = []
-    pat = re.compile(r"^amcaa-[a-z0-9-]+-agent\.md$")
+    pat = re.compile(r"^caa-[a-z0-9-]+-agent\.md$")
     for fc in ctx.agent_files:
         name = fc.path.name
         if not pat.match(name):
@@ -1329,9 +1329,9 @@ def check_no_pass_priority_ambiguity(ctx: Context) -> list[CheckResult]:
 
 @register("IC-NC-004", Severity.NIT, "naming")
 def check_skill_dir_convention(ctx: Context) -> list[CheckResult]:
-    """Skill directory names match 'amcaa-{kebab-name}-skill' pattern."""
+    """Skill directory names match 'caa-{kebab-name}-skill' pattern."""
     results: list[CheckResult] = []
-    pat = re.compile(r"^amcaa-[a-z0-9-]+-skill$")
+    pat = re.compile(r"^caa-[a-z0-9-]+-skill$")
     for d in ctx.skill_dirs:
         if not pat.match(d.name):
             results.append(
@@ -1406,7 +1406,7 @@ NC = "\033[0m"
 def format_text(all_results: list[CheckResult], verbose: bool) -> str:
     """Format results as human-readable text."""
     lines: list[str] = []
-    lines.append(f"\n{CYAN}AMCAA Plugin Integrity Validation{NC}")
+    lines.append(f"\n{CYAN}CAA Plugin Integrity Validation{NC}")
     lines.append("=" * 40)
 
     counts = {s: {"pass": 0, "fail": 0} for s in Severity}
@@ -1504,7 +1504,7 @@ def format_json(all_results: list[CheckResult], project_root: Path, plugin_versi
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="AMCAA Plugin Integrity Validator")
+    parser = argparse.ArgumentParser(description="CAA Plugin Integrity Validator")
     parser.add_argument("--json", action="store_true", help="Output JSON instead of text")
     parser.add_argument("--verbose", action="store_true", help="Show all checks, not just failures")
     parser.add_argument("--category", help="Only run checks in this category")

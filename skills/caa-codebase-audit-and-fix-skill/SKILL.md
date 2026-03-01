@@ -1,5 +1,5 @@
 ---
-name: amcaa-codebase-audit-and-fix-skill
+name: caa-codebase-audit-and-fix-skill
 description: "Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes. Trigger with /audit-codebase, 'audit the codebase', or 'compliance audit'."
 version: 1.0.0
 author: Emasoft
@@ -19,19 +19,19 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 | Agent | Phase | Purpose |
 |-------|-------|---------|
-| `amcaa-domain-auditor-agent` | 1, 3 | Discovery and gap-fill auditing of file batches |
-| `amcaa-verification-agent` | 2, 3 | Cross-check audit reports and detect missed files |
-| `amcaa-consolidation-agent` | 4 | Merge per-domain reports, dedup, classify findings |
-| `amcaa-todo-generator-agent` | 5 | Generate actionable TODO files from consolidated reports |
-| `amcaa-fix-agent` | 6 | Implement TODO fixes with checkpoint recovery |
-| `amcaa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
+| `caa-domain-auditor-agent` | 1, 3 | Discovery and gap-fill auditing of file batches |
+| `caa-verification-agent` | 2, 3 | Cross-check audit reports and detect missed files |
+| `caa-consolidation-agent` | 4 | Merge per-domain reports, dedup, classify findings |
+| `caa-todo-generator-agent` | 5 | Generate actionable TODO files from consolidated reports |
+| `caa-fix-agent` | 6 | Implement TODO fixes with checkpoint recovery |
+| `caa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
 
 ### Required Scripts
 
 | Script | Phase | Purpose |
 |--------|-------|---------|
-| `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
-| `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-generate-todos.py` | 5 | Structured TODO generation helper |
+| `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
+| `$CLAUDE_PLUGIN_ROOT/scripts/caa-generate-todos.py` | 5 | Structured TODO generation helper |
 
 ### Environment
 
@@ -48,8 +48,8 @@ Follow these steps to run the audit pipeline:
 1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path. Verify `REFERENCE_STANDARD` file exists and is non-empty before proceeding. If not, STOP with error: 'REFERENCE_STANDARD not found or empty at {path}.'
 2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
 3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4. If the file inventory returns zero files, STOP immediately with error: 'No files found in SCOPE_PATH ({path}). Verify the path exists and contains auditable files.' Do not proceed to Phase 1 with an empty file list.
-4. Run Phase 1: spawn `amcaa-domain-auditor-agent` for each batch (concurrency 20)
-5. Run Phase 2: spawn `amcaa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
+4. Run Phase 1: spawn `caa-domain-auditor-agent` for each batch (concurrency 20)
+5. Run Phase 2: spawn `caa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
 6. Run Phase 3: gap-fill missed files, re-verify, loop max 3 times until 100% coverage
 7. Run Phase 4: consolidate per-domain reports (max 5 inputs per agent, hierarchical if more)
 8. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
@@ -77,33 +77,33 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 | Phase | Action | Agent | Concurrency |
 |-------|--------|-------|-------------|
 | 0 | Prep: `find` inventory, domain classify, grep triage, batch (3-4 files), write manifest | orchestrator | -- |
-| 1 | Discovery: audit each batch | `amcaa-domain-auditor-agent` | 20 |
-| 2 | Verification: verify each Phase 1 report + missed-file detection | `amcaa-verification-agent` | 10 |
-| 3 | Gap-fill: audit missed files, re-verify, loop max 3x | `amcaa-domain-auditor-agent` + verifier | 20 |
-| 4 | Consolidation: merge per-domain (max 5 inputs/agent, hierarchical if more) | `amcaa-consolidation-agent` | 5 |
-| 5 | TODO generation: actionable TODO-{scope}-changes.md per domain | `amcaa-todo-generator-agent` | 5 |
-| 6 | Fix (if FIX_ENABLED): implement TODOs with checkpoints | `amcaa-fix-agent` | 20 |
-| 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `amcaa-fix-verifier-agent` | 20 |
+| 1 | Discovery: audit each batch | `caa-domain-auditor-agent` | 20 |
+| 2 | Verification: verify each Phase 1 report + missed-file detection | `caa-verification-agent` | 10 |
+| 3 | Gap-fill: audit missed files, re-verify, loop max 3x | `caa-domain-auditor-agent` + verifier | 20 |
+| 4 | Consolidation: merge per-domain (max 5 inputs/agent, hierarchical if more) | `caa-consolidation-agent` | 5 |
+| 5 | TODO generation: actionable TODO-{scope}-changes.md per domain | `caa-todo-generator-agent` | 5 |
+| 6 | Fix (if FIX_ENABLED): implement TODOs with checkpoints | `caa-fix-agent` | 20 |
+| 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `caa-fix-verifier-agent` | 20 |
 | 8 | Final report: compile stats, link artifacts | orchestrator | -- |
 
 If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until all PASS or `PASS_NUMBER > MAX_FIX_PASSES`.
 
 ### Report Naming
 
-All files use `{REPORT_DIR}/amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent generates its own UUID.
+All files use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent generates its own UUID.
 
 | Type | Pattern |
 |------|---------|
-| Audit | `amcaa-audit-P{N}-R{RUN_ID}-{UUID}.md` |
-| Verify | `amcaa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
-| Gap-fill | `amcaa-gapfill-P{N}-R{RUN_ID}-{UUID}.md` |
-| Consolidated | `amcaa-consolidated-{domain}.md` |
+| Audit | `caa-audit-P{N}-R{RUN_ID}-{UUID}.md` |
+| Verify | `caa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
+| Gap-fill | `caa-gapfill-P{N}-R{RUN_ID}-{UUID}.md` |
+| Consolidated | `caa-consolidated-{domain}.md` |
 | TODO | `TODO-{scope}-changes.md` |
-| Fix done | `amcaa-fixes-done-P{N}-{domain}.md` |
-| Fix checkpoint | `amcaa-checkpoint-P{N}-{domain}.json` |
-| Fix verify | `amcaa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` |
-| Manifest | `amcaa-manifest-R{RUN_ID}.json` |
-| Final | `amcaa-audit-FINAL-{timestamp}.md` |
+| Fix done | `caa-fixes-done-P{N}-{domain}.md` |
+| Fix checkpoint | `caa-checkpoint-P{N}-{domain}.json` |
+| Fix verify | `caa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` |
+| Manifest | `caa-manifest-R{RUN_ID}.json` |
+| Final | `caa-audit-FINAL-{timestamp}.md` |
 
 ### Finding IDs
 
@@ -115,9 +115,9 @@ Format: `{PREFIX}-P{PASS}-{AGENT_PREFIX}-{SEQ}` where PREFIX=DA/VE/GF/FV, AGENT_
 
 All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also receive: `SCOPE_PATH, VIOLATION_TYPES, PASS, RUN_ID, AGENT_PREFIX, FINDING_ID_PREFIX`. Additional per-phase params:
 
-**P1 Discovery**: `FILES` (max 4), `TRIAGE_STATUS` (LIKELY_VIOLATION/LIKELY_CLEAN). Report to `amcaa-audit-*`.
-**P2 Verify**: `AUDIT_REPORT` path, `DOMAIN_FILES` list. 3 checks: violation claims, clean claims, missed files. Report to `amcaa-verify-*`.
-**P3 Gap-fill**: Same as P1 but `TRIAGE_STATUS=MISSED`, prefix=GF, report to `amcaa-gapfill-*`.
+**P1 Discovery**: `FILES` (max 4), `TRIAGE_STATUS` (LIKELY_VIOLATION/LIKELY_CLEAN). Report to `caa-audit-*`.
+**P2 Verify**: `AUDIT_REPORT` path, `DOMAIN_FILES` list. 3 checks: violation claims, clean claims, missed files. Report to `caa-verify-*`.
+**P3 Gap-fill**: Same as P1 but `TRIAGE_STATUS=MISSED`, prefix=GF, report to `caa-gapfill-*`.
 **P4 Consolidate**: `INPUT_REPORTS` (max 5 paths), `DOMAIN_NAME`, `OUTPUT_PATH`. Merge, dedup, classify as VIOLATION/RECORD_KEEPING/FALSE_POSITIVE.
 **P5 TODO**: `CONSOLIDATED_REPORT`, `SCOPE_NAME`, `TODO_PREFIX`, `OUTPUT_PATH`. Each TODO must have file:line:evidence triple.
 **P6 Fix**: `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
@@ -147,20 +147,20 @@ The pipeline produces the following artifacts in `REPORT_DIR`:
 
 | Artifact | Description |
 |----------|-------------|
-| Per-batch audit reports | Individual `amcaa-audit-*` files from Phase 1 discovery |
-| Verification reports | `amcaa-verify-*` files confirming or rejecting findings |
-| Gap-fill reports | `amcaa-gapfill-*` files for previously missed files |
-| Consolidated domain reports | `amcaa-consolidated-{domain}.md` with deduplicated, classified findings |
+| Per-batch audit reports | Individual `caa-audit-*` files from Phase 1 discovery |
+| Verification reports | `caa-verify-*` files confirming or rejecting findings |
+| Gap-fill reports | `caa-gapfill-*` files for previously missed files |
+| Consolidated domain reports | `caa-consolidated-{domain}.md` with deduplicated, classified findings |
 | TODO files | `TODO-{scope}-changes.md` with actionable items per domain (file:line:evidence) |
-| Fix reports (if FIX_ENABLED) | `amcaa-fixes-done-*` with applied changes and checkpoints |
-| Fix verification (if FIX_ENABLED) | `amcaa-fixverify-*` with PASS/FAIL/REGRESSION verdicts |
-| Manifest | `amcaa-manifest-R{RUN_ID}.json` tracking all files, batches, and agent assignments |
-| Final merged report | `amcaa-audit-FINAL-{timestamp}.md` with aggregate stats, violation counts, and links to all artifacts |
+| Fix reports (if FIX_ENABLED) | `caa-fixes-done-*` with applied changes and checkpoints |
+| Fix verification (if FIX_ENABLED) | `caa-fixverify-*` with PASS/FAIL/REGRESSION verdicts |
+| Manifest | `caa-manifest-R{RUN_ID}.json` tracking all files, batches, and agent assignments |
+| Final merged report | `caa-audit-FINAL-{timestamp}.md` with aggregate stats, violation counts, and links to all artifacts |
 
 ## Error Handling
 
 - **Agent failure**: Check if the output file exists and is complete. If yes, use it. If not, re-spawn with a new UUID but the same agent prefix.
-- **Context compaction**: Read the manifest (`amcaa-manifest-R{RUN_ID}.json`) to recover full pipeline state after context compaction.
+- **Context compaction**: Read the manifest (`caa-manifest-R{RUN_ID}.json`) to recover full pipeline state after context compaction.
 - **Partial runs**: The manifest tracks per-file completion status. Resume from the last incomplete phase.
 - **Checkpoint recovery (Phase 6)**: Each fix agent writes a checkpoint JSON after every fix. On failure, the replacement agent reads the checkpoint and continues from the last successful fix.
 - **Escalation**: After 3 retries on the same agent task, escalate to the orchestrator for manual intervention.
@@ -214,17 +214,17 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 
 ### Agents
 
-- `amcaa-domain-auditor-agent` - File batch auditing (Phases 1, 3)
-- `amcaa-verification-agent` - Report cross-checking (Phase 2, 3)
-- `amcaa-consolidation-agent` - Per-domain report merging (Phase 4)
-- `amcaa-todo-generator-agent` - TODO file generation (Phase 5)
-- `amcaa-fix-agent` - Automated fix application (Phase 6)
-- `amcaa-fix-verifier-agent` - Fix verification (Phase 7)
+- `caa-domain-auditor-agent` - File batch auditing (Phases 1, 3)
+- `caa-verification-agent` - Report cross-checking (Phase 2, 3)
+- `caa-consolidation-agent` - Per-domain report merging (Phase 4)
+- `caa-todo-generator-agent` - TODO file generation (Phase 5)
+- `caa-fix-agent` - Automated fix application (Phase 6)
+- `caa-fix-verifier-agent` - Fix verification (Phase 7)
 
 ### Scripts
 
-- `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-audit-reports.py` - Final report compilation
-- `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-generate-todos.py` - Structured TODO generation
+- `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-audit-reports.py` - Final report compilation
+- `$CLAUDE_PLUGIN_ROOT/scripts/caa-generate-todos.py` - Structured TODO generation
 
 ### Related Commands
 

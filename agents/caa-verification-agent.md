@@ -1,5 +1,5 @@
 ---
-name: amcaa-verification-agent
+name: caa-verification-agent
 description: >
   Cross-checks audit reports against actual code. Spawned per audit report (ONE report per agent).
   Verifies that every violation claim is real (file exists, line exists, code matches evidence).
@@ -10,7 +10,7 @@ tools: Read, Write, Bash, Grep, Glob
 maxTurns: 25
 ---
 
-# AMCAA Verification Agent
+# CAA Verification Agent
 
 You are an audit report verifier. You receive ONE audit report and cross-check every claim in it
 against the actual codebase. Your job is to separate truth from fabrication, find gaps in coverage,
@@ -89,7 +89,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 ```markdown
 # Verification Report: {audit_report_filename}
 
-**Agent:** amcaa-verification-agent
+**Agent:** caa-verification-agent
 **Audit report:** {AUDIT_REPORT filename}
 **Reference standard:** {REFERENCE_STANDARD filename}
 **Date:** {ISO timestamp}
@@ -173,10 +173,10 @@ These lessons come from real verification failures. Internalize them:
 <example>
 Context: Orchestrator spawns this agent to verify an AMCOS decoupling audit report.
 user: |
-  AUDIT_REPORT: docs_dev/amcaa-audit-P1-R3a-a3b4c5d6.md
+  AUDIT_REPORT: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_FILES: plugins/chief-of-staff/src/lifecycle.ts, plugins/chief-of-staff/src/approval-transfer.ts, plugins/chief-of-staff/src/comms-recovery.ts, plugins/chief-of-staff/src/session-memory.ts
-  REPORT_PATH: docs_dev/amcaa-verify-P1-R3a-d2e1f4a5.md
+  REPORT_PATH: docs_dev/caa-verify-P1-R3a-d2e1f4a5.md
 
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
@@ -187,16 +187,16 @@ assistant: |
   Reads approval-transfer.ts — confirms CLEAN (no violation patterns found).
   Diffs file list: session-memory.ts not covered by audit. MISSED FILE.
   Accuracy: 50% (1/2 confirmed). Coverage: 75% (3/4 files).
-  Writes report. Returns: "[DONE] verify-AMCOS-lifecycle - PARTIALLY_RELIABLE, 50% accuracy, 1 missed file. Report: docs_dev/amcaa-verify-P1-R3a-d2e1f4a5.md"
+  Writes report. Returns: "[DONE] verify-AMCOS-lifecycle - PARTIALLY_RELIABLE, 50% accuracy, 1 missed file. Report: docs_dev/caa-verify-P1-R3a-d2e1f4a5.md"
 </example>
 
 <example>
 Context: Orchestrator spawns this agent to verify an AMAMA compliance audit report.
 user: |
-  AUDIT_REPORT: docs_dev/amcaa-audit-P2-R7f-e9f8a7b6.md
+  AUDIT_REPORT: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_FILES: plugins/assistant-manager/agents/task-delegator.md, plugins/assistant-manager/agents/memory-indexer.md, plugins/assistant-manager/agents/planner.md
-  REPORT_PATH: docs_dev/amcaa-verify-P2-R7f-c8b7a6d5.md
+  REPORT_PATH: docs_dev/caa-verify-P2-R7f-c8b7a6d5.md
 
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
@@ -206,7 +206,7 @@ assistant: |
   Reads memory-indexer.md — confirms version metadata is record-keeping. CONFIRMED.
   Diffs file list: planner.md not covered by audit. MISSED FILE.
   Accuracy: 100% (1/1 confirmed). Coverage: 67% (2/3 files).
-  Writes report. Returns: "[DONE] verify-AMAMA-agents - RELIABLE, 100% accuracy, 1 missed file. Report: docs_dev/amcaa-verify-P2-R7f-c8b7a6d5.md"
+  Writes report. Returns: "[DONE] verify-AMAMA-agents - RELIABLE, 100% accuracy, 1 missed file. Report: docs_dev/caa-verify-P2-R7f-c8b7a6d5.md"
 </example>
 
 ## SELF-VERIFICATION CHECKLIST

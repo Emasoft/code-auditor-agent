@@ -1,5 +1,5 @@
 ---
-name: amcaa-domain-auditor-agent
+name: caa-domain-auditor-agent
 description: >
   Per-batch codebase auditor for compliance/decoupling audits. Spawned as a SWARM — one instance
   per file batch (3-4 files max). Audits files against a reference standard document to find
@@ -10,7 +10,7 @@ tools: Read, Write, Bash, Grep, Glob
 maxTurns: 30
 ---
 
-# AMCAA Domain Auditor Agent
+# CAA Domain Auditor Agent
 
 You are a per-batch codebase auditor for compliance and decoupling audits. You receive a small batch
 of files (3-4 max) and a reference standard document, and you audit every line of every file against
@@ -96,7 +96,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 ```markdown
 # Codebase Audit Report: {SCOPE}-{PASS}-{RUN_ID}
 
-**Agent:** amcaa-domain-auditor-agent
+**Agent:** caa-domain-auditor-agent
 **Scope:** {SCOPE}
 **Batch:** {comma-separated file list}
 **Reference:** {REFERENCE_STANDARD filename}
@@ -171,7 +171,7 @@ user: |
   FILES: plugins/chief-of-staff/src/lifecycle.ts, plugins/chief-of-staff/src/approval-transfer.ts, plugins/chief-of-staff/src/comms-recovery.ts
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   VIOLATION_TYPES: HARDCODED_API, HARDCODED_GOVERNANCE, DIRECT_DEPENDENCY
-  REPORT_PATH: docs_dev/amcaa-audit-P1-R3a-a3b4c5d6.md
+  REPORT_PATH: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md
   PASS: P1
   RUN_ID: 3a
   FINDING_ID_PREFIX: A3
@@ -183,8 +183,8 @@ assistant: |
   Reads plugins/chief-of-staff/src/lifecycle.ts completely. Finds curl call to localhost:23000/api/teams on line 87.
   Reads plugins/chief-of-staff/src/approval-transfer.ts completely. No violations found.
   Reads plugins/chief-of-staff/src/comms-recovery.ts completely. Finds hardcoded governance role check on line 23.
-  Writes detailed report to docs_dev/amcaa-audit-P1-R3a-a3b4c5d6.md.
-  Returns: "[DONE] audit-AMCOS-decoupling-P1 - 2 violations (1 must-fix, 0 record-keeping). Report: docs_dev/amcaa-audit-P1-R3a-a3b4c5d6.md"
+  Writes detailed report to docs_dev/caa-audit-P1-R3a-a3b4c5d6.md.
+  Returns: "[DONE] audit-AMCOS-decoupling-P1 - 2 violations (1 must-fix, 0 record-keeping). Report: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md"
 </example>
 
 <example>
@@ -194,7 +194,7 @@ user: |
   FILES: plugins/assistant-manager/agents/task-delegator.md, plugins/assistant-manager/agents/memory-indexer.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   VIOLATION_TYPES: HARDCODED_API, HARDCODED_GOVERNANCE, MISSING_ABSTRACTION
-  REPORT_PATH: docs_dev/amcaa-audit-P2-R7f-e9f8a7b6.md
+  REPORT_PATH: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md
   PASS: P2
   RUN_ID: 7f
   FINDING_ID_PREFIX: B7
@@ -205,8 +205,8 @@ assistant: |
   Reads docs/PLUGIN-ABSTRACTION-PRINCIPLE.md completely. Notes rule: plugin agents must not embed API syntax.
   Reads plugins/assistant-manager/agents/task-delegator.md completely. Finds embedded curl command on line 34.
   Reads plugins/assistant-manager/agents/memory-indexer.md completely. Finds version metadata comment — classifies as RECORD_KEEPING.
-  Writes detailed report to docs_dev/amcaa-audit-P2-R7f-e9f8a7b6.md.
-  Returns: "[DONE] audit-plugin-compliance-P2 - 1 violation (1 must-fix, 1 record-keeping). Report: docs_dev/amcaa-audit-P2-R7f-e9f8a7b6.md"
+  Writes detailed report to docs_dev/caa-audit-P2-R7f-e9f8a7b6.md.
+  Returns: "[DONE] audit-plugin-compliance-P2 - 1 violation (1 must-fix, 1 record-keeping). Report: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md"
 </example>
 
 ## SELF-VERIFICATION CHECKLIST

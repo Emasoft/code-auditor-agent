@@ -44,7 +44,7 @@ and always fall back to `general-purpose` if the preferred agent is not found.
 
 ## Fix Protocol
 
-1. Read the merged review report from PROCEDURE 1: `docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
+1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
 2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
 3. For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
 4. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved.
@@ -70,8 +70,8 @@ Task(
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
-    REVIEW_REPORT: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
-    CHECKPOINT_FILE: docs_dev/amcaa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
+    REVIEW_REPORT: docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md
+    CHECKPOINT_FILE: docs_dev/caa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
 
     Fix these specific issues from the review report:
     {checklist_subset_for_this_domain}
@@ -90,7 +90,7 @@ Task(
     Checkpoint entry format (append to findings array in the JSON file):
     {"id": "SF-001", "status": "fixed", "file": "AgentProfileTab.tsx", "timestamp": "ISO"}
 
-    Write your fix report to: {ABSOLUTE_REPORT_DIR}/amcaa-fixes-done-P{PASS_NUMBER}-{domain_name}.md
+    Write your fix report to: {ABSOLUTE_REPORT_DIR}/caa-fixes-done-P{PASS_NUMBER}-{domain_name}.md
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -135,7 +135,7 @@ Task(
     Run the full test suite for the project.
     Determine the test command from package.json, Makefile, or project conventions
     (e.g., `yarn test`, `npm test`, `pytest`, `go test ./...`).
-    Write results to: {ABSOLUTE_REPORT_DIR}/amcaa-tests-outcome-P{PASS_NUMBER}.md
+    Write results to: {ABSOLUTE_REPORT_DIR}/caa-tests-outcome-P{PASS_NUMBER}.md
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -221,7 +221,7 @@ Task(
        - error_linters (string[]): names of failed linters
        - report_dir (string): path to full MegaLinter reports
 
-    4. Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-lint-outcome-P{PASS_NUMBER}.md
+    4. Write your report to: {ABSOLUTE_REPORT_DIR}/caa-lint-outcome-P{PASS_NUMBER}.md
        Include: exit code, error count, failed linter names, report directory path.
 
     REPORTING RULES:
@@ -256,7 +256,7 @@ Task(
     Fix ONLY the errors (not warnings). Make minimal changes to resolve lint issues.
     Do NOT refactor, restructure, or add features -- only fix what the linter flagged as errors.
 
-    Write your fix report to: {ABSOLUTE_REPORT_DIR}/amcaa-lint-fixes-P{PASS_NUMBER}.md
+    Write your fix report to: {ABSOLUTE_REPORT_DIR}/caa-lint-fixes-P{PASS_NUMBER}.md
 
     REPORTING RULES:
     - Write ALL detailed output to the report file
@@ -314,11 +314,11 @@ This creates a rollback point and ensures subsequent passes see a clean diff.
 
 ## Procedure 2 Output
 
-- Per-domain fix summaries: `docs_dev/amcaa-fixes-done-P{N}-{domain}.md`
-- Test outcome: `docs_dev/amcaa-tests-outcome-P{N}.md`
-- Lint outcome: `docs_dev/amcaa-lint-outcome-P{N}.md` (if Docker available)
+- Per-domain fix summaries: `docs_dev/caa-fixes-done-P{N}-{domain}.md`
+- Test outcome: `docs_dev/caa-tests-outcome-P{N}.md`
+- Lint outcome: `docs_dev/caa-lint-outcome-P{N}.md` (if Docker available)
 - Lint summary JSON: `docs_dev/megalinter-P{N}/lint-summary.json` (if Docker available)
-- Lint fixes: `docs_dev/amcaa-lint-fixes-P{N}.md` (if lint errors were fixed)
+- Lint fixes: `docs_dev/caa-lint-fixes-P{N}.md` (if lint errors were fixed)
 
 ---
 

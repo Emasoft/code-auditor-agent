@@ -1,4 +1,4 @@
-# ai-maestro-code-auditor-agent
+# code-auditor-agent
 
 **Version:** 2.0.0
 **License:** MIT
@@ -29,13 +29,13 @@ Three-phase PR review pipeline and full codebase audit pipeline for Claude Code.
 Install from the `emasoft-plugins` marketplace:
 
 ```text
-/install-plugin emasoft-plugins:ai-maestro-code-auditor-agent
+/install-plugin emasoft-plugins:code-auditor-agent
 ```
 
 For local development, launch Claude Code with the plugin path:
 
 ```bash
-claude --use-plugin /path/to/ai-maestro-code-auditor-agent
+claude --use-plugin /path/to/code-auditor-agent
 ```
 
 ---
@@ -48,21 +48,21 @@ This plugin provides 10 agents, split across two pipelines.
 
 | Agent | Purpose | Concurrency |
 |-------|---------|-------------|
-| `amcaa-code-correctness-agent` | Per-file correctness audit (type safety, logic, security, shell scripts) | Swarm (one per domain) |
-| `amcaa-claim-verification-agent` | Verifies PR description claims against actual code | Single instance |
-| `amcaa-skeptical-reviewer-agent` | Holistic review as an external maintainer (UX, breaking changes, consistency) | Single instance |
-| `amcaa-dedup-agent` | Semantic deduplication of merged review findings | Single instance |
+| `caa-code-correctness-agent` | Per-file correctness audit (type safety, logic, security, shell scripts) | Swarm (one per domain) |
+| `caa-claim-verification-agent` | Verifies PR description claims against actual code | Single instance |
+| `caa-skeptical-reviewer-agent` | Holistic review as an external maintainer (UX, breaking changes, consistency) | Single instance |
+| `caa-dedup-agent` | Semantic deduplication of merged review findings | Single instance |
 
 ### Codebase Audit Pipeline Agents
 
 | Agent | Purpose | Concurrency |
 |-------|---------|-------------|
-| `amcaa-domain-auditor-agent` | Per-domain file auditing against reference standard | Swarm (one per batch) |
-| `amcaa-verification-agent` | Cross-checks audit reports for accuracy, finds missed files | Swarm (one per report) |
-| `amcaa-consolidation-agent` | Merges per-domain findings, deduplicates, harmonizes severity | Up to 5 |
-| `amcaa-todo-generator-agent` | Generates actionable TODO files from consolidated findings | Up to 5 |
-| `amcaa-fix-agent` | Implements TODO fixes with checkpoint tracking | Swarm (one per domain) |
-| `amcaa-fix-verifier-agent` | Verifies fixes were applied correctly, detects regressions | Swarm (one per fix report) |
+| `caa-domain-auditor-agent` | Per-domain file auditing against reference standard | Swarm (one per batch) |
+| `caa-verification-agent` | Cross-checks audit reports for accuracy, finds missed files | Swarm (one per report) |
+| `caa-consolidation-agent` | Merges per-domain findings, deduplicates, harmonizes severity | Up to 5 |
+| `caa-todo-generator-agent` | Generates actionable TODO files from consolidated findings | Up to 5 |
+| `caa-fix-agent` | Implements TODO fixes with checkpoint tracking | Swarm (one per domain) |
+| `caa-fix-verifier-agent` | Verifies fixes were applied correctly, detects regressions | Swarm (one per fix report) |
 
 ---
 
@@ -70,11 +70,11 @@ This plugin provides 10 agents, split across two pipelines.
 
 | Skill | Purpose |
 |-------|---------|
-| `amcaa-pr-review-skill` | Three-phase PR review: correctness swarm, claim verification, skeptical review, merge + dedup |
-| `amcaa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
-| `amcaa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
+| `caa-pr-review-skill` | Three-phase PR review: correctness swarm, claim verification, skeptical review, merge + dedup |
+| `caa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
+| `caa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
 
-### `amcaa-pr-review-skill` (review only)
+### `caa-pr-review-skill` (review only)
 
 Review a PR without modifying code. Runs the three-phase pipeline and presents a verdict.
 
@@ -82,7 +82,7 @@ Review a PR without modifying code. Runs the three-phase pipeline and presents a
 review PR 206
 ```
 
-### `amcaa-pr-review-and-fix-skill` (review + iterative fix loop)
+### `caa-pr-review-and-fix-skill` (review + iterative fix loop)
 
 Review a PR AND automatically fix all findings. Loops until zero issues remain (max 25 passes).
 
@@ -111,7 +111,7 @@ review and fix PR 206 with worktrees
 
 Requirements: clean git state, sufficient disk space for worktree copies.
 
-### `amcaa-codebase-audit-and-fix-skill` (full codebase audit)
+### `caa-codebase-audit-and-fix-skill` (full codebase audit)
 
 Run a comprehensive 9-phase codebase audit with optional automatic fix application.
 
@@ -125,7 +125,7 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 
 | Command | Trigger | Purpose |
 |---------|---------|---------|
-| `amcaa-audit-codebase-cmd` | `/audit-codebase` | Launch codebase audit with configurable scope, standard, and fix mode |
+| `caa-audit-codebase-cmd` | `/audit-codebase` | Launch codebase audit with configurable scope, standard, and fix mode |
 
 ---
 
@@ -135,9 +135,9 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 
 | Script | Purpose |
 |--------|---------|
-| `amcaa-merge-reports-v2.py` | Concatenates phase reports into intermediate merged report (UUID-aware) |
-| `amcaa-merge-audit-reports.py` | Python merger for codebase audit reports |
-| `amcaa-generate-todos.py` | Converts consolidated findings into skeleton TODO files |
+| `caa-merge-reports.py` | Concatenates phase reports into intermediate merged report (UUID-aware) |
+| `caa-merge-audit-reports.py` | Python merger for codebase audit reports |
+| `caa-generate-todos.py` | Converts consolidated findings into skeleton TODO files |
 | `universal_pr_linter.py` | Runs MegaLinter via Docker for PR linting |
 
 ### Publishing Scripts (in `scripts/`)
@@ -157,21 +157,21 @@ The PR review pipeline (Procedure 1) runs five phases:
 Phase 1: Spawn correctness agents (one per domain, parallel swarm)
 Phase 2: Spawn claim verification agent
 Phase 3: Spawn skeptical reviewer agent
-Phase 4: Merge reports via amcaa-merge-reports-v2.py + dedup agent
+Phase 4: Merge reports via caa-merge-reports.py + dedup agent
 Phase 5: Present final report
 ```
 
-**Phase 1 -- Code Correctness Swarm.** One `amcaa-code-correctness-agent` is spawned per code domain (e.g., Python files, shell scripts, TypeScript files). Each agent audits files in its domain for type safety errors, logic bugs, security vulnerabilities, and shell script correctness. Agents run in parallel as a swarm.
+**Phase 1 -- Code Correctness Swarm.** One `caa-code-correctness-agent` is spawned per code domain (e.g., Python files, shell scripts, TypeScript files). Each agent audits files in its domain for type safety errors, logic bugs, security vulnerabilities, and shell script correctness. Agents run in parallel as a swarm.
 
-**Phase 2 -- Claim Verification.** A single `amcaa-claim-verification-agent` reads the PR description and cross-references every claim (e.g., "adds retry logic", "fixes race condition") against the actual diff. Claims that cannot be verified in the code are flagged.
+**Phase 2 -- Claim Verification.** A single `caa-claim-verification-agent` reads the PR description and cross-references every claim (e.g., "adds retry logic", "fixes race condition") against the actual diff. Claims that cannot be verified in the code are flagged.
 
-**Phase 3 -- Skeptical Review.** A single `amcaa-skeptical-reviewer-agent` performs a holistic review from the perspective of an external maintainer. It evaluates UX impact, breaking changes, API consistency, and architectural concerns that per-file audits miss.
+**Phase 3 -- Skeptical Review.** A single `caa-skeptical-reviewer-agent` performs a holistic review from the perspective of an external maintainer. It evaluates UX impact, breaking changes, API consistency, and architectural concerns that per-file audits miss.
 
-**Phase 4 -- Merge + Dedup.** The `amcaa-merge-reports-v2.py` script concatenates all phase reports into an intermediate merged report. Then `amcaa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
+**Phase 4 -- Merge + Dedup.** The `caa-merge-reports.py` script concatenates all phase reports into an intermediate merged report. Then `caa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
 
 **Phase 5 -- Final Report.** The deduplicated report is presented as the final verdict.
 
-When using `amcaa-pr-review-and-fix-skill`, a fix cycle follows each review pass:
+When using `caa-pr-review-and-fix-skill`, a fix cycle follows each review pass:
 
 ```
 Fix Cycle (Procedure 2, only if issues found):
@@ -201,27 +201,27 @@ Phase 8: Final merged report
 
 **Phase 0 -- File Inventory + Grep Triage.** The pipeline inventories all files in scope and runs grep-based triage to classify files by domain and identify high-priority targets.
 
-**Phase 1 -- Discovery Swarm.** `amcaa-domain-auditor-agent` instances are spawned in parallel, each auditing a batch of 3-4 files against the configured reference standard. Each agent produces a per-domain audit report.
+**Phase 1 -- Discovery Swarm.** `caa-domain-auditor-agent` instances are spawned in parallel, each auditing a batch of 3-4 files against the configured reference standard. Each agent produces a per-domain audit report.
 
-**Phase 2 -- Verification Swarm.** `amcaa-verification-agent` instances cross-check every audit report for accuracy, flagging false positives and identifying files that were missed.
+**Phase 2 -- Verification Swarm.** `caa-verification-agent` instances cross-check every audit report for accuracy, flagging false positives and identifying files that were missed.
 
 **Phase 3 -- Gap-Fill.** Any files not covered in Phase 1 are assigned to additional auditor agents. This phase iterates until 100% file coverage is achieved.
 
-**Phase 4 -- Per-Domain Consolidation.** `amcaa-consolidation-agent` instances merge findings within each domain, deduplicate issues, and harmonize severity ratings across reports.
+**Phase 4 -- Per-Domain Consolidation.** `caa-consolidation-agent` instances merge findings within each domain, deduplicate issues, and harmonize severity ratings across reports.
 
-**Phase 5 -- TODO Generation.** `amcaa-todo-generator-agent` instances convert consolidated findings into actionable TODO files, one per domain.
+**Phase 5 -- TODO Generation.** `caa-todo-generator-agent` instances convert consolidated findings into actionable TODO files, one per domain.
 
-**Phase 6 -- Fix Implementation (optional).** When `--fix` is enabled, `amcaa-fix-agent` instances implement the TODO items with checkpoint tracking, one agent per domain.
+**Phase 6 -- Fix Implementation (optional).** When `--fix` is enabled, `caa-fix-agent` instances implement the TODO items with checkpoint tracking, one agent per domain.
 
-**Phase 7 -- Fix Verification (optional).** `amcaa-fix-verifier-agent` instances verify that each fix was applied correctly and detect any regressions introduced by the fixes.
+**Phase 7 -- Fix Verification (optional).** `caa-fix-verifier-agent` instances verify that each fix was applied correctly and detect any regressions introduced by the fixes.
 
-**Phase 8 -- Final Merged Report.** All findings, fixes, and verification results are merged into a single final report via `amcaa-merge-audit-reports.py`.
+**Phase 8 -- Final Merged Report.** All findings, fixes, and verification results are merged into a single final report via `caa-merge-audit-reports.py`.
 
 ---
 
 ## Report Naming Convention
 
-Report filenames follow a pipeline-specific pattern. Codebase audit reports use `amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. PR review reports use a shorter pattern (see table below); `R{RUN_ID}` is included only in multi-pass runs via `amcaa-pr-review-and-fix-skill`.
+Report filenames follow a pipeline-specific pattern. Codebase audit reports use `caa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. PR review reports use a shorter pattern (see table below); `R{RUN_ID}` is included only in multi-pass runs via `caa-pr-review-and-fix-skill`.
 
 Reports are written to `docs_dev/`.
 
@@ -229,26 +229,26 @@ Reports are written to `docs_dev/`.
 
 | Report Type | Filename Pattern |
 |-------------|------------------|
-| Correctness (per-domain) | `amcaa-correctness-P{N}-{uuid}.md` |
-| Claim verification | `amcaa-claims-P{N}-{uuid}.md` |
-| Skeptical review | `amcaa-review-P{N}-{uuid}.md` |
-| Intermediate merged report | `amcaa-pr-review-P{N}-intermediate-{timestamp}.md` |
-| Final dedup report | `amcaa-pr-review-P{N}-{timestamp}.md` |
-| Fix summary (per-domain) | `amcaa-fixes-done-P{N}-{domain}.md` |
-| Test outcome | `amcaa-tests-outcome-P{N}.md` |
-| Final clean report | `amcaa-pr-review-and-fix-FINAL-{timestamp}.md` |
+| Correctness (per-domain) | `caa-correctness-P{N}-{uuid}.md` |
+| Claim verification | `caa-claims-P{N}-{uuid}.md` |
+| Skeptical review | `caa-review-P{N}-{uuid}.md` |
+| Intermediate merged report | `caa-pr-review-P{N}-intermediate-{timestamp}.md` |
+| Final dedup report | `caa-pr-review-P{N}-{timestamp}.md` |
+| Fix summary (per-domain) | `caa-fixes-done-P{N}-{domain}.md` |
+| Test outcome | `caa-tests-outcome-P{N}.md` |
+| Final clean report | `caa-pr-review-and-fix-FINAL-{timestamp}.md` |
 
-> **Note:** When called from `amcaa-pr-review-and-fix-skill` (multi-pass), PR review reports include `R{RUN_ID}` in filenames (e.g., `amcaa-correctness-P{N}-R{RUN_ID}-{uuid}.md`). Single-pass `amcaa-pr-review-skill` omits `R{RUN_ID}`.
+> **Note:** When called from `caa-pr-review-and-fix-skill` (multi-pass), PR review reports include `R{RUN_ID}` in filenames (e.g., `caa-correctness-P{N}-R{RUN_ID}-{uuid}.md`). Single-pass `caa-pr-review-skill` omits `R{RUN_ID}`.
 
 ### Codebase Audit Reports
 
 | Report Type | Filename Pattern |
 |-------------|------------------|
-| Audit (per-domain) | `amcaa-audit-P{N}-R{RUN_ID}-{UUID}.md` |
-| Verification | `amcaa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
-| Consolidated (per-domain) | `amcaa-consolidated-{domain}.md` |
-| Fix summary (per-domain) | `amcaa-fixes-done-P{N}-{domain}.md` |
-| Test outcome | `amcaa-tests-outcome-P{N}.md` |
+| Audit (per-domain) | `caa-audit-P{N}-R{RUN_ID}-{UUID}.md` |
+| Verification | `caa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
+| Consolidated (per-domain) | `caa-consolidated-{domain}.md` |
+| Fix summary (per-domain) | `caa-fixes-done-P{N}-{domain}.md` |
+| Test outcome | `caa-tests-outcome-P{N}.md` |
 
 Where:
 - `{N}` is the pass number (starting from 1)

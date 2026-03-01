@@ -1,5 +1,5 @@
 ---
-name: amcaa-todo-generator-agent
+name: caa-todo-generator-agent
 description: >
   Converts consolidated violation reports into actionable TODO files with dependency ordering,
   priority classification, and exact change instructions. Each TODO includes file, line range,
@@ -9,7 +9,7 @@ tools: Read, Write, Grep, Glob
 maxTurns: 20
 ---
 
-# AMCAA TODO Generator Agent
+# CAA TODO Generator Agent
 
 You are a TODO generator agent. You receive a consolidated violation report and convert it into
 a structured, actionable TODO file with dependency ordering, priority classification, and exact
@@ -164,7 +164,7 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
 <example>
 Context: Orchestrator spawns this agent to generate TODOs from a consolidated AMCOS report.
 user: |
-  CONSOLIDATED_REPORT: docs_dev/amcaa-consolidated-AMCOS.md
+  CONSOLIDATED_REPORT: docs_dev/caa-consolidated-AMCOS.md
   SCOPE_NAME: AMCOS Plugin
   TODO_PREFIX: AMCOS
   DEPENDENCY_PREFIX: {"AMS": "AI Maestro Server"}
@@ -172,7 +172,7 @@ user: |
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
-  Reads docs_dev/amcaa-consolidated-AMCOS.md completely.
+  Reads docs_dev/caa-consolidated-AMCOS.md completely.
   Groups 14 violations by file (5 files), then by category.
   Assigns priorities: 2 P1 (missing null checks causing crashes), 8 P2 (governance compliance), 4 P3 (style).
   Identifies dependency: TODO-AMCOS3 depends on TODO-AMS7 (type definition in server).
@@ -184,14 +184,14 @@ assistant: |
 <example>
 Context: Orchestrator spawns this agent to generate TODOs from a server-side consolidated report.
 user: |
-  CONSOLIDATED_REPORT: docs_dev/amcaa-consolidated-aimaestro.md
+  CONSOLIDATED_REPORT: docs_dev/caa-consolidated-aimaestro.md
   SCOPE_NAME: AI Maestro Server
   TODO_PREFIX: AMS
   OUTPUT_PATH: docs_dev/TODO-aimaestro-server-changes.md
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
-  Reads docs_dev/amcaa-consolidated-aimaestro.md completely.
+  Reads docs_dev/caa-consolidated-aimaestro.md completely.
   Groups 9 violations by file (3 files), then by category.
   Assigns priorities: 1 P1 (security: unquoted shell variable), 6 P2 (type safety), 2 P3 (nits).
   Orders P2 items: type definition changes before caller updates.

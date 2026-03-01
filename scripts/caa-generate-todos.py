@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# AMCAA TODO Generator — Pre-processes consolidated reports into skeleton TODOs.
+# CAA TODO Generator — Pre-processes consolidated reports into skeleton TODOs.
 # Extracts violations from consolidated audit reports and generates sequentially
 # numbered TODO entries grouped by priority. Used as a pre-processor before the
-# amcaa-todo-generator-agent adds context and implementation guidance.
+# caa-todo-generator-agent adds context and implementation guidance.
 #
 # Severity mapping:
 #   ## MUST-FIX   → P1 (critical violations requiring immediate fix)
@@ -10,7 +10,7 @@
 #   ## NIT        → P3 (style/consistency issues, low priority)
 #
 # Usage:
-#   amcaa-generate-todos.py <consolidated_report> <scope_name> <output_path> [todo_prefix]
+#   caa-generate-todos.py <consolidated_report> <scope_name> <output_path> [todo_prefix]
 #
 # Arguments:
 #   consolidated_report  Path to the consolidated audit report (.md)
@@ -24,8 +24,8 @@
 #   - **Category:** HARDCODED_API | DIRECT_DEPENDENCY | etc.
 #   - **Finding ID:** [original-finding-id]
 #   - **Status:** PENDING
-#   - **Description:** (to be filled by amcaa-todo-generator-agent)
-#   - **Fix:** (to be filled by amcaa-todo-generator-agent)
+#   - **Description:** (to be filled by caa-todo-generator-agent)
+#   - **Fix:** (to be filled by caa-todo-generator-agent)
 #
 # Exit codes:
 #   0 — TODOs generated successfully
@@ -89,7 +89,7 @@ RE_INLINE_CATEGORY = re.compile(r"[A-Z]{2,}_[A-Z_]{2,}")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="AMCAA TODO Generator — extract findings from consolidated audit reports into skeleton TODOs.",
+        description="CAA TODO Generator — extract findings from consolidated audit reports into skeleton TODOs.",
         usage="%(prog)s <consolidated_report> <scope_name> <output_path> [todo_prefix]",
     )
     parser.add_argument(
@@ -144,7 +144,7 @@ def main() -> None:
         )
         sys.exit(2)
 
-    print(f"{CYAN}{BOLD}AMCAA TODO Generator{NC}")
+    print(f"{CYAN}{BOLD}CAA TODO Generator{NC}")
     print(f"  Report:  {consolidated_report}")
     print(f"  Scope:   {scope_name}")
     print(f"  Prefix:  {todo_prefix}")
@@ -209,9 +209,9 @@ def main() -> None:
 
         output_lines.append("- **Status:** PENDING")
         output_lines.append(
-            "- **Description:** (to be filled by amcaa-todo-generator-agent)"
+            "- **Description:** (to be filled by caa-todo-generator-agent)"
         )
-        output_lines.append("- **Fix:** (to be filled by amcaa-todo-generator-agent)")
+        output_lines.append("- **Fix:** (to be filled by caa-todo-generator-agent)")
         output_lines.append("")
 
         # Reset state
@@ -232,7 +232,7 @@ def main() -> None:
     output_lines.append(f"**Scope:** {scope_name}")
     output_lines.append(f"**Prefix:** {todo_prefix}")
     output_lines.append(
-        "**Status:** SKELETON — awaiting amcaa-todo-generator-agent for implementation details"
+        "**Status:** SKELETON — awaiting caa-todo-generator-agent for implementation details"
     )
     output_lines.append("")
     output_lines.append("---")
@@ -327,7 +327,7 @@ def main() -> None:
     output_lines.append(f"| **Total** | {todo_num} |")
     output_lines.append("")
     output_lines.append(
-        "**Next step:** Run amcaa-todo-generator-agent to fill in descriptions and fix guidance."
+        "**Next step:** Run caa-todo-generator-agent to fill in descriptions and fix guidance."
     )
 
     # ── Atomic write: write to .tmp then rename ──────────────────────────────
@@ -344,7 +344,7 @@ def main() -> None:
     # ── Print summary ────────────────────────────────────────────────────────
     print()
     print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
-    print(f"{CYAN}  AMCAA TODO File: {output_path}{NC}")
+    print(f"{CYAN}  CAA TODO File: {output_path}{NC}")
     print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
     print()
     print(f"  P1 (MUST-FIX):    {p1_count}")
@@ -361,7 +361,7 @@ def main() -> None:
     else:
         print(f"{GREEN}Generated {todo_num} skeleton TODO entries.{NC}")
         print(
-            f"{YELLOW}Run amcaa-todo-generator-agent to add implementation details.{NC}"
+            f"{YELLOW}Run caa-todo-generator-agent to add implementation details.{NC}"
         )
 
     sys.exit(0)

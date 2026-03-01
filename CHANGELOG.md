@@ -5,17 +5,17 @@ All notable changes to this project will be documented in this file.
 ## [2.0.0] - 2026-03-01
 
 ### Features
-- Renamed plugin from emasoft-pr-checking-plugin to ai-maestro-code-auditor-agent
-- Unified prefix from epcp-/epca- to amcaa- across all agents, scripts, and commands
-- Added amcaa-codebase-audit-and-fix-skill with 9-phase audit pipeline
+- Renamed plugin from emasoft-pr-checking-plugin to code-auditor-agent
+- Unified prefix from epcp-/epca- to caa- across all agents, scripts, and commands
+- Added caa-codebase-audit-and-fix-skill with 9-phase audit pipeline
 - Added 6 new agents for codebase auditing: domain-auditor, verification, consolidation, todo-generator, fix, fix-verifier
-- Added amcaa-audit-codebase-cmd command for launching codebase audits
+- Added caa-audit-codebase-cmd command for launching codebase audits
 - Added CI/CD workflows for validation, release, and marketplace notification
 - Added publishing scripts: bump_version.py, check_version_consistency.py
 
 ### Breaking Changes
-- All agent, script, and command filenames changed from epcp-/epca- prefix to amcaa-
-- All report filename patterns changed from epcp-/epca- to amcaa-
+- All agent, script, and command filenames changed from epcp-/epca- prefix to caa-
+- All report filename patterns changed from epcp-/epca- to caa-
 
 ## [1.0.0] - 2026-02-01
 

@@ -1,5 +1,5 @@
 ---
-name: amcaa-audit-codebase-cmd
+name: caa-audit-codebase-cmd
 description: >
   Run a full codebase audit against a reference standard. Discovers all files, triages with
   grep, audits in parallel batches, verifies findings, fills gaps, consolidates per-domain,
@@ -47,7 +47,7 @@ parameters:
 
 # Codebase Audit & Fix
 
-This command launches the `amcaa-codebase-audit-and-fix-skill` skill pipeline.
+This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 
 ## Usage
 
@@ -73,4 +73,4 @@ This command launches the `amcaa-codebase-audit-and-fix-skill` skill pipeline.
 ## Reports
 
 All reports written to `--report-dir` (default: docs_dev/).
-See the `amcaa-codebase-audit-and-fix-skill` skill for report naming conventions.
+See the `caa-codebase-audit-and-fix-skill` skill for report naming conventions.

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-# AMCAA Merge Audit Reports — Concatenation merger for codebase audit reports.
-# Follows the same pattern as amcaa-merge-reports-v2.py but for AMCAA audit pipeline.
-# Deduplication is handled by the amcaa-dedup-agent (an AI agent).
+# CAA Merge Audit Reports — Concatenation merger for codebase audit reports.
+# Follows the same pattern as caa-merge-reports-v2.py but for CAA audit pipeline.
+# Deduplication is handled by the caa-dedup-agent (an AI agent).
 #
 # Report types merged (in order):
-#   1. amcaa-audit-P{N}-R{RUN_ID}-*.md       (Phase 1 — parallel audit findings)
-#   2. amcaa-verify-P{N}-*.md                 (Phase 2 — verification cross-checks)
-#   3. amcaa-gapfill-P{N}-*.md                (Phase 3 — gap-fill audit passes)
-#   4. amcaa-consolidated-*.md                (Phase 4 — per-domain consolidation)
+#   1. caa-audit-P{N}-R{RUN_ID}-*.md       (Phase 1 — parallel audit findings)
+#   2. caa-verify-P{N}-*.md                 (Phase 2 — verification cross-checks)
+#   3. caa-gapfill-P{N}-*.md                (Phase 3 — gap-fill audit passes)
+#   4. caa-consolidated-*.md                (Phase 4 — per-domain consolidation)
 #
 # Skipped files (not part of the audit->verify->gapfill->consolidate pipeline):
-#   amcaa-fixes-*         (fix phase outputs)
-#   amcaa-checkpoint-*    (pipeline checkpoints)
-#   amcaa-fixverify-*     (fix verification outputs)
-#   amcaa-manifest-*      (file manifests)
+#   caa-fixes-*         (fix phase outputs)
+#   caa-checkpoint-*    (pipeline checkpoints)
+#   caa-fixverify-*     (fix verification outputs)
+#   caa-manifest-*      (file manifests)
 #   TODO-*               (generated TODOs)
 #   *-STALE*             (manually marked stale)
-#   amcaa-audit-FINAL-*   (final merged reports — prevent re-merge)
+#   caa-audit-FINAL-*   (final merged reports — prevent re-merge)
 #
 # Features:
 #   - UUID-based input filenames (no collision between agents)
@@ -28,7 +28,7 @@
 #   - Source file deletion only after successful verification
 #
 # Usage:
-#   amcaa-merge-audit-reports.py <output_dir> <pass_number> [run_id]
+#   caa-merge-audit-reports.py <output_dir> <pass_number> [run_id]
 #
 # Arguments:
 #   output_dir           Directory containing audit reports
@@ -38,7 +38,7 @@
 #                        When omitted, merges all files for this pass (legacy behavior)
 #
 # Output:
-#   amcaa-audit-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
+#   caa-audit-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
 #
 # Exit codes:
 #   0 — Merge complete (dedup agent determines final verdict)
@@ -81,12 +81,12 @@ FINDING_LINE_RE = re.compile(r"^#{2,5}\s*\[")
 
 # ── Skip patterns for filenames ──────────────────────────────────────────────
 SKIP_PREFIXES = (
-    "amcaa-fixes-",
-    "amcaa-checkpoint-",
-    "amcaa-fixverify-",
-    "amcaa-manifest-",
+    "caa-fixes-",
+    "caa-checkpoint-",
+    "caa-fixverify-",
+    "caa-manifest-",
     "TODO-",
-    "amcaa-audit-FINAL-",
+    "caa-audit-FINAL-",
 )
 
 
@@ -100,13 +100,13 @@ def is_skipped(basename: str) -> bool:
 
 def classify_report(basename: str) -> str:
     """Classify a report by its type prefix."""
-    if basename.startswith("amcaa-audit-"):
+    if basename.startswith("caa-audit-"):
         return "audit"
-    elif basename.startswith("amcaa-verify-"):
+    elif basename.startswith("caa-verify-"):
         return "verify"
-    elif basename.startswith("amcaa-gapfill-"):
+    elif basename.startswith("caa-gapfill-"):
         return "gapfill"
-    elif basename.startswith("amcaa-consolidated-"):
+    elif basename.startswith("caa-consolidated-"):
         return "consolidated"
     else:
         return "other"
@@ -115,8 +115,8 @@ def classify_report(basename: str) -> str:
 def main() -> None:
     # ── Argument parsing ─────────────────────────────────────────────────────
     parser = argparse.ArgumentParser(
-        description="AMCAA Merge Audit Reports — Concatenation merger for codebase audit reports.",
-        usage="amcaa-merge-audit-reports.py <output_dir> <pass_number> [run_id]",
+        description="CAA Merge Audit Reports — Concatenation merger for codebase audit reports.",
+        usage="caa-merge-audit-reports.py <output_dir> <pass_number> [run_id]",
     )
     parser.add_argument(
         "output_dir",
@@ -144,13 +144,13 @@ def main() -> None:
 
     # Build glob pattern: if run_id provided, scope to that run only
     if run_id:
-        pattern = f"amcaa-*-P{pass_number}-R{run_id}-*.md"
+        pattern = f"caa-*-P{pass_number}-R{run_id}-*.md"
         print(f"{CYAN}Run ID: {run_id} (scoped merge){NC}")
     else:
-        pattern = f"amcaa-*-P{pass_number}-*.md"
+        pattern = f"caa-*-P{pass_number}-*.md"
         print(f"{YELLOW}No run ID — merging ALL files for pass {pass_number} (legacy mode){NC}")
 
-    intermediate_report = output_dir / f"amcaa-audit-P{pass_number}-intermediate-{timestamp}.md"
+    intermediate_report = output_dir / f"caa-audit-P{pass_number}-intermediate-{timestamp}.md"
 
     # ── Validate input ───────────────────────────────────────────────────────
     if not output_dir.is_dir():
@@ -178,7 +178,7 @@ def main() -> None:
         print(f"{RED}Error: No reports matching '{pattern}' found in '{output_dir}'{NC}")
         sys.exit(2)
 
-    print(f"{CYAN}{BOLD}AMCAA Audit Report Merger (no-dedup, UUID-aware){NC}")
+    print(f"{CYAN}{BOLD}CAA Audit Report Merger (no-dedup, UUID-aware){NC}")
     print(f"Found {len(reports)} reports to merge for pass {pass_number}")
     print()
 
@@ -273,20 +273,20 @@ def main() -> None:
     tmp_fd, tmp_path = tempfile.mkstemp(
         suffix=".tmp",
         dir=str(output_dir),
-        prefix="amcaa-audit-merge-",
+        prefix="caa-audit-merge-",
     )
 
     try:
         with os.fdopen(tmp_fd, "w", encoding="utf-8") as tmp_f:
             # Header
-            tmp_f.write(f"""# AMCAA Merged Audit Report (Pre-Deduplication)
+            tmp_f.write(f"""# CAA Merged Audit Report (Pre-Deduplication)
 
 **Generated:** {timestamp}
 **Pass:** {pass_number}
 **Run ID:** {run_id if run_id else "(none — legacy mode)"}
 **Reports merged:** {len(ordered_reports)}
 **Pipeline:** Audit \u2192 Verify \u2192 Gap-Fill \u2192 Consolidate
-**Status:** INTERMEDIATE \u2014 awaiting deduplication by amcaa-dedup-agent
+**Status:** INTERMEDIATE \u2014 awaiting deduplication by caa-dedup-agent
 
 ---
 
@@ -299,7 +299,7 @@ def main() -> None:
 | **NIT** | {raw_nit} |
 | **Total** | {raw_total} |
 
-**Note:** These counts may include duplicates. The amcaa-dedup-agent will produce final accurate counts.
+**Note:** These counts may include duplicates. The caa-dedup-agent will produce final accurate counts.
 
 ## Report Sources (by type)
 
@@ -390,7 +390,7 @@ def main() -> None:
     print(
         f"{CYAN}\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550{NC}"
     )
-    print(f"{CYAN}  AMCAA Intermediate Report: {intermediate_report}{NC}")
+    print(f"{CYAN}  CAA Intermediate Report: {intermediate_report}{NC}")
     print(
         f"{CYAN}\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550{NC}"
     )
@@ -405,7 +405,7 @@ def main() -> None:
     print(f"  Raw NIT:         {raw_nit}")
     print(f"  Raw Total:       {raw_total}")
     print()
-    print(f"{YELLOW}Awaiting amcaa-dedup-agent for final counts and verdict.{NC}")
+    print(f"{YELLOW}Awaiting caa-dedup-agent for final counts and verdict.{NC}")
 
     # Always exit 0 — the dedup agent determines the final verdict
     sys.exit(0)

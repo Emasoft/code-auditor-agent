@@ -1,6 +1,6 @@
 # Agent Recovery Protocol
 
-> **Maintenance Note:** This file shares ~70% content with `skills/amcaa-pr-review-and-fix-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. The pr-review-and-fix version is a superset with additional multi-pass recovery steps.
+> **Maintenance Note:** This file shares ~70% content with `skills/caa-pr-review-and-fix-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. The pr-review-and-fix version is a superset with additional multi-pass recovery steps.
 
 ## Table of Contents
 
@@ -77,7 +77,7 @@ Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or o
 
 ```bash
 # Identify the lost agent's output file by its UUID
-LOST_FILE="docs_dev/amcaa-correctness-P1-a1b2c3d4.md"
+LOST_FILE="docs_dev/caa-correctness-P1-a1b2c3d4.md"
 
 # Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
 # Then delete the partial file
@@ -119,7 +119,7 @@ Create a NEW agent with a NEW UUID for the exact same task:
 ## Step 5: Record the Failure
 
 Append an entry to the recovery log (either in the merged report or
-a separate `docs_dev/amcaa-recovery-log-P{N}.md` file):
+a separate `docs_dev/caa-recovery-log-P{N}.md` file):
 
 ```markdown
 ### Agent Recovery Log
@@ -136,7 +136,7 @@ a separate `docs_dev/amcaa-recovery-log-P{N}.md` file):
 
 The orchestrator's context was summarized and one or more agent task IDs were lost.
 
-1. List ALL `amcaa-*-P{N}-*.md` files in `docs_dev/` for the current pass number
+1. List ALL `caa-*-P{N}-*.md` files in `docs_dev/` for the current pass number
 2. Build the expected agent roster: which domains should have correctness reports? Was claims run? Was skeptical run? Was dedup run?
 3. For each expected report that is missing: check if a complete file exists under a different-than-expected UUID (the agent may have written it but the ID was lost)
 4. For each truly missing report: re-spawn from scratch (Step 4)
@@ -145,7 +145,7 @@ The orchestrator's context was summarized and one or more agent task IDs were lo
 
 If an agent writes a report with `P2` instead of `P1` (stale prompt from a cached agent definition):
 
-1. The merge script's glob `amcaa-*-P{N}*.md` will correctly EXCLUDE it (it won't match the current pass)
+1. The merge script's glob `caa-*-P{N}*.md` will correctly EXCLUDE it (it won't match the current pass)
 2. Check if the content is actually from the current pass (correct files audited, correct finding prefixes)
 3. If content is correct but filename is wrong: rename the file to the correct pass prefix
 4. If content is from a genuinely different pass: delete it and re-spawn

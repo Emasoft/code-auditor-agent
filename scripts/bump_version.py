@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version bumping script for ai-maestro-code-auditor-agent.
+"""Version bumping script for code-auditor-agent.
 
 Bumps version in .claude-plugin/plugin.json and pyproject.toml.
 

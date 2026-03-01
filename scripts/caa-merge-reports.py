@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# AMCAA Merge Reports v2 — Concatenation merger with NO deduplication.
-# Python port of amcaa-merge-reports-v2.sh, following the same patterns as
-# amcaa-merge-audit-reports.py.
+# CAA Merge Reports v2 — Concatenation merger with NO deduplication.
+# Python port of caa-merge-reports.sh, following the same patterns as
+# caa-merge-audit-reports.py.
 #
-# Deduplication is handled by the amcaa-dedup-agent (an AI agent).
+# Deduplication is handled by the caa-dedup-agent (an AI agent).
 #
 # Changes from v1:
 #   - UUID-based input filenames (no collision between agents)
@@ -15,7 +15,7 @@
 #   - Source file deletion only after successful verification
 #
 # Usage:
-#   amcaa-merge-reports-v2.py <output_dir> <pass_number> [run_id]
+#   caa-merge-reports.py <output_dir> <pass_number> [run_id]
 #
 # Arguments:
 #   output_dir           Directory containing phase reports
@@ -25,12 +25,12 @@
 #                        When omitted, merges all files for this pass (legacy behavior)
 #
 # Input files (UUID-named by agents):
-#   amcaa-correctness-P{N}-{uuid}.md  (Phase 1 -- may be multiple)
-#   amcaa-claims-P{N}-{uuid}.md       (Phase 2 -- one)
-#   amcaa-review-P{N}-{uuid}.md       (Phase 3 -- one)
+#   caa-correctness-P{N}-{uuid}.md  (Phase 1 -- may be multiple)
+#   caa-claims-P{N}-{uuid}.md       (Phase 2 -- one)
+#   caa-review-P{N}-{uuid}.md       (Phase 3 -- one)
 #
 # Output:
-#   amcaa-pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
+#   caa-pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
 #
 # Exit codes:
 #   0 -- Merge complete (dedup agent determines final verdict)
@@ -73,13 +73,13 @@ FINDING_LINE_RE = re.compile(r"^#{2,5}\s*\[")
 
 # -- Skip prefixes for filenames -----------------------------------------------
 SKIP_PREFIXES = (
-    "amcaa-pr-review-",
-    "amcaa-fixes-",
-    "amcaa-tests-",
-    "amcaa-lint-",
-    "amcaa-checkpoint-",
-    "amcaa-agents-",
-    "amcaa-recovery-",
+    "caa-pr-review-",
+    "caa-fixes-",
+    "caa-tests-",
+    "caa-lint-",
+    "caa-checkpoint-",
+    "caa-agents-",
+    "caa-recovery-",
 )
 
 
@@ -94,11 +94,11 @@ def is_skipped(basename: str) -> bool:
 
 def classify_report(basename: str) -> str:
     """Classify a report by its type prefix for phase ordering."""
-    if basename.startswith("amcaa-correctness-"):
+    if basename.startswith("caa-correctness-"):
         return "correctness"
-    elif basename.startswith("amcaa-claims-"):
+    elif basename.startswith("caa-claims-"):
         return "claims"
-    elif basename.startswith("amcaa-review-"):
+    elif basename.startswith("caa-review-"):
         return "review"
     else:
         return "other"
@@ -108,10 +108,10 @@ def main() -> None:
     # -- Argument parsing ------------------------------------------------------
     parser = argparse.ArgumentParser(
         description=(
-            "AMCAA Merge Reports v2 -- Concatenation merger with NO deduplication. "
-            "Deduplication is handled by the amcaa-dedup-agent."
+            "CAA Merge Reports v2 -- Concatenation merger with NO deduplication. "
+            "Deduplication is handled by the caa-dedup-agent."
         ),
-        usage="amcaa-merge-reports-v2.py <output_dir> <pass_number> [run_id]",
+        usage="caa-merge-reports.py <output_dir> <pass_number> [run_id]",
     )
     parser.add_argument(
         "output_dir",
@@ -139,13 +139,13 @@ def main() -> None:
 
     # Build glob pattern: if run_id provided, scope to that run only
     if run_id:
-        pattern = f"amcaa-*-P{pass_number}-R{run_id}-*.md"
+        pattern = f"caa-*-P{pass_number}-R{run_id}-*.md"
         print(f"{CYAN}Run ID: {run_id} (scoped merge){NC}")
     else:
-        pattern = f"amcaa-*-P{pass_number}-*.md"
+        pattern = f"caa-*-P{pass_number}-*.md"
         print(f"{YELLOW}No run ID -- merging ALL files for pass {pass_number} (legacy mode){NC}")
 
-    intermediate_report = output_dir / f"amcaa-pr-review-P{pass_number}-intermediate-{timestamp}.md"
+    intermediate_report = output_dir / f"caa-pr-review-P{pass_number}-intermediate-{timestamp}.md"
 
     # -- Validate input --------------------------------------------------------
     if not output_dir.is_dir():
@@ -173,7 +173,7 @@ def main() -> None:
         print(f"{RED}Error: No reports matching '{pattern}' found in '{output_dir}'{NC}")
         sys.exit(2)
 
-    print(f"{CYAN}{BOLD}AMCAA Report Merger v2 (no-dedup, UUID-aware){NC}")
+    print(f"{CYAN}{BOLD}CAA Report Merger v2 (no-dedup, UUID-aware){NC}")
     print(f"Found {len(reports)} reports to merge for pass {pass_number}")
     print()
 
@@ -265,21 +265,21 @@ def main() -> None:
     tmp_fd, tmp_path = tempfile.mkstemp(
         suffix=".tmp",
         dir=str(output_dir),
-        prefix="amcaa-merge-v2-",
+        prefix="caa-merge-v2-",
     )
 
     try:
         with os.fdopen(tmp_fd, "w", encoding="utf-8") as tmp_f:
             # Header (matches the bash script output format exactly)
             tmp_f.write(
-                f"# AMCAA Merged Report (Pre-Deduplication)\n"
+                f"# CAA Merged Report (Pre-Deduplication)\n"
                 f"\n"
                 f"**Generated:** {timestamp}\n"
                 f"**Pass:** {pass_number}\n"
                 f"**Run ID:** {run_id if run_id else '(none -- legacy mode)'}\n"
                 f"**Reports merged:** {len(ordered_reports)}\n"
                 f"**Pipeline:** Code Correctness \u2192 Claim Verification \u2192 Skeptical Review\n"
-                f"**Status:** INTERMEDIATE \u2014 awaiting deduplication by amcaa-dedup-agent\n"
+                f"**Status:** INTERMEDIATE \u2014 awaiting deduplication by caa-dedup-agent\n"
                 f"\n"
                 f"---\n"
                 f"\n"
@@ -293,7 +293,7 @@ def main() -> None:
                 f"| **Total** | {raw_total} |\n"
                 f"\n"
                 f"**Note:** These counts may include duplicates. "
-                f"The amcaa-dedup-agent will produce final accurate counts.\n"
+                f"The caa-dedup-agent will produce final accurate counts.\n"
                 f"\n"
             )
 
@@ -373,7 +373,7 @@ def main() -> None:
     print()
     separator = "\u2550" * 59
     print(f"{CYAN}{separator}{NC}")
-    print(f"{CYAN}  AMCAA Intermediate Report: {intermediate_report}{NC}")
+    print(f"{CYAN}  CAA Intermediate Report: {intermediate_report}{NC}")
     print(f"{CYAN}{separator}{NC}")
     print()
     print(f"  Raw MUST-FIX:    {raw_must_fix}")
@@ -381,7 +381,7 @@ def main() -> None:
     print(f"  Raw NIT:         {raw_nit}")
     print(f"  Raw Total:       {raw_total}")
     print()
-    print(f"{YELLOW}Awaiting amcaa-dedup-agent for final counts and verdict.{NC}")
+    print(f"{YELLOW}Awaiting caa-dedup-agent for final counts and verdict.{NC}")
 
     # Always exit 0 -- the dedup agent determines the final verdict
     sys.exit(0)

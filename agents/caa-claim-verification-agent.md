@@ -1,5 +1,5 @@
 ---
-name: amcaa-claim-verification-agent
+name: caa-claim-verification-agent
 description: >
   Extracts every factual claim from the PR description and commit message, then verifies
   each one against the actual code. This agent catches the #1 source of missed bugs:
@@ -21,7 +21,7 @@ capabilities:
   - Detect scaffolded-but-not-wired features, incomplete renames, dead type fields
 ---
 
-# AMCAA Claim Verification Agent
+# CAA Claim Verification Agent
 
 You are a claim verification auditor. Your job is to read the PR description and commit
 message, extract every factual claim the author makes about what the code does, then
@@ -117,7 +117,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 ```markdown
 # Claim Verification Report
 
-**Agent:** amcaa-claim-verification-agent
+**Agent:** caa-claim-verification-agent
 **PR:** #{PR_NUMBER}
 **Date:** {ISO timestamp}
 **Claims extracted:** {total}
@@ -195,7 +195,7 @@ user: |
   PR_NUMBER: 206
   PR_DESCRIPTION: "Added fromLabel/toLabel population via registry lookup in convertAMPToMessage()"
   COMMIT_MESSAGES: "fix: populate display labels from agent registry"
-  REPORT_PATH: docs_dev/amcaa-claims.md
+  REPORT_PATH: docs_dev/caa-claims.md
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
@@ -204,8 +204,8 @@ assistant: |
   Traces return statement — finds fromLabel and toLabel are NOT in the return object.
   The type declares them, the claim mentions them, but the code never assigns them.
   Marks as NOT IMPLEMENTED with file:line evidence.
-  Writes report to docs_dev/amcaa-claims.md.
-  Returns: "[DONE] claim-verification - 5 claims, 1 failed, 0 partial. Report: docs_dev/amcaa-claims.md"
+  Writes report to docs_dev/caa-claims.md.
+  Returns: "[DONE] claim-verification - 5 claims, 1 failed, 0 partial. Report: docs_dev/caa-claims.md"
 </example>
 
 <example>
@@ -214,7 +214,7 @@ user: |
   PR_NUMBER: 210
   PR_DESCRIPTION: "Bumped version to 0.22.5 across all files"
   COMMIT_MESSAGES: "chore: bump version to 0.22.5"
-  REPORT_PATH: docs_dev/amcaa-claims.md
+  REPORT_PATH: docs_dev/caa-claims.md
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
@@ -222,8 +222,8 @@ assistant: |
   Searches for version references in package.json, version.json, docs/ai-index.html, README.md.
   Finds version.json has 0.22.5, package.json has 0.22.5, but ai-index.html prose section still says 0.22.4.
   Marks as PARTIALLY IMPLEMENTED with all file:line evidence.
-  Writes report to docs_dev/amcaa-claims.md.
-  Returns: "[DONE] claim-verification - 3 claims, 0 failed, 1 partial. Report: docs_dev/amcaa-claims.md"
+  Writes report to docs_dev/caa-claims.md.
+  Returns: "[DONE] claim-verification - 3 claims, 0 failed, 1 partial. Report: docs_dev/caa-claims.md"
 </example>
 
 ## Special Cases
@@ -252,7 +252,7 @@ assistant: |
 - [ ] I marked each claim: VERIFIED / PARTIALLY IMPLEMENTED / NOT IMPLEMENTED / CANNOT VERIFY
 - [ ] I did NOT skip claims that seemed "obvious" (obvious claims fail most often)
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: amcaa-claims-P{N}-{uuid}.md (include R{RUN_ID} as amcaa-claims-P{N}-R{RUN_ID}-{uuid}.md when RUN_ID is provided by the orchestrator for multi-pass mode; single-pass mode omits R{RUN_ID})
+- [ ] My report file uses the UUID filename: caa-claims-P{N}-{uuid}.md (include R{RUN_ID} as caa-claims-P{N}-R{RUN_ID}-{uuid}.md when RUN_ID is provided by the orchestrator for multi-pass mode; single-pass mode omits R{RUN_ID})
 - [ ] I checked cross-file consistency (versions, types, configs match everywhere)
 - [ ] The verified/failed/partial counts in my return message match the report
 - [ ] My return message to the orchestrator is exactly 1-2 lines (no code blocks, no verbose output, full details in report file only)

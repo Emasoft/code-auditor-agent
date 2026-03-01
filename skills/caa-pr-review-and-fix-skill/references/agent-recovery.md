@@ -1,6 +1,6 @@
 # Agent Recovery Protocol
 
-> **Maintenance Note:** This file shares ~70% content with `skills/amcaa-pr-review-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. This version is a superset with additional multi-pass recovery steps.
+> **Maintenance Note:** This file shares ~70% content with `skills/caa-pr-review-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. This version is a superset with additional multi-pass recovery steps.
 
 ## Table of Contents
 
@@ -77,7 +77,7 @@ Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or o
 
 ```bash
 # Identify the lost agent's output file by its UUID
-LOST_FILE="docs_dev/amcaa-correctness-P3-a1b2c3d4.md"
+LOST_FILE="docs_dev/caa-correctness-P3-a1b2c3d4.md"
 
 # Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
 # Then delete the partial file
@@ -130,7 +130,7 @@ Create a NEW agent with a NEW UUID for the exact same task:
 ## Step 5: Record the Failure
 
 Append an entry to the recovery log in the pass audit trail (either in the merged report or
-a separate `docs_dev/amcaa-recovery-log-P{N}.md` file):
+a separate `docs_dev/caa-recovery-log-P{N}.md` file):
 
 ```markdown
 ### Agent Recovery Log
@@ -148,7 +148,7 @@ a separate `docs_dev/amcaa-recovery-log-P{N}.md` file):
 
 The orchestrator's context was summarized and one or more agent task IDs were lost.
 
-1. Read the agent manifest file: `docs_dev/amcaa-agents-P{N}-R{RUN_ID}.json`
+1. Read the agent manifest file: `docs_dev/caa-agents-P{N}-R{RUN_ID}.json`
    - This file records all spawned agents, their domains, prefixes, and expected outputs
    - It survives context compaction because it's on disk
 2. For each agent in the manifest, check if its output file exists and is complete
@@ -156,18 +156,18 @@ The orchestrator's context was summarized and one or more agent task IDs were lo
    - File exists but incomplete -> agent died mid-execution (Step 3 cleanup)
    - File missing -> agent never wrote output (re-spawn needed)
 3. If the manifest file itself was lost (extreme case), fall back to glob-based recovery:
-   - List ALL `amcaa-*-P{N}-R{RUN_ID}-*.md` files in `docs_dev/`
+   - List ALL `caa-*-P{N}-R{RUN_ID}-*.md` files in `docs_dev/`
    - Read first 5 lines of each to identify domain from the report header
    - Cross-reference with the expected domain list
 4. For each truly missing report: re-spawn from scratch (Step 4)
 5. For fix agents: check `git log` for the most recent fix commit -- if fixes were already committed, the fix agent completed successfully even though its task ID was lost
-6. For fix agents: also check checkpoint file `docs_dev/amcaa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` to see which findings were already resolved
+6. For fix agents: also check checkpoint file `docs_dev/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` to see which findings were already resolved
 
 ### Agent wrote report with wrong pass number (version/cache collision)
 
 If an agent writes a report with `P2` instead of `P3` (stale prompt from a cached agent definition):
 
-1. The merge script's glob `amcaa-*-P{N}*.md` will correctly EXCLUDE it (it won't match the current pass)
+1. The merge script's glob `caa-*-P{N}*.md` will correctly EXCLUDE it (it won't match the current pass)
 2. Check if the content is actually from the current pass (correct files audited, correct finding prefixes)
 3. If content is correct but filename is wrong: rename the file to the correct pass prefix
 4. If content is from a genuinely different pass: delete it and re-spawn
@@ -203,5 +203,5 @@ Copy this checklist and track your progress:
 - [ ] If file incomplete/missing: partial artifacts cleaned up
 - [ ] For fix agents: `git diff` checked and partial changes stashed if present
 - [ ] Replacement agent spawned with new UUID, same prompt and finding prefix
-- [ ] Recovery log entry written to `docs_dev/amcaa-recovery-log-P{N}.md`
+- [ ] Recovery log entry written to `docs_dev/caa-recovery-log-P{N}.md`
 - [ ] If 3 consecutive failures: escalated to user

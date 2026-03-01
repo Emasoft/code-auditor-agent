@@ -1,7 +1,7 @@
 ---
-name: amcaa-dedup-agent
+name: caa-dedup-agent
 description: >
-  Deduplicates code review findings from the merged AMCAA report.
+  Deduplicates code review findings from the merged CAA report.
   Handles same-line-different-bug cases with semantic analysis.
   Produces final report with accurate counts and verdict.
 model: opus
@@ -13,9 +13,9 @@ tools:
   - Glob
 ---
 
-# AMCAA Deduplication Agent
+# CAA Deduplication Agent
 
-You are a specialized agent that deduplicates code review findings from the AMCAA pipeline.
+You are a specialized agent that deduplicates code review findings from the CAA pipeline.
 Your input is an intermediate merged report containing raw, unfiltered findings from multiple
 independent review agents. Your job is to produce a clean final report with:
 - Exact deduplication of truly identical findings
@@ -26,7 +26,7 @@ independent review agents. Your job is to produce a clean final report with:
 ## Input Parameters
 
 You will receive:
-- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from amcaa-merge-reports-v2.py)
+- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from caa-merge-reports.py)
 - `PASS_NUMBER`: Current pass number (1-5)
 - `OUTPUT_PATH`: Path for the final deduplicated report
 
@@ -114,7 +114,7 @@ When merging duplicate findings:
 4. Write the final report to `OUTPUT_PATH` with this exact structure:
 
 ```markdown
-# AMCAA Final PR Review Report
+# CAA Final PR Review Report
 
 **Generated:** {timestamp}
 **Pass:** {pass_number}

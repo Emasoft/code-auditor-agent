@@ -1,5 +1,5 @@
 ---
-name: amcaa-pr-review-and-fix-skill
+name: caa-pr-review-and-fix-skill
 description: >
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review and fix the PR", "review and fix PR", "audit and fix the PR", "pre-merge review and fix".
@@ -7,7 +7,7 @@ version: 2.0.0
 author: Emasoft
 license: MIT
 tags:
-  - amcaa-pr-review
+  - caa-pr-review
   - code-audit
   - claim-verification
   - quality-gate
@@ -55,7 +55,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 - `gh` CLI installed and authenticated (for `gh pr view`, `gh pr diff`)
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output. Create it if missing, and ensure it is in `.gitignore`.
-- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` must exist
+- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` must exist
 - $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes). Run `git status` to verify.
 
@@ -66,7 +66,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 | `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
 | `MAX_PASSES` | N | int | `25` | Maximum review-fix loop iterations |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
-| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` | Path to merge script |
+| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees. Prevents concurrent file conflicts and gives each agent a clean snapshot. |
 
 ## Use When
@@ -121,7 +121,7 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES:
     STOP -- write escalation report and present to user:
     "Maximum pass limit (25) reached. {N} issues remain unresolved.
-     Manual intervention required. See: docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md"
+     Manual intervention required. See: docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md"
 ```
 
 ## Report Naming Convention
@@ -131,21 +131,21 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 
 | Report | Filename |
 |--------|----------|
-| Correctness (per-domain) | `docs_dev/amcaa-correctness-P{N}-R{RUN_ID}-{uuid}.md` |
-| Claim verification | `docs_dev/amcaa-claims-P{N}-R{RUN_ID}-{uuid}.md` |
-| Skeptical review | `docs_dev/amcaa-review-P{N}-R{RUN_ID}-{uuid}.md` |
-| Agent manifest | `docs_dev/amcaa-agents-P{N}-R{RUN_ID}.json` |
-| Merged intermediate | `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md` |
-| Final dedup report | `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md` |
-| Fix checkpoint (per-domain) | `docs_dev/amcaa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
-| Fix summary (per-domain) | `docs_dev/amcaa-fixes-done-P{N}-{domain}.md` |
-| Test outcome | `docs_dev/amcaa-tests-outcome-P{N}.md` |
-| Lint outcome | `docs_dev/amcaa-lint-outcome-P{N}.md` |
+| Correctness (per-domain) | `docs_dev/caa-correctness-P{N}-R{RUN_ID}-{uuid}.md` |
+| Claim verification | `docs_dev/caa-claims-P{N}-R{RUN_ID}-{uuid}.md` |
+| Skeptical review | `docs_dev/caa-review-P{N}-R{RUN_ID}-{uuid}.md` |
+| Agent manifest | `docs_dev/caa-agents-P{N}-R{RUN_ID}.json` |
+| Merged intermediate | `docs_dev/caa-pr-review-P{N}-intermediate-{timestamp}.md` |
+| Final dedup report | `docs_dev/caa-pr-review-P{N}-{timestamp}.md` |
+| Fix checkpoint (per-domain) | `docs_dev/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
+| Fix summary (per-domain) | `docs_dev/caa-fixes-done-P{N}-{domain}.md` |
+| Test outcome | `docs_dev/caa-tests-outcome-P{N}.md` |
+| Lint outcome | `docs_dev/caa-lint-outcome-P{N}.md` |
 | Lint summary (JSON) | `docs_dev/megalinter-P{N}/lint-summary.json` |
-| Lint fixes | `docs_dev/amcaa-lint-fixes-P{N}.md` |
-| Recovery log | `docs_dev/amcaa-recovery-log-P{N}.md` |
-| Final clean report | `docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md` |
-| Escalation (if max reached) | `docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md` |
+| Lint fixes | `docs_dev/caa-lint-fixes-P{N}.md` |
+| Recovery log | `docs_dev/caa-recovery-log-P{N}.md` |
+| Final clean report | `docs_dev/caa-pr-review-and-fix-FINAL-{timestamp}.md` |
+| Escalation (if max reached) | `docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md` |
 
 ### UUID Filename Generation
 
@@ -153,7 +153,7 @@ Each agent generates a UUID at startup and uses it in its output filename:
 
 ```bash
 UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-REPORT_PATH="docs_dev/amcaa-correctness-P${PASS}-R${RUN_ID}-${UUID}.md"
+REPORT_PATH="docs_dev/caa-correctness-P${PASS}-R${RUN_ID}-${UUID}.md"
 ```
 
 The combination of RUN_ID + UUID provides two levels of isolation:
@@ -223,7 +223,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 
 - Small PRs with 1-3 domains (overhead outweighs benefit)
 - When disk space is limited
-- When agents don't modify code (review-only mode with `amcaa-pr-review-skill`)
+- When agents don't modify code (review-only mode with `caa-pr-review-skill`)
 
 ---
 
@@ -296,14 +296,14 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES (25):
     STOP. Write escalation report:
     "Maximum pass limit reached. {remaining_count} issues persist after {MAX_PASSES} passes.
-     Review: docs_dev/amcaa-pr-review-P{last_pass}-{timestamp}.md
+     Review: docs_dev/caa-pr-review-P{last_pass}-{timestamp}.md
      Manual intervention required."
     Present to user and exit.
 
 Run PROCEDURE 1 with new PASS_NUMBER.
 
 if PROCEDURE 1 finds ZERO issues (all severities -- MUST-FIX, SHOULD-FIX, NIT):
-    Write final report: docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md
+    Write final report: docs_dev/caa-pr-review-and-fix-FINAL-{timestamp}.md
     Present final summary to user and exit.
 else:
     Run PROCEDURE 2 with the new findings.
@@ -330,10 +330,10 @@ When the loop terminates with zero issues:
 | {N}  | 0           | --          | {passed}/{total} | {clean/skipped} |
 
 ### Reports Generated
-- Pass 1 review: docs_dev/amcaa-pr-review-P1-{timestamp}.md
-- Pass 1 fixes: docs_dev/amcaa-fixes-done-P1-{domain}.md
+- Pass 1 review: docs_dev/caa-pr-review-P1-{timestamp}.md
+- Pass 1 fixes: docs_dev/caa-fixes-done-P1-{domain}.md
 - ...
-- Final clean review: docs_dev/amcaa-pr-review-P{N}-{timestamp}.md
+- Final clean review: docs_dev/caa-pr-review-P{N}-{timestamp}.md
 
 ### All Fixes Applied
 1. [CC-P1-001] {title} -- {file} (Pass 1)
@@ -365,14 +365,14 @@ The pipeline produces these deliverables across all passes:
 
 | Deliverable | Location | When |
 |-------------|----------|------|
-| Per-pass review report (deduplicated) | `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md` | After each Procedure 1 |
-| Per-domain fix summaries | `docs_dev/amcaa-fixes-done-P{N}-{domain}.md` | After each Procedure 2 |
-| Test outcome per pass | `docs_dev/amcaa-tests-outcome-P{N}.md` | After each test run |
-| Lint outcome per pass | `docs_dev/amcaa-lint-outcome-P{N}.md` | After each lint run (Docker only) |
+| Per-pass review report (deduplicated) | `docs_dev/caa-pr-review-P{N}-{timestamp}.md` | After each Procedure 1 |
+| Per-domain fix summaries | `docs_dev/caa-fixes-done-P{N}-{domain}.md` | After each Procedure 2 |
+| Test outcome per pass | `docs_dev/caa-tests-outcome-P{N}.md` | After each test run |
+| Lint outcome per pass | `docs_dev/caa-lint-outcome-P{N}.md` | After each lint run (Docker only) |
 | Lint summary JSON | `docs_dev/megalinter-P{N}/lint-summary.json` | After each lint run (Docker only) |
-| Recovery log | `docs_dev/amcaa-recovery-log-P{N}.md` | When agent failures occur |
-| Final report (zero issues) | `docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md` | Pipeline completion |
-| Escalation report (max passes) | `docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md` | If limit reached |
+| Recovery log | `docs_dev/caa-recovery-log-P{N}.md` | When agent failures occur |
+| Final report (zero issues) | `docs_dev/caa-pr-review-and-fix-FINAL-{timestamp}.md` | Pipeline completion |
+| Escalation report (max passes) | `docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md` | If limit reached |
 
 **Key outputs for the user:**
 - **Final report** summarizes all passes, all fixes applied, and final verdict (APPROVE)
@@ -395,7 +395,7 @@ The pipeline produces these deliverables across all passes:
    Full findings go in the report files. This prevents context flooding AND file collisions.
 
 4. **Two-stage merge: script + AI agent.** The bash merge script (v2) does simple concatenation.
-   The `amcaa-dedup-agent` does semantic deduplication. NEVER rely on the merge script alone
+   The `caa-dedup-agent` does semantic deduplication. NEVER rely on the merge script alone
    for dedup -- it deliberately does NOT deduplicate.
 
 5. **Dedup agent determines the verdict.** The merge script always exits 0. The dedup agent's
@@ -416,7 +416,7 @@ The pipeline produces these deliverables across all passes:
    This eliminates ID collisions between parallel correctness agents.
 
 10. **UUID-based report filenames.** All agent output files MUST include a UUID:
-    `amcaa-{phase}-P{N}-{uuid}.md`. This prevents file overwrites between concurrent agents.
+    `caa-{phase}-P{N}-{uuid}.md`. This prevents file overwrites between concurrent agents.
 
 11. **Same line, different bugs = KEEP BOTH.** The dedup agent must never merge findings
     that describe different issues at the same code location. Two bugs at line 42 are
@@ -440,7 +440,7 @@ The pipeline produces these deliverables across all passes:
 
 - If any Phase 1 agent fails, re-run it for that domain only (with a new UUID)
 - If Phase 2 or 3 fails, re-run that phase (they are single agents, new UUID)
-- If the merge script (v2) exits with code 2, there's a fatal error -- investigate
+- If the merge script exits with code 2, there's a fatal error -- investigate
 - If the dedup agent reports MUST-FIX > 0, proceed to PROCEDURE 2
 - If the dedup agent fails, re-run it with the same intermediate report
 - If `gh` CLI is not authenticated, stop and ask the user to run `gh auth login`
@@ -509,8 +509,8 @@ See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with ful
 
 ## Resources
 
-- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py`
-- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/amcaa-dedup-agent.md`
+- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py`
+- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/caa-dedup-agent.md`
 - Other agents: `$CLAUDE_PLUGIN_ROOT/agents/`
 - Report output directory: `docs_dev/`
 
