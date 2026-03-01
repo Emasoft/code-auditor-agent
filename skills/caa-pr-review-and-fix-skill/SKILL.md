@@ -445,19 +445,13 @@ The pipeline produces these deliverables across all passes:
 ## Error Handling
 
 - If any Phase 1 agent fails, re-run it for that domain only (with a new UUID)
-- If Phase 2, 3, or 4 fails, re-run that phase (they are single agents, new UUID)
-- If the merge script exits with code 2, there's a fatal error -- investigate
-- If the dedup agent reports MUST-FIX > 0, proceed to PROCEDURE 2
-- If the dedup agent fails, re-run it with the same intermediate report
-- If `gh` CLI is not authenticated, stop and ask the user to run `gh auth login`
-- If a fix agent fails, re-run for that domain only
-- If tests fail after fixes, spawn domain-specific agents to investigate and fix
+- If Phase 2, 3, or 4 fails, re-run that phase (single agents, new UUID)
+- If merge script exits code 2 or byte-size verification fails, investigate (do NOT delete source files)
+- If dedup agent reports MUST-FIX > 0, proceed to PROCEDURE 2; if dedup fails, re-run on same intermediate
+- If `gh` CLI not authenticated, stop and ask user to run `gh auth login`
+- If fix agent fails, re-run for that domain; if tests fail, spawn domain agents to investigate
 - If max passes reached, write escalation report and stop
-- If merge byte-size verification fails, do NOT delete source files -- investigate
-- If Docker is not available, skip MegaLinter entirely -- log "[SKIP]" and proceed to commit
-- If the MegaLinter Docker image pull fails, skip linting for this pass (don't block the pipeline)
-- If the linter script crashes (Python error, not lint errors), log the error and skip linting
-- If lint-fix loop exhausts 3 attempts without reducing error count, stop the lint loop and escalate to user -- proceed to commit with lint errors noted in the pass report
+- Docker/lint failures: skip MegaLinter and proceed to commit (linting is enhancement, not gate). If lint-fix loop exhausts 3 attempts, escalate to user
 
 ---
 
@@ -479,37 +473,15 @@ See [Agent Recovery Protocol](references/agent-recovery.md) for full protocol.
 
 ### Recovery Checklist
 
-Copy this checklist and track your progress:
-
-- [ ] Failure detected and classified
-- [ ] Loss verified (output file checked)
-- [ ] Partial artifacts cleaned up
-- [ ] Replacement agent spawned with new UUID
-- [ ] Recovery log entry written
-- [ ] If 3 consecutive failures: escalated to user
+- [ ] Failure detected and classified; loss verified (output file checked)
+- [ ] Partial artifacts cleaned up; replacement agent spawned with new UUID
+- [ ] Recovery log entry written; if 3 consecutive failures: escalated to user
 
 ---
 
-## Lessons Learned (Baked Into This Pipeline)
+## Lessons Learned
 
-Key insights from real incidents that shaped this pipeline's design.
-
-See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with full context.
-
-**Summary:**
-1. Why swarms miss the big picture and how verification compensates
-2. Why PR descriptions cannot be trusted as implementation evidence
-3. How to catch absence bugs that produce no errors
-4. Why cross-file consistency requires holistic review agents
-5. Why UX judgment requires a separate review phase
-6. Why the stranger's perspective catches what familiarity misses
-7. Fixes introduce regressions -- review-fix loop is essential
-8. Commit between passes for clean diffs
-9. Linting catches what reviewers and tests miss
-10. Stale files poison the pipeline -- use Run ID isolation
-11. Agent rate limits are inevitable -- use checkpoint files
-12. Line numbers drift across passes -- always re-verify
-13. Task IDs are ephemeral -- use on-disk agent manifest
+See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with full context (swarm blind spots, PR description lies, absence bugs, cross-file consistency, UX judgment, stranger's perspective, regression loops, clean diffs, lint catches, stale file isolation, rate limit checkpoints, line drift, ephemeral task IDs).
 
 ---
 
@@ -523,13 +495,4 @@ See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with ful
 
 ## Examples
 
-```
-# Full review-and-fix pipeline on PR 206
-User: "review and fix PR 206"
--> Pass 1: Review finds 8 issues (3 MUST-FIX, 4 SHOULD-FIX, 1 NIT)
--> Pass 1: Fix agents resolve all 8 issues, tests pass, commit
--> Pass 2: Review finds 2 new issues (regressions from fixes)
--> Pass 2: Fix agents resolve 2 issues, tests pass, commit
--> Pass 3: Review finds 0 issues
--> Final report presented: "APPROVE -- zero issues after 3 passes"
-```
+See [examples.md](references/examples.md) for usage examples.

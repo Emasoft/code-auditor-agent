@@ -433,14 +433,15 @@ original finding ID cross-references.
 
 See [Agent Recovery Protocol](references/agent-recovery.md) for full recovery procedures.
 
-**Contents:**
-- How to detect agent failures (crash, OOM, timeout, API errors, compaction loss)
-- How to track agents using manifest fields (taskId, domain, outputPath, status)
-- How to verify whether an agent's output was lost or corrupted
-- How to clean up partial artifacts from failed agents
-- How to re-spawn a failed task with a new UUID (max 3 retries)
-- How to record failures in the recovery log
-- How to handle special cases: compaction recovery, wrong pass number, domain collision
+**Reference file sections (agent-recovery.md):**
+- [Failure Modes & Detection](references/agent-recovery.md#failure-modes--detection)
+- [Step 1: Detect the Loss](references/agent-recovery.md#step-1-detect-the-loss)
+- [Step 2: Verify the Loss](references/agent-recovery.md#step-2-verify-the-loss)
+- [Step 3: Clean Up Partial Artifacts](references/agent-recovery.md#step-3-clean-up-partial-artifacts)
+- [Step 4: Re-Spawn the Task](references/agent-recovery.md#step-4-re-spawn-the-task)
+- [Step 5: Record the Failure](references/agent-recovery.md#step-5-record-the-failure)
+- [Special Cases](references/agent-recovery.md#special-cases) (compaction recovery, wrong pass number, domain collision)
+- [Agent Recovery Checklist](references/agent-recovery.md#agent-recovery-checklist)
 
 ### Recovery Checklist
 
@@ -481,23 +482,12 @@ User: "re-run the PR review"
 - Agents: `$CLAUDE_PLUGIN_ROOT/agents/`
 - Report output directory: `docs_dev/`
 
-## Lessons Learned (Baked Into This Pipeline)
+## Lessons Learned
 
-See [Lessons Learned](references/lessons-learned.md) for the full list with context.
-
-**Contents:**
-- Why swarms miss the big picture and how verification compensates
-- Why PR descriptions cannot be trusted as implementation evidence
-- How to catch absence bugs that produce no errors
-- Why cross-file consistency requires holistic review agents
-- Why UX judgment requires a separate review phase
-- Why the stranger's perspective catches what familiarity misses
+See [Lessons Learned](references/lessons-learned.md) for the full list with context (swarm blind spots, PR description lies, absence bugs, cross-file consistency, UX judgment, stranger's perspective).
 
 ### Lessons Checklist
 
-Copy this checklist and track your progress:
-
-- [ ] All four phases (correctness, claims, skeptical, security) are included in every review
-- [ ] PR description claims are verified against actual code, not trusted at face value
-- [ ] Cross-file consistency is checked (version strings, shared constants, API contracts)
-- [ ] Security review covers OWASP Top 10, dependency vulnerabilities, and secrets exposure
+- [ ] All four phases (correctness, claims, skeptical, security) included in every review
+- [ ] PR description claims verified against actual code, not trusted at face value
+- [ ] Cross-file consistency checked; security review covers OWASP Top 10 and secrets exposure
