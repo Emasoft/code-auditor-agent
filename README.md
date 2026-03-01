@@ -5,7 +5,6 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 
-
 **Version:** 3.1.0
 **License:** MIT
 **Author:** Emasoft

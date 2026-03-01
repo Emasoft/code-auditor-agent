@@ -255,8 +255,8 @@ def update_readme_badges(version: str, dry_run: bool) -> bool:
         new_lines = lines[:badges_start] + badge_lines + lines[badges_end:]
         action = "Replaced"
     else:
-        # Insert badges after heading line
-        badge_lines = ["\n"] + [bl + "\n" for bl in badges.split("\n")] + ["\n"]
+        # Insert badges after heading line (single blank line separator)
+        badge_lines = ["\n"] + [bl + "\n" for bl in badges.split("\n")]
         new_lines = lines[: heading_idx + 1] + badge_lines + lines[heading_idx + 1 :]
         action = "Inserted"
 
