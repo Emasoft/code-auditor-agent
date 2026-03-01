@@ -57,6 +57,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 - `docs_dev/` directory must exist for report output. Create it if missing, and ensure it is in `.gitignore`.
 - The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` must be executable
 - $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes). Run `git status` to verify.
 
 ## Parameters
 
@@ -66,6 +67,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 | `MAX_PASSES` | N | int | `25` | Maximum review-fix loop iterations |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
 | `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` | Path to merge script |
+| `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees. Prevents concurrent file conflicts and gives each agent a clean snapshot. |
 
 ## Use When
 
@@ -189,6 +191,39 @@ This guarantees zero ID collisions because:
 **Before each pass**, run the pre-pass cleanup protocol (see Procedure 1 reference). Do NOT delete merged reports or fix summaries from previous passes -- they form the audit trail.
 
 The merge script v2 uses pass-specific and run-specific glob patterns, so prior-pass and prior-run files are automatically excluded.
+
+---
+
+## Worktree Mode
+
+When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: "worktree"` in the Agent tool. This is useful for large PRs with many domains where concurrent agents might otherwise see each other's in-progress changes.
+
+### How It Works
+
+1. **Before spawning**, resolve the absolute path to `REPORT_DIR` (e.g., `$(pwd)/docs_dev/`). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
+
+2. **Review agents** (Phase 1-3, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
+
+3. **Fix agents** (Procedure 2): Each gets an isolated worktree on a separate branch. They modify code in their worktree and write reports to the main `REPORT_DIR`. After ALL fix agents complete, the orchestrator merges their branches back to the current branch sequentially:
+   ```
+   for each completed fix agent worktree:
+     git merge --no-edit {worktree_branch}
+     # If merge conflict: resolve manually or escalate to user
+   ```
+
+4. **Spawning pattern addition**: When USE_WORKTREES is true, add `isolation: "worktree"` to every Task() call. The agent prompt must include `REPORT_DIR: {absolute_docs_dev_path}` so the agent writes reports outside its worktree.
+
+### Prerequisites for Worktree Mode
+
+- Git repository must be in a clean state (no uncommitted changes)
+- Sufficient disk space for N worktree copies (one per concurrent agent)
+- The `REPORT_DIR` must be an absolute path accessible from all worktrees
+
+### When NOT to Use Worktrees
+
+- Small PRs with 1-3 domains (overhead outweighs benefit)
+- When disk space is limited
+- When agents don't modify code (review-only mode with `amcaa-pr-review-skill`)
 
 ---
 

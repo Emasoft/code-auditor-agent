@@ -27,6 +27,7 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 - `docs_dev/` directory must exist for report output
 - The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` must be executable
 - $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes)
 
 ## Parameters
 
@@ -35,6 +36,11 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 | `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
 | `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` | Path to merge script |
+| `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees for isolation |
+
+### Worktree Mode
+
+When `USE_WORKTREES=true`, agents run in isolated git worktrees. Before spawning, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/`. Pass this absolute path in every agent prompt and add `isolation: "worktree"` to every Task() call. Since this skill is review-only (no code modifications), worktrees are auto-cleaned after each agent completes.
 
 ## Use when
 
@@ -110,11 +116,12 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       FILES: {file_list}
       AGENT_PREFIX: {AGENT_PREFIX}
       FINDING_ID_PREFIX: CC-P1-{AGENT_PREFIX}
+      REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
         UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-      Write your report to: docs_dev/amcaa-correctness-P1-${UUID}.md
+      Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P1-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
       Use finding IDs starting with {FINDING_ID_PREFIX}-001.
@@ -125,7 +132,8 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       - Return to orchestrator ONLY: "[DONE/FAILED] correctness-{domain} - brief result. Report: {path}"
       - Max 2 lines back to orchestrator
     """,
-    run_in_background: true
+    run_in_background: true,
+    isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
   )
 ```
 
@@ -150,11 +158,12 @@ Task(
     PR_DESCRIPTION: (read from `gh pr view {number} --json body --jq .body`)
     COMMIT_MESSAGES: (read from `gh pr view {number} --json commits`)
     FINDING_ID_PREFIX: CV-P1
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-    Write your report to: docs_dev/amcaa-claims-P1-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P1-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
     Verify each claim against the actual code.
@@ -165,7 +174,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] claim-verification - brief result. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -192,15 +202,16 @@ Task(
   prompt: """
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (provide the text or path)
-    DIFF: (save `gh pr diff {number}` to docs_dev/pr-diff.txt and provide path)
-    CORRECTNESS_REPORTS: docs_dev/amcaa-correctness-P1-*.md
-    CLAIMS_REPORT: docs_dev/amcaa-claims-P1-*.md
+    DIFF: (save `gh pr diff {number}` to {ABSOLUTE_REPORT_DIR}/pr-diff.txt and provide path)
+    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P1-*.md
+    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P1-*.md
     FINDING_ID_PREFIX: SR-P1
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-    Write your report to: docs_dev/amcaa-review-P1-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P1-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.
     Read the full diff holistically. Check for UX concerns, breaking changes,
@@ -212,7 +223,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] skeptical-review - Verdict: X, brief result. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -223,10 +235,10 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (bash script — simple concatenation, no dedup)**
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh docs_dev/ 1
+bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh ${REPORT_DIR} 1
 ```
 
-This produces an intermediate report at `docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md`.
+This produces an intermediate report at `${REPORT_DIR}/amcaa-pr-review-P1-intermediate-{timestamp}.md`.
 The v2 script verifies merged file integrity and deletes source files after verification.
 
 **Stage 2: Deduplicate (AI agent — semantic analysis)**
@@ -235,9 +247,10 @@ The v2 script verifies merged file integrity and deletes source files after veri
 Task(
   subagent_type: "amcaa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P1-intermediate-{timestamp}.md
     PASS_NUMBER: 1
-    OUTPUT_PATH: docs_dev/amcaa-pr-review-P1-{timestamp}.md
+    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P1-{timestamp}.md
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     Read the intermediate merged report.
     Deduplicate findings semantically (see agent instructions).
@@ -248,7 +261,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] dedup - {raw}→{dedup} ({removed} removed). Verdict: {VERDICT}. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 

@@ -39,6 +39,10 @@ parameters:
     description: "Maximum fix-verify iterations (default 5)"
     required: false
     default: "5"
+  - name: worktrees
+    description: Run agent swarms in isolated git worktrees
+    required: false
+    default: "false"
 ---
 
 # Codebase Audit & Fix
@@ -64,6 +68,7 @@ This command launches the `amcaa-codebase-audit-and-fix-skill` skill pipeline.
 7. **Phase 6** (if --fix): Applies fixes from TODOs
 8. **Phase 7** (if --fix): Verifies fixes, loops if regressions found
 9. **Phase 8**: Final merged report
+- When `--worktrees` is enabled, each agent swarm runs in isolated git worktrees. Fix agent branches are merged back sequentially after completion.
 
 ## Reports
 

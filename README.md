@@ -94,6 +94,23 @@ Each pass runs the PR Review Pipeline (three-phase review) then a fix cycle (fix
 
 Fix agents are dynamically selected from whatever agents are available in the user's Claude Code instance, with `general-purpose` as the universal fallback.
 
+### Worktree Mode (Optional)
+
+All three skills support an optional `USE_WORKTREES=true` parameter that runs agent swarms in isolated git worktrees. This is useful for:
+
+- **Large PRs** with many domains where concurrent agents might see each other's in-progress changes
+- **Fix pipelines** where multiple fix agents modify code simultaneously
+- **Isolation guarantees** — each agent gets a clean, independent snapshot of the repo
+
+To enable: include "use worktrees" or "with worktrees" in your request:
+
+```text
+review and fix PR 206 with worktrees
+/audit-codebase --scope ./src --standard ./docs/rules.md --fix --worktrees
+```
+
+Requirements: clean git state, sufficient disk space for worktree copies.
+
 ### `amcaa-codebase-audit-and-fix-skill` (full codebase audit)
 
 Run a comprehensive 9-phase codebase audit with optional automatic fix application.

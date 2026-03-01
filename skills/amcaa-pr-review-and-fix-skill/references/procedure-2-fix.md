@@ -11,6 +11,8 @@
 
 Swarm of fixing agents that resolve all findings from Procedure 1, run tests, lint, and commit.
 
+**Worktree mode:** When `USE_WORKTREES=true`, each fix agent runs in an isolated git worktree via `isolation: "worktree"`. This prevents concurrent agents from modifying the same files. After all fix agents complete, the orchestrator merges their worktree branches back sequentially. See the parent SKILL.md for full worktree protocol.
+
 ## Agent Selection (Dynamic)
 
 This plugin does NOT hardcode any specific agent types for code fixing. Different users
@@ -67,6 +69,7 @@ Task(
     TASK: Fix review findings for domain {domain_name}
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
     REVIEW_REPORT: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
     CHECKPOINT_FILE: docs_dev/amcaa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
 
@@ -87,7 +90,7 @@ Task(
     Checkpoint entry format (append to findings array in the JSON file):
     {"id": "SF-001", "status": "fixed", "file": "AgentProfileTab.tsx", "timestamp": "ISO"}
 
-    Write your fix report to: docs_dev/amcaa-fixes-done-P{PASS_NUMBER}-{domain_name}.md
+    Write your fix report to: {ABSOLUTE_REPORT_DIR}/amcaa-fixes-done-P{PASS_NUMBER}-{domain_name}.md
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -116,7 +119,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] fix-{domain} - {M}/{N} issues fixed. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -126,10 +130,12 @@ Task(
 Task(
   subagent_type: "{best_available_test_agent, fallback: 'general-purpose'}",
   prompt: """
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+
     Run the full test suite for the project.
     Determine the test command from package.json, Makefile, or project conventions
     (e.g., `yarn test`, `npm test`, `pytest`, `go test ./...`).
-    Write results to: docs_dev/amcaa-tests-outcome-P{PASS_NUMBER}.md
+    Write results to: {ABSOLUTE_REPORT_DIR}/amcaa-tests-outcome-P{PASS_NUMBER}.md
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -157,7 +163,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] tests - {passed}/{total} pass. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -189,6 +196,7 @@ Task(
   prompt: """
     TASK: Run MegaLinter on the project
     PASS: {PASS_NUMBER}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     1. Check Docker availability:
        which docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
@@ -199,21 +207,21 @@ Task(
          {PROJECT_ROOT} \
          --plugin-mode \
          --all \
-         --report-dir docs_dev/megalinter-P{PASS_NUMBER} \
-         --summary-json docs_dev/megalinter-P{PASS_NUMBER}/lint-summary.json \
+         --report-dir {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER} \
+         --summary-json {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER}/lint-summary.json \
          --no-pull
 
        NOTE: On first run, omit --no-pull so Docker pulls the MegaLinter image.
        On subsequent runs within the same pass, use --no-pull to skip the pull.
 
-    3. Read the summary JSON at docs_dev/megalinter-P{PASS_NUMBER}/lint-summary.json
+    3. Read the summary JSON at {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER}/lint-summary.json
        Key fields:
        - has_errors (bool): true if any linter reported errors
        - error_count (int): number of linters that failed
        - error_linters (string[]): names of failed linters
        - report_dir (string): path to full MegaLinter reports
 
-    4. Write your report to: docs_dev/amcaa-lint-outcome-P{PASS_NUMBER}.md
+    4. Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-lint-outcome-P{PASS_NUMBER}.md
        Include: exit code, error count, failed linter names, report directory path.
 
     REPORTING RULES:
@@ -221,7 +229,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/SKIP] lint - exit {code}, {N} linter errors. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -236,24 +245,26 @@ Task(
   prompt: """
     TASK: Fix lint errors reported by MegaLinter
     PASS: {PASS_NUMBER}
-    LINT_REPORT: docs_dev/megalinter-P{PASS_NUMBER}/lint-summary.json
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+    LINT_REPORT: {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER}/lint-summary.json
 
     The following linters reported errors: {error_linters_list}
 
     For each failed linter, read the error log at:
-      docs_dev/megalinter-P{PASS_NUMBER}/linters_logs/ERROR-{LINTER_NAME}.log
+      {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER}/linters_logs/ERROR-{LINTER_NAME}.log
 
     Fix ONLY the errors (not warnings). Make minimal changes to resolve lint issues.
     Do NOT refactor, restructure, or add features -- only fix what the linter flagged as errors.
 
-    Write your fix report to: docs_dev/amcaa-lint-fixes-P{PASS_NUMBER}.md
+    Write your fix report to: {ABSOLUTE_REPORT_DIR}/amcaa-lint-fixes-P{PASS_NUMBER}.md
 
     REPORTING RULES:
     - Write ALL detailed output to the report file
     - Return to orchestrator ONLY: "[DONE/FAILED] lint-fix - {M}/{N} linter errors fixed. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -265,6 +276,25 @@ Task(
 **Important:** The lint-fix loop counts are SEPARATE from the main pass counter. A single pass
 can have multiple lint-fix iterations without incrementing the pass number. Only the outer
 review-fix loop increments the pass counter.
+
+## Worktree Merge-Back (USE_WORKTREES only)
+
+When `USE_WORKTREES=true`, after all fix agents complete, merge their branches back:
+
+```
+for each completed fix agent:
+  worktree_branch = {branch name returned by the Agent tool}
+  git merge --no-edit {worktree_branch}
+  if merge conflict:
+    # Try auto-resolve with 'git checkout --theirs' for non-overlapping changes
+    # If conflicts persist, escalate to user:
+    # "Merge conflict between fix agents for {domain1} and {domain2}. Manual resolution required."
+  git worktree remove {worktree_path}  # Clean up the worktree
+```
+
+**Order matters:** Merge domains in the same order they were assigned to fix agents. This maintains a predictable merge order.
+
+**If a merge fails:** Do NOT continue merging other branches. Stop and escalate to the user with the conflicting file list.
 
 ## Commit After Fixes
 

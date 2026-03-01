@@ -39,6 +39,7 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 - Git repository (for diff-based change tracking)
 - Sufficient disk space for report artifacts in `REPORT_DIR`
 - `$CLAUDE_PLUGIN_ROOT` must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes). Sufficient disk space for N worktree copies.
 
 ## Instructions
 
@@ -67,6 +68,7 @@ Follow these steps to run the audit pipeline:
 | `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
 | `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |
 | `MAX_FIX_PASSES` | N | int | `5` | Max fix-verify loops |
+| `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees |
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
@@ -109,6 +111,8 @@ Format: `{PREFIX}-P{PASS}-{AGENT_PREFIX}-{SEQ}` where PREFIX=DA/VE/GF/FV, AGENT_
 
 ### Spawning Patterns
 
+**Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/{REPORT_DIR}` before spawning. Pass this absolute path as `REPORT_DIR` in every agent prompt and add `isolation: "worktree"` to every Task() call. For Phase 6 fix agents, after all complete, merge worktree branches back sequentially (see below).
+
 All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also receive: `SCOPE_PATH, VIOLATION_TYPES, PASS, RUN_ID, AGENT_PREFIX, FINDING_ID_PREFIX`. Additional per-phase params:
 
 **P1 Discovery**: `FILES` (max 4), `TRIAGE_STATUS` (LIKELY_VIOLATION/LIKELY_CLEAN). Report to `amcaa-audit-*`.
@@ -120,6 +124,15 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 **P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
 
 All agents end with: `REPORTING RULES: Write details to report file. Return ONLY: "[DONE/FAILED] {task} - {summary}. Report: {path}". Max 2 lines.`
+
+### Fix Agent Worktree Merge-Back (USE_WORKTREES only)
+
+When `USE_WORKTREES=true` and `FIX_ENABLED=true`, Phase 6 fix agents each work in isolated worktrees on separate branches. After ALL Phase 6 agents complete:
+
+1. Merge each agent's branch back to the current branch sequentially (in domain assignment order)
+2. If a merge conflict occurs, STOP and escalate to the user
+3. After successful merge, remove the worktree: `git worktree remove {path}`
+4. Run Phase 7 (fix verification) on the merged result
 
 ### Loop Termination
 

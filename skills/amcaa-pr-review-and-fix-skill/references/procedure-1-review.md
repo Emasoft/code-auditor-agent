@@ -2,6 +2,8 @@
 
 Three-phase review pipeline: correctness swarm, claim verification, skeptical review, then merge + dedup.
 
+**Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call. See the parent SKILL.md for full worktree protocol.
+
 ## Table of Contents
 
 - [Pre-Pass Cleanup (MANDATORY)](#pre-pass-cleanup-mandatory)
@@ -113,11 +115,12 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       RUN_ID: {RUN_ID}
       AGENT_PREFIX: {AGENT_PREFIX}
       FINDING_ID_PREFIX: CC-P{PASS_NUMBER}-{AGENT_PREFIX}
+      REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
         UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-      Write your report to: docs_dev/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+      Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
       Use finding IDs starting with {FINDING_ID_PREFIX}-001.
@@ -134,7 +137,8 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       - Return to orchestrator ONLY: "[DONE/FAILED] correctness-{domain} - brief result. Report: {path}"
       - Max 2 lines back to orchestrator
     """,
-    run_in_background: true
+    run_in_background: true,
+    isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
   )
 ```
 
@@ -161,11 +165,12 @@ Task(
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     FINDING_ID_PREFIX: CV-P{PASS_NUMBER}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-    Write your report to: docs_dev/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
     Verify each claim against the actual code.
@@ -177,7 +182,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] claim-verification - brief result. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -205,16 +211,17 @@ Task(
     PR_NUMBER: {pr_number}
     PR_DESCRIPTION: (provide the text or path)
     DIFF: (save `gh pr diff {number}` to docs_dev/pr-diff.txt and provide path)
-    CORRECTNESS_REPORTS: docs_dev/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-*.md
-    CLAIMS_REPORT: docs_dev/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-*.md
+    CORRECTNESS_REPORTS: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-*.md
+    CLAIMS_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-*.md
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     FINDING_ID_PREFIX: SR-P{PASS_NUMBER}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-    Write your report to: docs_dev/amcaa-review-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.
     Read the full diff holistically. Check for UX concerns, breaking changes,
@@ -227,7 +234,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] skeptical-review - Verdict: X, brief result. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
@@ -238,7 +246,7 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (bash script -- simple concatenation, no dedup)**
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh docs_dev/ ${PASS_NUMBER} ${RUN_ID}
+bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
 ```
 
 This produces an intermediate report at `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md`.
@@ -260,9 +268,10 @@ The v2 script:
 Task(
   subagent_type: "amcaa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
     PASS_NUMBER: {PASS_NUMBER}
-    OUTPUT_PATH: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+    OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
 
     Read the intermediate merged report.
     Deduplicate findings semantically (see agent instructions).
@@ -273,7 +282,8 @@ Task(
     - Return to orchestrator ONLY: "[DONE/FAILED] dedup - {raw}->{dedup} findings ({removed} removed). Verdict: {VERDICT}. Report: {path}"
     - Max 2 lines back to orchestrator
   """,
-  run_in_background: true
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
 )
 ```
 
