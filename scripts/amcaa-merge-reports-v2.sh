@@ -27,7 +27,7 @@
 #   amcaa-review-P{N}-{uuid}.md       (Phase 3 — one)
 #
 # Output:
-#   pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
+#   amcaa-pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
 #
 # Exit codes:
 #   0 — Merge complete (dedup agent determines final verdict)
@@ -56,7 +56,7 @@ else
     echo -e "${YELLOW}No run ID — merging ALL files for pass ${PASS_NUMBER} (legacy mode)${NC}"
 fi
 
-INTERMEDIATE_REPORT="${OUTPUT_DIR}/pr-review-P${PASS_NUMBER}-intermediate-${TIMESTAMP}.md"
+INTERMEDIATE_REPORT="${OUTPUT_DIR}/amcaa-pr-review-P${PASS_NUMBER}-intermediate-${TIMESTAMP}.md"
 TMP_REPORT="${INTERMEDIATE_REPORT}.tmp"
 
 # ── Validate input ────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ REPORTS=()
 while IFS= read -r -d '' file; do
     basename_file=$(basename "$file")
     # Skip non-phase reports (intermediate, final, fixes, tests, lint, checkpoints, stale)
-    if [[ "$basename_file" == pr-review-* ]]; then
+    if [[ "$basename_file" == amcaa-pr-review-* ]]; then
         continue
     fi
     if [[ "$basename_file" == amcaa-fixes-* ]]; then

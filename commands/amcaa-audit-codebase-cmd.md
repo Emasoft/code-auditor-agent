@@ -43,7 +43,7 @@ parameters:
 
 # Codebase Audit & Fix
 
-This command launches the `codebase-audit-and-fix` skill pipeline.
+This command launches the `amcaa-codebase-audit-and-fix-skill` skill pipeline.
 
 ## Usage
 
@@ -68,4 +68,4 @@ This command launches the `codebase-audit-and-fix` skill pipeline.
 ## Reports
 
 All reports written to `--report-dir` (default: docs_dev/).
-See the `codebase-audit-and-fix` skill for report naming conventions.
+See the `amcaa-codebase-audit-and-fix-skill` skill for report naming conventions.

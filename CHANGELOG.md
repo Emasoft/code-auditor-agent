@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 - Renamed plugin from emasoft-pr-checking-plugin to ai-maestro-code-auditor-agent
 - Unified prefix from epcp-/epca- to amcaa- across all agents, scripts, and commands
-- Added codebase-audit-and-fix skill with 9-phase audit pipeline
+- Added amcaa-codebase-audit-and-fix-skill with 9-phase audit pipeline
 - Added 6 new agents for codebase auditing: domain-auditor, verification, consolidation, todo-generator, fix, fix-verifier
 - Added amcaa-audit-codebase-cmd command for launching codebase audits
 - Added CI/CD workflows for validation, release, and marketplace notification

@@ -17,7 +17,7 @@ for f in docs_dev/amcaa-correctness-P${PASS_NUMBER}-*.md \
   [ -f "$f" ] && mv "$f" docs_dev/archive/
 done
 # Also archive any stale intermediate reports for this pass
-for f in docs_dev/pr-review-P${PASS_NUMBER}-intermediate-*.md; do
+for f in docs_dev/amcaa-pr-review-P${PASS_NUMBER}-intermediate-*.md; do
   [ -f "$f" ] && mv "$f" docs_dev/archive/
 done
 ```
@@ -229,7 +229,7 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh docs_dev/ ${PASS_NUMBER} ${RUN_ID}
 ```
 
-This produces an intermediate report at `docs_dev/pr-review-P{N}-intermediate-{timestamp}.md`.
+This produces an intermediate report at `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md`.
 The v2 script:
 - When RUN_ID is provided, only collects files matching `amcaa-*-P{N}-R{RUN_ID}-*.md`
 - When RUN_ID is omitted, collects all `amcaa-*-P{N}-*.md` files (legacy mode)
@@ -248,9 +248,9 @@ The v2 script:
 Task(
   subagent_type: "amcaa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: docs_dev/pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-intermediate-{timestamp}.md
     PASS_NUMBER: {PASS_NUMBER}
-    OUTPUT_PATH: docs_dev/pr-review-P{PASS_NUMBER}-{timestamp}.md
+    OUTPUT_PATH: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
 
     Read the intermediate merged report.
     Deduplicate findings semantically (see agent instructions).
@@ -266,7 +266,7 @@ Task(
 ```
 
 Wait for the dedup agent to complete. The dedup agent produces:
-- Final report: `docs_dev/pr-review-P{N}-{timestamp}.md`
+- Final report: `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md`
 - Verdict: REQUEST CHANGES / APPROVE WITH NITS / APPROVE
 - Deduplication log showing which findings were merged and why
 
@@ -288,7 +288,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P{N}-A1-005)
 
-### Full report: docs_dev/pr-review-P{N}-{timestamp}.md
+### Full report: docs_dev/amcaa-pr-review-P{N}-{timestamp}.md
 ```
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: codebase-audit-and-fix
+name: amcaa-codebase-audit-and-fix-skill
 description: "Codebase audit pipeline with discovery, verification, gap-fill, consolidation, TODO generation and fix loop. Trigger with /audit-codebase."
 version: 1.0.0
 author: Emasoft

@@ -70,11 +70,11 @@ This plugin provides 10 agents, split across two pipelines.
 
 | Skill | Purpose |
 |-------|---------|
-| `pr-review` | Three-phase PR review: correctness swarm, claim verification, skeptical review, merge + dedup |
-| `pr-review-and-fix` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
-| `codebase-audit-and-fix` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
+| `amcaa-pr-review-skill` | Three-phase PR review: correctness swarm, claim verification, skeptical review, merge + dedup |
+| `amcaa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
+| `amcaa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
 
-### `pr-review` (review only)
+### `amcaa-pr-review-skill` (review only)
 
 Review a PR without modifying code. Runs the three-phase pipeline and presents a verdict.
 
@@ -82,7 +82,7 @@ Review a PR without modifying code. Runs the three-phase pipeline and presents a
 review PR 206
 ```
 
-### `pr-review-and-fix` (review + iterative fix loop)
+### `amcaa-pr-review-and-fix-skill` (review + iterative fix loop)
 
 Review a PR AND automatically fix all findings. Loops until zero issues remain (max 10 passes).
 
@@ -94,7 +94,7 @@ Each pass runs the PR Review Pipeline (three-phase review) then a fix cycle (fix
 
 Fix agents are dynamically selected from whatever agents are available in the user's Claude Code instance, with `general-purpose` as the universal fallback.
 
-### `codebase-audit-and-fix` (full codebase audit)
+### `amcaa-codebase-audit-and-fix-skill` (full codebase audit)
 
 Run a comprehensive 9-phase codebase audit with optional automatic fix application.
 
@@ -155,7 +155,7 @@ Phase 5: Present final report
 
 **Phase 5 -- Final Report.** The deduplicated report is presented as the final verdict.
 
-When using `pr-review-and-fix`, a fix cycle follows each review pass:
+When using `amcaa-pr-review-and-fix-skill`, a fix cycle follows each review pass:
 
 ```
 Fix Cycle (Procedure 2, only if issues found):
@@ -216,11 +216,11 @@ Reports are written to `docs_dev/`.
 | Correctness (per-domain) | `amcaa-correctness-P{N}-{uuid}.md` |
 | Claim verification | `amcaa-claims-P{N}-{uuid}.md` |
 | Skeptical review | `amcaa-review-P{N}-{uuid}.md` |
-| Intermediate merged report | `pr-review-P{N}-intermediate-{timestamp}.md` |
-| Final dedup report | `pr-review-P{N}-{timestamp}.md` |
+| Intermediate merged report | `amcaa-pr-review-P{N}-intermediate-{timestamp}.md` |
+| Final dedup report | `amcaa-pr-review-P{N}-{timestamp}.md` |
 | Fix summary (per-domain) | `amcaa-fixes-done-P{N}-{domain}.md` |
 | Test outcome | `amcaa-tests-outcome-P{N}.md` |
-| Final clean report | `pr-review-and-fix-FINAL-{timestamp}.md` |
+| Final clean report | `amcaa-pr-review-and-fix-FINAL-{timestamp}.md` |
 
 ### Codebase Audit Reports
 

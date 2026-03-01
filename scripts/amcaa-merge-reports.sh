@@ -14,7 +14,7 @@
 #   amcaa-review.md         (Phase 3 — skeptical review)
 #
 # Output:
-#   pr-review-YYYY-MM-DD-HHMMSS.md  (merged final report)
+#   amcaa-pr-review-YYYY-MM-DD-HHMMSS.md  (merged final report)
 #
 # Exit codes:
 #   0 — No MUST-FIX issues found
@@ -33,7 +33,7 @@ NC='\033[0m'
 OUTPUT_DIR="${1:-.}"
 PATTERN="${2:-amcaa-*.md}"
 TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
-FINAL_REPORT="${OUTPUT_DIR}/pr-review-${TIMESTAMP}.md"
+FINAL_REPORT="${OUTPUT_DIR}/amcaa-pr-review-${TIMESTAMP}.md"
 
 # ── Validate input ────────────────────────────────────────────────────────────
 if [ ! -d "$OUTPUT_DIR" ]; then

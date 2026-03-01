@@ -1,5 +1,5 @@
 ---
-name: pr-review
+name: amcaa-pr-review-skill
 description: >
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
@@ -7,7 +7,7 @@ version: 2.0.0
 author: Emasoft
 license: MIT
 tags:
-  - pr-review
+  - amcaa-pr-review
   - code-audit
   - claim-verification
   - quality-gate
@@ -215,7 +215,7 @@ After all 3 phases complete, run the **two-stage merge pipeline**:
 bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh docs_dev/ 1
 ```
 
-This produces an intermediate report at `docs_dev/pr-review-P1-intermediate-{timestamp}.md`.
+This produces an intermediate report at `docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md`.
 The v2 script verifies merged file integrity and deletes source files after verification.
 
 **Stage 2: Deduplicate (AI agent — semantic analysis)**
@@ -224,9 +224,9 @@ The v2 script verifies merged file integrity and deletes source files after veri
 Task(
   subagent_type: "amcaa-dedup-agent",
   prompt: """
-    INTERMEDIATE_REPORT: docs_dev/pr-review-P1-intermediate-{timestamp}.md
+    INTERMEDIATE_REPORT: docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md
     PASS_NUMBER: 1
-    OUTPUT_PATH: docs_dev/pr-review-P1-{timestamp}.md
+    OUTPUT_PATH: docs_dev/amcaa-pr-review-P1-{timestamp}.md
 
     Read the intermediate merged report.
     Deduplicate findings semantically (see agent instructions).
@@ -259,7 +259,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P1-A1-005)
 
-### Full report: docs_dev/pr-review-P1-{timestamp}.md
+### Full report: docs_dev/amcaa-pr-review-P1-{timestamp}.md
 ```
 
 ## CRITICAL RULES
@@ -332,8 +332,8 @@ The pipeline produces:
 - Per-domain correctness reports: `docs_dev/amcaa-correctness-P1-{uuid}.md` (deleted after merge verification)
 - Claim verification report: `docs_dev/amcaa-claims-P1-{uuid}.md` (deleted after merge verification)
 - Skeptical review report: `docs_dev/amcaa-review-P1-{uuid}.md` (deleted after merge verification)
-- Intermediate merged report: `docs_dev/pr-review-P1-intermediate-{timestamp}.md`
-- Final deduplicated report: `docs_dev/pr-review-P1-{timestamp}.md`
+- Intermediate merged report: `docs_dev/amcaa-pr-review-P1-intermediate-{timestamp}.md`
+- Final deduplicated report: `docs_dev/amcaa-pr-review-P1-{timestamp}.md`
 
 Final report includes: verdict (APPROVE/REQUEST CHANGES/APPROVE WITH NITS), all
 deduplicated issues with severity (MUST-FIX/SHOULD-FIX/NIT), deduplication log, and

@@ -33,7 +33,7 @@ and always fall back to `general-purpose` if the preferred agent is not found.
 
 ## Fix Protocol
 
-1. Read the merged review report from PROCEDURE 1: `docs_dev/pr-review-P{PASS_NUMBER}-{timestamp}.md`
+1. Read the merged review report from PROCEDURE 1: `docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
 2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
 3. For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
 4. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved.
@@ -58,7 +58,7 @@ Task(
     TASK: Fix review findings for domain {domain_name}
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
-    REVIEW_REPORT: docs_dev/pr-review-P{PASS_NUMBER}-{timestamp}.md
+    REVIEW_REPORT: docs_dev/amcaa-pr-review-P{PASS_NUMBER}-{timestamp}.md
     CHECKPOINT_FILE: docs_dev/amcaa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
 
     Fix these specific issues from the review report:

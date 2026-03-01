@@ -1,5 +1,5 @@
 ---
-name: pr-review-and-fix
+name: amcaa-pr-review-and-fix-skill
 description: >
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review and fix the PR", "review and fix PR", "audit and fix the PR", "pre-merge review and fix".
@@ -7,7 +7,7 @@ version: 3.0.0
 author: Emasoft
 license: MIT
 tags:
-  - pr-review
+  - amcaa-pr-review
   - code-audit
   - claim-verification
   - quality-gate
@@ -109,7 +109,7 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES:
     STOP -- write escalation report and present to user:
     "Maximum pass limit (25) reached. {N} issues remain unresolved.
-     Manual intervention required. See: docs_dev/pr-review-and-fix-escalation-{timestamp}.md"
+     Manual intervention required. See: docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md"
 ```
 
 ## Report Naming Convention
@@ -123,8 +123,8 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 | Claim verification | `docs_dev/amcaa-claims-P{N}-R{RUN_ID}-{uuid}.md` |
 | Skeptical review | `docs_dev/amcaa-review-P{N}-R{RUN_ID}-{uuid}.md` |
 | Agent manifest | `docs_dev/amcaa-agents-P{N}-R{RUN_ID}.json` |
-| Merged intermediate | `docs_dev/pr-review-P{N}-intermediate-{timestamp}.md` |
-| Final dedup report | `docs_dev/pr-review-P{N}-{timestamp}.md` |
+| Merged intermediate | `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md` |
+| Final dedup report | `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md` |
 | Fix checkpoint (per-domain) | `docs_dev/amcaa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
 | Fix summary (per-domain) | `docs_dev/amcaa-fixes-done-P{N}-{domain}.md` |
 | Test outcome | `docs_dev/amcaa-tests-outcome-P{N}.md` |
@@ -132,8 +132,8 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 | Lint summary (JSON) | `docs_dev/megalinter-P{N}/lint-summary.json` |
 | Lint fixes | `docs_dev/amcaa-lint-fixes-P{N}.md` |
 | Recovery log | `docs_dev/amcaa-recovery-log-P{N}.md` |
-| Final clean report | `docs_dev/pr-review-and-fix-FINAL-{timestamp}.md` |
-| Escalation (if max reached) | `docs_dev/pr-review-and-fix-escalation-{timestamp}.md` |
+| Final clean report | `docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md` |
+| Escalation (if max reached) | `docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md` |
 
 ### UUID Filename Generation
 
@@ -252,14 +252,14 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES (25):
     STOP. Write escalation report:
     "Maximum pass limit reached. {remaining_count} issues persist after {MAX_PASSES} passes.
-     Review: docs_dev/pr-review-P{last_pass}-{timestamp}.md
+     Review: docs_dev/amcaa-pr-review-P{last_pass}-{timestamp}.md
      Manual intervention required."
     Present to user and exit.
 
 Run PROCEDURE 1 with new PASS_NUMBER.
 
 if PROCEDURE 1 finds ZERO issues (all severities -- MUST-FIX, SHOULD-FIX, NIT):
-    Write final report: docs_dev/pr-review-and-fix-FINAL-{timestamp}.md
+    Write final report: docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md
     Present final summary to user and exit.
 else:
     Run PROCEDURE 2 with the new findings.
@@ -286,10 +286,10 @@ When the loop terminates with zero issues:
 | {N}  | 0           | --          | {passed}/{total} | {clean/skipped} |
 
 ### Reports Generated
-- Pass 1 review: docs_dev/pr-review-P1-{timestamp}.md
+- Pass 1 review: docs_dev/amcaa-pr-review-P1-{timestamp}.md
 - Pass 1 fixes: docs_dev/amcaa-fixes-done-P1-{domain}.md
 - ...
-- Final clean review: docs_dev/pr-review-P{N}-{timestamp}.md
+- Final clean review: docs_dev/amcaa-pr-review-P{N}-{timestamp}.md
 
 ### All Fixes Applied
 1. [CC-P1-001] {title} -- {file} (Pass 1)
@@ -306,14 +306,14 @@ The pipeline produces these deliverables across all passes:
 
 | Deliverable | Location | When |
 |-------------|----------|------|
-| Per-pass review report (deduplicated) | `docs_dev/pr-review-P{N}-{timestamp}.md` | After each Procedure 1 |
+| Per-pass review report (deduplicated) | `docs_dev/amcaa-pr-review-P{N}-{timestamp}.md` | After each Procedure 1 |
 | Per-domain fix summaries | `docs_dev/amcaa-fixes-done-P{N}-{domain}.md` | After each Procedure 2 |
 | Test outcome per pass | `docs_dev/amcaa-tests-outcome-P{N}.md` | After each test run |
 | Lint outcome per pass | `docs_dev/amcaa-lint-outcome-P{N}.md` | After each lint run (Docker only) |
 | Lint summary JSON | `docs_dev/megalinter-P{N}/lint-summary.json` | After each lint run (Docker only) |
 | Recovery log | `docs_dev/amcaa-recovery-log-P{N}.md` | When agent failures occur |
-| Final report (zero issues) | `docs_dev/pr-review-and-fix-FINAL-{timestamp}.md` | Pipeline completion |
-| Escalation report (max passes) | `docs_dev/pr-review-and-fix-escalation-{timestamp}.md` | If limit reached |
+| Final report (zero issues) | `docs_dev/amcaa-pr-review-and-fix-FINAL-{timestamp}.md` | Pipeline completion |
+| Escalation report (max passes) | `docs_dev/amcaa-pr-review-and-fix-escalation-{timestamp}.md` | If limit reached |
 
 **Key outputs for the user:**
 - **Final report** summarizes all passes, all fixes applied, and final verdict (APPROVE)
