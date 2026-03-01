@@ -200,7 +200,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 
 ### How It Works
 
-1. **Before spawning**, resolve the absolute path to `REPORT_DIR` (e.g., `$(pwd)/docs_dev/`). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
+1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` (or `$(pwd)/{REPORT_DIR}` if custom). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
 
 2. **Review agents** (Phase 1-3, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
 
@@ -211,7 +211,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
      # If merge conflict: resolve manually or escalate to user
    ```
 
-4. **Spawning pattern addition**: When USE_WORKTREES is true, add `isolation: "worktree"` to every Task() call. The agent prompt must include `REPORT_DIR: {absolute_docs_dev_path}` so the agent writes reports outside its worktree.
+4. **Spawning pattern addition**: When USE_WORKTREES is true, add `isolation: "worktree"` to every Task() call. The agent prompt must include `REPORT_DIR: {ABSOLUTE_REPORT_DIR}` so the agent writes reports outside its worktree. See [procedure-1-review.md](references/procedure-1-review.md) and [procedure-2-fix.md](references/procedure-2-fix.md) for the complete spawning patterns with worktree support.
 
 ### Prerequisites for Worktree Mode
 
