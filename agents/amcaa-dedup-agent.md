@@ -26,7 +26,7 @@ independent review agents. Your job is to produce a clean final report with:
 ## Input Parameters
 
 You will receive:
-- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from amcaa-merge-reports-v2.sh)
+- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from amcaa-merge-reports-v2.py)
 - `PASS_NUMBER`: Current pass number (1-5)
 - `OUTPUT_PATH`: Path for the final deduplicated report
 

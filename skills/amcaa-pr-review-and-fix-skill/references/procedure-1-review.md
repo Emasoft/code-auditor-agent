@@ -245,14 +245,14 @@ Task(
 
 After all 3 phases complete, run the **two-stage merge pipeline**:
 
-**Stage 1: Merge (bash script -- simple concatenation, no dedup)**
+**Stage 1: Merge (Python script -- simple concatenation, no dedup)**
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
+uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
 ```
 
 This produces an intermediate report at `docs_dev/amcaa-pr-review-P{N}-intermediate-{timestamp}.md`.
-The v2 script:
+The merge script:
 - When RUN_ID is provided, only collects files matching `amcaa-*-P{N}-R{RUN_ID}-*.md`
 - When RUN_ID is omitted, collects all `amcaa-*-P{N}-*.md` files (legacy mode)
 - Skips files with `-STALE` in the name

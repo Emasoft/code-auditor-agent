@@ -54,8 +54,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List, NoReturn, Optional, Tuple
-
+from typing import NoReturn
 
 MEGALINTER_IMAGE_DEFAULT = "oxsecurity/megalinter:v9"  # stable major tag
 REPORT_DIRNAME_DEFAULT = "megalinter-reports"
@@ -69,7 +68,7 @@ def _is_windows() -> bool:
     return os.name == "nt"
 
 
-def _fmt_cmd(cmd: List[str]) -> str:
+def _fmt_cmd(cmd: list[str]) -> str:
     """Readable, copy/paste friendly command string."""
     if _is_windows():
         return subprocess.list2cmdline(cmd)
@@ -86,11 +85,11 @@ def _die(msg: str, code: int = 2) -> NoReturn:
 
 
 def _run(
-    cmd: List[str],
-    cwd: Optional[Path] = None,
-    env: Optional[Dict[str, str]] = None,
+    cmd: list[str],
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
     check: bool = True,
-) -> subprocess.CompletedProcess:
+) -> subprocess.CompletedProcess[str]:
     p = subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -101,16 +100,12 @@ def _run(
     )
     if check and p.returncode != 0:
         raise CmdError(
-            "Command failed.\n"
-            f"  Exit code: {p.returncode}\n"
-            f"  Command:   {_fmt_cmd(cmd)}\n\n"
-            "Output:\n"
-            f"{p.stdout.strip()}"
+            f"Command failed.\n  Exit code: {p.returncode}\n  Command:   {_fmt_cmd(cmd)}\n\nOutput:\n{p.stdout.strip()}"
         )
     return p
 
 
-def _which(prog: str) -> Optional[str]:
+def _which(prog: str) -> str | None:
     return shutil.which(prog)
 
 
@@ -161,7 +156,7 @@ def _ensure_tools() -> None:
         raise CmdError("\n".join(hints))
 
 
-def _parse_source(source: str) -> Tuple[str, Optional[str], Optional[int]]:
+def _parse_source(source: str) -> tuple[str, str | None, int | None]:
     """Return (kind, repo_url_or_path, pr_number)
 
     kind in {"local_path", "git_url", "github_pr"}
@@ -228,7 +223,7 @@ def _copy_tree_readonly(src: Path, dst: Path) -> None:
             raise
 
 
-def _clone_repo(repo_url: str, dst: Path, token: Optional[str]) -> None:
+def _clone_repo(repo_url: str, dst: Path, token: str | None) -> None:
     """Clone remote repo into dst.
 
     IMPORTANT: avoid printing tokens. We intentionally do NOT include the clone
@@ -238,7 +233,7 @@ def _clone_repo(repo_url: str, dst: Path, token: Optional[str]) -> None:
     if dst.exists():
         shutil.rmtree(dst)
 
-    cmd: List[str]
+    cmd: list[str]
     env = os.environ.copy()
 
     # For GitHub HTTPS + token, use extraheader rather than embedding in URL.
@@ -314,9 +309,8 @@ def _fetch_pr(repo_dir: Path, pr_number: int) -> str:
             "Actionable fixes:\n"
             "- If this is NOT GitHub, use --ref instead (e.g. the MR branch).\n"
             "- Ensure the remote is `origin` and points to the hosting service.\n"
-            "- For private repos, ensure your token/SSH access is valid.\n\n"
-            + str(e)
-        )
+            "- For private repos, ensure your token/SSH access is valid.\n\n" + str(e)
+        ) from e
 
     return branch
 
@@ -330,7 +324,7 @@ def _checkout_ref(repo_dir: Path, ref: str) -> None:
         _run(["git", "checkout", "--force", f"origin/{ref}"], cwd=repo_dir, check=True)
 
 
-def _changed_files(repo_dir: Path, base_ref: str, head_ref: str) -> List[str]:
+def _changed_files(repo_dir: Path, base_ref: str, head_ref: str) -> list[str]:
     """Return changed file paths relative to repo root (POSIX-style)."""
 
     _run(["git", "fetch", "origin", base_ref], cwd=repo_dir, check=False)
@@ -364,18 +358,17 @@ def _docker_pull(image: str) -> None:
             "Actionable fixes:\n"
             "- Verify network connectivity and that Docker can reach registries.\n"
             "- If behind a proxy, configure Docker proxy settings.\n"
-            "- If using a custom image, verify the name/tag is correct.\n\n"
-            + str(e)
-        )
+            "- If using a custom image, verify the name/tag is correct.\n\n" + str(e)
+        ) from e
 
 
 def _run_megalinter_docker(
     repo_dir: Path,
     report_dir: Path,
     image: str,
-    files_to_lint: Optional[List[str]],
+    files_to_lint: list[str] | None,
     validate_all_codebase: bool,
-    extra_env: List[str],
+    extra_env: list[str],
     dry_run: bool,
     readonly: bool = True,
 ) -> int:
@@ -454,10 +447,10 @@ def _ensure_writable_dir(path: Path) -> None:
             "- Choose a different --report-dir (e.g. inside your home directory).\n"
             "- Fix permissions of the target folder.\n\n"
             f"Underlying error: {e}"
-        )
+        ) from e
 
 
-def _write_lint_summary(report_dir: Path, summary_path: Optional[str], exit_code: int) -> None:
+def _write_lint_summary(report_dir: Path, summary_path: str | None, exit_code: int) -> None:
     """Parse MegaLinter results and write a JSON summary for pipeline automation.
 
     Scans linters_logs/ for ERROR-*.log and SUCCESS-*.log files to determine
@@ -466,8 +459,8 @@ def _write_lint_summary(report_dir: Path, summary_path: Optional[str], exit_code
     import json
 
     linters_dir = report_dir / "linters_logs"
-    error_linters: List[str] = []
-    success_linters: List[str] = []
+    error_linters: list[str] = []
+    success_linters: list[str] = []
 
     if linters_dir.is_dir():
         for f in sorted(linters_dir.iterdir()):
@@ -476,7 +469,7 @@ def _write_lint_summary(report_dir: Path, summary_path: Optional[str], exit_code
             elif f.name.startswith("SUCCESS-") and f.name.endswith(".log"):
                 success_linters.append(f.name[8:-4])
 
-    summary: Dict = {
+    summary: dict[str, object] = {
         "exit_code": exit_code,
         "has_errors": exit_code != 0,
         "error_count": len(error_linters),
@@ -505,7 +498,7 @@ def _write_lint_summary(report_dir: Path, summary_path: Optional[str], exit_code
         print(f"  Failed: {', '.join(error_linters)}")
 
 
-def _make_workspace_root(args_workspace_dir: Optional[str]) -> Path:
+def _make_workspace_root(args_workspace_dir: str | None) -> Path:
     """Pick where the temporary workspace should live.
 
     If --workspace-dir is provided, create a unique subdirectory inside it.
@@ -531,12 +524,12 @@ def _make_workspace_root(args_workspace_dir: Optional[str]) -> Path:
             "- Pick a directory you can write to (e.g. inside your home folder).\n"
             "- Fix permissions for that directory.\n\n"
             f"Underlying error: {e}"
-        )
+        ) from e
 
     return root
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     epilog = r"""
 Examples (common)
 -----------------
@@ -735,7 +728,7 @@ Dry run:
             else:
                 _clone_repo(repo_or_path or "", workspace, token=token)
 
-            files_to_lint: Optional[List[str]] = None
+            files_to_lint: list[str] | None = None
             validate_all = True
 
             if _is_git_repo(workspace):
@@ -812,7 +805,7 @@ Dry run:
             "- Try --workspace-dir inside your home directory.\n"
             "- On Windows/macOS, ensure Docker Desktop can access that directory.\n\n"
             f"Underlying error: {e}"
-        )
+        ) from e
 
 
 if __name__ == "__main__":
@@ -820,4 +813,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except CmdError as e:
         print(str(e), file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from e

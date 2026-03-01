@@ -25,7 +25,7 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 - `gh` CLI installed and authenticated (for `gh pr view`, `gh pr diff`)
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output
-- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` must be executable
+- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` must exist
 - $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes)
 
@@ -35,7 +35,7 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 |-------|-----|------|---------|-------------|
 | `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
-| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` | Path to merge script |
+| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees for isolation |
 
 ### Worktree Mode
@@ -232,10 +232,10 @@ Task(
 
 After all 3 phases complete, run the **two-stage merge pipeline**:
 
-**Stage 1: Merge (bash script — simple concatenation, no dedup)**
+**Stage 1: Merge (Python script — simple concatenation, no dedup)**
 
 ```bash
-bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh ${REPORT_DIR} 1
+uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py ${REPORT_DIR} 1
 ```
 
 This produces an intermediate report at `${REPORT_DIR}/amcaa-pr-review-P1-intermediate-{timestamp}.md`.
@@ -347,7 +347,7 @@ Follow the 5-phase protocol strictly:
 5. Wait for Phase 2 to complete before proceeding.
 6. Spawn a single `amcaa-skeptical-reviewer-agent` with the full diff and earlier reports (Phase 3). Agent generates UUID filename.
 7. Wait for Phase 3 to complete.
-8. Run the two-stage merge: `bash $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh docs_dev/ 1` (Stage 1), then spawn `amcaa-dedup-agent` on the intermediate report (Stage 2).
+8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py docs_dev/ 1` (Stage 1), then spawn `amcaa-dedup-agent` on the intermediate report (Stage 2).
 9. Read the final deduplicated report and present the verdict summary to the user.
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 
@@ -418,8 +418,7 @@ User: "re-run the PR review"
 
 ## Resources
 
-- Merge script (v2): `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh`
-- Merge script (v1, legacy): `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports.sh`
+- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.py`
 - Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/amcaa-dedup-agent.md`
 - Agents: `$CLAUDE_PLUGIN_ROOT/agents/`
 - Report output directory: `docs_dev/`

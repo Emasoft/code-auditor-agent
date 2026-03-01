@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AMCAA Plugin Integrity Validator — 35 automated checks across 8 categories.
+"""AMCAA Plugin Integrity Validator — 30 automated checks across 8 categories.
 
 Prevents the categories of issues found in the deep audit by validating
 cross-file consistency, reference integrity, structural completeness,
@@ -69,7 +69,6 @@ class Context:
     skill_md_files: list[FileContent]
     command_files: list[FileContent]
     script_files_py: list[FileContent]
-    script_files_sh: list[FileContent]
     reference_files: list[FileContent]
     readme: FileContent | None
     ci_workflow: FileContent | None
@@ -220,9 +219,6 @@ def build_context(root: Path) -> Context:
     script_files_py = (
         [load_file(f, root) for f in sorted((root / "scripts").glob("*.py"))] if (root / "scripts").exists() else []
     )
-    script_files_sh = (
-        [load_file(f, root) for f in sorted((root / "scripts").glob("*.sh"))] if (root / "scripts").exists() else []
-    )
 
     # Collect reference files
     reference_files = []
@@ -260,7 +256,6 @@ def build_context(root: Path) -> Context:
         skill_md_files=skill_md_files,
         command_files=command_files,
         script_files_py=script_files_py,
-        script_files_sh=script_files_sh,
         reference_files=reference_files,
         readme=readme,
         ci_workflow=ci_workflow,
@@ -383,16 +378,16 @@ def check_finding_id_format_in_agents(ctx: Context) -> list[CheckResult]:
                     and not full_id_pat.search(line)
                     and not is_inside_code_fence(fc.lines, i - 1)
                 ):
-                        results.append(
-                            CheckResult(
-                                check_id="IC-CC-003",
-                                severity=Severity.MAJOR,
-                                passed=False,
-                                message="Short finding ID format found (should use full P{N} format)",
-                                file_ref=f"{fc.rel_path}:{i}",
-                                details=f"Line: {line.strip()[:100]}",
-                            )
+                    results.append(
+                        CheckResult(
+                            check_id="IC-CC-003",
+                            severity=Severity.MAJOR,
+                            passed=False,
+                            message="Short finding ID format found (should use full P{N} format)",
+                            file_ref=f"{fc.rel_path}:{i}",
+                            details=f"Line: {line.strip()[:100]}",
                         )
+                    )
     if not any(not r.passed for r in results):
         results.append(
             CheckResult(
@@ -461,8 +456,7 @@ def check_maintenance_notes_bidirectional(ctx: Context) -> list[CheckResult]:
                         severity=Severity.MAJOR,
                         passed=False,
                         message=(
-                            f"Maintenance Note is not reciprocal: "
-                            f"{target_rel} lacks note back to {source_fc.rel_path}"
+                            f"Maintenance Note is not reciprocal: {target_rel} lacks note back to {source_fc.rel_path}"
                         ),
                         file_ref=source_fc.rel_path,
                     )
@@ -719,7 +713,7 @@ def check_script_references(ctx: Context) -> list[CheckResult]:
     """Script paths referenced in .md files exist in scripts/."""
     results: list[CheckResult] = []
     script_pat = re.compile(r"\$CLAUDE_PLUGIN_ROOT/scripts/([a-zA-Z0-9_.-]+)")
-    script_names = {fc.path.name for fc in ctx.script_files_py + ctx.script_files_sh}
+    script_names = {fc.path.name for fc in ctx.script_files_py}
     seen: set[str] = set()
     for fc in ctx.all_md_files:
         for m in script_pat.finditer(fc.text):
@@ -916,15 +910,15 @@ def check_procedure_checklists(ctx: Context) -> list[CheckResult]:
     for fc in ctx.reference_files:
         is_procedure_or_recovery = "procedure" in fc.rel_path.lower() or "recovery" in fc.rel_path.lower()
         if is_procedure_or_recovery and not checklist_pat.search(fc.text):
-                results.append(
-                    CheckResult(
-                        check_id="IC-SC-004",
-                        severity=Severity.MINOR,
-                        passed=False,
-                        message="Procedure/recovery file missing Checklist section",
-                        file_ref=fc.rel_path,
-                    )
+            results.append(
+                CheckResult(
+                    check_id="IC-SC-004",
+                    severity=Severity.MINOR,
+                    passed=False,
+                    message="Procedure/recovery file missing Checklist section",
+                    file_ref=fc.rel_path,
                 )
+            )
     if not any(not r.passed for r in results):
         results.append(
             CheckResult(
@@ -1122,7 +1116,7 @@ def check_max_fix_passes_consistent(ctx: Context) -> list[CheckResult]:
 def check_merge_script_pass_range(ctx: Context) -> list[CheckResult]:
     """Merge script v2 pass_number range comment matches actual limit."""
     results: list[CheckResult] = []
-    for fc in ctx.script_files_sh:
+    for fc in ctx.script_files_py:
         if "merge-reports-v2" in fc.rel_path:
             range_pat = re.compile(r"\(1-(\d+)\)")
             for i, line in enumerate(fc.lines, 1):
@@ -1179,64 +1173,6 @@ def check_python_future_annotations(ctx: Context) -> list[CheckResult]:
     return results
 
 
-@register("IC-CQ-002", Severity.MAJOR, "code-quality")
-def check_bash_set_eo_pipefail(ctx: Context) -> list[CheckResult]:
-    """All bash scripts have 'set -eo pipefail'."""
-    results: list[CheckResult] = []
-    for fc in ctx.script_files_sh:
-        has_set = any("set -eo pipefail" in line or "set -euo pipefail" in line for line in fc.lines[:40])
-        if not has_set:
-            results.append(
-                CheckResult(
-                    check_id="IC-CQ-002",
-                    severity=Severity.MAJOR,
-                    passed=False,
-                    message="Bash script missing 'set -eo pipefail'",
-                    file_ref=fc.rel_path,
-                )
-            )
-    if not any(not r.passed for r in results):
-        results.append(
-            CheckResult(
-                check_id="IC-CQ-002",
-                severity=Severity.MAJOR,
-                passed=True,
-                message=f"All {len(ctx.script_files_sh)} bash scripts have set -eo pipefail",
-            )
-        )
-    return results
-
-
-@register("IC-CQ-003", Severity.MAJOR, "code-quality")
-def check_no_echo_grep_in_bash(ctx: Context) -> list[CheckResult]:
-    """No 'echo | grep' patterns in bash scripts (use [[ =~ ]] instead)."""
-    results: list[CheckResult] = []
-    pat = re.compile(r"echo\s.*\|\s*grep")
-    for fc in ctx.script_files_sh:
-        for i, line in enumerate(fc.lines, 1):
-            if pat.search(line) and not line.strip().startswith("#"):
-                results.append(
-                    CheckResult(
-                        check_id="IC-CQ-003",
-                        severity=Severity.MAJOR,
-                        passed=False,
-                        message="echo|grep pattern found (use [[ =~ ]] for performance)",
-                        file_ref=f"{fc.rel_path}:{i}",
-                        details=f"Line: {line.strip()[:100]}",
-                    )
-                )
-    if not any(not r.passed for r in results):
-        results.append(
-            CheckResult(
-                check_id="IC-CQ-003",
-                severity=Severity.MAJOR,
-                passed=True,
-                message="No echo|grep patterns in bash scripts",
-            )
-        )
-    return results
-
-
 @register("IC-CQ-004", Severity.MINOR, "code-quality")
 def check_no_python3_invocations(ctx: Context) -> list[CheckResult]:
     """No 'python3' invocations in .md files (should be 'uv run')."""
@@ -1268,37 +1204,6 @@ def check_no_python3_invocations(ctx: Context) -> list[CheckResult]:
                 severity=Severity.MINOR,
                 passed=True,
                 message="No python3 invocations in .md files",
-            )
-        )
-    return results
-
-
-@register("IC-CQ-005", Severity.MINOR, "code-quality")
-def check_bash_version_guard(ctx: Context) -> list[CheckResult]:
-    """Bash scripts using bash 4+ features have a version check."""
-    results: list[CheckResult] = []
-    bash4_features = ["declare -A", "readarray", "mapfile", "${!"]
-    for fc in ctx.script_files_sh:
-        uses_bash4 = any(feat in fc.text for feat in bash4_features)
-        if uses_bash4:
-            has_check = "BASH_VERSINFO" in fc.text or "BASH_VERSION" in fc.text
-            if not has_check:
-                results.append(
-                    CheckResult(
-                        check_id="IC-CQ-005",
-                        severity=Severity.MINOR,
-                        passed=False,
-                        message="Bash 4+ features used without version check",
-                        file_ref=fc.rel_path,
-                    )
-                )
-    if not any(not r.passed for r in results):
-        results.append(
-            CheckResult(
-                check_id="IC-CQ-005",
-                severity=Severity.MINOR,
-                passed=True,
-                message="All bash scripts with 4+ features have version guards",
             )
         )
     return results
@@ -1403,16 +1308,16 @@ def check_no_pass_priority_ambiguity(ctx: Context) -> list[CheckResult]:
     results: list[CheckResult] = []
     for fc in ctx.agent_files:
         if "fix-verifier" in fc.rel_path and re.search(r"FV-P\{priority\}", fc.text, re.IGNORECASE):
-                results.append(
-                    CheckResult(
-                        check_id="IC-NC-003",
-                        severity=Severity.MINOR,
-                        passed=False,
-                        message="Fix-verifier uses P{priority} (collides with pipeline P{pass_number})",
-                        file_ref=fc.rel_path,
-                        details="Should use S{severity} or PRI{priority} instead",
-                    )
+            results.append(
+                CheckResult(
+                    check_id="IC-NC-003",
+                    severity=Severity.MINOR,
+                    passed=False,
+                    message="Fix-verifier uses P{priority} (collides with pipeline P{pass_number})",
+                    file_ref=fc.rel_path,
+                    details="Should use S{severity} or PRI{priority} instead",
                 )
+            )
     if not any(not r.passed for r in results):
         results.append(
             CheckResult(
@@ -1451,73 +1356,6 @@ def check_skill_dir_convention(ctx: Context) -> list[CheckResult]:
 
 
 # ── CATEGORY 7: Dead Code / Stale References (IC-DC) ─────────────────────────
-
-
-@register("IC-DC-001", Severity.MINOR, "dead-code")
-def check_unused_trap_variables(ctx: Context) -> list[CheckResult]:
-    """Bash scripts don't have unused variables in trap cleanup."""
-    results: list[CheckResult] = []
-    for fc in ctx.script_files_sh:
-        # Find trap cleanup line
-        trap_pat = re.compile(r"trap\s+'[^']*rm\s+-f\s+(.+?)'")
-        for m in trap_pat.finditer(fc.text):
-            cleanup_vars = re.findall(r'"\$([A-Z_]+)"', m.group(1))
-            for var in cleanup_vars:
-                # Check if variable is actually written to (not just declared)
-                write_pat = re.compile(rf'(>>|>)\s*"\${var}"')
-                if not write_pat.search(fc.text):
-                    # Also check for 'cat' or 'echo' redirects
-                    cat_pat = re.compile(rf'cat\s+"\${var}"')
-                    if not cat_pat.search(fc.text):
-                        results.append(
-                            CheckResult(
-                                check_id="IC-DC-001",
-                                severity=Severity.MINOR,
-                                passed=False,
-                                message=f"Trap variable ${var} in cleanup but never written to",
-                                file_ref=fc.rel_path,
-                            )
-                        )
-    if not any(not r.passed for r in results):
-        results.append(
-            CheckResult(
-                check_id="IC-DC-001",
-                severity=Severity.MINOR,
-                passed=True,
-                message="No unused trap variables in bash scripts",
-            )
-        )
-    return results
-
-
-@register("IC-DC-002", Severity.NIT, "dead-code")
-def check_legacy_script_deprecation(ctx: Context) -> list[CheckResult]:
-    """Legacy merge script v1 has deprecation notice if v2 exists."""
-    results: list[CheckResult] = []
-    v1 = None
-    v2_exists = False
-    for fc in ctx.script_files_sh:
-        if "merge-reports.sh" in fc.rel_path and "v2" not in fc.rel_path:
-            v1 = fc
-        if "merge-reports-v2" in fc.rel_path:
-            v2_exists = True
-    if v1 and v2_exists:
-        has_notice = any(word in v1.text.lower() for word in ["legacy", "deprecated", "superseded", "v2"])
-        if not has_notice:
-            results.append(
-                CheckResult(
-                    check_id="IC-DC-002",
-                    severity=Severity.NIT,
-                    passed=False,
-                    message="Legacy merge-reports.sh exists but has no deprecation notice (v2 exists)",
-                    file_ref=v1.rel_path,
-                )
-            )
-    if not any(not r.passed for r in results):
-        results.append(
-            CheckResult(check_id="IC-DC-002", severity=Severity.NIT, passed=True, message="Legacy script status OK")
-        )
-    return results
 
 
 # ── CATEGORY 8: Tool Completeness (IC-TC) ────────────────────────────────────

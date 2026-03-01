@@ -32,12 +32,6 @@ jobs:
       - name: Type check Python scripts
         run: uv run mypy scripts/ --ignore-missing-imports || true
 
-      - name: ShellCheck shell scripts
-        uses: ludeeus/action-shellcheck@2.0.0
-        with:
-          scandir: scripts/
-          severity: warning
-
       - name: Validate plugin.json
         run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json', encoding='utf-8')); print('plugin.json is valid JSON')"
 

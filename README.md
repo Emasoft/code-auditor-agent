@@ -135,8 +135,7 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 
 | Script | Purpose |
 |--------|---------|
-| `amcaa-merge-reports-v2.sh` | Concatenates phase reports into intermediate merged report (v2, UUID-aware) |
-| `amcaa-merge-reports.sh` | Legacy v1 merger with in-script deduplication |
+| `amcaa-merge-reports-v2.py` | Concatenates phase reports into intermediate merged report (UUID-aware) |
 | `amcaa-merge-audit-reports.py` | Python merger for codebase audit reports |
 | `amcaa-generate-todos.py` | Converts consolidated findings into skeleton TODO files |
 | `universal_pr_linter.py` | Runs MegaLinter via Docker for PR linting |
@@ -158,7 +157,7 @@ The PR review pipeline (Procedure 1) runs five phases:
 Phase 1: Spawn correctness agents (one per domain, parallel swarm)
 Phase 2: Spawn claim verification agent
 Phase 3: Spawn skeptical reviewer agent
-Phase 4: Merge reports via amcaa-merge-reports-v2.sh + dedup agent
+Phase 4: Merge reports via amcaa-merge-reports-v2.py + dedup agent
 Phase 5: Present final report
 ```
 
@@ -168,7 +167,7 @@ Phase 5: Present final report
 
 **Phase 3 -- Skeptical Review.** A single `amcaa-skeptical-reviewer-agent` performs a holistic review from the perspective of an external maintainer. It evaluates UX impact, breaking changes, API consistency, and architectural concerns that per-file audits miss.
 
-**Phase 4 -- Merge + Dedup.** The `amcaa-merge-reports-v2.sh` script concatenates all phase reports into an intermediate merged report. Then `amcaa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
+**Phase 4 -- Merge + Dedup.** The `amcaa-merge-reports-v2.py` script concatenates all phase reports into an intermediate merged report. Then `amcaa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
 
 **Phase 5 -- Final Report.** The deduplicated report is presented as the final verdict.
 
