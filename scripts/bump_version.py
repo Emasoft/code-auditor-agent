@@ -52,10 +52,11 @@ def bump_semver(major: int, minor: int, patch: int, part: str) -> tuple[int, int
     raise ValueError(f"Unknown bump part: {part!r}")
 
 
-def read_plugin_json(path: Path) -> dict:
+def read_plugin_json(path: Path) -> dict[str, object]:
     """Read and return parsed plugin.json content."""
     with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        data: dict[str, object] = json.load(f)
+        return data
 
 
 def write_plugin_json(path: Path, data: dict) -> None:

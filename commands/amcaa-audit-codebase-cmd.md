@@ -18,7 +18,7 @@ parameters:
     description: Path to reference standard document
     required: true
   - name: types
-    description: "Comma-separated violation types (default: HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION)"
+    description: "Comma-separated violation types (default HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION)"
     required: false
   - name: fix
     description: Enable fix phases (6-7)
@@ -32,7 +32,7 @@ parameters:
     description: Path to file with custom grep patterns (one per line)
     required: false
   - name: report-dir
-    description: Directory for reports (default: docs_dev/)
+    description: "Directory for reports (default: docs_dev/)"
     required: false
     default: "docs_dev/"
   - name: max-fix-passes

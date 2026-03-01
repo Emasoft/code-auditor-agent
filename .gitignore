@@ -15,9 +15,16 @@ build/
 venv/
 ENV/
 
+# Environment
+.env
+.env.*
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Node
+node_modules/
 
 # IDE
 .idea/

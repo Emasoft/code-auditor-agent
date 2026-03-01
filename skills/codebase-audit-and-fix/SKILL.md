@@ -1,6 +1,6 @@
 ---
 name: codebase-audit-and-fix
-description: "Full codebase audit pipeline: discover, verify, gap-fill, consolidate, TODO, fix loop."
+description: "Full codebase audit pipeline: discover, verify, gap-fill, consolidate, TODO, fix loop. Use when auditing an entire codebase for compliance violations, architectural issues, or decoupling standards. Trigger with /audit-codebase or 'audit the codebase'."
 version: 1.0.0
 author: Emasoft
 license: MIT
