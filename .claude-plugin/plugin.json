@@ -1,6 +1,6 @@
 {
   "name": "code-auditor-agent",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Four-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.",
   "author": {
     "name": "Emasoft",
@@ -9,7 +9,19 @@
   "homepage": "https://github.com/Emasoft/code-auditor-agent",
   "repository": "https://github.com/Emasoft/code-auditor-agent",
   "license": "MIT",
-  "keywords": ["code-review", "audit", "pr-review", "code-quality", "correctness", "claim-verification", "security", "vulnerability-scanning", "codebase-audit", "compliance", "todo-generation"],
+  "keywords": [
+    "code-review",
+    "audit",
+    "pr-review",
+    "code-quality",
+    "correctness",
+    "claim-verification",
+    "security",
+    "vulnerability-scanning",
+    "codebase-audit",
+    "compliance",
+    "todo-generation"
+  ],
   "commands": "./commands/",
   "agents": [
     "./agents/caa-code-correctness-agent.md",
