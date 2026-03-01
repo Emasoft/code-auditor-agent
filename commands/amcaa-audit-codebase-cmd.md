@@ -36,7 +36,7 @@ parameters:
     required: false
     default: "docs_dev/"
   - name: max-fix-passes
-    description: Maximum fix-verify iterations (default: 5)
+    description: "Maximum fix-verify iterations (default 5)"
     required: false
     default: "5"
 ---
