@@ -218,14 +218,13 @@ Dynamic agent swarm that resolves all findings, runs tests, lints, and commits.
 
 See [Procedure 2: Code Fix](references/procedure-2-fix.md) for full protocol.
 
-**Reference TOC:**
-- [Table of Contents](references/procedure-2-fix.md#table-of-contents)
-- [How to select and assign fix agents dynamically](references/procedure-2-fix.md#agent-selection-dynamic)
-- [How to implement fixes with the fix protocol](references/procedure-2-fix.md#fix-protocol)
-- [How to run MegaLinter and handle lint errors](references/procedure-2-fix.md#linting-step-docker-required)
-- [How to commit verified fixes](references/procedure-2-fix.md#commit-after-fixes)
-- [What Procedure 2 produces](references/procedure-2-fix.md#procedure-2-output)
-- [Procedure 2 completion checklist](references/procedure-2-fix.md#procedure-2-checklist)
+**Reference file sections (procedure-2-fix.md):**
+- [Agent Selection (Dynamic)](references/procedure-2-fix.md#agent-selection-dynamic) — How to select and assign fix agents dynamically
+- [Fix Protocol](references/procedure-2-fix.md#fix-protocol) — How to implement fixes with the 15-step protocol
+- [Linting Step (Docker Required)](references/procedure-2-fix.md#linting-step-docker-required) — How to run MegaLinter and handle lint errors
+- [Commit After Fixes](references/procedure-2-fix.md#commit-after-fixes) — How to commit verified fixes
+- [Procedure 2 Output](references/procedure-2-fix.md#procedure-2-output) — What Procedure 2 produces
+- [Procedure 2 Checklist](references/procedure-2-fix.md#procedure-2-checklist) — Completion checklist for the fix cycle
 
 ### Fix Checklist
 
