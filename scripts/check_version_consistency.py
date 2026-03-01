@@ -27,7 +27,7 @@ def find_project_root(start: Path) -> Path:
 def read_plugin_version(project_root: Path) -> str:
     """Read version field from .claude-plugin/plugin.json."""
     plugin_json = project_root / ".claude-plugin" / "plugin.json"
-    with plugin_json.open() as f:
+    with plugin_json.open(encoding="utf-8") as f:
         data = json.load(f)
     version = data.get("version")
     if not version:
@@ -40,7 +40,7 @@ def read_pyproject_version(project_root: Path) -> str:
     pyproject = project_root / "pyproject.toml"
     if not pyproject.exists():
         raise FileNotFoundError(f"pyproject.toml not found at {pyproject}")
-    text = pyproject.read_text()
+    text = pyproject.read_text(encoding="utf-8")
     # Match version = "x.y.z" in the [project] or [tool.poetry] section
     match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
     if not match:

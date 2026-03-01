@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Requires bash 4+ (for ${var,,} lowercase). macOS ships bash 3.2 — install bash via Homebrew.
 # AMCAA Merge Reports v2 — Concatenation merger with NO deduplication.
 # Deduplication is handled by the amcaa-dedup-agent (an AI agent).
 #
@@ -34,6 +35,12 @@
 #   2 — Error (missing reports, invalid input)
 
 set -eo pipefail
+
+# Require bash 4+ for ${var,,} lowercase (macOS ships bash 3.2 — install via: brew install bash)
+if ((BASH_VERSINFO[0] < 4)); then
+  echo "Error: bash 4+ required (found ${BASH_VERSION}). Install via: brew install bash" >&2
+  exit 2
+fi
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 RED='\033[0;31m'

@@ -120,7 +120,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
 
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
-        UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+        UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
       Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P1-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
@@ -162,7 +162,7 @@ Task(
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
-      UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
     Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P1-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
@@ -210,7 +210,7 @@ Task(
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
-      UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
     Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P1-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.
@@ -309,7 +309,7 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
    CC-P1-A1-001) to guarantee global uniqueness within a pass.
 
 6. **UUID filenames prevent collisions.** Each agent generates a UUID for its output file
-   (`uuidgen | tr '[:upper:]' '[:lower:]'`). This eliminates file overwrites between
+   (`python3 -c "import uuid; print(uuid.uuid4())"`). This eliminates file overwrites between
    concurrent agents.
 
 7. **Same line ≠ same bug.** Two findings at the same file:line are only duplicates if they

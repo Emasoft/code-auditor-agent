@@ -121,7 +121,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
 
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:
-        UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+        UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
       Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-correctness-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
       Audit these files for code correctness. Read every file completely.
@@ -171,7 +171,7 @@ Task(
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
-      UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
     Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-claims-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Extract every factual claim from the PR description and commit messages.
@@ -222,7 +222,7 @@ Task(
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
-      UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
     Write your report to: {ABSOLUTE_REPORT_DIR}/amcaa-review-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
 
     Review this PR as an external maintainer who has never seen the codebase.

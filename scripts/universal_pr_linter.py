@@ -34,7 +34,7 @@ lint-summary.json with error/warning counts for pipeline automation.
 
 Requirements
 ------------
-- Python 3.8+
+- Python 3.12+
 - git
 - docker (Docker Desktop / Engine). The script emits actionable help if missing.
 

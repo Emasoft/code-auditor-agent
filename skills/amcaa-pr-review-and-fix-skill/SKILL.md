@@ -107,7 +107,7 @@ MAX_PASSES = 25
 At the start of EACH pass (including the first), generate a unique run ID:
 
 ```
-RUN_ID = first 8 characters of uuidgen (lowercase)
+RUN_ID = first 8 hex characters from python3 -c "import uuid; print(uuid.uuid4().hex[:8])"
 # Example: RUN_ID = "a1b2c3d4"
 ```
 
@@ -152,7 +152,7 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 Each agent generates a UUID at startup and uses it in its output filename:
 
 ```bash
-UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
 REPORT_PATH="docs_dev/amcaa-correctness-P${PASS}-R${RUN_ID}-${UUID}.md"
 ```
 

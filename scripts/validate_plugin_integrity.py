@@ -184,9 +184,9 @@ def is_inside_code_fence(lines: list[str], target_line_idx: int) -> bool:
 def build_context(root: Path) -> Context:
     """Scan project tree and build Context with all file contents cached."""
     plugin_json_path = root / ".claude-plugin" / "plugin.json"
-    plugin_json = json.loads(plugin_json_path.read_text())
+    plugin_json = json.loads(plugin_json_path.read_text(encoding="utf-8"))
     pyproject_path = root / "pyproject.toml"
-    pyproject_text = pyproject_path.read_text() if pyproject_path.exists() else ""
+    pyproject_text = pyproject_path.read_text(encoding="utf-8") if pyproject_path.exists() else ""
     pv_path = root / ".python-version"
     python_version_file = pv_path.read_text().strip() if pv_path.exists() else None
 
@@ -1246,6 +1246,10 @@ def check_no_python3_invocations(ctx: Context) -> list[CheckResult]:
             if "python3 " in line and not is_inside_code_fence(fc.lines, i - 1):
                 # Skip if it's a comment about python3 or an installation instruction
                 if "install" in line.lower() or "which python" in line.lower():
+                    continue
+                # Skip if python3 appears only inside inline code backticks (explanatory references)
+                stripped = re.sub(r"`[^`]*`", "", line)
+                if "python3 " not in stripped:
                     continue
                 results.append(
                     CheckResult(

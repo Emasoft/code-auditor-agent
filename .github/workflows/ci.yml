@@ -39,7 +39,7 @@ jobs:
           severity: warning
 
       - name: Validate plugin.json
-        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
+        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json', encoding='utf-8')); print('plugin.json is valid JSON')"
 
       - name: Check version consistency
         run: uv run scripts/check_version_consistency.py

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # DEPRECATED: Use amcaa-merge-reports-v2.sh instead. This v1 script is retained for
 # backward-compatible reference only. It will be removed in a future release.
 #
