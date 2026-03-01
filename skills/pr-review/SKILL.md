@@ -352,148 +352,23 @@ original finding ID cross-references.
 
 ## Agent Recovery Protocol
 
-This protocol applies to ALL agents spawned by the orchestrator: correctness swarm, claim verification,
-skeptical review, and dedup agent. When an agent is lost for any reason, the orchestrator MUST follow
-these steps to ensure the task is completed and no corrupt artifacts remain.
+See [Agent Recovery Protocol](references/agent-recovery.md) for full recovery procedures.
 
-### Failure Modes & Detection
+**Contents:**
+- Failure modes and detection (crash, OOM, timeout, API errors, context compaction)
+- Agent tracking fields (taskId, agentType, domain, outputPath, findingPrefix, status)
+- Loss verification (output file completeness checks)
+- Partial artifact cleanup rules
+- Re-spawn procedures (new UUID, same finding prefix, same pass number)
+- Failure logging (recovery log format)
+- Special cases: context compaction recovery, wrong pass number, domain label collision
 
-| Failure Mode | Detection Signal |
-|---|---|
-| **Crash / OOM** | Task tool returns error, empty result, or agent process dies mid-execution |
-| **Out of tokens** | Agent returns truncated output, `[MAX TURNS]`, or incomplete report file |
-| **API errors** | Agent returns "overloaded", rate limit (429), server error (500), or auth failure |
-| **Connection errors** | Task tool hangs then returns timeout or network error |
-| **Timeout** | Agent does not return within deadline (review agents: 10 min, dedup agent: 5 min) |
-| **Lost during compaction** | Orchestrator's context was summarized; agent task ID no longer in memory and no result was ever received |
-| **Broken reference** | TaskOutput returns "agent not found" or "invalid task ID" |
-| **ID collision** | Two agents wrote to overlapping filenames (prevented by UUID filenames — verify if suspected) |
-| **Version collision** | Agent used stale plugin/agent definition cached from a prior session; writes wrong format or wrong pass prefix |
-
-### Step 1: Detect the Loss
-
-The orchestrator MUST mentally track every spawned agent with these fields:
-
-```
-taskId:        string    // Task tool's returned ID
-agentType:     string    // "correctness" | "claims" | "skeptical" | "dedup"
-domain:        string    // Domain label (e.g., "governance-core") or "N/A" for single agents
-outputPath:    string    // Expected report file path (with UUID)
-findingPrefix: string    // e.g., "CC-P1-A2" — for re-spawn consistency
-launchedAt:    timestamp // When the agent was spawned
-status:        string    // "running" | "done" | "failed" | "lost"
-```
-
-An agent is **LOST** if ANY of these are true:
-
-- Task tool returned an error, empty string, or exception
-- Agent returned a result but its expected output file does not exist
-- Agent returned but its output file is incomplete (see Step 2)
-- Agent's task ID cannot be resolved (TaskOutput returns error)
-- Agent has been running longer than its deadline without returning
-- Context compaction occurred and the agent's task ID is no longer in the orchestrator's working memory
-
-### Step 2: Verify the Loss
-
-Before cleanup, verify that the agent truly failed (not just slow or communication-disrupted):
-
-1. **Check if output file exists** at the expected `outputPath`
-2. **If file exists, check completeness:**
-   - File size > 0 bytes
-   - File contains the `## Self-Verification` section (the agent's checklist)
-   - File does not end mid-sentence or with an unclosed code block
-   - File has valid markdown structure matching the agent's output format
-3. **If file is COMPLETE** → the agent finished its work despite the communication failure.
-   Mark as "done" and use the file. No re-spawn needed.
-4. **If file is INCOMPLETE or MISSING** → the agent truly failed. Proceed to Step 3.
-
-### Step 3: Clean Up Partial Artifacts
-
-Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or other passes.
-
-```bash
-# Identify the lost agent's output file by its UUID
-LOST_FILE="docs_dev/amcaa-correctness-P1-a1b2c3d4.md"
-
-# Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
-# Then delete the partial file
-rm -f "$LOST_FILE"
-```
-
-**Cleanup rules:**
-
-- Delete partial report files (missing Self-Verification section at the end)
-- Delete zero-byte files created by the lost agent
-- Delete files with incomplete markdown (unclosed code blocks, truncated mid-sentence)
-- **NEVER** delete files from a different agent (different UUID in filename)
-- **NEVER** delete files from a different pass (different `P{N}` prefix)
-- **NEVER** delete the intermediate merge report or final report from a completed phase
-- If unsure whether a file belongs to the lost agent, **leave it** — the merge script and dedup agent handle extras gracefully
-
-### Step 4: Re-Spawn the Task
-
-Create a NEW agent with a NEW UUID for the exact same task:
-
-1. **Generate a new UUID** for the replacement agent's output filename
-2. **Copy the original prompt EXACTLY** — same domain, same files, same finding ID prefix, same pass number
-3. **Update only the output path** to use the new UUID
-4. **Spawn the replacement agent**
-
-**Re-spawn rules:**
-
-- Always use a **NEW UUID** (prevents filename collision with the deleted partial file)
-- Use the **SAME finding ID prefix** (ensures finding ID continuity for the domain)
-- Use the **SAME pass number** (the replacement is part of the same pass, not a new pass)
-- If the same task fails **3 consecutive times**, **STOP** and escalate to the user:
-  ```
-  "Agent {type} for domain {domain} failed 3 times.
-   Last error: {error_summary}.
-   Manual intervention required."
-  ```
-- Between retries, wait **30 seconds** (API rate limit cooldown, transient error recovery)
-
-### Step 5: Record the Failure
-
-Append an entry to the recovery log (either in the merged report or
-a separate `docs_dev/amcaa-recovery-log-P{N}.md` file):
-
-```markdown
-### Agent Recovery Log
-
-| Time | Agent Type | Domain | Failure Mode | Lost File | Action Taken |
-|------|-----------|--------|-------------|-----------|-------------|
-| 14:23 | correctness | governance-core | timeout (12 min) | P1-a1b2c3d4.md (0 bytes, deleted) | Re-spawned → P1-e5f6g7h8.md |
-| 14:25 | claims | N/A | API 429 | P1-i9j0k1l2.md (partial, deleted) | 30s cooldown → re-spawned |
-```
-
-### Special Cases
-
-**Lost during context compaction:**
-
-The orchestrator's context was summarized and one or more agent task IDs were lost.
-
-1. List ALL `amcaa-*-P{N}-*.md` files in `docs_dev/` for the current pass number
-2. Build the expected agent roster: which domains should have correctness reports? Was claims run? Was skeptical run? Was dedup run?
-3. For each expected report that is missing: check if a complete file exists under a different-than-expected UUID (the agent may have written it but the ID was lost)
-4. For each truly missing report: re-spawn from scratch (Step 4)
-
-**Agent wrote report with wrong pass number (version/cache collision):**
-
-If an agent writes a report with `P2` instead of `P1` (stale prompt from a cached agent definition):
-
-1. The merge script's glob `amcaa-*-P{N}*.md` will correctly EXCLUDE it (it won't match the current pass)
-2. Check if the content is actually from the current pass (correct files audited, correct finding prefixes)
-3. If content is correct but filename is wrong: rename the file to the correct pass prefix
-4. If content is from a genuinely different pass: delete it and re-spawn
-
-**Multiple correctness agents for the same domain (domain label collision):**
-
-UUID filenames prevent file-level collision. But if two agents were accidentally given the same domain:
-
-1. Both will produce separate UUID-named files — no file collision occurs
-2. The merge script will concatenate BOTH files into the intermediate report
-3. The dedup agent will handle any duplicate findings between them
-4. Note the duplication in the recovery log, but no data loss occurs
+### Recovery Checklist
+- [ ] Check all agent reports exist in docs_dev/
+- [ ] Verify merge script produced intermediate report
+- [ ] Confirm dedup agent produced final report
+- [ ] Record any agent failures in recovery log
+- [ ] Escalate to user after 3 consecutive failures for same task
 
 ---
 
@@ -523,16 +398,17 @@ User: "re-run the PR review"
 
 ## Lessons Learned (Baked Into This Pipeline)
 
-1. **Swarms are microscopes.** Great at per-file correctness. Blind to the big picture.
-2. **PR descriptions lie.** Not maliciously — authors believe they implemented what they described.
-   The gap between intent and implementation is the #1 source of missed bugs.
-3. **Absence is the hardest bug to find.** A missing field assignment produces no error, no warning,
-   no test failure. The code compiles and runs fine. Only a claim verifier or skeptical reviewer
-   will notice that `fromLabel` is declared in the type but never set in the return statement.
-4. **Cross-file consistency requires holistic view.** Version "0.22.5" in JSON-LD but "0.22.4"
-   in prose HTML — each file is internally valid, but together they're inconsistent.
-5. **UX judgment is not a code concern.** Auto-copying clipboard on text selection is technically
-   correct code. Whether it's a good idea requires a different kind of thinking.
-6. **The stranger's perspective is irreplaceable.** Twenty agents who know the codebase missed
-   what one agent pretending to be a stranger caught immediately. Fresh eyes see what familiarity
-   blinds you to.
+See [Lessons Learned](references/lessons-learned.md) for the full list with context.
+
+**Contents:**
+- Why swarms alone are insufficient (microscope vs. telescope)
+- PR descriptions lie: intent vs. implementation gap
+- Absence is the hardest bug to find (missing field assignments)
+- Cross-file consistency requires holistic view
+- UX judgment is not a code concern
+- The stranger's perspective is irreplaceable
+
+### Lessons Checklist
+- [ ] All three phases (correctness, claims, skeptical) are included in every review
+- [ ] PR description claims are verified against actual code, not trusted at face value
+- [ ] Cross-file consistency is checked (version strings, shared constants, API contracts)

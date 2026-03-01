@@ -1,6 +1,6 @@
 ---
 name: codebase-audit-and-fix
-description: "Full codebase audit pipeline: discover, verify, gap-fill, consolidate, TODO, fix loop. Use when auditing an entire codebase for compliance violations, architectural issues, or decoupling standards. Trigger with /audit-codebase or 'audit the codebase'."
+description: "Codebase audit pipeline with discovery, verification, gap-fill, consolidation, TODO generation and fix loop. Trigger with /audit-codebase."
 version: 1.0.0
 author: Emasoft
 license: MIT
@@ -9,9 +9,39 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 # Codebase Audit And Fix
 
-9-phase pipeline auditing every file in scope against a reference standard. Uses grep triage to skip clean files, 3-4 file batches to prevent hallucination, multi-wave verification to eliminate false positives, and iterative gap-fill for 100% coverage.
+## Overview
 
-## Parameters
+9-phase pipeline that audits every file in a codebase against a reference standard. Uses grep triage to skip clean files, 3-4 file batches to prevent hallucination, multi-wave verification to eliminate false positives, and iterative gap-fill for 100% coverage. When FIX_ENABLED, applies automated fixes with checkpoint-based recovery and multi-pass verification until all violations are resolved.
+
+## Prerequisites
+
+### Required Agents
+
+| Agent | Phase | Purpose |
+|-------|-------|---------|
+| `amcaa-domain-auditor-agent` | 1, 3 | Discovery and gap-fill auditing of file batches |
+| `amcaa-verification-agent` | 2, 3 | Cross-check audit reports and detect missed files |
+| `amcaa-consolidation-agent` | 4 | Merge per-domain reports, dedup, classify findings |
+| `amcaa-todo-generator-agent` | 5 | Generate actionable TODO files from consolidated reports |
+| `amcaa-fix-agent` | 6 | Implement TODO fixes with checkpoint recovery |
+| `amcaa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
+
+### Required Scripts
+
+| Script | Phase | Purpose |
+|--------|-------|---------|
+| `amcaa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
+| `amcaa-generate-todos.py` | 5 | Structured TODO generation helper |
+
+### Environment
+
+- Python 3.12+ with `uv`
+- Git repository (for diff-based change tracking)
+- Sufficient disk space for report artifacts in `REPORT_DIR`
+
+## Instructions
+
+### Parameters
 
 | Param | Req | Default | Description |
 |-------|-----|---------|-------------|
@@ -26,7 +56,7 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
-## Pipeline
+### Pipeline
 
 | Phase | Action | Agent | Concurrency |
 |-------|--------|-------|-------------|
@@ -42,7 +72,7 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 
 If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until all PASS or `PASS_NUMBER > MAX_FIX_PASSES`.
 
-## Report Naming
+### Report Naming
 
 All files use `{REPORT_DIR}/amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent generates its own UUID.
 
@@ -59,11 +89,11 @@ All files use `{REPORT_DIR}/amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent g
 | Manifest | `amcaa-manifest-R{RUN_ID}.json` |
 | Final | `amcaa-audit-FINAL-{timestamp}.md` |
 
-## Finding IDs
+### Finding IDs
 
 Format: `{PREFIX}-P{PASS}-{AGENT_PREFIX}-{SEQ}` where PREFIX=DA/VE/GF/FV, AGENT_PREFIX=A0..AF..A10.., SEQ=001+. Consolidation uses `CA-{DOMAIN}-{SEQ}` (no PASS/AGENT_PREFIX since it operates per-domain).
 
-## Spawning Patterns
+### Spawning Patterns
 
 All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also receive: `SCOPE_PATH, VIOLATION_TYPES, PASS, RUN_ID, AGENT_PREFIX, FINDING_ID_PREFIX`. Additional per-phase params:
 
@@ -77,12 +107,113 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 
 All agents end with: `REPORTING RULES: Write details to report file. Return ONLY: "[DONE/FAILED] {task} - {summary}. Report: {path}". Max 2 lines.`
 
-## Loop Termination
+### Loop Termination
 
 - Gap-fill: stops when 0 missed files or 3 iterations reached
 - Fix loop: stops when all verifiers PASS or `PASS_NUMBER > MAX_FIX_PASSES`
 - Agent retry: max 3 retries per agent; after 3, escalate
 
-## Recovery
+## Output
 
-If agent fails: check if output file exists and is complete. If yes, use it. If not, re-spawn with new UUID, same prefix. Read manifest to recover from context compaction.
+The pipeline produces the following artifacts in `REPORT_DIR`:
+
+| Artifact | Description |
+|----------|-------------|
+| Per-batch audit reports | Individual `amcaa-audit-*` files from Phase 1 discovery |
+| Verification reports | `amcaa-verify-*` files confirming or rejecting findings |
+| Gap-fill reports | `amcaa-gapfill-*` files for previously missed files |
+| Consolidated domain reports | `amcaa-consolidated-{domain}.md` with deduplicated, classified findings |
+| TODO files | `TODO-{scope}-changes.md` with actionable items per domain (file:line:evidence) |
+| Fix reports (if FIX_ENABLED) | `amcaa-fixes-done-*` with applied changes and checkpoints |
+| Fix verification (if FIX_ENABLED) | `amcaa-fixverify-*` with PASS/FAIL/REGRESSION verdicts |
+| Manifest | `amcaa-manifest-R{RUN_ID}.json` tracking all files, batches, and agent assignments |
+| Final merged report | `amcaa-audit-FINAL-{timestamp}.md` with aggregate stats, violation counts, and links to all artifacts |
+
+## Error Handling
+
+- **Agent failure**: Check if the output file exists and is complete. If yes, use it. If not, re-spawn with a new UUID but the same agent prefix.
+- **Context compaction**: Read the manifest (`amcaa-manifest-R{RUN_ID}.json`) to recover full pipeline state after context compaction.
+- **Partial runs**: The manifest tracks per-file completion status. Resume from the last incomplete phase.
+- **Checkpoint recovery (Phase 6)**: Each fix agent writes a checkpoint JSON after every fix. On failure, the replacement agent reads the checkpoint and continues from the last successful fix.
+- **Escalation**: After 3 retries on the same agent task, escalate to the orchestrator for manual intervention.
+
+## Examples
+
+### Example 1: Audit-only (no fixes)
+
+```bash
+# Trigger via slash command:
+/audit-codebase
+
+# Orchestrator sets:
+SCOPE_PATH=src/
+REFERENCE_STANDARD=docs/compliance-standard.md
+REPORT_DIR=docs_dev/
+FIX_ENABLED=false
+TODO_ONLY=false
+```
+
+This runs all 8 phases (skipping 6-7) and produces a final merged report with TODO files.
+
+### Example 2: Audit with TODO generation only
+
+```bash
+/audit-codebase
+
+# Orchestrator sets:
+SCOPE_PATH=src/api/
+REFERENCE_STANDARD=docs/api-decoupling-standard.md
+TODO_ONLY=true
+```
+
+Stops after Phase 5. Produces consolidated reports and TODO files but does not apply fixes.
+
+### Example 3: Full audit with automated fixes
+
+```bash
+/audit-codebase
+
+# Orchestrator sets:
+SCOPE_PATH=src/
+REFERENCE_STANDARD=docs/compliance-standard.md
+FIX_ENABLED=true
+MAX_FIX_PASSES=3
+```
+
+Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix reports, verification results, and the final merged report.
+
+## Resources
+
+### Agents
+
+- `amcaa-domain-auditor-agent` - File batch auditing (Phases 1, 3)
+- `amcaa-verification-agent` - Report cross-checking (Phase 2, 3)
+- `amcaa-consolidation-agent` - Per-domain report merging (Phase 4)
+- `amcaa-todo-generator-agent` - TODO file generation (Phase 5)
+- `amcaa-fix-agent` - Automated fix application (Phase 6)
+- `amcaa-fix-verifier-agent` - Fix verification (Phase 7)
+
+### Scripts
+
+- `amcaa-merge-audit-reports.py` - Final report compilation
+- `amcaa-generate-todos.py` - Structured TODO generation
+
+### Related Commands
+
+- `/audit-codebase` - Triggers this skill from the CLI
+
+### Reference Files
+
+- `references/pipeline-phases.md` - Detailed phase documentation (if extracted)
+
+## Completion Checklist
+
+- [ ] Scope path and reference standard identified
+- [ ] Phase 1: Discovery swarm completed for all batches
+- [ ] Phase 2: Verification swarm cross-checked all reports
+- [ ] Phase 3: Gap-fill achieved 100% file coverage
+- [ ] Phase 4: Per-domain consolidation completed
+- [ ] Phase 5: TODO files generated for each scope
+- [ ] Phase 6: Fixes applied (if FIX_ENABLED)
+- [ ] Phase 7: Fix verification passed (if FIX_ENABLED)
+- [ ] Phase 8: Final merged report generated
