@@ -38,14 +38,15 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 - Python 3.12+ with `uv`
 - Git repository (for diff-based change tracking)
 - Sufficient disk space for report artifacts in `REPORT_DIR`
+- `$CLAUDE_PLUGIN_ROOT` must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 
 ## Instructions
 
 Follow these steps to run the audit pipeline:
 
-1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path
+1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path. Verify `REFERENCE_STANDARD` file exists and is non-empty before proceeding. If not, STOP with error: 'REFERENCE_STANDARD not found or empty at {path}.'
 2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
-3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4
+3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4. If the file inventory returns zero files, STOP immediately with error: 'No files found in SCOPE_PATH ({path}). Verify the path exists and contains auditable files.' Do not proceed to Phase 1 with an empty file list.
 4. Run Phase 1: spawn `amcaa-domain-auditor-agent` for each batch (concurrency 20)
 5. Run Phase 2: spawn `amcaa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
 6. Run Phase 3: gap-fill missed files, re-verify, loop max 3 times until 100% coverage
@@ -56,16 +57,16 @@ Follow these steps to run the audit pipeline:
 
 ### Parameters
 
-| Param | Req | Default | Description |
-|-------|-----|---------|-------------|
-| `SCOPE_PATH` | Y | -- | Directory to audit |
-| `REFERENCE_STANDARD` | Y | -- | Path to compliance doc |
-| `VIOLATION_TYPES` | N | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
-| `AUDIT_PATTERNS` | N | 14 defaults | Grep triage patterns |
-| `REPORT_DIR` | N | `docs_dev/` | Output directory |
-| `FIX_ENABLED` | N | `false` | Run fix phases 6-7 |
-| `TODO_ONLY` | N | `false` | Stop after phase 5 |
-| `MAX_FIX_PASSES` | N | `5` | Max fix-verify loops |
+| Param | Req | Type | Default | Description |
+|-------|-----|------|---------|-------------|
+| `SCOPE_PATH` | Y | path | -- | Directory to audit |
+| `REFERENCE_STANDARD` | Y | path | -- | Path to compliance doc |
+| `VIOLATION_TYPES` | N | comma-separated string | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
+| `AUDIT_PATTERNS` | N | list | 14 defaults: `http://`, `https://`, `hardcoded`, `api_key`, `secret`, `token`, `password`, `/usr/local`, `/home/`, `os.path`, `subprocess`, `eval(`, `exec(`, `system()` | Grep triage patterns |
+| `REPORT_DIR` | N | path | `docs_dev/` | Output directory |
+| `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
+| `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |
+| `MAX_FIX_PASSES` | N | int | `5` | Max fix-verify loops |
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
@@ -125,6 +126,7 @@ All agents end with: `REPORTING RULES: Write details to report file. Return ONLY
 - Gap-fill: stops when 0 missed files or 3 iterations reached
 - Fix loop: stops when all verifiers PASS or `PASS_NUMBER > MAX_FIX_PASSES`
 - Agent retry: max 3 retries per agent; after 3, escalate
+- Escalation: If gap-fill completes 3 iterations with <100% coverage, write a WARNING to the final report header listing uncovered files. If MAX_FIX_PASSES is reached with still-failing verifications, the final report MUST be marked 'INCOMPLETE - {N} unresolved issues after {MAX_FIX_PASSES} passes' and the user must be notified.
 
 ## Output
 

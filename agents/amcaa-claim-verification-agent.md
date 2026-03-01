@@ -125,7 +125,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## FAILED CLAIMS (MUST-FIX)
 
-### [CV-001] Claim: "{exact quote from PR description}"
+### [CV-P1-001] Claim: "{exact quote from PR description}"
 - **Source:** PR description, section "{section}"
 - **Severity:** MUST-FIX
 - **Verification:** NOT IMPLEMENTED
@@ -136,7 +136,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## PARTIALLY IMPLEMENTED (SHOULD-FIX)
 
-### [CV-002] Claim: "{exact quote}"
+### [CV-P1-002] Claim: "{exact quote}"
 - **Source:** ...
 - **Verification:** PARTIALLY IMPLEMENTED
 - **What works:** {part that's implemented}
@@ -145,7 +145,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## CONSISTENCY ISSUES
 
-### [CV-003] {Title}
+### [CV-P1-003] {Title}
 - **Severity:** {MUST-FIX|SHOULD-FIX}
 - **Files affected:** {list}
 - **Expected:** {consistent value}
@@ -226,6 +226,13 @@ assistant: |
   Returns: "[DONE] claim-verification - 3 claims, 0 failed, 1 partial. Report: docs_dev/amcaa-claims.md"
 </example>
 
+## Special Cases
+
+- **Empty PR (no code changes)**: If the PR contains no code changes (e.g., only documentation), report: "No code changes to verify claims against."
+- **No PR description**: If the PR description is empty, report: "No claims found — PR description is empty."
+- **Binary files in diff**: Skip binary files. Note: "Binary file skipped: {filename}"
+- **Deletion-only PR**: If the PR only deletes code, verify deletion claims only.
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**
@@ -245,7 +252,7 @@ assistant: |
 - [ ] I marked each claim: VERIFIED / PARTIALLY IMPLEMENTED / NOT IMPLEMENTED / CANNOT VERIFY
 - [ ] I did NOT skip claims that seemed "obvious" (obvious claims fail most often)
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: amcaa-claims-P{N}-{uuid}.md
+- [ ] My report file uses the UUID filename: amcaa-claims-P{N}-{uuid}.md (include R{RUN_ID} as amcaa-claims-P{N}-R{RUN_ID}-{uuid}.md when RUN_ID is provided by the orchestrator for multi-pass mode; single-pass mode omits R{RUN_ID})
 - [ ] I checked cross-file consistency (versions, types, configs match everywhere)
 - [ ] The verified/failed/partial counts in my return message match the report
 - [ ] My return message to the orchestrator is exactly 1-2 lines (no code blocks, no verbose output, full details in report file only)

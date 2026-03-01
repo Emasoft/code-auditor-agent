@@ -24,6 +24,12 @@
 
 set -eo pipefail
 
+# Require bash 4+ for associative arrays (declare -A)
+if ((BASH_VERSINFO[0] < 4)); then
+  echo "Error: bash 4+ required (found ${BASH_VERSION}). Install via: brew install bash" >&2
+  exit 2
+fi
+
 # ── Configuration ──────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -71,9 +77,8 @@ MUST_FIX_FINDINGS=$(mktemp)
 SHOULD_FIX_FINDINGS=$(mktemp)
 NIT_FINDINGS=$(mktemp)
 CLEAN_FILES=$(mktemp)
-VERIFIED_CLAIMS=$(mktemp)
 
-trap 'rm -f "$MUST_FIX_FINDINGS" "$SHOULD_FIX_FINDINGS" "$NIT_FINDINGS" "$CLEAN_FILES" "$VERIFIED_CLAIMS"' EXIT
+trap 'rm -f "$MUST_FIX_FINDINGS" "$SHOULD_FIX_FINDINGS" "$NIT_FINDINGS" "$CLEAN_FILES"' EXIT
 
 # ── Process each report ────────────────────────────────────────────────────────
 for report in "${REPORTS[@]}"; do
@@ -86,26 +91,31 @@ for report in "${REPORTS[@]}"; do
 
     while IFS= read -r line; do
         # Detect section headers
-        if echo "$line" | grep -qiE '^#{1,3}\s*(MUST.FIX|FAILED CLAIMS)'; then
+        if [[ "$line" =~ ^#{1,3}[[:space:]]*(MUST.FIX|FAILED[[:space:]]CLAIMS) ]]; then
             in_section="must-fix"
+            finding_id=""
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*SHOULD.FIX|^#{1,3}\s*PARTIALLY IMPLEMENTED'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]]*(SHOULD.FIX|PARTIALLY[[:space:]]IMPLEMENTED) ]]; then
             in_section="should-fix"
+            finding_id=""
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*NIT|^#{1,3}\s*CONSISTENCY ISSUES'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]]*(NIT|CONSISTENCY[[:space:]]ISSUES) ]]; then
             in_section="nit"
+            finding_id=""
             continue
-        elif echo "$line" | grep -qiE '^#{1,3}\s*CLEAN|^#{1,3}\s*VERIFIED'; then
+        elif [[ "$line" =~ ^#{1,3}[[:space:]]*(CLEAN|VERIFIED) ]]; then
             in_section="clean"
+            finding_id=""
             continue
-        elif echo "$line" | grep -qiE '^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]' && [ "$in_section" != "" ]; then
+        elif [[ "$line" =~ ^#{1,2}[[:space:]]*[0-9] ]] || [[ "$line" =~ ^#{1,2}[[:space:]]*[A-Z] ]] && [ "$in_section" != "" ]; then
             # New top-level section, exit current parsing
             in_section=""
+            finding_id=""
             continue
         fi
 
         # Extract finding IDs like [CC-001], [CV-001], [SR-001]
-        if echo "$line" | grep -qE '^\#{2,5}\s*\['; then
+        if [[ "$line" =~ ^#{2,5}[[:space:]]*\[ ]]; then
             finding_id=$(echo "$line" | grep -oE '\[[A-Z]{2}(-P[0-9]+)?-[0-9]+\]' | head -1)
         fi
 

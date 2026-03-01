@@ -26,6 +26,15 @@ in sequence: correctness swarm, claim verification, skeptical review — then me
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output
 - The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` must be executable
+- $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+
+## Parameters
+
+| Param | Req | Type | Default | Description |
+|-------|-----|------|---------|-------------|
+| `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
+| `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
+| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` | Path to merge script |
 
 ## Use when
 
@@ -51,6 +60,8 @@ issues:
 | 3 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
 
 ## Protocol
+
+> **Maintenance Note:** This protocol is also used by `amcaa-pr-review-and-fix-skill` via `references/procedure-1-review.md`. When updating shared steps below, also update that reference file. Key differences: this skill uses single-pass (P1 hardcoded, no RUN_ID), while pr-review-and-fix uses multi-pass (variable PASS_NUMBER, with RUN_ID).
 
 ### Prerequisites
 

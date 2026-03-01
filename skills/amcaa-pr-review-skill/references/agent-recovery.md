@@ -1,5 +1,7 @@
 # Agent Recovery Protocol
 
+> **Maintenance Note:** This file shares ~70% content with `skills/amcaa-pr-review-and-fix-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. The pr-review-and-fix version is a superset with additional multi-pass recovery steps.
+
 ## Table of Contents
 
 - [Failure Modes & Detection](#failure-modes--detection)
@@ -12,7 +14,7 @@
   - [Lost during context compaction](#lost-during-context-compaction)
   - [Agent wrote report with wrong pass number](#agent-wrote-report-with-wrong-pass-number-versioncache-collision)
   - [Multiple correctness agents for the same domain](#multiple-correctness-agents-for-the-same-domain-domain-label-collision)
-- [Checklist](#checklist)
+- [Agent Recovery Checklist](#agent-recovery-checklist)
 
 This protocol applies to ALL agents spawned by the orchestrator: correctness swarm, claim verification,
 skeptical review, and dedup agent. When an agent is lost for any reason, the orchestrator MUST follow
@@ -157,7 +159,7 @@ UUID filenames prevent file-level collision. But if two agents were accidentally
 3. The dedup agent will handle any duplicate findings between them
 4. Note the duplication in the recovery log, but no data loss occurs
 
-## Checklist
+## Agent Recovery Checklist
 
 Copy this checklist and track your progress:
 

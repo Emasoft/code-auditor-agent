@@ -124,7 +124,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## MUST-FIX
 
-### [CC-001] {Brief title}
+### [CC-P1-A0-001] {Brief title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
 - **Category:** {type-safety|logic|security|api-contract|race-condition|shell}
@@ -134,12 +134,12 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## SHOULD-FIX
 
-### [CC-002] {Brief title}
+### [CC-P1-A0-002] {Brief title}
 ...
 
 ## NIT
 
-### [CC-003] {Brief title}
+### [CC-P1-A0-003] {Brief title}
 ...
 
 ## CLEAN
@@ -193,6 +193,13 @@ assistant: |
   Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: docs_dev/amcaa-correctness-shell-scripts.md"
 </example>
 
+## Special Cases
+
+- **Empty file list**: If the FILES list is empty, report: "No files to audit for domain {DOMAIN}." and exit cleanly.
+- **Binary files**: If a file cannot be read as text (binary), skip it with note: "Binary file skipped: {filename}"
+- **Very large files (>10K lines)**: Audit only the changed regions from the diff. Note in the report: "Large file — audited changed regions only."
+- **Deletion-only changes**: If a file was only deleted, note: "File deleted — no code to audit."
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**
@@ -209,7 +216,7 @@ assistant: |
       SHOULD-FIX = bugs that don't crash but produce incorrect behavior
       NIT = style, convention, minor improvement
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: amcaa-correctness-P{N}-{uuid}.md
+- [ ] My report file uses the UUID filename: amcaa-correctness-P{N}-{uuid}.md (filename includes `R{RUN_ID}` when provided by the orchestrator in multi-pass mode; single-pass mode omits `R{RUN_ID}`)
 - [ ] I did NOT report issues outside my assigned domain files
 - [ ] I noted code paths that appear to lack test coverage (tests may be in another domain — flag, don't verify)
 - [ ] My report has all required sections: MUST-FIX, SHOULD-FIX, NIT, CLEAN

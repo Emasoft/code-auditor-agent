@@ -11,6 +11,8 @@ Usage:
     bump_version.py patch --dry-run
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import re
@@ -60,10 +62,13 @@ def read_plugin_json(path: Path) -> dict[str, object]:
 
 
 def write_plugin_json(path: Path, data: dict) -> None:
-    """Write dict back to plugin.json with 2-space indent and trailing newline."""
-    with path.open("w", encoding="utf-8") as f:
+    """Write dict back to plugin.json with 2-space indent and trailing newline (atomic)."""
+    tmp = path.with_suffix(".json.tmp")
+    with tmp.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
         f.write("\n")
+    # Atomic rename: either the full write succeeds or the original is untouched.
+    tmp.rename(path)
 
 
 def update_pyproject_version(pyproject_path: Path, new_version: str, dry_run: bool) -> bool:
@@ -90,7 +95,11 @@ def update_pyproject_version(pyproject_path: Path, new_version: str, dry_run: bo
         return False
 
     if not dry_run:
-        pyproject_path.write_text(new_text, encoding="utf-8")
+        # Atomic write: write to a temp file then rename so a partial write never
+        # leaves pyproject.toml in a corrupted/intermediate state.
+        tmp = pyproject_path.with_suffix(".toml.tmp")
+        tmp.write_text(new_text, encoding="utf-8")
+        tmp.rename(pyproject_path)
     return True
 
 
@@ -171,15 +180,36 @@ def main() -> int:
         print("(dry-run: no files written)")
         return 0
 
-    # Update plugin.json
-    plugin_data["version"] = new_version_str
-    write_plugin_json(plugin_json_path, plugin_data)
-    print(f"Updated: {plugin_json_path.relative_to(root)}")
+    # Save originals for rollback in case the second write fails.
+    original_plugin_text = plugin_json_path.read_text(encoding="utf-8")
 
-    # Update pyproject.toml
+    # Update pyproject.toml FIRST so that if plugin.json write fails we only
+    # need to rollback the less-critical file (pyproject may not even exist).
     changed = update_pyproject_version(pyproject_path, new_version_str, dry_run=False)
     if changed:
         print(f"Updated: {pyproject_path.relative_to(root)}")
+
+    # Update plugin.json; rollback pyproject.toml if this write fails.
+    try:
+        plugin_data["version"] = new_version_str
+        write_plugin_json(plugin_json_path, plugin_data)
+        print(f"Updated: {plugin_json_path.relative_to(root)}")
+    except OSError as exc:
+        # Rollback pyproject.toml to its original content so both files stay
+        # in sync even when plugin.json could not be written.
+        if changed:
+            try:
+                tmp = pyproject_path.with_suffix(".toml.tmp")
+                tmp.write_text(original_plugin_text, encoding="utf-8")
+                tmp.rename(pyproject_path)
+                print("Rolled back pyproject.toml to original version", file=sys.stderr)
+            except OSError as rollback_exc:
+                print(
+                    f"ERROR: Failed to rollback pyproject.toml: {rollback_exc}",
+                    file=sys.stderr,
+                )
+        print(f"ERROR: Failed to write plugin.json: {exc}", file=sys.stderr)
+        return 1
 
     return 0
 

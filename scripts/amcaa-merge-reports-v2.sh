@@ -16,7 +16,7 @@
 #
 # Arguments:
 #   output_dir           Directory containing phase reports
-#   pass_number          Current pass number (1-10)
+#   pass_number          Current pass number (1-25)
 #   run_id               Optional run ID to scope to a single invocation
 #                        When provided, only merges files matching R{run_id}
 #                        When omitted, merges all files for this pass (legacy behavior)

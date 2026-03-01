@@ -87,6 +87,9 @@ Read the entire diff, not individual files. You're looking for patterns across t
 - [ ] Are error messages helpful? Do they tell the user what to do?
 
 #### Cross-File Consistency
+
+> **Note:** If the claims report (provided as optional input from Phase 2) already flagged a cross-file consistency issue, do NOT re-report it. Instead, note it in your cross-reference section as "confirmed by claims agent [CV-P{N}-{SEQ}]." Only report NEW cross-file issues not already covered.
+
 - [ ] Version strings match across ALL files (JSON, HTML, markdown, scripts)
 - [ ] Config values consistent (ports, paths, URLs, timeouts)
 - [ ] Interface definitions match implementations
@@ -158,7 +161,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 #### MUST-FIX
 
-##### [SR-001] {Title}
+##### [SR-P1-001] {Title}
 - **Severity:** MUST-FIX
 - **Category:** {breaking-change|ux-concern|missing-implementation|consistency|security|design}
 - **Description:** {Clear explanation of what's wrong}
@@ -168,12 +171,12 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 #### SHOULD-FIX
 
-##### [SR-002] {Title}
+##### [SR-P1-002] {Title}
 ...
 
 #### NIT
 
-##### [SR-003] {Title}
+##### [SR-P1-003] {Title}
 ...
 
 ## 3. Risk Assessment
@@ -282,6 +285,13 @@ assistant: |
   Returns: "[DONE] skeptical-review - Verdict: APPROVE, 0 issues (0 must-fix). Report: docs_dev/amcaa-review.md"
 </example>
 
+## Special Cases
+
+- **Empty PR (no code changes)**: Report: "No code changes to review."
+- **Binary files in diff**: Skip binary files. Note: "Binary file skipped: {filename}"
+- **Very large diffs (>10K lines)**: Focus on architectural and cross-file concerns. Note: "Large diff — focused on holistic patterns."
+- **Deletion-only PR**: Focus on whether deletions leave broken references or orphaned code.
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**
@@ -301,7 +311,7 @@ assistant: |
 - [ ] I justified the verdict with specific evidence (file:line references for issues, or explicit confirmation of no issues for APPROVE)
 - [ ] I acknowledged strengths (not just problems) with specific examples
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: amcaa-review-P{N}-{uuid}.md
+- [ ] My report file uses the UUID filename: amcaa-review-P{N}-{uuid}.md (include `R{RUN_ID}` when provided by the orchestrator in multi-pass mode, e.g. amcaa-review-P{N}-R{RUN_ID}-{uuid}.md; single-pass mode omits `R{RUN_ID}`)
 - [ ] I cross-referenced with Phase 1 and Phase 2 reports (if provided)
 - [ ] The issue counts in my return message match the actual counts in the report
 - [ ] My return message to the orchestrator is exactly 1-2 lines: verdict + brief result + report path (no code blocks, no verbose output)

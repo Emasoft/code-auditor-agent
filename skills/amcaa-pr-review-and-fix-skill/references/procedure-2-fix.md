@@ -50,7 +50,7 @@ and always fall back to `general-purpose` if the preferred agent is not found.
 6. Read all fix reports and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
 7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions.
 8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause.
-9. Repeat test -> fix cycles until all tests pass.
+9. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
 10. Write fix summary and test results reports.
 11. **Linting step (Docker required).** Check if Docker is available: `which docker && docker info >/dev/null 2>&1`. If Docker is NOT available, skip linting with a note: "Docker not available -- MegaLinter step skipped." and proceed to commit.
 12. If Docker IS available, run the MegaLinter linter script (see "Linting Step" section below). Parse the `lint-summary.json` output.
@@ -195,7 +195,7 @@ Task(
        If Docker is NOT available, write "[SKIP] Docker not available" to the report and return immediately.
 
     2. Run the linter:
-       python3 $CLAUDE_PLUGIN_ROOT/scripts/universal_pr_linter.py \
+       uv run $CLAUDE_PLUGIN_ROOT/scripts/universal_pr_linter.py \
          {PROJECT_ROOT} \
          --plugin-mode \
          --all \

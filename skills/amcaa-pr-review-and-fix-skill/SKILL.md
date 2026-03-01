@@ -3,7 +3,7 @@ name: amcaa-pr-review-and-fix-skill
 description: >
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review and fix the PR", "review and fix PR", "audit and fix the PR", "pre-merge review and fix".
-version: 3.0.0
+version: 2.0.0
 author: Emasoft
 license: MIT
 tags:
@@ -37,7 +37,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 |     Phase 5: Present Results                      |
 |                                                   |
 |  2. If zero issues -> DONE (write final report)   |
-|     If N > 10   -> STOP (escalate to user)         |
+|     If N > 25   -> STOP (escalate to user)         |
 |                                                   |
 |  3. PROCEDURE 2 -- Fix                            |
 |     Fix all findings from merged report           |
@@ -56,6 +56,16 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output. Create it if missing, and ensure it is in `.gitignore`.
 - The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` must be executable
+- $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+
+## Parameters
+
+| Param | Req | Type | Default | Description |
+|-------|-----|------|---------|-------------|
+| `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
+| `MAX_PASSES` | N | int | `25` | Maximum review-fix loop iterations |
+| `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
+| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-reports-v2.sh` | Path to merge script |
 
 ## Use When
 

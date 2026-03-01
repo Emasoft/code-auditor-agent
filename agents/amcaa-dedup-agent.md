@@ -221,9 +221,17 @@ Phase 3: lib/auth.ts:42 — MUST-FIX "Missing null check allows crash"
 - NEVER return code blocks, file contents, long lists, or verbose explanations to orchestrator
 - Max 2 lines of text back to orchestrator
 
+## Special Cases
+
+- **Empty intermediate report**: If the intermediate report contains zero findings, produce a final report with verdict "APPROVE" and zero counts.
+- **Single finding only**: No dedup needed. Copy the finding to the final report as-is.
+- **All findings from same agent**: No cross-agent dedup needed. Check only for self-duplicates.
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**
+
+> **Note on input filename patterns:** Input filename patterns may include `R{RUN_ID}` (multi-pass mode) or omit it (single-pass mode). Handle both patterns when globbing for source reports.
 
 ```
 ## Self-Verification

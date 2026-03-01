@@ -32,6 +32,10 @@ You make MINIMAL changes — only what the TODO specifies, nothing more.
 
 Other agents in the pipeline handle what you cannot see. Focus on what you do best.
 
+## File Assignment Invariant
+
+**CRITICAL**: This agent MUST only modify files listed in its `FILES` parameter. The orchestrator guarantees that every file path appears in exactly one fix-agent's FILES list per fix pass. Do NOT modify files outside your assigned list — another agent may be modifying them concurrently.
+
 ## INPUT FORMAT
 
 You will receive:
@@ -60,7 +64,7 @@ from the same run, skip those — they are already applied. This handles crash r
 
 For each assigned TODO (in order, skipping already-completed ones):
 
-1. **Read the target file** completely to understand context.
+1. **Read the target file** completely to understand context. Store the full original content as a backup before making any modifications. If post-fix verification (Step D) fails for this file, restore the original content from the backup to prevent corrupt files from persisting until the next fix-verify pass.
 2. **Locate the exact code** referenced in the TODO's "File" and "Lines" fields.
 3. **Read surrounding context** (5-10 lines above and below) to understand what the code
    is doing and ensure your change integrates correctly.

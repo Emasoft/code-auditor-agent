@@ -147,9 +147,11 @@ Files confirmed as clean across all reports:
 
 ## De-duplication Log
 
-| Finding | Reports | Kept Severity | Notes |
-|---------|---------|---------------|-------|
-| {file:line:type} | {report1, report2} | {MUST-FIX} | {merged evidence / harmonized} |
+Columns: **Finding** = file:line:type key; **Reports** = source reports that identified it; **Kept Severity** = severity after harmonization; **Original IDs** = lists the source finding IDs that were merged into this consolidated entry (e.g., DA-P1-A0-003, DA-P1-A2-007); **Notes** = merge/harmonization notes.
+
+| Finding | Reports | Kept Severity | Original IDs | Notes |
+|---------|---------|---------------|--------------|-------|
+| {file:line:type} | {report1, report2} | {MUST-FIX} | {DA-P1-A0-003, DA-P1-A2-007} | {merged evidence / harmonized} |
 ```
 
 ## CRITICAL RULES

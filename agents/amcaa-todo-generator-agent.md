@@ -5,7 +5,7 @@ description: >
   priority classification, and exact change instructions. Each TODO includes file, line range,
   current code, required change, and verification steps.
 model: sonnet
-tools: Read, Write
+tools: Read, Write, Grep, Glob
 maxTurns: 20
 ---
 
@@ -157,7 +157,7 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
    applied first, the dependency must be explicit.
 5. **RECORD_KEEPING items must have harmonization notes.** If a violation is flagged as
    RECORD_KEEPING, the TODO must explain what to preserve and what to add alongside.
-6. **Numbering is sequential within prefix.** TODO-{PREFIX}1, TODO-{PREFIX}2, etc. No gaps.
+6. **Numbering is sequential within priority range.** P1 items use 1-9, P2 items use 10-19, P3 items use 20+. This provides visual priority grouping.
 7. **Minimal report to orchestrator.** Write full details to the TODO file. Return to the
    orchestrator ONLY: `[DONE] todo-gen-{scope} - {N} TODOs (P1:{n}, P2:{n}, P3:{n}). File: {path}`
 
@@ -213,7 +213,7 @@ assistant: |
 - [ ] Priorities are correctly assigned: P1=blocker, P2=required, P3=nice-to-have
 - [ ] P1 items that block P2/P3 have explicit dependency references
 - [ ] All RECORD_KEEPING items have harmonization notes explaining what to preserve
-- [ ] TODO numbering is sequential with no gaps: {PREFIX}1, {PREFIX}2, ...
+- [ ] TODO numbering is sequential within priority range: P1 items use {PREFIX}1-{PREFIX}9, P2 items use {PREFIX}10-{PREFIX}19, P3 items use {PREFIX}20+
 - [ ] Dependency graph section is present and accurate
 - [ ] Header counts (Total, P1, P2, P3) match the actual TODO entries
 - [ ] My return message to the orchestrator is exactly 1-2 lines (full details in TODO file only)

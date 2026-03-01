@@ -66,6 +66,8 @@ For each file listed as CLEAN in the audit report:
 2. **If patterns found:** Flag as POTENTIALLY_MISSED — the auditor may have overlooked a violation
 3. **If no patterns found:** Confirm as CLEAN
 
+> **IMPORTANT — Gap-Fill Queue:** When spot-checks find `POTENTIALLY_MISSED` violations in files already marked CLEAN by the domain-auditor, these files MUST be added to the gap-fill re-audit queue (Phase 3). Report them in a dedicated `## Potentially Missed` section in the output, with full details (file, line, type, description, evidence) so the gap-fill phase can prioritize them.
+
 ### Step 4: Detect Missed Files
 1. Compare the audit report's file list against `DOMAIN_FILES`
 2. Any files in `DOMAIN_FILES` not covered by the report are MISSED
@@ -126,6 +128,14 @@ Write your findings to `REPORT_PATH` in this exact format:
 - {file} — CLEAN confirmed (no violation patterns found)
 - {file} — POTENTIALLY_MISSED: found {pattern} at line {N}
 - ...
+
+### Potentially Missed
+Files already marked CLEAN by the domain-auditor but where spot-checks found suspicious patterns.
+These files are queued for gap-fill re-audit in Phase 3.
+
+| File | Line | Type | Description | Evidence |
+|------|------|------|-------------|----------|
+| {file} | {line} | {violation_type} | {description} | `{code snippet}` |
 
 ### Missed Files
 - {file} — Not covered by audit report
@@ -218,6 +228,7 @@ assistant: |
 - [ ] I listed all missed files explicitly
 - [ ] I listed all disputed findings with clear explanations
 - [ ] I did NOT re-audit files (only verified existing claims and noted potential gaps)
-- [ ] My report has all required sections: Metrics, Verdict, Verification Details, Missed Files, Recommendations
+- [ ] If any POTENTIALLY_MISSED violations were found in CLEAN files, I wrote a `## Potentially Missed` section with full details (file, line, type, description, evidence) for the gap-fill phase
+- [ ] My report has all required sections: Metrics, Verdict, Verification Details, Potentially Missed, Missed Files, Recommendations
 - [ ] My return message to the orchestrator is exactly 1-2 lines (no code blocks, no verbose output, full details in report file only)
 ```

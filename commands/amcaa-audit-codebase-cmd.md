@@ -56,7 +56,7 @@ This command launches the `amcaa-codebase-audit-and-fix-skill` skill pipeline.
 ## What Happens
 
 1. **Phase 0**: Inventories all files, classifies by domain, triages with grep
-2. **Phase 1**: Spawns parallel auditor agents (3-4 files each, opus)
+2. **Phase 1**: Spawns parallel auditor agents (3-4 files each)
 3. **Phase 2**: Verification swarm cross-checks all audit reports
 4. **Phase 3**: Gap-fill audits missed files (iterative until 100% coverage)
 5. **Phase 4**: Consolidation per domain (dedup, severity harmonization)

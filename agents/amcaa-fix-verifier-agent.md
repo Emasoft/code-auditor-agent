@@ -128,16 +128,22 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## Remaining Issues (if FAIL)
 
-### [FV-P{priority}-{PREFIX}-001] {title}
+### [FV-S{severity}-{PREFIX}-001] {title}
 - **File:** {path}:{line}
 - **Type:** TODO-not-applied / Regression / Incomplete-fix
 - **Description:** {what is still wrong}
 - **Evidence:** {code snippet showing the issue}
 - **Suggested fix:** {what should be done to resolve}
+
+> **Severity levels:** S1=critical, S2=major, S3=minor
 ```
 
 The "Remaining Issues" section is only included if the verdict is FAIL. Each issue
 must have enough detail for the next fix pass to address it without re-auditing.
+
+### Regression-to-TODO Conversion
+
+When this agent reports remaining issues or regressions, the orchestrator MUST construct TODO entries from the "Remaining Issues" section before re-running Phase 6. Each remaining issue includes file, line, type, description, evidence, and suggested fix — all fields needed for a TODO entry. The orchestrator converts these directly without re-running Phase 5 (TODO generation).
 
 ## CRITICAL RULES
 

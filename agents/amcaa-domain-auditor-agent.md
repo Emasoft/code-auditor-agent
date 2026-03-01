@@ -62,7 +62,8 @@ For each file in `FILES`:
 3. **For violations found:** record file:line, violation type, evidence (actual code), explanation
 4. **For clean files:** list explicitly with "No violations found"
 5. **If file doesn't exist:** report as "FILE_NOT_FOUND" — NEVER fabricate content
-6. **If running out of context:** report which files completed and which couldn't finish
+6. **If a file cannot be read as text (binary file):** report it as `BINARY_FILE` in the output and skip it. Do not attempt to audit binary files.
+7. **If running out of context:** report which files completed and which couldn't finish
 
 ### Step 3: Classify Findings
 For each finding, classify into the correct violation category (see table below).
@@ -72,6 +73,8 @@ Pay special attention to RECORD_KEEPING items — these are NOT violations.
 Write the full report to `REPORT_PATH` in the exact output format specified below.
 
 ## VIOLATION CATEGORIES
+
+> **Note:** This is the default violation category list. If the orchestrator provides a `VIOLATION_TYPES` parameter, use that list instead. The `VIOLATION_TYPES` parameter overrides this default table.
 
 | Category | Description | Action |
 |----------|-------------|--------|

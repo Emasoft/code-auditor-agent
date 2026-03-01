@@ -44,6 +44,8 @@
 #   0 — Merge complete (dedup agent determines final verdict)
 #   2 — Error (missing reports, invalid input)
 
+from __future__ import annotations
+
 import argparse
 import fnmatch
 import os

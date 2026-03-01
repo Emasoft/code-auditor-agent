@@ -4,7 +4,7 @@
 **License:** MIT
 **Author:** Emasoft
 
-Three-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review with deduplication. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
+Three-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
 
 ---
 
@@ -84,13 +84,13 @@ review PR 206
 
 ### `amcaa-pr-review-and-fix-skill` (review + iterative fix loop)
 
-Review a PR AND automatically fix all findings. Loops until zero issues remain (max 10 passes).
+Review a PR AND automatically fix all findings. Loops until zero issues remain (max 25 passes).
 
 ```text
 review and fix PR 206
 ```
 
-Each pass runs the PR Review Pipeline (three-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 10 passes are reached.
+Each pass runs the PR Review Pipeline (three-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 25 passes are reached.
 
 Fix agents are dynamically selected from whatever agents are available in the user's Claude Code instance, with `general-purpose` as the universal fallback.
 
@@ -205,7 +205,7 @@ Phase 8: Final merged report
 
 ## Report Naming Convention
 
-All reports use the pattern: `amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`
+Report filenames follow a pipeline-specific pattern. Codebase audit reports use `amcaa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. PR review reports use a shorter pattern (see table below); `R{RUN_ID}` is included only in multi-pass runs via `amcaa-pr-review-and-fix-skill`.
 
 Reports are written to `docs_dev/`.
 
@@ -221,6 +221,8 @@ Reports are written to `docs_dev/`.
 | Fix summary (per-domain) | `amcaa-fixes-done-P{N}-{domain}.md` |
 | Test outcome | `amcaa-tests-outcome-P{N}.md` |
 | Final clean report | `amcaa-pr-review-and-fix-FINAL-{timestamp}.md` |
+
+> **Note:** When called from `amcaa-pr-review-and-fix-skill` (multi-pass), PR review reports include `R{RUN_ID}` in filenames (e.g., `amcaa-correctness-P{N}-R{RUN_ID}-{uuid}.md`). Single-pass `amcaa-pr-review-skill` omits `R{RUN_ID}`.
 
 ### Codebase Audit Reports
 
@@ -247,9 +249,9 @@ Three GitHub Actions workflows are configured:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push, Pull Request | Lint, typecheck, validate `plugin.json`, check version consistency |
+| `ci.yml` | Pull Request, Manual dispatch | Lint, typecheck, validate `plugin.json`, check version consistency |
 | `release.yml` | Tag push (`v*`) | Tag-triggered GitHub Release with changelog generation |
-| `notify-marketplace.yml` | Plugin changes | Notifies the marketplace repository when the plugin is updated |
+| `notify-marketplace.yml` | Plugin changes (removed) | Notified the marketplace repository when the plugin was updated |
 
 ---
 
@@ -286,7 +288,7 @@ The `release.yml` workflow will create a GitHub Release with an auto-generated c
 
 ### CI
 
-CI runs automatically on every push and pull request. It performs:
+CI runs automatically on pull requests and can be triggered manually via workflow_dispatch. It performs:
 
 1. Linting and type checking
 2. `plugin.json` schema validation

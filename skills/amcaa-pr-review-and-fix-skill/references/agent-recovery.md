@@ -1,5 +1,7 @@
 # Agent Recovery Protocol
 
+> **Maintenance Note:** This file shares ~70% content with `skills/amcaa-pr-review-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. This version is a superset with additional multi-pass recovery steps.
+
 ## Table of Contents
 
 - [Failure Modes & Detection](#failure-modes--detection)
