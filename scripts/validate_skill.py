@@ -119,7 +119,7 @@ def validate_frontmatter(skill_path: Path, content: str, report: ValidationRepor
     report.passed("Valid YAML frontmatter", "SKILL.md")
 
     # Validate known fields
-    for key in frontmatter.keys():
+    for key in frontmatter:
         if key not in KNOWN_FRONTMATTER_FIELDS:
             report.warning(
                 f"Unknown frontmatter field '{key}' (may be ignored by CLI)",
@@ -392,12 +392,11 @@ def validate_skill_content(content: str, report: ValidationReport) -> None:
 
     # Check for $ARGUMENTS placeholder if skill seems action-oriented
     # (contains numbered steps, commands, etc.)
-    if re.search(r"^\d+\.", body, re.MULTILINE) or "```bash" in body.lower():
-        if "$ARGUMENTS" not in content:
-            report.info(
-                "Task-oriented skill without $ARGUMENTS placeholder (arguments will be appended automatically)",
-                "SKILL.md",
-            )
+    if (re.search(r"^\d+\.", body, re.MULTILINE) or "```bash" in body.lower()) and "$ARGUMENTS" not in content:
+        report.info(
+            "Task-oriented skill without $ARGUMENTS placeholder (arguments will be appended automatically)",
+            "SKILL.md",
+        )
 
 
 def validate_directory_structure(skill_path: Path, report: ValidationReport) -> None:

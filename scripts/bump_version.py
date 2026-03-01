@@ -86,7 +86,7 @@ def update_plugin_json(plugin_root: Path, new_version: str) -> tuple[bool, str]:
         return False, f"plugin.json not found at {plugin_json_path}"
 
     try:
-        with open(plugin_json_path, "r", encoding="utf-8") as f:
+        with open(plugin_json_path, encoding="utf-8") as f:
             data = json.load(f)
 
         old_version = data.get("version", "unknown")
@@ -208,7 +208,7 @@ def get_current_version(plugin_root: Path) -> str | None:
         return None
 
     try:
-        with open(plugin_json_path, "r", encoding="utf-8") as f:
+        with open(plugin_json_path, encoding="utf-8") as f:
             data = json.load(f)
         version = data.get("version")
         # Explicit type check: return str if string, None otherwise

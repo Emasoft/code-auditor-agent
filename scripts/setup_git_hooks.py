@@ -37,9 +37,7 @@ def _colors_supported() -> bool:
         # Windows Terminal and recent cmd.exe honour VIRTUAL_TERMINAL_PROCESSING,
         # but the safest heuristic is checking for the WT_SESSION env var (Windows
         # Terminal) or ANSICON. Fall back to False for classic cmd.exe.
-        if os.environ.get("WT_SESSION") or os.environ.get("ANSICON"):
-            return True
-        return False
+        return bool(os.environ.get("WT_SESSION") or os.environ.get("ANSICON"))
     # On Unix-like systems respect isatty
     return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
