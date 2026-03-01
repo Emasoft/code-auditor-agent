@@ -690,10 +690,18 @@ def lint_markdown(repo_root: Path, files: list[Path]) -> bool:
 
     file_paths = [str(f) for f in files]
 
+    # Auto-discover markdownlint config in repo root
+    config_args: list[str] = []
+    for config_name in (".markdownlint.jsonc", ".markdownlint.json", ".markdownlint.yaml", ".markdownlint.yml"):
+        config_path = repo_root / config_name
+        if config_path.is_file():
+            config_args = ["--config", str(config_path)]
+            break
+
     # Read-only check (no --fix)
     print(f"{BLUE}    markdownlint...{NC}")
     try:
-        result = subprocess.run(lint_cmd + file_paths, cwd=repo_root, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(lint_cmd + config_args + file_paths, cwd=repo_root, capture_output=True, text=True, timeout=120)
         if result.returncode != 0:
             output = (result.stdout or result.stderr or "").strip()
             if output:
