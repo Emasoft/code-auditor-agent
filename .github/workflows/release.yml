@@ -23,16 +23,16 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv pip install --system ruff mypy pyyaml types-pyyaml
+        run: uv sync --no-install-project --extra dev
 
       - name: Lint Python scripts
-        run: ruff check scripts/
+        run: uv run ruff check scripts/
 
       - name: Check version consistency
-        run: python scripts/check_version_consistency.py
+        run: uv run scripts/check_version_consistency.py
 
       - name: Validate plugin.json
-        run: python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
+        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
 
       - name: Generate changelog
         id: changelog

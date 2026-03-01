@@ -49,4 +49,4 @@ builds_dev/
 logs/
 
 # UV
-uv.lock
+# uv.lock is committed for reproducibility

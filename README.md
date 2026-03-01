@@ -279,9 +279,9 @@ Three GitHub Actions workflows are configured:
 Use the bump script to increment the version across `plugin.json` and `pyproject.toml`:
 
 ```bash
-python scripts/bump_version.py patch   # 2.0.0 -> 2.0.1
-python scripts/bump_version.py minor   # 2.0.0 -> 2.1.0
-python scripts/bump_version.py major   # 2.0.0 -> 3.0.0
+uv run scripts/bump_version.py patch   # 2.0.0 -> 2.0.1
+uv run scripts/bump_version.py minor   # 2.0.0 -> 2.1.0
+uv run scripts/bump_version.py major   # 2.0.0 -> 3.0.0
 ```
 
 ### Checking Version Consistency
@@ -289,7 +289,7 @@ python scripts/bump_version.py major   # 2.0.0 -> 3.0.0
 Verify that all config files agree on the version:
 
 ```bash
-python scripts/check_version_consistency.py
+uv run scripts/check_version_consistency.py
 ```
 
 ### Creating a Release

@@ -21,16 +21,16 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv pip install --system ruff mypy pyyaml types-pyyaml
+        run: uv sync --no-install-project --extra dev
 
       - name: Lint Python scripts
-        run: ruff check scripts/ --output-format=github
+        run: uv run ruff check scripts/ --output-format=github
 
       - name: Format check Python scripts
-        run: ruff format --check scripts/
+        run: uv run ruff format --check scripts/
 
       - name: Type check Python scripts
-        run: mypy scripts/ --ignore-missing-imports || true
+        run: uv run mypy scripts/ --ignore-missing-imports || true
 
       - name: ShellCheck shell scripts
         uses: ludeeus/action-shellcheck@2.0.0
@@ -39,10 +39,10 @@ jobs:
           severity: warning
 
       - name: Validate plugin.json
-        run: python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
+        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
 
       - name: Check version consistency
-        run: python scripts/check_version_consistency.py
+        run: uv run scripts/check_version_consistency.py
 
       - name: Plugin integrity validation
-        run: python scripts/validate_plugin_integrity.py
+        run: uv run scripts/validate_plugin_integrity.py
