@@ -20,7 +20,7 @@ tags:
 
 Iterative review-and-fix pipeline that combines two procedures in a loop until zero issues remain:
 
-1. **PROCEDURE 1 -- Code Review**: Four-phase PR review (correctness swarm -> claim verification -> security review -> skeptical review) that produces a merged findings report.
+1. **PROCEDURE 1 -- Code Review**: Four-phase PR review (correctness swarm -> claim verification -> skeptical review -> security review) that produces a merged findings report.
 2. **PROCEDURE 2 -- Code Fix**: Swarm of fixing agents (dynamically selected from available agents) that resolve all findings from PROCEDURE 1, then run tests to verify no regressions.
 
 The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25) is reached.
@@ -32,8 +32,8 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 |  1. PROCEDURE 1 -- Review                         |
 |     Phase 1: Code Correctness Swarm (parallel)    |
 |     Phase 2: Claim Verification (sequential)      |
-|     Phase 3: Security Review (sequential)         |
-|     Phase 4: Skeptical Review (sequential)        |
+|     Phase 3: Skeptical Review (sequential)        |
+|     Phase 4: Security Review (sequential)         |
 |     Phase 5: Merge Reports                        |
 |     Phase 6: Present Results                      |
 |                                                   |
@@ -90,8 +90,8 @@ This pipeline automates the four complementary review perspectives AND the fix c
 |-------|-------|-----------------|---------|
 | 1 | Code Correctness (swarm) | Per-file bugs, type errors, logic errors | Microscope |
 | 2 | Claim Verification (single) | PR description lies, missing implementations | Fact-checker |
-| 3 | Security Review (`caa-security-review-agent`) | Vulnerabilities, secrets, injection flaws, auth issues | Scanner |
-| 4 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
+| 3 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
+| 4 | Security Review (`caa-security-review-agent`) | Vulnerabilities, secrets, injection flaws, auth issues | Scanner |
 
 After review, a swarm of fixing agents resolves all findings. Then the review runs again to verify the fixes and catch any regressions. This continues until zero issues remain.
 
@@ -174,8 +174,8 @@ Phase 1 (swarm): Each correctness agent gets a unique prefix A0, A1, A2, ...
   Agent 2: CC-P1-A2-001, CC-P1-A2-002, ...
 
 Phase 2 (single): CV-P1-001, CV-P1-002, ... (no agent prefix needed)
-Phase 3 (single): SC-P1-001, SC-P1-002, ... (no agent prefix needed)
-Phase 4 (single): SR-P1-001, SR-P1-002, ... (no agent prefix needed)
+Phase 3 (single): SR-P1-001, SR-P1-002, ... (no agent prefix needed)
+Phase 4 (single): SC-P1-001, SC-P1-002, ... (no agent prefix needed)
 ```
 
 The orchestrator assigns prefixes at spawn time using this algorithm:
@@ -233,7 +233,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 
 ## PROCEDURE 1 -- Code Review
 
-Four-phase review: correctness swarm, claim verification, security review, skeptical review, then merge + dedup.
+Four-phase review: correctness swarm, claim verification, skeptical review, security review, then merge + dedup.
 
 See [Procedure 1: Code Review](references/procedure-1-review.md) for full protocol.
 
@@ -256,8 +256,8 @@ Copy this checklist and track your progress:
 - [ ] Pre-pass cleanup completed (stale files archived)
 - [ ] Phase 1: All correctness agents spawned and completed
 - [ ] Phase 2: Claim verification agent completed
-- [ ] Phase 3: Security review agent (`caa-security-review-agent`) completed
-- [ ] Phase 4: Skeptical reviewer completed
+- [ ] Phase 3: Skeptical reviewer completed
+- [ ] Phase 4: Security review agent (`caa-security-review-agent`) completed
 - [ ] Phase 5: Merge script + dedup agent completed
 - [ ] Phase 6: Final report presented to user
 
@@ -355,7 +355,7 @@ When the loop terminates with zero issues:
 Follow the iterative review-fix protocol strictly:
 
 1. Initialize `PASS_NUMBER = 1`, `MAX_PASSES = 25`.
-2. Run **PROCEDURE 1** (Phases 1-6): spawn correctness swarm, claim verification, security review (`caa-security-review-agent`), skeptical review, merge reports, present results.
+2. Run **PROCEDURE 1** (Phases 1-6): spawn correctness swarm, claim verification, skeptical review, security review (`caa-security-review-agent`), merge reports, present results.
 3. If zero issues found -> write final report and exit.
 4. If `PASS_NUMBER >= MAX_PASSES` -> write escalation report and exit.
 5. Run **PROCEDURE 2**: spawn fix agents per domain, run tests, fix regressions, lint (if Docker available), fix lint errors, commit.
@@ -393,7 +393,7 @@ The pipeline produces these deliverables across all passes:
    claimed-but-not-implemented features, security vulnerabilities, cross-file inconsistencies,
    and UX concerns. Phases 2, 3, and 4 are what make this pipeline catch 100% of issues.
 
-2. **Phase order matters.** Phase 1 (parallel) -> Phase 2 (sequential) -> Phase 3 (sequential) -> Phase 4 (sequential).
+2. **Phase order matters.** Phase 1 (parallel) -> Phase 2 (sequential) -> Phase 3 and Phase 4 (run in parallel with each other, both sequential internally).
    Later phases can reference earlier reports to avoid duplicate work, but they must NOT
    skip their own checks.
 
@@ -418,7 +418,7 @@ The pipeline produces these deliverables across all passes:
 
 9. **Agent-prefixed finding IDs.** Phase 1 agents MUST use unique prefixes:
    `CC-P{N}-A{hex_index}-{NNN}` (e.g., `CC-P1-A0-001`, `CC-P1-A1-001`).
-   Phase 2/3/4 single agents use `CV-P{N}-{NNN}`, `SC-P{N}-{NNN}`, and `SR-P{N}-{NNN}`.
+   Phase 2/3/4 single agents use `CV-P{N}-{NNN}`, `SR-P{N}-{NNN}`, and `SC-P{N}-{NNN}`.
    This eliminates ID collisions between parallel correctness agents.
 
 10. **UUID-based report filenames.** All agent output files MUST include a UUID:

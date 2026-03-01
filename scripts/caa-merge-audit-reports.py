@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # CAA Merge Audit Reports — Concatenation merger for codebase audit reports.
-# Follows the same pattern as caa-merge-reports-v2.py but for CAA audit pipeline.
+# Follows the same pattern as caa-merge-reports.py but for CAA audit pipeline.
 # Deduplication is handled by the caa-dedup-agent (an AI agent).
 #
 # Report types merged (in order):

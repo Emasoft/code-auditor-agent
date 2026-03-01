@@ -250,20 +250,18 @@ Task(
     PR_NUMBER: {pr_number}
     DOMAIN: all-changed-files
     FILES: {all_changed_files}
-    PASS: {PASS_NUMBER}
-    RUN_ID: {RUN_ID}
-    FINDING_ID_PREFIX: SC-P{PASS_NUMBER}
+    FINDING_ID_PREFIX: SC-P1
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
     IMPORTANT — UUID FILENAME:
     Generate a UUID for your output file:
       UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-security-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-security-P1-${UUID}.md
 
     Perform a deep security review of all changed files.
     Check for OWASP Top 10, injection attacks, secrets exposure, auth bypasses,
     dependency vulnerabilities, and attack surface analysis.
-    Use finding IDs starting with SC-P{PASS_NUMBER}-001.
+    Use finding IDs starting with SC-P1-001.
 
     REPORTING RULES:
     - Write ALL detailed output to the report file
@@ -412,7 +410,7 @@ The pipeline produces:
 - Per-domain correctness reports: `docs_dev/caa-correctness-P1-{uuid}.md` (deleted after merge verification)
 - Claim verification report: `docs_dev/caa-claims-P1-{uuid}.md` (deleted after merge verification)
 - Skeptical review report: `docs_dev/caa-review-P1-{uuid}.md` (deleted after merge verification)
-- Security review report: `docs_dev/caa-security-P1-R{run_id}-{uuid}.md` (deleted after merge verification)
+- Security review report: `docs_dev/caa-security-P1-{uuid}.md` (deleted after merge verification)
 - Intermediate merged report: `docs_dev/caa-pr-review-P1-intermediate-{timestamp}.md`
 - Final deduplicated report: `docs_dev/caa-pr-review-P1-{timestamp}.md`
 
@@ -452,7 +450,7 @@ Copy this checklist and track your progress:
 - [ ] Phase 1: All correctness agent reports present (caa-correctness-P{N}-*.md)
 - [ ] Phase 2: Claim verification report present (caa-claims-P{N}-*.md)
 - [ ] Phase 3: Skeptical review report present (caa-review-P{N}-*.md)
-- [ ] Phase 4: Security review agent spawned and completed (caa-security-P{N}-R{run_id}-*.md)
+- [ ] Phase 4: Security review agent spawned and completed (caa-security-P{N}-*.md)
 - [ ] Verify merge script produced intermediate report
 - [ ] Confirm dedup agent produced final report
 - [ ] Record any agent failures in recovery log

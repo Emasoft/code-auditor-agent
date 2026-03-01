@@ -27,7 +27,7 @@ read-only into the container.
 
 Plugin mode (--plugin-mode)
 ---------------------------
-When used inside the AMCAA review pipeline, use --plugin-mode to lint the working
+When used inside the CAA review pipeline, use --plugin-mode to lint the working
 directory directly (no temporary copy, no read-only mount). This is safe because
 APPLY_FIXES=none is always set — MegaLinter never modifies your files. Writes a
 lint-summary.json with error/warning counts for pipeline automation.
@@ -648,7 +648,7 @@ Dry run:
         action="store_true",
         help=(
             "Lint the working directory directly (no temp copy, no readonly mount). "
-            "Used by the AMCAA review pipeline. APPLY_FIXES=none is still enforced."
+            "Used by the CAA review pipeline. APPLY_FIXES=none is still enforced."
         ),
     )
     ap.add_argument(

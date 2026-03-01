@@ -1,6 +1,6 @@
 # code-auditor-agent
 
-**Version:** 2.0.0
+**Version:** 3.0.0
 **License:** MIT
 **Author:** Emasoft
 
@@ -146,7 +146,6 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 | Script | Purpose |
 |--------|---------|
 | `bump_version.py` | Semantic version bumping across `plugin.json` and `pyproject.toml` |
-| `check_version_consistency.py` | Validates version matches across all config files |
 
 ---
 
@@ -283,17 +282,9 @@ Three GitHub Actions workflows are configured:
 Use the bump script to increment the version across `plugin.json` and `pyproject.toml`:
 
 ```bash
-uv run scripts/bump_version.py patch   # 2.0.0 -> 2.0.1
-uv run scripts/bump_version.py minor   # 2.0.0 -> 2.1.0
-uv run scripts/bump_version.py major   # 2.0.0 -> 3.0.0
-```
-
-### Checking Version Consistency
-
-Verify that all config files agree on the version:
-
-```bash
-uv run scripts/check_version_consistency.py
+uv run scripts/bump_version.py patch   # 3.0.0 -> 3.0.1
+uv run scripts/bump_version.py minor   # 3.0.0 -> 3.1.0
+uv run scripts/bump_version.py major   # 3.0.0 -> 4.0.0
 ```
 
 ### Creating a Release
@@ -301,7 +292,7 @@ uv run scripts/check_version_consistency.py
 Tag the commit and push to trigger the release workflow:
 
 ```bash
-git tag v2.0.0
+git tag v3.0.0
 git push --tags
 ```
 

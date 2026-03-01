@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2026-03-01
+
+### Features
+- Added security review agent (caa-security-review-agent, SC prefix)
+- Integrated security review as Phase 4 in PR review pipeline (parallel with Phase 3)
+- Replaced validation scripts with claude-plugins-validation suite
+- Added markdownlint configuration
+- Version bump to 3.0.0
+
+### Breaking Changes
+- Renamed plugin from ai-maestro-code-auditor-agent to code-auditor-agent
+- Renamed all amcaa- prefixes to caa-
+
 ## [2.0.0] - 2026-03-01
 
 ### Features
