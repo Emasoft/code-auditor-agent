@@ -189,13 +189,13 @@ Three-phase review: correctness swarm, claim verification, skeptical review, the
 See [Procedure 1: Code Review](references/procedure-1-review.md) for full protocol.
 
 **Contents:**
-- Pre-Pass Cleanup (MANDATORY)
-- Agent Manifest
-- Phase 1: Code Correctness Swarm (parallel agents per domain)
-- Phase 2: Claim Verification (single agent)
-- Phase 3: Skeptical Review (single agent)
-- Phase 4: Merge Reports + Deduplicate (bash script + AI dedup agent)
-- Phase 5: Present Results to user
+- How to clean up stale artifacts before starting a new pass
+- How to build the agent manifest for parallel spawning
+- How to spawn the correctness swarm across file domains
+- How to verify claims against actual implementation
+- How to run the skeptical external review
+- How to merge reports and deduplicate findings
+- How to present the review verdict to the user
 
 ### Review Checklist
 
@@ -219,13 +219,13 @@ Dynamic agent swarm that resolves all findings, runs tests, lints, and commits.
 See [Procedure 2: Code Fix](references/procedure-2-fix.md) for full protocol.
 
 **Contents:**
-- Agent Selection (dynamic, based on available agents)
-- Fix Protocol (15-step process)
-- Fix agent spawning pattern with self-verification checklist
-- Test agent spawning pattern with self-verification checklist
-- Linting Step (Docker required, MegaLinter)
-- Lint-fix loop (max 3 attempts)
-- Commit After Fixes
+- How to select and assign fix agents dynamically per domain
+- How to implement fixes with the 15-step protocol
+- How to spawn fix agents with self-verification checklists
+- How to run and verify tests after fixes
+- How to run MegaLinter and handle lint errors (Docker required)
+- How to iterate the lint-fix loop (max 3 attempts)
+- How to commit verified fixes with the correct message format
 
 ### Fix Checklist
 
@@ -403,13 +403,12 @@ Protocol for recovering from agent crashes, timeouts, API errors, and context co
 See [Agent Recovery Protocol](references/agent-recovery.md) for full protocol.
 
 **Contents:**
-- Failure Modes & Detection (crash, OOM, API errors, timeout, compaction loss, collisions)
-- Step 1: Detect the Loss (agent tracking fields)
-- Step 2: Verify the Loss (file completeness checks)
-- Step 3: Clean Up Partial Artifacts (including fix agent uncommitted changes)
-- Step 4: Re-Spawn the Task (new UUID, same prompt, max 3 retries)
-- Step 5: Record the Failure (recovery log)
-- Special Cases: compaction recovery, wrong pass number, domain collision, missing test report
+- How to detect agent failures (crash, OOM, API errors, timeout, compaction loss)
+- How to verify whether an agent's output was lost or corrupted
+- How to clean up partial artifacts and uncommitted fix changes
+- How to re-spawn a failed task with a new UUID (max 3 retries)
+- How to record failures in the recovery log
+- How to handle special cases: compaction recovery, wrong pass number, domain collision
 
 ### Recovery Checklist
 
@@ -431,12 +430,12 @@ Key insights from real incidents that shaped this pipeline's design.
 See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with full context.
 
 **Summary:**
-1. Swarms are microscopes -- blind to the big picture
-2. PR descriptions lie -- intent vs. implementation gap
-3. Absence is the hardest bug -- missing fields produce no errors
-4. Cross-file consistency requires holistic view
-5. UX judgment is not a code concern
-6. The stranger's perspective is irreplaceable
+1. Why swarms miss the big picture and how verification compensates
+2. Why PR descriptions cannot be trusted as implementation evidence
+3. How to catch absence bugs that produce no errors
+4. Why cross-file consistency requires holistic review agents
+5. Why UX judgment requires a separate review phase
+6. Why the stranger's perspective catches what familiarity misses
 7. Fixes introduce regressions -- review-fix loop is essential
 8. Commit between passes for clean diffs
 9. Linting catches what reviewers and tests miss

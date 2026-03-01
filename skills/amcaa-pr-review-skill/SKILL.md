@@ -355,13 +355,13 @@ original finding ID cross-references.
 See [Agent Recovery Protocol](references/agent-recovery.md) for full recovery procedures.
 
 **Contents:**
-- Failure modes and detection (crash, OOM, timeout, API errors, context compaction)
-- Agent tracking fields (taskId, agentType, domain, outputPath, findingPrefix, status)
-- Loss verification (output file completeness checks)
-- Partial artifact cleanup rules
-- Re-spawn procedures (new UUID, same finding prefix, same pass number)
-- Failure logging (recovery log format)
-- Special cases: context compaction recovery, wrong pass number, domain label collision
+- How to detect agent failures (crash, OOM, timeout, API errors, compaction loss)
+- How to track agents using manifest fields (taskId, domain, outputPath, status)
+- How to verify whether an agent's output was lost or corrupted
+- How to clean up partial artifacts from failed agents
+- How to re-spawn a failed task with a new UUID (max 3 retries)
+- How to record failures in the recovery log
+- How to handle special cases: compaction recovery, wrong pass number, domain collision
 
 ### Recovery Checklist
 - [ ] Check all agent reports exist in docs_dev/
@@ -401,12 +401,12 @@ User: "re-run the PR review"
 See [Lessons Learned](references/lessons-learned.md) for the full list with context.
 
 **Contents:**
-- Why swarms alone are insufficient (microscope vs. telescope)
-- PR descriptions lie: intent vs. implementation gap
-- Absence is the hardest bug to find (missing field assignments)
-- Cross-file consistency requires holistic view
-- UX judgment is not a code concern
-- The stranger's perspective is irreplaceable
+- Why swarms miss the big picture and how verification compensates
+- Why PR descriptions cannot be trusted as implementation evidence
+- How to catch absence bugs that produce no errors
+- Why cross-file consistency requires holistic review agents
+- Why UX judgment requires a separate review phase
+- Why the stranger's perspective catches what familiarity misses
 
 ### Lessons Checklist
 - [ ] All three phases (correctness, claims, skeptical) are included in every review
