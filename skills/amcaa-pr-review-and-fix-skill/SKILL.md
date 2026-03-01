@@ -219,6 +219,7 @@ Dynamic agent swarm that resolves all findings, runs tests, lints, and commits.
 See [Procedure 2: Code Fix](references/procedure-2-fix.md) for full protocol.
 
 **Reference TOC:**
+- [Table of Contents](references/procedure-2-fix.md#table-of-contents)
 - [How to select and assign fix agents dynamically](references/procedure-2-fix.md#agent-selection-dynamic)
 - [How to implement fixes with the fix protocol](references/procedure-2-fix.md#fix-protocol)
 - [How to run MegaLinter and handle lint errors](references/procedure-2-fix.md#linting-step-docker-required)
