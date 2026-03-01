@@ -398,8 +398,11 @@ def prepend_changelog_entry(version: str, dry_run: bool) -> bool:
 
     if insert_idx is not None:
         # Insert the new entry before the first existing version section
-        entry_lines = [el + "\n" for el in new_entry.split("\n")]
-        # Add a blank line separator after new entry
+        # new_entry ends with \n, so split produces a trailing empty string — drop it
+        raw_parts = new_entry.split("\n")
+        if raw_parts and raw_parts[-1] == "":
+            raw_parts = raw_parts[:-1]
+        entry_lines = [el + "\n" for el in raw_parts]
         new_lines = lines[:insert_idx] + entry_lines + ["\n"] + lines[insert_idx:]
     else:
         # No existing version sections -- append after all existing content

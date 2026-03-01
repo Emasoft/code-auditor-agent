@@ -9,7 +9,6 @@ All notable changes to this project will be documented in this file.
 - feat: release automation, CPV sync, git hooks (75cc464)
 - fix: audit findings — swapped phases, stale refs, version, changelog (a5ea13b)
 
-
 ## [3.0.0] - 2026-03-01
 
 ### Features
