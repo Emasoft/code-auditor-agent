@@ -221,6 +221,8 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 
 ## Completion Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Scope path and reference standard identified
 - [ ] Phase 1: Discovery swarm completed for all batches
 - [ ] Phase 2: Verification swarm cross-checked all reports

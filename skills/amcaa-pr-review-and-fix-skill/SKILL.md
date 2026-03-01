@@ -218,14 +218,13 @@ Dynamic agent swarm that resolves all findings, runs tests, lints, and commits.
 
 See [Procedure 2: Code Fix](references/procedure-2-fix.md) for full protocol.
 
-**Contents:**
-- How to select and assign fix agents dynamically per domain
-- How to implement fixes with the 15-step protocol
-- How to spawn fix agents with self-verification checklists
-- How to run and verify tests after fixes
-- How to run MegaLinter and handle lint errors (Docker required)
-- How to iterate the lint-fix loop (max 3 attempts)
-- How to commit verified fixes with the correct message format
+**Reference TOC:**
+- [How to select and assign fix agents dynamically](references/procedure-2-fix.md#agent-selection-dynamic)
+- [How to implement fixes with the fix protocol](references/procedure-2-fix.md#fix-protocol)
+- [How to run MegaLinter and handle lint errors](references/procedure-2-fix.md#linting-step-docker-required)
+- [How to commit verified fixes](references/procedure-2-fix.md#commit-after-fixes)
+- [What Procedure 2 produces](references/procedure-2-fix.md#procedure-2-output)
+- [Procedure 2 completion checklist](references/procedure-2-fix.md#procedure-2-checklist)
 
 ### Fix Checklist
 
@@ -402,13 +401,15 @@ Protocol for recovering from agent crashes, timeouts, API errors, and context co
 
 See [Agent Recovery Protocol](references/agent-recovery.md) for full protocol.
 
-**Contents:**
-- How to detect agent failures (crash, OOM, API errors, timeout, compaction loss)
-- How to verify whether an agent's output was lost or corrupted
-- How to clean up partial artifacts and uncommitted fix changes
-- How to re-spawn a failed task with a new UUID (max 3 retries)
-- How to record failures in the recovery log
-- How to handle special cases: compaction recovery, wrong pass number, domain collision
+**Reference TOC:**
+- [How to detect agent failure modes](references/agent-recovery.md#failure-modes--detection)
+- [Step 1: How to detect the loss](references/agent-recovery.md#step-1-detect-the-loss)
+- [Step 2: How to verify the loss](references/agent-recovery.md#step-2-verify-the-loss)
+- [Step 3: How to clean up partial artifacts](references/agent-recovery.md#step-3-clean-up-partial-artifacts)
+- [Step 4: How to re-spawn the task](references/agent-recovery.md#step-4-re-spawn-the-task)
+- [Step 5: How to record the failure](references/agent-recovery.md#step-5-record-the-failure)
+- [How to handle special cases](references/agent-recovery.md#special-cases)
+- [Agent recovery checklist](references/agent-recovery.md#agent-recovery-checklist)
 
 ### Recovery Checklist
 
