@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Version bumping script for code-auditor-agent.
+"""
+bump_version.py - CLI tool to bump semantic version across all plugin files.
 
-Bumps version in .claude-plugin/plugin.json and pyproject.toml.
+Supports bumping major, minor, or patch versions following semver format.
+Updates version in: plugin.json, pyproject.toml, and any __version__ variables.
 
-Usage:
-    bump_version.py major
-    bump_version.py minor
-    bump_version.py patch
-    bump_version.py set X.Y.Z
-    bump_version.py patch --dry-run
+Exit codes:
+    0 - Success
+    1 - Error (invalid version, file not found, etc.)
 """
 
 from __future__ import annotations
@@ -19,199 +18,333 @@ import re
 import sys
 from pathlib import Path
 
-
-def find_project_root(start: Path) -> Path:
-    """Walk up from start directory until .claude-plugin/plugin.json is found."""
-    current = start.resolve()
-    while True:
-        candidate = current / ".claude-plugin" / "plugin.json"
-        if candidate.exists():
-            return current
-        parent = current.parent
-        if parent == current:
-            raise FileNotFoundError(
-                "Could not find .claude-plugin/plugin.json in any parent directory"
-            )
-        current = parent
+from cpv_validation_common import get_plugin_root
 
 
-def parse_semver(version_str: str) -> tuple[int, int, int]:
-    """Parse 'X.Y.Z' string into (major, minor, patch) ints."""
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", version_str.strip())
+def parse_semver(version: str) -> tuple[int, int, int] | None:
+    """
+    Parse a semantic version string into (major, minor, patch) tuple.
+
+    Args:
+        version: Version string in format "X.Y.Z"
+
+    Returns:
+        Tuple of (major, minor, patch) integers, or None if invalid format
+    """
+    match = re.match(r"^(\d+)\.(\d+)\.(\d+)$", version.strip())
     if not match:
-        raise ValueError(f"Invalid semver string: {version_str!r}")
-    return int(match.group(1)), int(match.group(2)), int(match.group(3))
+        return None
+    return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
 
-def bump_semver(major: int, minor: int, patch: int, part: str) -> tuple[int, int, int]:
-    """Return new (major, minor, patch) after bumping the requested part."""
-    if part == "major":
-        return major + 1, 0, 0
-    if part == "minor":
-        return major, minor + 1, 0
-    if part == "patch":
-        return major, minor, patch + 1
-    raise ValueError(f"Unknown bump part: {part!r}")
+def format_semver(major: int, minor: int, patch: int) -> str:
+    """Format version tuple as semver string."""
+    return f"{major}.{minor}.{patch}"
 
 
-def read_plugin_json(path: Path) -> dict[str, object]:
-    """Read and return parsed plugin.json content."""
-    with path.open("r", encoding="utf-8") as f:
-        data: dict[str, object] = json.load(f)
-        return data
+def bump_version(current: str, bump_type: str) -> str | None:
+    """
+    Bump the version according to the specified type.
+
+    Args:
+        current: Current version string
+        bump_type: One of 'major', 'minor', or 'patch'
+
+    Returns:
+        New version string, or None if current version is invalid
+    """
+    parts = parse_semver(current)
+    if parts is None:
+        return None
+
+    major, minor, patch = parts
+
+    if bump_type == "major":
+        return format_semver(major + 1, 0, 0)
+    elif bump_type == "minor":
+        return format_semver(major, minor + 1, 0)
+    elif bump_type == "patch":
+        return format_semver(major, minor, patch + 1)
+    else:
+        return None
 
 
-def write_plugin_json(path: Path, data: dict) -> None:
-    """Write dict back to plugin.json with 2-space indent and trailing newline (atomic)."""
-    tmp = path.with_suffix(".json.tmp")
-    with tmp.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
-    # Atomic rename: either the full write succeeds or the original is untouched.
-    tmp.rename(path)
+def update_plugin_json(plugin_root: Path, new_version: str) -> tuple[bool, str]:
+    """
+    Update version in plugin.json.
+
+    Args:
+        plugin_root: Root directory of the plugin
+        new_version: New version string to set
+
+    Returns:
+        Tuple of (success, message)
+    """
+    plugin_json_path = plugin_root / ".claude-plugin" / "plugin.json"
+
+    if not plugin_json_path.exists():
+        return False, f"plugin.json not found at {plugin_json_path}"
+
+    try:
+        with open(plugin_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        old_version = data.get("version", "unknown")
+        data["version"] = new_version
+
+        with open(plugin_json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+
+        return True, f"plugin.json: {old_version} -> {new_version}"
+    except json.JSONDecodeError as e:
+        return False, f"plugin.json has invalid JSON: {e}"
+    except Exception as e:
+        return False, f"Error updating plugin.json: {e}"
 
 
-def update_pyproject_version(pyproject_path: Path, new_version: str, dry_run: bool) -> bool:
-    """Replace version = "X.Y.Z" line in pyproject.toml. Returns True if changed."""
+def update_pyproject_toml(plugin_root: Path, new_version: str) -> tuple[bool, str]:
+    """
+    Update version in pyproject.toml.
+
+    Args:
+        plugin_root: Root directory of the plugin
+        new_version: New version string to set
+
+    Returns:
+        Tuple of (success, message)
+    """
+    pyproject_path = plugin_root / "pyproject.toml"
+
     if not pyproject_path.exists():
-        print(f"WARNING: {pyproject_path} not found — skipping pyproject.toml update")
-        return False
+        return True, "pyproject.toml not found (skipped)"
 
-    text = pyproject_path.read_text(encoding="utf-8")
+    try:
+        content = pyproject_path.read_text(encoding="utf-8")
 
-    # Match version = "X.Y.Z" under [project] or [tool.poetry] tables.
-    # We use a simple pattern that replaces the first occurrence of:
-    #   version = "X.Y.Z"
-    # which is the canonical location for both PEP 517 and Poetry.
-    pattern = re.compile(r'^(version\s*=\s*")[^"]*(")', re.MULTILINE)
-    match = pattern.search(text)
-    if not match:
-        print("WARNING: Could not find version = \"...\" in pyproject.toml — skipping")
-        return False
+        # Match version = "X.Y.Z" pattern
+        pattern = r'^(version\s*=\s*["\'])(\d+\.\d+\.\d+)(["\'])$'
 
-    new_text = pattern.sub(rf"\g<1>{new_version}\2", text, count=1)
-    if new_text == text:
-        print("pyproject.toml version already up to date")
-        return False
+        old_version = None
 
-    if not dry_run:
-        # Atomic write: write to a temp file then rename so a partial write never
-        # leaves pyproject.toml in a corrupted/intermediate state.
-        tmp = pyproject_path.with_suffix(".toml.tmp")
-        tmp.write_text(new_text, encoding="utf-8")
-        tmp.rename(pyproject_path)
-    return True
+        def replace_version(match: re.Match[str]) -> str:
+            nonlocal old_version
+            old_version = match.group(2)
+            return f"{match.group(1)}{new_version}{match.group(3)}"
+
+        new_content, count = re.subn(pattern, replace_version, content, flags=re.MULTILINE)
+
+        if count == 0:
+            return True, "pyproject.toml has no version field (skipped)"
+
+        pyproject_path.write_text(new_content, encoding="utf-8")
+        return True, f"pyproject.toml: {old_version} -> {new_version}"
+    except Exception as e:
+        return False, f"Error updating pyproject.toml: {e}"
+
+
+def update_python_version_variables(plugin_root: Path, new_version: str) -> list[tuple[bool, str]]:
+    """
+    Update __version__ variables in Python files.
+
+    Args:
+        plugin_root: Root directory of the plugin
+        new_version: New version string to set
+
+    Returns:
+        List of (success, message) tuples for each file updated
+    """
+    results: list[tuple[bool, str]] = []
+
+    # Directories to exclude from scanning
+    exclude_dirs = {"__pycache__", ".venv", "venv", "env", ".env", "node_modules", ".git", ".mypy_cache", ".ruff_cache"}
+
+    # Search for Python files with __version__ variable
+    for py_file in plugin_root.rglob("*.py"):
+        # Skip excluded directories and hidden directories
+        parts_set = set(py_file.relative_to(plugin_root).parts)
+        if parts_set & exclude_dirs or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
+            continue
+
+        try:
+            content = py_file.read_text(encoding="utf-8")
+
+            # Match __version__ = "X.Y.Z" or __version__ = 'X.Y.Z'
+            pattern = r'^(__version__\s*=\s*["\'])(\d+\.\d+\.\d+)(["\'])$'
+
+            old_version = None
+
+            def replace_version(match: re.Match[str]) -> str:
+                nonlocal old_version
+                old_version = match.group(2)
+                return f"{match.group(1)}{new_version}{match.group(3)}"
+
+            new_content, count = re.subn(pattern, replace_version, content, flags=re.MULTILINE)
+
+            if count > 0:
+                py_file.write_text(new_content, encoding="utf-8")
+                rel_path = py_file.relative_to(plugin_root)
+                results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
+        except Exception as e:
+            rel_path = py_file.relative_to(plugin_root)
+            results.append((False, f"Error updating {rel_path}: {e}"))
+
+    return results
+
+
+def get_current_version(plugin_root: Path) -> str | None:
+    """
+    Get the current version from plugin.json.
+
+    Args:
+        plugin_root: Root directory of the plugin
+
+    Returns:
+        Current version string, or None if not found
+    """
+    plugin_json_path = plugin_root / ".claude-plugin" / "plugin.json"
+
+    if not plugin_json_path.exists():
+        return None
+
+    try:
+        with open(plugin_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        version = data.get("version")
+        # Explicit type check: return str if string, None otherwise
+        if isinstance(version, str):
+            return version
+        return None
+    except Exception:
+        return None
 
 
 def main() -> int:
+    """Main entry point for the version bump CLI tool."""
     parser = argparse.ArgumentParser(
-        description="Bump version in plugin.json and pyproject.toml"
+        description="Bump semantic version across all plugin files.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --patch     # 1.0.0 -> 1.0.1
+  %(prog)s --minor     # 1.0.0 -> 1.1.0
+  %(prog)s --major     # 1.0.0 -> 2.0.0
+  %(prog)s --set 2.5.0 # Set explicit version
+        """,
     )
-    subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    # Positional bump commands: major / minor / patch
-    for part in ("major", "minor", "patch"):
-        sp = subparsers.add_parser(part, help=f"Bump {part} version component")
-        sp.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="Show what would change without writing files",
-        )
+    bump_group = parser.add_mutually_exclusive_group(required=True)
+    bump_group.add_argument("--major", action="store_true", help="Bump major version (X.0.0)")
+    bump_group.add_argument("--minor", action="store_true", help="Bump minor version (x.Y.0)")
+    bump_group.add_argument("--patch", action="store_true", help="Bump patch version (x.y.Z)")
+    bump_group.add_argument("--set", metavar="VERSION", help="Set explicit version (format: X.Y.Z)")
 
-    # Explicit set command
-    sp_set = subparsers.add_parser("set", help="Set version to an explicit X.Y.Z value")
-    sp_set.add_argument("version", metavar="X.Y.Z", help="Version string to set")
-    sp_set.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would change without writing files",
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without making changes")
+
+    parser.add_argument(
+        "--plugin-dir", type=Path, default=None, help="Plugin root directory (default: parent of scripts/)"
     )
 
     args = parser.parse_args()
 
-    if args.command is None:
-        parser.print_help()
+    # Determine plugin root
+    plugin_root = args.plugin_dir if args.plugin_dir else get_plugin_root()
+    plugin_root = plugin_root.resolve()
+
+    if not plugin_root.exists():
+        print(f"Error: Plugin directory not found: {plugin_root}", file=sys.stderr)
         return 1
 
-    # Locate project root
-    script_dir = Path(__file__).parent
-    try:
-        root = find_project_root(script_dir)
-    except FileNotFoundError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        return 1
-
-    plugin_json_path = root / ".claude-plugin" / "plugin.json"
-    pyproject_path = root / "pyproject.toml"
-
-    # Read current version from plugin.json
-    try:
-        plugin_data = read_plugin_json(plugin_json_path)
-    except (json.JSONDecodeError, OSError) as exc:
-        print(f"ERROR reading {plugin_json_path}: {exc}", file=sys.stderr)
-        return 1
-
-    current_version_str = str(plugin_data.get("version", ""))
-    if not current_version_str:
-        print("ERROR: 'version' key not found in plugin.json", file=sys.stderr)
-        return 1
-
-    try:
-        major, minor, patch = parse_semver(current_version_str)
-    except ValueError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+    # Get current version
+    current_version = get_current_version(plugin_root)
+    if current_version is None:
+        print("Error: Could not read current version from plugin.json", file=sys.stderr)
         return 1
 
     # Determine new version
-    if args.command == "set":
-        try:
-            new_major, new_minor, new_patch = parse_semver(args.version)
-        except ValueError as exc:
-            print(f"ERROR: {exc}", file=sys.stderr)
+    if args.set:
+        if parse_semver(args.set) is None:
+            print(f"Error: Invalid version format '{args.set}'. Expected X.Y.Z", file=sys.stderr)
             return 1
+        new_version = args.set
     else:
-        new_major, new_minor, new_patch = bump_semver(major, minor, patch, args.command)
+        bump_type = "major" if args.major else "minor" if args.minor else "patch"
+        new_version = bump_version(current_version, bump_type)
+        if new_version is None:
+            print(f"Error: Current version '{current_version}' is not valid semver", file=sys.stderr)
+            return 1
 
-    new_version_str = f"{new_major}.{new_minor}.{new_patch}"
-    dry_run: bool = args.dry_run
+    print(f"Bumping version: {current_version} -> {new_version}")
+    if args.dry_run:
+        print("(dry-run mode - no files will be changed)")
+    print()
 
-    print(f"Version: {current_version_str} → {new_version_str}")
-    if dry_run:
-        print("(dry-run: no files written)")
-        return 0
+    # Collect all updates
+    all_results: list[tuple[bool, str]] = []
 
-    # Save originals for rollback in case the second write fails.
-    original_plugin_text = plugin_json_path.read_text(encoding="utf-8")
+    if not args.dry_run:
+        # Update plugin.json
+        success, msg = update_plugin_json(plugin_root, new_version)
+        all_results.append((success, msg))
 
-    # Update pyproject.toml FIRST so that if plugin.json write fails we only
-    # need to rollback the less-critical file (pyproject may not even exist).
-    changed = update_pyproject_version(pyproject_path, new_version_str, dry_run=False)
-    if changed:
-        print(f"Updated: {pyproject_path.relative_to(root)}")
+        # Update pyproject.toml
+        success, msg = update_pyproject_toml(plugin_root, new_version)
+        all_results.append((success, msg))
 
-    # Update plugin.json; rollback pyproject.toml if this write fails.
-    try:
-        plugin_data["version"] = new_version_str
-        write_plugin_json(plugin_json_path, plugin_data)
-        print(f"Updated: {plugin_json_path.relative_to(root)}")
-    except OSError as exc:
-        # Rollback pyproject.toml to its original content so both files stay
-        # in sync even when plugin.json could not be written.
-        if changed:
+        # Update __version__ variables
+        py_results = update_python_version_variables(plugin_root, new_version)
+        all_results.extend(py_results)
+    else:
+        # Dry run - just list files that would be updated
+        all_results.append((True, "[DRY-RUN] plugin.json would be updated"))
+        if (plugin_root / "pyproject.toml").exists():
+            all_results.append((True, "[DRY-RUN] pyproject.toml would be updated"))
+
+        # Directories to exclude from scanning
+        exclude_dirs = {
+            "__pycache__",
+            ".venv",
+            "venv",
+            "env",
+            ".env",
+            "node_modules",
+            ".git",
+            ".mypy_cache",
+            ".ruff_cache",
+        }
+
+        for py_file in plugin_root.rglob("*.py"):
+            parts_set = set(py_file.relative_to(plugin_root).parts)
+            if parts_set & exclude_dirs or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
+                continue
             try:
-                tmp = pyproject_path.with_suffix(".toml.tmp")
-                tmp.write_text(original_plugin_text, encoding="utf-8")
-                tmp.rename(pyproject_path)
-                print("Rolled back pyproject.toml to original version", file=sys.stderr)
-            except OSError as rollback_exc:
-                print(
-                    f"ERROR: Failed to rollback pyproject.toml: {rollback_exc}",
-                    file=sys.stderr,
-                )
-        print(f"ERROR: Failed to write plugin.json: {exc}", file=sys.stderr)
-        return 1
+                content = py_file.read_text(encoding="utf-8")
+                if re.search(r"^__version__\s*=", content, re.MULTILINE):
+                    rel_path = py_file.relative_to(plugin_root)
+                    all_results.append((True, f"[DRY-RUN] {rel_path} would be updated"))
+            except Exception:
+                pass
 
-    return 0
+    # Print summary
+    print("Summary:")
+    print("-" * 50)
+
+    errors = 0
+    for success, msg in all_results:
+        status = "[OK]" if success else "[ERROR]"
+        print(f"  {status} {msg}")
+        if not success:
+            errors += 1
+
+    print("-" * 50)
+
+    if errors > 0:
+        print(f"\nCompleted with {errors} error(s)")
+        return 1
+    else:
+        file_count = len([r for r in all_results if "skipped" not in r[1].lower()])
+        print(f"\nSuccessfully updated {file_count} file(s)")
+        return 0
 
 
 if __name__ == "__main__":

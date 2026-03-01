@@ -25,14 +25,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --no-install-project --extra dev
 
-      - name: Lint Python scripts
-        run: uv run ruff check scripts/
+      - name: Lint all source files
+        run: uv run python scripts/lint_files.py .
 
-      - name: Check version consistency
-        run: uv run scripts/check_version_consistency.py
-
-      - name: Validate plugin.json
-        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json')); print('plugin.json is valid JSON')"
+      - name: Validate plugin
+        run: uv run python scripts/validate_plugin.py .
 
       - name: Generate changelog
         id: changelog

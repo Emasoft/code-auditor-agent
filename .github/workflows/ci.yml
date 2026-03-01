@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main, master]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -23,20 +25,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --no-install-project --extra dev
 
-      - name: Lint Python scripts
-        run: uv run ruff check scripts/ --output-format=github
+      - name: Lint all source files
+        run: uv run python scripts/lint_files.py .
 
-      - name: Format check Python scripts
-        run: uv run ruff format --check scripts/
-
-      - name: Type check Python scripts
-        run: uv run mypy scripts/ --ignore-missing-imports || true
-
-      - name: Validate plugin.json
-        run: uv run python -c "import json; json.load(open('.claude-plugin/plugin.json', encoding='utf-8')); print('plugin.json is valid JSON')"
-
-      - name: Check version consistency
-        run: uv run scripts/check_version_consistency.py
-
-      - name: Plugin integrity validation
-        run: uv run scripts/validate_plugin_integrity.py
+      - name: Run plugin validation
+        run: uv run python scripts/validate_plugin.py .

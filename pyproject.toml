@@ -4,6 +4,9 @@ version = "2.0.0"
 description = "Three-phase PR review pipeline and full codebase audit pipeline for Claude Code"
 requires-python = ">=3.12"
 license = "MIT"
+dependencies = [
+    "pyyaml>=6.0",
+]
 authors = [
     { name = "Emasoft", email = "713559+Emasoft@users.noreply.github.com" },
 ]
