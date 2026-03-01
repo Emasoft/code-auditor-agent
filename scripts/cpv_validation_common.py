@@ -18,9 +18,10 @@ import json
 import os
 import re
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 # =============================================================================
 # Tool Resolution: local install → remote runner fallback (via smart_exec)
@@ -919,7 +920,7 @@ class ValidationReport:
             counts[r.level] = counts.get(r.level, 0) + 1
         return counts
 
-    def merge(self, other: "ValidationReport") -> None:
+    def merge(self, other: ValidationReport) -> None:
         """Merge results from another report into this one."""
         self.results.extend(other.results)
 
@@ -1881,10 +1882,7 @@ def _is_toc_exempt(file_path: Path) -> bool:
     """
     if file_path.name in _TOC_EXEMPT_NAMES:
         return True
-    for part in file_path.parts:
-        if part in _TOC_EXEMPT_DIRS:
-            return True
-    return False
+    return any(part in _TOC_EXEMPT_DIRS for part in file_path.parts)
 
 
 def validate_toc_embedding(

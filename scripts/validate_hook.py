@@ -236,10 +236,7 @@ def extract_script_path(command: str, plugin_root: Path | None) -> Path | None:
     if cmd.startswith('"'):
         # Find matching quote
         end = cmd.find('"', 1)
-        if end > 0:
-            cmd = cmd[1:end]
-        else:
-            cmd = cmd[1:]
+        cmd = cmd[1:end] if end > 0 else cmd[1:]
 
     # Split on spaces to get first token (the command/script)
     parts = cmd.split()
@@ -537,9 +534,8 @@ def validate_command_hook(
             report.warning(f"Command hook timeout is {timeout}ms — very short, may cause premature timeouts")
 
     # Check for environment variable usage
-    if "CLAUDE_ENV_FILE" in command:
-        if event_name not in {"SessionStart", "Setup"}:
-            report.major("CLAUDE_ENV_FILE is only available in SessionStart and Setup hooks")
+    if "CLAUDE_ENV_FILE" in command and event_name not in {"SessionStart", "Setup"}:
+        report.major("CLAUDE_ENV_FILE is only available in SessionStart and Setup hooks")
 
     # Extract and validate script path
     script_path = extract_script_path(command, plugin_root)
@@ -590,9 +586,8 @@ def validate_prompt_hook(
     report.passed(f"Prompt: {prompt[:60]}...")
 
     # Validate optional model field
-    if "model" in hook:
-        if not isinstance(hook["model"], str) or not hook["model"].strip():
-            report.major("Prompt hook 'model' must be a non-empty string")
+    if "model" in hook and (not isinstance(hook["model"], str) or not hook["model"].strip()):
+        report.major("Prompt hook 'model' must be a non-empty string")
 
     # Validate timeout if present (Claude Code hooks use milliseconds)
     if "timeout" in hook:
@@ -669,9 +664,8 @@ def validate_single_hook(
                 hook_path_str,
             )
         # Validate optional model field
-        if "model" in hook:
-            if not isinstance(hook["model"], str) or not hook["model"].strip():
-                report.major("Agent hook 'model' must be a non-empty string", hook_path_str)
+        if "model" in hook and (not isinstance(hook["model"], str) or not hook["model"].strip()):
+            report.major("Agent hook 'model' must be a non-empty string", hook_path_str)
         # Agent hooks have a default timeout of 60s
         if "timeout" in hook:
             timeout = hook["timeout"]
@@ -683,9 +677,8 @@ def validate_single_hook(
                 report.minor("Agent hook timeout exceeds 10 minutes", hook_path_str)
 
     # Validate statusMessage field (common to all hook types)
-    if "statusMessage" in hook:
-        if not isinstance(hook["statusMessage"], str):
-            report.major("'statusMessage' must be a string")
+    if "statusMessage" in hook and not isinstance(hook["statusMessage"], str):
+        report.major("'statusMessage' must be a string")
 
     # Validate 'once' field (only valid in skill hooks)
     if "once" in hook:

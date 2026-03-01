@@ -63,7 +63,7 @@ Follow these steps to run the audit pipeline:
 | `SCOPE_PATH` | Y | path | -- | Directory to audit |
 | `REFERENCE_STANDARD` | Y | path | -- | Path to compliance doc |
 | `VIOLATION_TYPES` | N | comma-separated string | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
-| `AUDIT_PATTERNS` | N | list | 14 defaults: `http://`, `https://`, `hardcoded`, `api_key`, `secret`, `token`, `password`, `/usr/local`, `/home/`, `os.path`, `subprocess`, `eval(`, `exec(`, `system()` | Grep triage patterns |
+| `AUDIT_PATTERNS` | N | list | 14 defaults (see reference) | Grep triage patterns |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory |
 | `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
 | `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |

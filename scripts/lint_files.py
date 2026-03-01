@@ -1004,7 +1004,7 @@ def run_linting(repo_root: Path) -> bool:
     print(f"{BLUE}  Detected languages: {', '.join(languages.keys())}{NC}")
 
     # Language -> lint function dispatch table (all read-only, return bool)
-    _LINT_DISPATCH: dict[str, Callable[..., bool]] = {
+    lint_dispatch: dict[str, Callable[..., bool]] = {
         "python": lambda r, _f: lint_python(r),
         "javascript": lambda r, _f: lint_javascript(r),
         "shell": lambda r, f: lint_shell(r, f),
@@ -1034,7 +1034,7 @@ def run_linting(repo_root: Path) -> bool:
             continue
 
         # Dispatch to language-specific linter
-        lint_fn = _LINT_DISPATCH.get(lang)
+        lint_fn = lint_dispatch.get(lang)
         if lint_fn is None:
             print(
                 f"{YELLOW}  ⚠ WARNING: {len(files)} {lang.upper()} file(s) "

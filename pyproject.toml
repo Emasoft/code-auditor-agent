@@ -1,7 +1,7 @@
 [project]
 name = "code-auditor-agent"
 version = "2.0.0"
-description = "Three-phase PR review pipeline and full codebase audit pipeline for Claude Code"
+description = "Four-phase PR review pipeline and full codebase audit pipeline for Claude Code"
 requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
@@ -25,6 +25,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+ignore = ["SIM102"]
 
 [tool.mypy]
 python_version = "3.12"

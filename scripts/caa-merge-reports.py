@@ -284,7 +284,7 @@ def main() -> None:
                 f"**Pass:** {pass_number}\n"
                 f"**Run ID:** {run_id if run_id else '(none -- legacy mode)'}\n"
                 f"**Reports merged:** {len(ordered_reports)}\n"
-                f"**Pipeline:** Code Correctness \u2192 Claim Verification \u2192 Skeptical Review \u2192 Security Review\n"
+                f"**Pipeline:** Correctness \u2192 Claims \u2192 Skeptical Review \u2192 Security\n"
                 f"**Status:** INTERMEDIATE \u2014 awaiting deduplication by caa-dedup-agent\n"
                 f"\n"
                 f"---\n"

@@ -25,6 +25,7 @@ Exit codes (when run directly):
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -66,10 +67,7 @@ ABSOLUTE_PATH_PATTERNS = [
 
 def is_absolute_path(path: str) -> bool:
     """Check if a path appears to be an absolute path (without env var substitution)."""
-    for pattern in ABSOLUTE_PATH_PATTERNS:
-        if pattern.match(path):
-            return True
-    return False
+    return any(pattern.match(path) for pattern in ABSOLUTE_PATH_PATTERNS)
 
 
 def extract_env_vars(value: str) -> list[tuple[str, str | None]]:
@@ -124,9 +122,8 @@ def validate_path_value(value: str, report: ValidationReport, context: str, plug
         resolved = value.replace("${CLAUDE_PLUGIN_ROOT}", str(plugin_root))
         resolved_path = Path(resolved)
         # Only check if it looks like a file (has extension) not a dir
-        if "." in resolved_path.name or resolved_path.suffix:
-            if not resolved_path.exists():
-                report.info(f"Referenced file may not exist: {value} (resolved: {resolved_path})")
+        if ("." in resolved_path.name or resolved_path.suffix) and not resolved_path.exists():
+            report.info(f"Referenced file may not exist: {value} (resolved: {resolved_path})")
 
 
 def validate_mcp_server(
@@ -148,7 +145,7 @@ def validate_mcp_server(
     ctx = f"{file_context}:{server_name}"
 
     # Check for unknown fields
-    for key in config.keys():
+    for key in config:
         if key not in KNOWN_SERVER_FIELDS:
             report.warning(f"Unknown field '{key}' in server {server_name}")
 
@@ -348,10 +345,8 @@ def validate_mcp_config(
 
     rel_path = config_path.name
     if plugin_root:
-        try:
+        with contextlib.suppress(ValueError):
             rel_path = str(config_path.relative_to(plugin_root))
-        except ValueError:
-            pass
 
     if not config_path.exists():
         report.info(f"MCP config file not found: {rel_path}")
@@ -546,10 +541,7 @@ def main() -> int:
     args = parser.parse_args()
 
     # Determine path — always resolve to absolute so relative_to() works
-    if args.path:
-        path = Path(args.path).resolve()
-    else:
-        path = Path.cwd().resolve()
+    path = Path(args.path).resolve() if args.path else Path.cwd().resolve()
 
     if not path.exists():
         print(f"Error: {path} does not exist", file=sys.stderr)
@@ -570,10 +562,7 @@ def main() -> int:
             return 1
 
     # Determine if it's a file or directory
-    if path.is_file():
-        report = validate_mcp_config(path, path.parent)
-    else:
-        report = validate_plugin_mcp(path)
+    report = validate_mcp_config(path, path.parent) if path.is_file() else validate_plugin_mcp(path)
 
     # Output
     if args.json:

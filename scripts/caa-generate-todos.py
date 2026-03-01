@@ -49,15 +49,9 @@ NC = "\033[0m"
 
 # ── Section detection patterns ───────────────────────────────────────────────
 # These regexes detect severity section headers in the consolidated report
-RE_MUST_FIX = re.compile(
-    r"^#{1,3}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)", re.IGNORECASE
-)
-RE_SHOULD_FIX = re.compile(
-    r"^#{1,3}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)", re.IGNORECASE
-)
-RE_NIT = re.compile(
-    r"^#{1,3}\s*(NIT|CONSISTENCY|STYLE|SUGGESTION)", re.IGNORECASE
-)
+RE_MUST_FIX = re.compile(r"^#{1,3}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)", re.IGNORECASE)
+RE_SHOULD_FIX = re.compile(r"^#{1,3}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)", re.IGNORECASE)
+RE_NIT = re.compile(r"^#{1,3}\s*(NIT|CONSISTENCY|STYLE|SUGGESTION)", re.IGNORECASE)
 RE_END_SECTION = re.compile(
     r"^#{1,3}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS|SOURCE REPORTS)",
     re.IGNORECASE,
@@ -79,9 +73,7 @@ RE_FILE_LINE = re.compile(r"^\s*[-*]\s*\*?\*?file\*?\*?\s*:", re.IGNORECASE)
 RE_INLINE_FILE = re.compile(r"`([a-zA-Z0-9_./-]+\.[a-z]+:[0-9]+)`")
 
 # Category/type/violation line
-RE_CATEGORY_LINE = re.compile(
-    r"^\s*[-*]\s*\*?\*?(category|type|violation)\*?\*?\s*:", re.IGNORECASE
-)
+RE_CATEGORY_LINE = re.compile(r"^\s*[-*]\s*\*?\*?(category|type|violation)\*?\*?\s*:", re.IGNORECASE)
 
 # Inline uppercase category marker: HARDCODED_API, DIRECT_DEPENDENCY, etc.
 RE_INLINE_CATEGORY = re.compile(r"[A-Z]{2,}_[A-Z_]{2,}")
@@ -189,9 +181,7 @@ def main() -> None:
         # Clean up title: strip leading hashes, brackets, whitespace
         clean_title = re.sub(r"^[\s#]*", "", current_title).strip()
 
-        output_lines.append(
-            f"## [{todo_prefix}-{padded_num}] {current_priority} — {clean_title}"
-        )
+        output_lines.append(f"## [{todo_prefix}-{padded_num}] {current_priority} — {clean_title}")
         output_lines.append("")
 
         if current_file:
@@ -208,9 +198,7 @@ def main() -> None:
             output_lines.append(f"- **Finding ID:** {current_finding_id}")
 
         output_lines.append("- **Status:** PENDING")
-        output_lines.append(
-            "- **Description:** (to be filled by caa-todo-generator-agent)"
-        )
+        output_lines.append("- **Description:** (to be filled by caa-todo-generator-agent)")
         output_lines.append("- **Fix:** (to be filled by caa-todo-generator-agent)")
         output_lines.append("")
 
@@ -231,9 +219,7 @@ def main() -> None:
     output_lines.append(f"**Source:** {report_basename}")
     output_lines.append(f"**Scope:** {scope_name}")
     output_lines.append(f"**Prefix:** {todo_prefix}")
-    output_lines.append(
-        "**Status:** SKELETON — awaiting caa-todo-generator-agent for implementation details"
-    )
+    output_lines.append("**Status:** SKELETON — awaiting caa-todo-generator-agent for implementation details")
     output_lines.append("")
     output_lines.append("---")
     output_lines.append("")
@@ -326,9 +312,7 @@ def main() -> None:
     output_lines.append(f"| **P3 (NIT)** | {p3_count} |")
     output_lines.append(f"| **Total** | {todo_num} |")
     output_lines.append("")
-    output_lines.append(
-        "**Next step:** Run caa-todo-generator-agent to fill in descriptions and fix guidance."
-    )
+    output_lines.append("**Next step:** Run caa-todo-generator-agent to fill in descriptions and fix guidance.")
 
     # ── Atomic write: write to .tmp then rename ──────────────────────────────
     tmp_output = output_path.with_suffix(output_path.suffix + ".tmp")
@@ -360,9 +344,7 @@ def main() -> None:
         )
     else:
         print(f"{GREEN}Generated {todo_num} skeleton TODO entries.{NC}")
-        print(
-            f"{YELLOW}Run caa-todo-generator-agent to add implementation details.{NC}"
-        )
+        print(f"{YELLOW}Run caa-todo-generator-agent to add implementation details.{NC}")
 
     sys.exit(0)
 
