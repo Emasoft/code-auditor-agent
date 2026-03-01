@@ -1,0 +1,7 @@
+# Dev folders contain draft/in-progress docs — not published
+docs_dev/
+scripts_dev/
+samples_dev/
+examples_dev/
+tests_dev/
+builds_dev/

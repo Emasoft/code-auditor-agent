@@ -113,7 +113,8 @@ def _fetch_upstream_file_info(upstream_path: str) -> dict[str, object]:
     )
     if result.returncode != 0:
         raise RuntimeError(f"gh api failed for {upstream_path}: {result.stderr.strip()}")
-    return json.loads(result.stdout)
+    data: dict[str, object] = json.loads(result.stdout)
+    return data
 
 
 def _local_blob_sha(file_path: Path) -> str | None:
