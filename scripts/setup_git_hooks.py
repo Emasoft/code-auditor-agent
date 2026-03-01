@@ -21,9 +21,9 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Only pre-push is used (per project decision -- NOT pre-commit)
+# Local override — excluded from CPV sync (project needs pre-commit)
 # ---------------------------------------------------------------------------
-HOOKS: list[str] = ["pre-push"]
+HOOKS: list[str] = ["pre-commit", "pre-push"]
 
 
 # ---------------------------------------------------------------------------
