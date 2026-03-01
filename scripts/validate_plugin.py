@@ -34,7 +34,6 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import contextlib
 import json
 import os
 import re
@@ -160,7 +159,7 @@ def validate_manifest(
         "outputStyles",
         "lspServers",
     }
-    for key in manifest:
+    for key in manifest.keys():
         if key not in known_fields:
             report.warning(
                 f"Unknown manifest field '{key}' — not part of the Claude Code plugin spec. "
@@ -570,8 +569,10 @@ def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
                 for file_path_str, count in sorted(errors_by_file.items()):
                     # Report ONE MAJOR per file, with total error count for that file
                     rel = file_path_str
-                    with contextlib.suppress(ValueError):
+                    try:
                         rel = str(Path(file_path_str).relative_to(plugin_root))
+                    except ValueError:
+                        pass
                     report.major(f"Ruff: {count} error(s) in {rel}", rel)
                 if not errors_by_file and result.stdout.strip():
                     # Fallback: ruff output did not match expected format
@@ -699,7 +700,9 @@ def _is_python_venv(dirpath: Path) -> bool:
     # Fallback: bin/activate (Unix) or Scripts/activate.bat (Windows)
     if (dirpath / "bin" / "activate").is_file():
         return True
-    return bool((dirpath / "Scripts" / "activate.bat").is_file())
+    if (dirpath / "Scripts" / "activate.bat").is_file():
+        return True
+    return False
 
 
 def validate_cross_platform(plugin_root: Path, report: ValidationReport) -> None:
@@ -794,7 +797,7 @@ def validate_cross_platform(plugin_root: Path, report: ValidationReport) -> None
         for lang_name, source_paths in compiled_source_files.items():
             # Find expected build system files for this language
             expected_build_files: set[str] = set()
-            for _ext, (ln, build_markers) in compiled_languages.items():
+            for ext, (ln, build_markers) in compiled_languages.items():
                 if ln == lang_name:
                     expected_build_files.update(build_markers)
 
@@ -1108,7 +1111,10 @@ def validate_gitignore(plugin_root: Path, report: ValidationReport) -> None:
     }
     for pattern_glob, desc in artifact_patterns.items():
         # Use gitignore-aware rglob — only find artifacts NOT covered by .gitignore
-        matches = [p for p in _gi.rglob(pattern_glob)] if _gi else list(plugin_root.rglob(pattern_glob))
+        if _gi:
+            matches = [p for p in _gi.rglob(pattern_glob)]
+        else:
+            matches = list(plugin_root.rglob(pattern_glob))
         if matches:
             sample = matches[0].relative_to(plugin_root)
             report.warning(f"Found {len(matches)} {desc} file(s) (e.g. {sample}) that are not gitignored")
@@ -1282,7 +1288,10 @@ def main() -> int:
     args = parser.parse_args()
 
     # Determine plugin root — always resolve to absolute path so relative_to() works
-    plugin_root = Path(args.path).resolve() if args.path else Path(__file__).resolve().parent.parent
+    if args.path:
+        plugin_root = Path(args.path).resolve()
+    else:
+        plugin_root = Path(__file__).resolve().parent.parent
 
     if not plugin_root.is_dir():
         print(f"Error: {plugin_root} is not a directory", file=sys.stderr)

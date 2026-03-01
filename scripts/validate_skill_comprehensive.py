@@ -1028,7 +1028,7 @@ def validate_hooks_field(
         "WorktreeRemove",
     }
 
-    for event_name in hooks:
+    for event_name in hooks.keys():
         if event_name not in valid_hook_events:
             report.minor(
                 f"Unknown hook event '{event_name}'. Valid events: PreToolUse, PostToolUse, Stop, etc.",
@@ -1133,7 +1133,7 @@ def validate_field_whitelist(
     """Validate frontmatter fields against whitelist."""
     allowed_fields = OPENSPEC_ALLOWED_FIELDS if strict_openspec else ALL_KNOWN_FIELDS
 
-    for key in frontmatter:
+    for key in frontmatter.keys():
         if key in DEPRECATED_FIELDS:
             report.minor(
                 f"Deprecated field '{key}' (may be ignored by CLI)",
@@ -1217,7 +1217,10 @@ def validate_required_sections(body: str, report: ValidationReport, strict_mode:
         instructions_start = instructions_match.start()
         # Find next ## header (any level 2 header)
         next_section = re.search(r"(?m)^## ", body[instructions_match.end() :])
-        instructions_end = instructions_match.end() + next_section.start() if next_section else len(body)
+        if next_section:
+            instructions_end = instructions_match.end() + next_section.start()
+        else:
+            instructions_end = len(body)
         instructions = body[instructions_start:instructions_end]
 
         has_numbered = bool(re.search(r"(?m)^\s*1\.\s+\S+", instructions))
