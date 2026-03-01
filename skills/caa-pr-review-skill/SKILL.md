@@ -17,8 +17,8 @@ tags:
 
 ## Overview
 
-Three-phase PR review that catches what standard code audits miss. Spawns specialized agents
-in sequence: correctness swarm, claim verification, skeptical review — then merges findings.
+Four-phase PR review that catches what standard code audits miss. Spawns specialized agents
+in sequence: correctness swarm, claim verification, skeptical review + security review (in parallel) — then merges findings.
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ A single external reviewer then immediately found 3 real bugs — including a fu
 claimed to populate 4 fields but actually populated zero of them. The audit swarm checked
 code correctness per-file; the reviewer checked claims against reality.
 
-This pipeline automates the three complementary review perspectives needed to catch 100% of
+This pipeline automates the four complementary review perspectives needed to catch 100% of
 issues:
 
 | Phase | Agent | What it catches | Analogy |
@@ -64,6 +64,7 @@ issues:
 | 1 | Code Correctness (swarm) | Per-file bugs, type errors, security | Microscope |
 | 2 | Claim Verification (single) | PR description lies, missing implementations | Fact-checker |
 | 3 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
+| 4 | Security Review (single, parallel with Phase 3) | OWASP Top 10, injections, secrets, auth bypasses, dependency vulns | Threat model |
 
 ## Protocol
 
@@ -228,9 +229,57 @@ Task(
 )
 ```
 
-### Phase 4: Merge Reports + Deduplicate
+> **Phase 3 and Phase 4 run in parallel.** Spawn both agents immediately after Phase 2 completes,
+> then wait for BOTH before proceeding to Phase 5 (merge).
 
-After all 3 phases complete, run the **two-stage merge pipeline**:
+### Phase 4: Security Review
+
+Spawn **one `caa-security-review-agent`** (single instance, runs in parallel with Phase 3).
+
+This agent needs:
+- The full PR diff
+- Access to the full codebase
+- Access to dependency files (package.json, pyproject.toml, requirements.txt)
+
+**Spawning pattern:**
+
+```
+Task(
+  subagent_type: "caa-security-review-agent",
+  prompt: """
+    PR_NUMBER: {pr_number}
+    DOMAIN: all-changed-files
+    FILES: {all_changed_files}
+    PASS: {PASS_NUMBER}
+    RUN_ID: {RUN_ID}
+    FINDING_ID_PREFIX: SC-P{PASS_NUMBER}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+
+    IMPORTANT — UUID FILENAME:
+    Generate a UUID for your output file:
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-security-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+
+    Perform a deep security review of all changed files.
+    Check for OWASP Top 10, injection attacks, secrets exposure, auth bypasses,
+    dependency vulnerabilities, and attack surface analysis.
+    Use finding IDs starting with SC-P{PASS_NUMBER}-001.
+
+    REPORTING RULES:
+    - Write ALL detailed output to the report file
+    - Return to orchestrator ONLY: "[DONE/FAILED] security-review - brief result. Report: {path}"
+    - Max 2 lines back to orchestrator
+  """,
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
+)
+```
+
+**Wait for both Phase 3 and Phase 4 to complete before proceeding to Phase 5.**
+
+### Phase 5: Merge Reports + Deduplicate
+
+After all 4 phases complete, run the **two-stage merge pipeline**:
 
 **Stage 1: Merge (Python script — simple concatenation, no dedup)**
 
@@ -240,6 +289,8 @@ uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py ${REPORT_DIR} 1
 
 This produces an intermediate report at `${REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md`.
 The v2 script verifies merged file integrity and deletes source files after verification.
+The script collects all report files matching: `caa-correctness-P{N}-*.md`, `caa-claims-P{N}-*.md`,
+`caa-review-P{N}-*.md`, and `caa-security-P{N}-*.md`.
 
 **Stage 2: Deduplicate (AI agent — semantic analysis)**
 
@@ -266,7 +317,7 @@ Task(
 )
 ```
 
-### Phase 5: Present Results
+### Phase 6: Present Results
 
 Read the **final deduplicated report** (NOT the intermediate) and present a summary:
 
@@ -284,16 +335,20 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P1-A1-005)
 
+### Security Findings:
+1. [SC-P1-001] {title} — {file:line} (Severity: {HIGH/MEDIUM/LOW})
+
 ### Full report: docs_dev/caa-pr-review-P1-{timestamp}.md
 ```
 
 ## CRITICAL RULES
 
-1. **NEVER skip Phase 2 and 3.** The correctness swarm alone is insufficient. It will miss
-   claimed-but-not-implemented features, cross-file inconsistencies, and UX concerns.
-   Phase 2 and 3 are what make this pipeline catch 100% of issues.
+1. **NEVER skip Phases 2, 3, or 4.** The correctness swarm alone is insufficient. It will miss
+   claimed-but-not-implemented features, cross-file inconsistencies, UX concerns, and security
+   vulnerabilities. Phases 2, 3, and 4 are what make this pipeline catch 100% of issues.
 
-2. **Phase order matters.** Phase 1 (parallel) → Phase 2 (sequential) → Phase 3 (sequential).
+2. **Phase order matters.** Phase 1 (parallel swarm) → Phase 2 (sequential) → Phase 3 + Phase 4
+   (parallel with each other, sequential after Phase 2) → Phase 5 (merge) → Phase 6 (present).
    Later phases can reference earlier reports to avoid duplicate work, but they must NOT
    skip their own checks.
 
@@ -338,17 +393,17 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 
 ## Instructions
 
-Follow the 5-phase protocol strictly:
+Follow the 6-phase protocol strictly:
 
 1. Gather the PR number, description, and list of changed files grouped by domain.
 2. Assign unique prefixes (A0, A1, ...) to each domain. Spawn one `caa-code-correctness-agent` per domain in parallel (Phase 1 swarm). Each agent generates a UUID for its output filename.
 3. Wait for all Phase 1 agents to complete before proceeding.
 4. Spawn a single `caa-claim-verification-agent` with the PR description and commit messages (Phase 2). Agent generates UUID filename.
 5. Wait for Phase 2 to complete before proceeding.
-6. Spawn a single `caa-skeptical-reviewer-agent` with the full diff and earlier reports (Phase 3). Agent generates UUID filename.
-7. Wait for Phase 3 to complete.
-8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1), then spawn `caa-dedup-agent` on the intermediate report (Stage 2).
-9. Read the final deduplicated report and present the verdict summary to the user.
+6. Spawn BOTH a single `caa-skeptical-reviewer-agent` (Phase 3) AND a single `caa-security-review-agent` (Phase 4) in parallel. Both agents generate UUID filenames.
+7. Wait for BOTH Phase 3 and Phase 4 to complete before proceeding.
+8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
+9. Read the final deduplicated report and present the verdict summary including security findings to the user (Phase 6).
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 
 ## Output
@@ -357,6 +412,7 @@ The pipeline produces:
 - Per-domain correctness reports: `docs_dev/caa-correctness-P1-{uuid}.md` (deleted after merge verification)
 - Claim verification report: `docs_dev/caa-claims-P1-{uuid}.md` (deleted after merge verification)
 - Skeptical review report: `docs_dev/caa-review-P1-{uuid}.md` (deleted after merge verification)
+- Security review report: `docs_dev/caa-security-P1-R{run_id}-{uuid}.md` (deleted after merge verification)
 - Intermediate merged report: `docs_dev/caa-pr-review-P1-intermediate-{timestamp}.md`
 - Final deduplicated report: `docs_dev/caa-pr-review-P1-{timestamp}.md`
 
@@ -367,7 +423,7 @@ original finding ID cross-references.
 ## Error Handling
 
 - If any Phase 1 agent fails, re-run it for that domain only (UUID filename avoids collision)
-- If Phase 2 or 3 fails, re-run that phase (they are single agents)
+- If Phase 2, 3, or 4 fails, re-run that phase (they are single agents)
 - If the merge script exits with code 2, there was an input error (missing reports, invalid dir)
 - If the merge script's byte-size verification fails, source files are preserved — investigate manually
 - If the dedup agent fails, re-run it on the intermediate report (it's idempotent)
@@ -393,6 +449,10 @@ See [Agent Recovery Protocol](references/agent-recovery.md) for full recovery pr
 Copy this checklist and track your progress:
 
 - [ ] Check all agent reports exist in docs_dev/
+- [ ] Phase 1: All correctness agent reports present (caa-correctness-P{N}-*.md)
+- [ ] Phase 2: Claim verification report present (caa-claims-P{N}-*.md)
+- [ ] Phase 3: Skeptical review report present (caa-review-P{N}-*.md)
+- [ ] Phase 4: Security review agent spawned and completed (caa-security-P{N}-R{run_id}-*.md)
 - [ ] Verify merge script produced intermediate report
 - [ ] Confirm dedup agent produced final report
 - [ ] Record any agent failures in recovery log
@@ -405,7 +465,7 @@ Copy this checklist and track your progress:
 ```
 # Full pipeline on PR 206
 User: "review PR 206"
-→ Skill activates, runs all 5 phases, presents merged verdict
+→ Skill activates, runs all 6 phases, presents merged verdict
 
 # Quick claim check only
 User: "just verify the claims in PR 206"
@@ -439,6 +499,7 @@ See [Lessons Learned](references/lessons-learned.md) for the full list with cont
 
 Copy this checklist and track your progress:
 
-- [ ] All three phases (correctness, claims, skeptical) are included in every review
+- [ ] All four phases (correctness, claims, skeptical, security) are included in every review
 - [ ] PR description claims are verified against actual code, not trusted at face value
 - [ ] Cross-file consistency is checked (version strings, shared constants, API contracts)
+- [ ] Security review covers OWASP Top 10, dependency vulnerabilities, and secrets exposure

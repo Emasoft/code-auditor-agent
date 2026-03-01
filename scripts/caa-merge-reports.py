@@ -28,6 +28,7 @@
 #   caa-correctness-P{N}-{uuid}.md  (Phase 1 -- may be multiple)
 #   caa-claims-P{N}-{uuid}.md       (Phase 2 -- one)
 #   caa-review-P{N}-{uuid}.md       (Phase 3 -- one)
+#   caa-security-P{N}-{uuid}.md     (Phase 4 -- one, runs in parallel with review)
 #
 # Output:
 #   caa-pr-review-P{N}-intermediate-{timestamp}.md  (merged, NOT deduplicated)
@@ -100,6 +101,8 @@ def classify_report(basename: str) -> str:
         return "claims"
     elif basename.startswith("caa-review-"):
         return "review"
+    elif basename.startswith("caa-security-"):
+        return "security"
     else:
         return "other"
 
@@ -177,10 +180,11 @@ def main() -> None:
     print(f"Found {len(reports)} reports to merge for pass {pass_number}")
     print()
 
-    # -- Sort reports by phase: correctness -> claims -> review -> other -------
+    # -- Sort reports by phase: correctness -> claims -> review -> security -> other -------
     correctness_reports: list[Path] = []
     claims_reports: list[Path] = []
     review_reports: list[Path] = []
+    security_reports: list[Path] = []
     other_reports: list[Path] = []
 
     for report in reports:
@@ -191,10 +195,12 @@ def main() -> None:
             claims_reports.append(report)
         elif rtype == "review":
             review_reports.append(report)
+        elif rtype == "security":
+            security_reports.append(report)
         else:
             other_reports.append(report)
 
-    ordered_reports = correctness_reports + claims_reports + review_reports + other_reports
+    ordered_reports = correctness_reports + claims_reports + review_reports + security_reports + other_reports
 
     # -- Severity section accumulators -----------------------------------------
     must_fix_lines: list[str] = []
@@ -278,7 +284,7 @@ def main() -> None:
                 f"**Pass:** {pass_number}\n"
                 f"**Run ID:** {run_id if run_id else '(none -- legacy mode)'}\n"
                 f"**Reports merged:** {len(ordered_reports)}\n"
-                f"**Pipeline:** Code Correctness \u2192 Claim Verification \u2192 Skeptical Review\n"
+                f"**Pipeline:** Code Correctness \u2192 Claim Verification \u2192 Skeptical Review \u2192 Security Review\n"
                 f"**Status:** INTERMEDIATE \u2014 awaiting deduplication by caa-dedup-agent\n"
                 f"\n"
                 f"---\n"

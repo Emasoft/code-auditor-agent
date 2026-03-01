@@ -45,7 +45,7 @@ Finding {
   file: string         // Primary file path mentioned (first file:line reference)
   lines: number[]      // All line numbers mentioned
   body: string         // Full finding text (all lines from heading to next heading)
-  phase: string        // "CC" (correctness), "CV" (claims), "SR" (skeptical review)
+  phase: string        // "CC" (correctness), "CV" (claims), "SR" (skeptical review), "SC" (security)
 }
 ```
 
@@ -97,7 +97,7 @@ When merging duplicate findings:
 1. **Keep the most detailed version** — the one with the longest, most informative description
 2. **Preserve the highest severity** — if one is MUST-FIX and the other is SHOULD-FIX, keep MUST-FIX
 3. **Note all original IDs** — add `Also identified by: [other IDs]` to the finding body
-4. **Preserve all source phases** — note which phases caught it (CC, CV, SR)
+4. **Preserve all source phases** — note which phases caught it (CC, CV, SR, SC)
 
 ### Step 5: Assign Final IDs and Write Output
 
@@ -118,7 +118,7 @@ When merging duplicate findings:
 
 **Generated:** {timestamp}
 **Pass:** {pass_number}
-**Pipeline:** Code Correctness → Claim Verification → Skeptical Review
+**Pipeline:** Code Correctness → Claim Verification → Skeptical Review → Security Review
 **Dedup:** {raw_count} raw findings → {dedup_count} unique findings ({removed} duplicates removed)
 
 ---
@@ -141,7 +141,7 @@ When merging duplicate findings:
 ### [MF-001] {title}
 **File:** {file}:{line}
 **Original IDs:** {original_ids}
-**Phases:** {CC, CV, SR — which phases caught this}
+**Phases:** {CC, CV, SR, SC — which phases caught this}
 {description}
 
 ---
@@ -244,7 +244,7 @@ Phase 3: lib/auth.ts:42 — MUST-FIX "Missing null check allows crash"
 - [ ] I did NOT merge findings from different files even if they describe the same pattern
 - [ ] For merged findings: I kept the HIGHEST severity (N/A if no duplicates found)
 - [ ] For merged findings: I preserved ALL original IDs in "Also identified by" annotation (N/A if no duplicates found)
-- [ ] For merged findings: I noted ALL source phases (CC, CV, SR) (N/A if no duplicates found)
+- [ ] For merged findings: I noted ALL source phases (CC, CV, SR, SC) (N/A if no duplicates found)
 - [ ] My final IDs use sequential numbering: MF-001, SF-001, NT-001
 - [ ] My deduplication log has an entry for EVERY final finding (including unique ones)
 - [ ] Each dedup log entry includes the merge reasoning

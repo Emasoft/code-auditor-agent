@@ -2,7 +2,7 @@
 
 > **Maintenance Note:** The review protocol below is shared with `caa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
 
-Three-phase review pipeline: correctness swarm, claim verification, skeptical review, then merge + dedup.
+Four-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup.
 
 **Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call. See the parent SKILL.md for full worktree protocol.
 
@@ -14,8 +14,9 @@ Three-phase review pipeline: correctness swarm, claim verification, skeptical re
 - [Phase 1: Code Correctness Swarm](#phase-1-code-correctness-swarm)
 - [Phase 2: Claim Verification](#phase-2-claim-verification)
 - [Phase 3: Skeptical Review](#phase-3-skeptical-review)
-- [Phase 4: Merge Reports + Deduplicate](#phase-4-merge-reports--deduplicate)
-- [Phase 5: Present Results](#phase-5-present-results)
+- [Phase 4: Security Review](#phase-4-security-review)
+- [Phase 5: Merge Reports + Deduplicate](#phase-5-merge-reports--deduplicate)
+- [Phase 6: Present Results](#phase-6-present-results)
 - [Procedure 1 Checklist](#procedure-1-checklist)
 
 ## Pre-Pass Cleanup (MANDATORY)
@@ -28,6 +29,7 @@ mkdir -p docs_dev/archive
 for f in docs_dev/caa-correctness-P${PASS_NUMBER}-*.md \
          docs_dev/caa-claims-P${PASS_NUMBER}-*.md \
          docs_dev/caa-review-P${PASS_NUMBER}-*.md \
+         docs_dev/caa-security-P${PASS_NUMBER}-*.md \
          docs_dev/caa-agents-P${PASS_NUMBER}-*.json \
          docs_dev/caa-checkpoint-P${PASS_NUMBER}-*.json; do
   [ -f "$f" ] && mv "$f" docs_dev/archive/
@@ -60,7 +62,8 @@ docs_dev/caa-agents-P{N}-R{RUN_ID}.json
   "phases": {
     "correctness": {"status": "pending", "agents": []},
     "claims": {"status": "pending"},
-    "review": {"status": "pending"}
+    "review": {"status": "pending"},
+    "security": {"status": "pending"}
   }
 }
 ```
@@ -204,6 +207,8 @@ This agent needs:
 - The PR description
 - Optionally, the Phase 1 and Phase 2 reports for cross-reference
 
+**Spawn Phase 3 and Phase 4 in parallel. Wait for BOTH to complete before proceeding to Phase 5.**
+
 **Spawning pattern:**
 
 ```
@@ -241,9 +246,49 @@ Task(
 )
 ```
 
-## Phase 4: Merge Reports + Deduplicate
+## Phase 4: Security Review
 
-After all 3 phases complete, run the **two-stage merge pipeline**:
+Spawn **one `caa-security-review-agent`** (single instance, runs in parallel with Phase 3).
+
+**Spawning pattern:**
+
+```
+Task(
+  subagent_type: "caa-security-review-agent",
+  prompt: """
+    DOMAIN: all-changed-files
+    FILES: {all_changed_files_list}
+    PASS: {PASS_NUMBER}
+    RUN_ID: {RUN_ID}
+    FINDING_ID_PREFIX: SC-P{PASS_NUMBER}
+    REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+
+    IMPORTANT — UUID FILENAME:
+    Generate a UUID for your output file:
+      UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
+    Write your report to: {ABSOLUTE_REPORT_DIR}/caa-security-P{PASS_NUMBER}-R{RUN_ID}-${UUID}.md
+
+    Perform a deep security review of all changed files.
+    Check OWASP Top 10, injection attacks, secrets exposure, auth bypasses,
+    dependency vulnerabilities, and attack surface analysis.
+    Use finding IDs starting with {FINDING_ID_PREFIX}-001.
+    (e.g., SC-P1-001, SC-P1-002, ...)
+
+    REPORTING RULES:
+    - Write ALL detailed output to the report file
+    - Return to orchestrator ONLY: "[DONE/FAILED] security-review - brief result. Report: {path}"
+    - Max 2 lines back to orchestrator
+  """,
+  run_in_background: true,
+  isolation: "worktree"  # Only when USE_WORKTREES=true; omit this line otherwise
+)
+```
+
+**Wait for BOTH Phase 3 and Phase 4 to complete before proceeding to Phase 5.**
+
+## Phase 5: Merge Reports + Deduplicate
+
+After all 4 phases complete, run the **two-stage merge pipeline**:
 
 **Stage 1: Merge (Python script -- simple concatenation, no dedup)**
 
@@ -294,7 +339,7 @@ Wait for the dedup agent to complete. The dedup agent produces:
 - Verdict: REQUEST CHANGES / APPROVE WITH NITS / APPROVE
 - Deduplication log showing which findings were merged and why
 
-## Phase 5: Present Results
+## Phase 6: Present Results
 
 Read the **final deduplicated report** (NOT the intermediate) and present a summary to the user:
 
@@ -328,6 +373,7 @@ Copy this checklist and track your progress:
 - [ ] Phase 1: All correctness agents completed successfully
 - [ ] Phase 2: Claim verification agent spawned and completed
 - [ ] Phase 3: Skeptical reviewer agent spawned and completed
-- [ ] Phase 4 Stage 1: Merge script executed successfully
-- [ ] Phase 4 Stage 2: Dedup agent completed with verdict
-- [ ] Phase 5: Final report summary presented to user
+- [ ] Phase 4: Security review agent spawned and completed
+- [ ] Phase 5 Stage 1: Merge script executed successfully
+- [ ] Phase 5 Stage 2: Dedup agent completed with verdict
+- [ ] Phase 6: Final report summary presented to user

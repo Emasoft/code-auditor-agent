@@ -4,7 +4,7 @@
 **License:** MIT
 **Author:** Emasoft
 
-Three-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
+Four-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
 
 ---
 
@@ -42,7 +42,7 @@ claude --use-plugin /path/to/code-auditor-agent
 
 ## Agents
 
-This plugin provides 10 agents, split across two pipelines.
+This plugin provides 11 agents, split across two pipelines.
 
 ### PR Review Pipeline Agents
 
@@ -51,6 +51,7 @@ This plugin provides 10 agents, split across two pipelines.
 | `caa-code-correctness-agent` | Per-file correctness audit (type safety, logic, security, shell scripts) | Swarm (one per domain) |
 | `caa-claim-verification-agent` | Verifies PR description claims against actual code | Single instance |
 | `caa-skeptical-reviewer-agent` | Holistic review as an external maintainer (UX, breaking changes, consistency) | Single instance |
+| `caa-security-review-agent` | Deep security review (OWASP, injections, secrets, attack surface) | Single instance |
 | `caa-dedup-agent` | Semantic deduplication of merged review findings | Single instance |
 
 ### Codebase Audit Pipeline Agents
@@ -70,13 +71,13 @@ This plugin provides 10 agents, split across two pipelines.
 
 | Skill | Purpose |
 |-------|---------|
-| `caa-pr-review-skill` | Three-phase PR review: correctness swarm, claim verification, skeptical review, merge + dedup |
+| `caa-pr-review-skill` | Four-phase PR review: correctness swarm, claim verification, skeptical review, security analysis, merge + dedup |
 | `caa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
 | `caa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
 
 ### `caa-pr-review-skill` (review only)
 
-Review a PR without modifying code. Runs the three-phase pipeline and presents a verdict.
+Review a PR without modifying code. Runs the four-phase pipeline and presents a verdict.
 
 ```text
 review PR 206
@@ -90,7 +91,7 @@ Review a PR AND automatically fix all findings. Loops until zero issues remain (
 review and fix PR 206
 ```
 
-Each pass runs the PR Review Pipeline (three-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 25 passes are reached.
+Each pass runs the PR Review Pipeline (four-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 25 passes are reached.
 
 Fix agents are dynamically selected from whatever agents are available in the user's Claude Code instance, with `general-purpose` as the universal fallback.
 
@@ -151,14 +152,15 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 
 ## PR Review Pipeline
 
-The PR review pipeline (Procedure 1) runs five phases:
+The PR review pipeline (Procedure 1) runs six phases:
 
 ```
 Phase 1: Spawn correctness agents (one per domain, parallel swarm)
 Phase 2: Spawn claim verification agent
 Phase 3: Spawn skeptical reviewer agent
-Phase 4: Merge reports via caa-merge-reports.py + dedup agent
-Phase 5: Present final report
+Phase 4: Spawn security review agent (parallel with Phase 3)
+Phase 5: Merge reports via caa-merge-reports.py + dedup agent
+Phase 6: Present final report
 ```
 
 **Phase 1 -- Code Correctness Swarm.** One `caa-code-correctness-agent` is spawned per code domain (e.g., Python files, shell scripts, TypeScript files). Each agent audits files in its domain for type safety errors, logic bugs, security vulnerabilities, and shell script correctness. Agents run in parallel as a swarm.
@@ -167,9 +169,11 @@ Phase 5: Present final report
 
 **Phase 3 -- Skeptical Review.** A single `caa-skeptical-reviewer-agent` performs a holistic review from the perspective of an external maintainer. It evaluates UX impact, breaking changes, API consistency, and architectural concerns that per-file audits miss.
 
-**Phase 4 -- Merge + Dedup.** The `caa-merge-reports.py` script concatenates all phase reports into an intermediate merged report. Then `caa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
+**Phase 4 -- Security Review.** A single `caa-security-review-agent` performs deep security analysis of all changed files. It checks for OWASP Top 10 vulnerabilities, injection attacks, secrets exposure, authentication bypasses, dependency CVEs, and attack surface analysis. Runs in parallel with Phase 3.
 
-**Phase 5 -- Final Report.** The deduplicated report is presented as the final verdict.
+**Phase 5 -- Merge + Dedup.** The `caa-merge-reports.py` script concatenates all phase reports into an intermediate merged report. Then `caa-dedup-agent` performs semantic deduplication, removing findings that are duplicates or subsets of other findings.
+
+**Phase 6 -- Final Report.** The deduplicated report is presented as the final verdict.
 
 When using `caa-pr-review-and-fix-skill`, a fix cycle follows each review pass:
 
@@ -232,6 +236,7 @@ Reports are written to `docs_dev/`.
 | Correctness (per-domain) | `caa-correctness-P{N}-{uuid}.md` |
 | Claim verification | `caa-claims-P{N}-{uuid}.md` |
 | Skeptical review | `caa-review-P{N}-{uuid}.md` |
+| Security review | `caa-security-P{N}-{uuid}.md` |
 | Intermediate merged report | `caa-pr-review-P{N}-intermediate-{timestamp}.md` |
 | Final dedup report | `caa-pr-review-P{N}-{timestamp}.md` |
 | Fix summary (per-domain) | `caa-fixes-done-P{N}-{domain}.md` |
