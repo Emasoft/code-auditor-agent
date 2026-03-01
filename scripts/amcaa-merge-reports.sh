@@ -1,4 +1,5 @@
 #!/bin/bash
+# Requires bash 4+ (for associative arrays). macOS ships bash 3.2 — install bash via Homebrew.
 # AMCAA Merge Reports — Combines findings from all 3 review phases into one final report.
 #
 # Usage:

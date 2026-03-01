@@ -18,6 +18,8 @@ These lessons emerged from a real incident where 20+ specialized audit agents ch
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] Phase 1 (correctness swarm) catches per-file bugs but not big-picture issues
 - [ ] Phase 2 (claim verification) catches PR description lies and missing implementations
 - [ ] Phase 3 (skeptical review) catches cross-file inconsistencies and UX concerns

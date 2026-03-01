@@ -160,7 +160,6 @@ def main() -> int:
         except ValueError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
-        new_major, new_minor, new_patch = new_major, new_minor, new_patch
     else:
         new_major, new_minor, new_patch = bump_semver(major, minor, patch, args.command)
 

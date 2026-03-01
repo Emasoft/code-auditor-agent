@@ -299,6 +299,21 @@ When the loop terminates with zero issues:
 
 ---
 
+## Instructions
+
+Follow the iterative review-fix protocol strictly:
+
+1. Initialize `PASS_NUMBER = 1`, `MAX_PASSES = 25`.
+2. Run **PROCEDURE 1** (Phases 1-5): spawn correctness swarm, claim verification, skeptical review, merge reports, present results.
+3. If zero issues found -> write final report and exit.
+4. If `PASS_NUMBER >= MAX_PASSES` -> write escalation report and exit.
+5. Run **PROCEDURE 2**: spawn fix agents per domain, run tests, fix regressions, lint (if Docker available), fix lint errors, commit.
+6. Increment `PASS_NUMBER`, go to step 2.
+
+Each step's details are documented in the reference files for PROCEDURE 1 and PROCEDURE 2.
+
+---
+
 ## Output
 
 The pipeline produces these deliverables across all passes:
@@ -454,19 +469,6 @@ See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with ful
 - Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/amcaa-dedup-agent.md`
 - Other agents: `$CLAUDE_PLUGIN_ROOT/agents/`
 - Report output directory: `docs_dev/`
-
-## Instructions
-
-Follow the iterative review-fix protocol strictly:
-
-1. Initialize `PASS_NUMBER = 1`, `MAX_PASSES = 25`.
-2. Run **PROCEDURE 1** (Phases 1-5): spawn correctness swarm, claim verification, skeptical review, merge reports, present results.
-3. If zero issues found -> write final report and exit.
-4. If `PASS_NUMBER >= MAX_PASSES` -> write escalation report and exit.
-5. Run **PROCEDURE 2**: spawn fix agents per domain, run tests, fix regressions, lint (if Docker available), fix lint errors, commit.
-6. Increment `PASS_NUMBER`, go to step 2.
-
-Each step's details are documented in the reference files for PROCEDURE 1 and PROCEDURE 2.
 
 ## Examples
 

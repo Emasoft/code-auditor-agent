@@ -215,10 +215,6 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 
 - `/audit-codebase` - Triggers this skill from the CLI
 
-### Reference Files
-
-- `references/pipeline-phases.md` - Detailed phase documentation (if extracted)
-
 ## Completion Checklist
 
 Copy this checklist and track your progress:

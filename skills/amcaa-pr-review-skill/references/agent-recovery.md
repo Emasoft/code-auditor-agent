@@ -159,6 +159,8 @@ UUID filenames prevent file-level collision. But if two agents were accidentally
 
 ## Checklist
 
+Copy this checklist and track your progress:
+
 - [ ] All spawned agents are tracked with taskId, agentType, domain, outputPath, findingPrefix, launchedAt, status
 - [ ] Lost agents are detected via output file verification (not just task tool response)
 - [ ] Partial artifacts are cleaned up before re-spawning
