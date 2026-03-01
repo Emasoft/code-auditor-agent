@@ -153,7 +153,7 @@ for report in "${ORDERED_REPORTS[@]}"; do
     while IFS= read -r line; do
         # Detect section headers
         # Detect section headers using bash regex instead of echo|grep
-        local line_lower="${line,,}"
+        line_lower="${line,,}"
         if [[ "$line" =~ ^#{1,3}[[:space:]] ]] && [[ "$line_lower" =~ (must.fix|failed\ claims) ]]; then
             in_section="must-fix"
             continue

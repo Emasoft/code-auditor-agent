@@ -30,8 +30,8 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 | Script | Phase | Purpose |
 |--------|-------|---------|
-| `amcaa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
-| `amcaa-generate-todos.py` | 5 | Structured TODO generation helper |
+| `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
+| `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-generate-todos.py` | 5 | Structured TODO generation helper |
 
 ### Environment
 
@@ -223,8 +223,8 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 
 ### Scripts
 
-- `amcaa-merge-audit-reports.py` - Final report compilation
-- `amcaa-generate-todos.py` - Structured TODO generation
+- `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-merge-audit-reports.py` - Final report compilation
+- `$CLAUDE_PLUGIN_ROOT/scripts/amcaa-generate-todos.py` - Structured TODO generation
 
 ### Related Commands
 
