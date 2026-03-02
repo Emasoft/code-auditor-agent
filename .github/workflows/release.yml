@@ -37,6 +37,9 @@ jobs:
           if [ "$exit_code" -eq 1 ] || [ "$exit_code" -eq 2 ]; then
             exit $exit_code
           fi
+          if [ "$exit_code" -ge 3 ]; then
+            echo "::warning::Plugin validation found issues (exit code $exit_code). See validation-report.txt."
+          fi
 
       - name: Validation step summary
         if: always()
@@ -58,9 +61,9 @@ jobs:
           else
             LOG=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
           fi
-          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "CHANGELOG<<CHANGELOG_DELIM" >> $GITHUB_OUTPUT
           echo "$LOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "CHANGELOG_DELIM" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -69,5 +72,4 @@ jobs:
             ## Changes
 
             ${{ steps.changelog.outputs.CHANGELOG }}
-          generate_release_notes: true
           files: validation-report.txt

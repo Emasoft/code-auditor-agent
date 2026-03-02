@@ -61,7 +61,7 @@ issues:
 
 | Phase | Agent | What it catches | Analogy |
 |-------|-------|-----------------|---------|
-| 1 | Code Correctness (swarm) | Per-file bugs, type errors, security | Microscope |
+| 1 | Code Correctness (swarm) | Per-file bugs, type errors, logic errors | Microscope |
 | 2 | Claim Verification (single) | PR description lies, missing implementations | Fact-checker |
 | 3 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
 | 4 | Security Review (single, parallel with Phase 3) | OWASP Top 10, injections, secrets, auth bypasses, dependency vulns | Threat model |
@@ -186,7 +186,9 @@ Phase 2 runs AFTER Phase 1 so it can optionally reference correctness findings
 to avoid duplicating effort. However, it MUST NOT skip its own verification —
 correctness agents check different things than claim verification.
 
-### Phase 3: Skeptical Review
+### Phase 3 + Phase 4 (run in parallel)
+
+#### Phase 3: Skeptical Review
 
 Spawn **one `caa-skeptical-reviewer-agent`** (single instance).
 
@@ -232,7 +234,7 @@ Task(
 > **Phase 3 and Phase 4 run in parallel.** Spawn both agents immediately after Phase 2 completes,
 > then wait for BOTH before proceeding to Phase 5 (merge).
 
-### Phase 4: Security Review
+#### Phase 4: Security Review
 
 Spawn **one `caa-security-review-agent`** (single instance, runs in parallel with Phase 3).
 
@@ -379,8 +381,8 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 ## Quick Reference
 
 ```
-# Full pipeline
-/pr-review 206
+# Full pipeline (natural language trigger)
+review PR 206
 
 # Just claim verification (fastest, catches the most common misses)
 # Spawn caa-claim-verification-agent manually

@@ -510,11 +510,14 @@ def print_push_instructions(version: str) -> None:
         version: The version string for the tag name.
     """
     tag = f"v{version}"
+    # Detect current branch instead of hardcoding 'main'
+    branch_result = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "main"
     _step("Step 6: Push instructions")
     print()
     _info("  Release prepared. To publish, run:")
     print()
-    print(f"    git push origin main && git push origin {tag}")
+    print(f"    git push origin {branch} && git push origin {tag}")
     print()
 
 

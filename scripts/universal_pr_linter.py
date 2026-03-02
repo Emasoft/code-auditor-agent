@@ -47,8 +47,10 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -74,8 +76,6 @@ def _fmt_cmd(cmd: list[str]) -> str:
         return subprocess.list2cmdline(cmd)
 
     # POSIX: quote args safely
-    import shlex
-
     return " ".join(shlex.quote(c) for c in cmd)
 
 
@@ -236,22 +236,14 @@ def _clone_repo(repo_url: str, dst: Path, token: str | None) -> None:
     cmd: list[str]
     env = os.environ.copy()
 
-    # For GitHub HTTPS + token, use extraheader rather than embedding in URL.
-    # NOTE: the token may still appear in process listings on some OSes.
-    # We mitigate by never printing the full command line on errors.
+    # For GitHub HTTPS + token, pass credentials via environment variables
+    # instead of command-line args (which are visible in /proc/cmdline on Linux).
     if token and repo_url.startswith("https://github.com/"):
-        cmd = [
-            "git",
-            "-c",
-            f"http.extraheader=AUTHORIZATION: bearer {token}",
-            "clone",
-            "--no-tags",
-            "--filter=blob:none",
-            repo_url,
-            str(dst),
-        ]
-    else:
-        cmd = ["git", "clone", "--no-tags", "--filter=blob:none", repo_url, str(dst)]
+        env["GIT_CONFIG_COUNT"] = "1"
+        env["GIT_CONFIG_KEY_0"] = "http.extraheader"
+        env["GIT_CONFIG_VALUE_0"] = f"AUTHORIZATION: bearer {token}"
+
+    cmd = ["git", "clone", "--no-tags", "--filter=blob:none", repo_url, str(dst)]
 
     p = subprocess.run(
         cmd,
@@ -329,7 +321,9 @@ def _changed_files(repo_dir: Path, base_ref: str, head_ref: str) -> list[str]:
 
     _run(["git", "fetch", "origin", base_ref], cwd=repo_dir, check=False)
 
-    mb = _run(["git", "merge-base", head_ref, f"origin/{base_ref}"], cwd=repo_dir, check=True).stdout.strip()
+    # Avoid prepending "origin/" if base_ref already has it (e.g. from GitHub Actions)
+    origin_base = base_ref if base_ref.startswith("origin/") else f"origin/{base_ref}"
+    mb = _run(["git", "merge-base", head_ref, origin_base], cwd=repo_dir, check=True).stdout.strip()
     diff = _run(
         ["git", "diff", "--name-only", "--diff-filter=ACMRTUXB", mb, head_ref],
         cwd=repo_dir,
@@ -456,7 +450,6 @@ def _write_lint_summary(report_dir: Path, summary_path: str | None, exit_code: i
     Scans linters_logs/ for ERROR-*.log and SUCCESS-*.log files to determine
     which linters passed and which failed. Writes structured JSON output.
     """
-    import json
 
     linters_dir = report_dir / "linters_logs"
     error_linters: list[str] = []

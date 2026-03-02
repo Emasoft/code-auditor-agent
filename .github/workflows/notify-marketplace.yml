@@ -26,7 +26,7 @@ name: Notify Marketplace
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
     paths:
       - '.claude-plugin/plugin.json'
       - 'hooks/**'
@@ -34,6 +34,9 @@ on:
       - 'agents/**'
       - 'skills/**'
       - 'scripts/**'
+
+permissions:
+  contents: read
 
 env:
   # ⚠️ REQUIRED: Update these values to point to your marketplace repository
@@ -59,13 +62,8 @@ jobs:
           token: ${{ secrets.MARKETPLACE_PAT }}
           repository: ${{ env.MARKETPLACE_OWNER }}/${{ env.MARKETPLACE_REPO }}
           event-type: plugin-updated
-          client-payload: |
-            {
-              "plugin": "${{ steps.plugin.outputs.name }}",
-              "ref": "${{ steps.plugin.outputs.ref }}",
-              "source_repo": "${{ github.repository }}",
-              "triggered_by": "${{ github.actor }}"
-            }
+          client-payload: >-
+            {"plugin": ${{ toJSON(steps.plugin.outputs.name) }}, "ref": ${{ toJSON(steps.plugin.outputs.ref) }}, "source_repo": ${{ toJSON(github.repository) }}, "triggered_by": ${{ toJSON(github.actor) }}}
 
       - name: Summary
         run: |

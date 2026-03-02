@@ -276,7 +276,7 @@ Three GitHub Actions workflows are configured:
 |----------|---------|---------|
 | `ci.yml` | Pull Request, Manual dispatch | Lint, typecheck, validate `plugin.json`, check version consistency |
 | `release.yml` | Tag push (`v*`) | Tag-triggered GitHub Release with changelog generation |
-| `notify-marketplace.yml` | Plugin changes (removed) | Notified the marketplace repository when the plugin was updated |
+| `notify-marketplace.yml` | Push to main (plugin changes) | Notifies the marketplace repository when the plugin is updated |
 
 ---
 

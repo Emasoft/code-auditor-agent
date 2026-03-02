@@ -14,7 +14,6 @@ tools:
   - Bash
   - Grep
   - Glob
-  - WebSearch
 capabilities:
   - Deep analysis of injection vectors (SQL, command, XSS, LDAP, template, header)
   - Attack surface mapping — identify all entry points (APIs, CLI args, env vars, file inputs)
@@ -177,9 +176,9 @@ After individual vulnerability scanning, think like an attacker:
 3. If I compromised one component, what else could I reach?
 4. Are there any "assume breach" scenarios the code doesn't handle?
 
-### Phase D: Latest Threat Intelligence (if WebSearch available)
+### Phase D: Latest Threat Intelligence
 
-Use WebSearch to check:
+Use Bash with `gh api` or `curl` to check (skip if network unavailable):
 1. Recent CVEs for specific package versions found in the codebase
 2. Latest attack techniques relevant to the tech stack
 3. Security advisories for frameworks and libraries in use

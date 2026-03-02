@@ -6,7 +6,12 @@ description: >
   HARD LIMIT: max 5 input reports per invocation. If more reports exist, the orchestrator must
   split them into sub-groups.
 model: sonnet
-tools: Read, Write, Bash, Grep, Glob
+tools:
+  - Read
+  - Write
+  - Bash
+  - Grep
+  - Glob
 maxTurns: 20
 ---
 

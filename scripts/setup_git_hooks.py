@@ -33,6 +33,8 @@ HOOKS: list[str] = ["pre-commit", "pre-push"]
 
 def _colors_supported() -> bool:
     """Return True when the terminal likely supports ANSI escape codes."""
+    if os.environ.get("NO_COLOR"):
+        return False
     if os.name == "nt":
         # Windows Terminal and recent cmd.exe honour VIRTUAL_TERMINAL_PROCESSING,
         # but the safest heuristic is checking for the WT_SESSION env var (Windows
@@ -144,6 +146,7 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
     _ok("Git hooks installed successfully!")
     print()
     _info("Installed hooks:")
+    print("  - pre-commit: CPV sync + plugin validation (allows MINOR issues)")
     print("  - pre-push: Read-only linting + plugin validation (blocks ALL issues)")
     print()
     _info("To test the hooks:")
@@ -166,7 +169,7 @@ def _make_executable(path: Path) -> None:
     bits, but calling it keeps the logic unconditional.
     """
     current_mode = path.stat().st_mode
-    path.chmod(current_mode | 0o755)
+    path.chmod(current_mode | 0o111)
 
 
 # ---------------------------------------------------------------------------

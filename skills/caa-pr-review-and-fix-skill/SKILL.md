@@ -32,8 +32,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 |  1. PROCEDURE 1 -- Review                         |
 |     Phase 1: Code Correctness Swarm (parallel)    |
 |     Phase 2: Claim Verification (sequential)      |
-|     Phase 3: Skeptical Review (sequential)        |
-|     Phase 4: Security Review (sequential)         |
+|     Phase 3+4: Skeptical + Security (parallel)    |
 |     Phase 5: Merge Reports                        |
 |     Phase 6: Present Results                      |
 |                                                   |

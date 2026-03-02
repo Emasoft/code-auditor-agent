@@ -74,6 +74,8 @@ SYNC_TARGETS: list[tuple[str, str]] = [
 
 def _colors_supported() -> bool:
     """Return True when the terminal likely supports ANSI escape codes."""
+    if os.environ.get("NO_COLOR"):
+        return False
     if os.name == "nt":
         return bool(os.environ.get("WT_SESSION") or os.environ.get("ANSICON"))
     return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
