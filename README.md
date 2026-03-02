@@ -287,9 +287,9 @@ Three GitHub Actions workflows are configured:
 Use the bump script to increment the version across `plugin.json` and `pyproject.toml`:
 
 ```bash
-uv run scripts/bump_version.py patch   # 3.0.0 -> 3.0.1
-uv run scripts/bump_version.py minor   # 3.0.0 -> 3.1.0
-uv run scripts/bump_version.py major   # 3.0.0 -> 4.0.0
+uv run scripts/bump_version.py --patch   # 3.0.0 -> 3.0.1
+uv run scripts/bump_version.py --minor   # 3.0.0 -> 3.1.0
+uv run scripts/bump_version.py --major   # 3.0.0 -> 4.0.0
 ```
 
 ### Creating a Release

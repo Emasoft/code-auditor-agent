@@ -50,12 +50,22 @@ from datetime import datetime
 from pathlib import Path
 
 # -- ANSI Color Configuration -------------------------------------------------
-RED = "\033[0;31m"
-GREEN = "\033[0;32m"
-YELLOW = "\033[1;33m"
-CYAN = "\033[0;36m"
-BOLD = "\033[1m"
-NC = "\033[0m"
+
+def _colors_supported() -> bool:
+    """Return True only when the terminal supports ANSI escape sequences."""
+    if os.environ.get("NO_COLOR"):
+        return False
+    if os.name == "nt":
+        return bool(os.environ.get("WT_SESSION") or os.environ.get("ANSICON"))
+    return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+_USE_COLOR = _colors_supported()
+RED = "\033[0;31m" if _USE_COLOR else ""
+GREEN = "\033[0;32m" if _USE_COLOR else ""
+YELLOW = "\033[1;33m" if _USE_COLOR else ""
+CYAN = "\033[0;36m" if _USE_COLOR else ""
+BOLD = "\033[1m" if _USE_COLOR else ""
+NC = "\033[0m" if _USE_COLOR else ""
 
 # -- Finding ID regex ----------------------------------------------------------
 # Matches: [CC-P4-A0-001], [CV-P4-001], [SR-P4-001], [CC-001], etc.

@@ -57,7 +57,7 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1)
           if [ -z "$PREV_TAG" ]; then
-            LOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+            LOG=$(git log --max-count=50 --pretty=format:"- %s (%h)" HEAD)
           else
             LOG=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
           fi

@@ -6,6 +6,7 @@ description: >
   cross-file consistency, missing implementations, design judgment, and documentation accuracy.
   This is the telescope that sees what the microscope (correctness swarm) misses.
 model: opus
+maxTurns: 30
 tools:
   - Read
   - Write

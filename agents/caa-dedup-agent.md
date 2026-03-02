@@ -5,6 +5,7 @@ description: >
   Handles same-line-different-bug cases with semantic analysis.
   Produces final report with accurate counts and verdict.
 model: opus
+maxTurns: 25
 tools:
   - Read
   - Write
@@ -26,7 +27,7 @@ independent review agents. Your job is to produce a clean final report with:
 ## Input Parameters
 
 You will receive:
-- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from caa-merge-reports.py)
+- `INTERMEDIATE_REPORT`: Path to the merged intermediate report (from scripts/caa-merge-reports.py for PR review, or scripts/caa-merge-audit-reports.py for codebase audit)
 - `PASS_NUMBER`: Current pass number (1-5)
 - `OUTPUT_PATH`: Path for the final deduplicated report
 

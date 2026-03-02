@@ -8,6 +8,7 @@ description: >
   shield: focused exclusively on security, unlike the correctness agent which treats
   security as one checklist item among many.
 model: opus
+maxTurns: 30
 tools:
   - Read
   - Write

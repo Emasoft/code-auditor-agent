@@ -33,7 +33,7 @@ in sequence: correctness swarm, claim verification, skeptical review + security 
 
 | Param | Req | Type | Default | Description |
 |-------|-----|------|---------|-------------|
-| `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
+| `PR_NUMBER` | Y | string | -- | GitHub PR number or branch name |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
 | `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees for isolation |
@@ -101,7 +101,7 @@ Group changed files by domain. Common domain splits:
 ```
 domains = sorted(list of domains with changed files)
 for i, domain in enumerate(domains):
-    AGENT_PREFIX = "A" + hex(i).upper()    # A0, A1, A2, ..., AF, A10
+    AGENT_PREFIX = f"A{i:X}"    # A0, A1, A2, ..., AF, A10
     FINDING_ID_PREFIX = "CC-P1-{AGENT_PREFIX}"
     # Each agent also generates its own UUID for the filename
 ```

@@ -63,7 +63,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 
 | Param | Req | Type | Default | Description |
 |-------|-----|------|---------|-------------|
-| `PR_NUMBER` | Y | int | -- | GitHub PR number or branch name |
+| `PR_NUMBER` | Y | string | -- | GitHub PR number or branch name |
 | `MAX_PASSES` | N | int | `25` | Maximum review-fix loop iterations |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
 | `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
@@ -182,7 +182,7 @@ The orchestrator assigns prefixes at spawn time using this algorithm:
 ```
 domains = sorted(list of domains with changed files)
 for i, domain in enumerate(domains):
-    agent_prefix = "A" + hex(i).upper()  # A0, A1, A2, ..., AF, A10, ...
+    agent_prefix = f"A{i:X}"  # A0, A1, A2, ..., AF, A10, ...
     finding_id_prefix = f"CC-P{PASS_NUMBER}-{agent_prefix}"
 ```
 
@@ -269,12 +269,12 @@ Dynamic agent swarm that resolves all findings, runs tests, lints, and commits.
 See [Procedure 2: Code Fix](references/procedure-2-fix.md) for full protocol.
 
 **Reference file sections (procedure-2-fix.md):**
-- [Agent Selection (Dynamic)](references/procedure-2-fix.md#agent-selection-dynamic) — How to select and assign fix agents dynamically
-- [Fix Protocol](references/procedure-2-fix.md#fix-protocol) — How to implement fixes with the 15-step protocol
-- [Linting Step (Docker Required)](references/procedure-2-fix.md#linting-step-docker-required) — How to run MegaLinter and handle lint errors
-- [Commit After Fixes](references/procedure-2-fix.md#commit-after-fixes) — How to commit verified fixes
-- [Procedure 2 Output](references/procedure-2-fix.md#procedure-2-output) — What Procedure 2 produces
-- [Procedure 2 Checklist](references/procedure-2-fix.md#procedure-2-checklist) — Completion checklist for the fix cycle
+- [Agent Selection (Dynamic)](references/procedure-2-fix.md#agent-selection-dynamic) -- How to select and assign fix agents dynamically
+- [Fix Protocol](references/procedure-2-fix.md#fix-protocol) -- How to implement fixes with the 15-step protocol
+- [Linting Step (Docker Required)](references/procedure-2-fix.md#linting-step-docker-required) -- How to run MegaLinter and handle lint errors
+- [Commit After Fixes](references/procedure-2-fix.md#commit-after-fixes) -- How to commit verified fixes
+- [Procedure 2 Output](references/procedure-2-fix.md#procedure-2-output) -- What Procedure 2 produces
+- [Procedure 2 Checklist](references/procedure-2-fix.md#procedure-2-checklist) -- Completion checklist for the fix cycle
 
 ### Fix Checklist
 

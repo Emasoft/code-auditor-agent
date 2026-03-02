@@ -102,7 +102,7 @@ Group changed files by domain. Examine the project files to identify the domains
 ```
 domains = sorted(list of domains with changed files)
 for i, domain in enumerate(domains):
-    AGENT_PREFIX = "A" + hex(i).upper()    # A0, A1, A2, ..., AF, A10
+    AGENT_PREFIX = f"A{i:X}"    # A0, A1, A2, ..., AF, A10
     FINDING_ID_PREFIX = "CC-P{PASS_NUMBER}-{AGENT_PREFIX}"
     # Each agent also generates its own UUID for the filename
 ```

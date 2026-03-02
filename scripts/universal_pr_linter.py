@@ -181,7 +181,7 @@ def _parse_source(source: str) -> tuple[str, str | None, int | None]:
         return "local_path", str(p.resolve()), None
 
     # git URL (https/ssh)
-    if re.match(r"^(https?|ssh)://", s) or re.match(r"^git@[^:]+:.+\.git$", s) or s.endswith(".git"):
+    if re.match(r"^(https?|ssh)://", s) or re.match(r"^git@[^:]+:.+", s) or s.endswith(".git"):
         return "git_url", s, None
 
     # github repo without .git
@@ -211,7 +211,10 @@ def _copy_tree_readonly(src: Path, dst: Path) -> None:
     """Copy files into dst. This is our "read-only guarantee": we never touch src."""
 
     if dst.exists():
-        shutil.rmtree(dst)
+        try:
+            shutil.rmtree(dst)
+        except OSError as exc:
+            raise CmdError(f"Cannot remove {dst}: {exc}. Close any programs using this directory.") from exc
 
     # Windows often blocks symlink creation; try symlinks=True, fall back on Windows.
     try:
@@ -231,7 +234,10 @@ def _clone_repo(repo_url: str, dst: Path, token: str | None) -> None:
     """
 
     if dst.exists():
-        shutil.rmtree(dst)
+        try:
+            shutil.rmtree(dst)
+        except OSError as exc:
+            raise CmdError(f"Cannot remove {dst}: {exc}. Close any programs using this directory.") from exc
 
     cmd: list[str]
     env = os.environ.copy()

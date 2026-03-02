@@ -406,9 +406,7 @@ def prepend_changelog_entry(version: str, dry_run: bool) -> bool:
         new_lines = lines[:insert_idx] + entry_lines + ["\n"] + lines[insert_idx:]
     else:
         # No existing version sections -- append after all existing content
-        if not content.endswith("\n"):
-            content += "\n"
-        new_lines = [content, "\n", new_entry, "\n"]
+        new_lines = [content.rstrip("\n"), "\n\n", new_entry, "\n"]
 
     new_content = "".join(new_lines)
 
@@ -476,7 +474,7 @@ def git_commit_and_tag(version: str, dry_run: bool) -> bool:
     if existing_files:
         result = run_cmd(["git", "add"] + existing_files)
         if result.returncode != 0:
-            _err(f"  git add failed: {result.stderr}")
+            _err(f"  git add failed: {result.stderr or result.stdout}")
             return False
         _ok(f"  Staged: {', '.join(existing_files)}")
 
@@ -484,14 +482,14 @@ def git_commit_and_tag(version: str, dry_run: bool) -> bool:
     commit_msg = f"release: {tag}"
     result = run_cmd(["git", "commit", "-m", commit_msg])
     if result.returncode != 0:
-        _err(f"  git commit failed: {result.stderr}")
+        _err(f"  git commit failed: {result.stderr or result.stdout}")
         return False
     _ok(f"  Committed: {commit_msg}")
 
     # Create annotated tag
     result = run_cmd(["git", "tag", "-a", tag, "-m", f"Release {tag}"])
     if result.returncode != 0:
-        _err(f"  git tag failed: {result.stderr}")
+        _err(f"  git tag failed: {result.stderr or result.stdout}")
         return False
     _ok(f"  Tagged: {tag}")
 
