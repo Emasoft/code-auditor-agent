@@ -34,19 +34,36 @@ UPSTREAM_REF = "master"
 # ---------------------------------------------------------------------------
 
 SYNC_TARGETS: list[tuple[str, str]] = [
-    # scripts/ -> scripts/
+    # Core validation framework
     ("scripts/cpv_validation_common.py", "scripts/cpv_validation_common.py"),
     ("scripts/validate_plugin.py", "scripts/validate_plugin.py"),
+    # Component validators
+    ("scripts/validate_agent.py", "scripts/validate_agent.py"),
+    ("scripts/validate_command.py", "scripts/validate_command.py"),
+    ("scripts/validate_documentation.py", "scripts/validate_documentation.py"),
+    ("scripts/validate_encoding.py", "scripts/validate_encoding.py"),
+    ("scripts/validate_enterprise.py", "scripts/validate_enterprise.py"),
+    ("scripts/validate_hook.py", "scripts/validate_hook.py"),
+    ("scripts/validate_lsp.py", "scripts/validate_lsp.py"),
+    ("scripts/validate_marketplace.py", "scripts/validate_marketplace.py"),
+    ("scripts/validate_marketplace_pipeline.py", "scripts/validate_marketplace_pipeline.py"),
+    ("scripts/validate_mcp.py", "scripts/validate_mcp.py"),
+    ("scripts/validate_rules.py", "scripts/validate_rules.py"),
+    ("scripts/validate_scoring.py", "scripts/validate_scoring.py"),
+    ("scripts/validate_security.py", "scripts/validate_security.py"),
     ("scripts/validate_skill.py", "scripts/validate_skill.py"),
     ("scripts/validate_skill_comprehensive.py", "scripts/validate_skill_comprehensive.py"),
-    ("scripts/validate_mcp.py", "scripts/validate_mcp.py"),
-    ("scripts/validate_hook.py", "scripts/validate_hook.py"),
-    ("scripts/validate_rules.py", "scripts/validate_rules.py"),
-    ("scripts/lint_files.py", "scripts/lint_files.py"),
-    ("scripts/gitignore_filter.py", "scripts/gitignore_filter.py"),
-    ("scripts/smart_exec.py", "scripts/smart_exec.py"),
+    ("scripts/validate_xref.py", "scripts/validate_xref.py"),
+    # Utilities
     ("scripts/bump_version.py", "scripts/bump_version.py"),
-    # git-hooks/
+    ("scripts/check_version_consistency.py", "scripts/check_version_consistency.py"),
+    ("scripts/gitignore_filter.py", "scripts/gitignore_filter.py"),
+    ("scripts/lint_files.py", "scripts/lint_files.py"),
+    ("scripts/setup_marketplace_automation.py", "scripts/setup_marketplace_automation.py"),
+    ("scripts/setup_plugin_pipeline.py", "scripts/setup_plugin_pipeline.py"),
+    ("scripts/smart_exec.py", "scripts/smart_exec.py"),
+    ("scripts/update_marketplace_metadata.py", "scripts/update_marketplace_metadata.py"),
+    # git-hooks/ (pre-commit excluded — local override with CPV sync call)
     ("git-hooks/pre-push", "git-hooks/pre-push"),
 ]
 
