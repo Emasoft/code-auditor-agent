@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.3] - 2026-03-03
+
+### Changes
+- chore: sync CPV validation scripts from upstream (multiple rounds)
+- fix: resolve validation warnings — document git-hooks, fix TOC link
+- feat: add security scanning CI workflow and enhance security review agent
+- fix: resolve critical skill audit findings (off-by-one, missing PR_NUMBER)
+- fix: CI version check uses --plugin-dir flag instead of positional arg
+- chore: bump version through 3.1.1, 3.1.2, 3.1.3
+
 ## [3.1.0] - 2026-03-01
 
 ### Changes
