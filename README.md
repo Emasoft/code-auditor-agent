@@ -152,6 +152,15 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 |--------|---------|
 | `bump_version.py` | Semantic version bumping across `plugin.json` and `pyproject.toml` |
 
+### Git Hooks (in `git-hooks/`)
+
+| Hook | Purpose |
+|------|---------|
+| `pre-commit` | Runs CPV script sync and plugin validation before each commit |
+| `pre-push` | Runs full plugin validation before pushing to remote |
+
+Install hooks with `uv run python scripts/setup_git_hooks.py`.
+
 ---
 
 ## PR Review Pipeline

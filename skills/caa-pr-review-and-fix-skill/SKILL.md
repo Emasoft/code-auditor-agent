@@ -214,7 +214,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
      # If merge conflict: resolve manually or escalate to user
    ```
 
-4. **Spawning pattern addition**: When USE_WORKTREES is true, add `isolation: "worktree"` to every Task() call. The agent prompt must include `REPORT_DIR: {ABSOLUTE_REPORT_DIR}` so the agent writes reports outside its worktree. See [procedure-1-review.md](references/procedure-1-review.md) and [procedure-2-fix.md](references/procedure-2-fix.md) for the complete spawning patterns with worktree support.
+4. **Spawning pattern addition**: When USE_WORKTREES is true, add `isolation: "worktree"` to every Task() call. The agent prompt must include `REPORT_DIR: {ABSOLUTE_REPORT_DIR}` so the agent writes reports outside its worktree. See `procedure-1-review.md` and `procedure-2-fix.md` in the references directory for the complete spawning patterns with worktree support.
 
 ### Prerequisites for Worktree Mode
 
