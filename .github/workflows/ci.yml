@@ -41,7 +41,7 @@ jobs:
           fi
 
       - name: Check version consistency
-        run: uv run python scripts/check_version_consistency.py .
+        run: uv run python scripts/check_version_consistency.py --plugin-dir .
 
       - name: Validation step summary
         if: always()
