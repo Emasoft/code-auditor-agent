@@ -12,6 +12,12 @@ tools:
   - Bash
   - Grep
   - Glob
+capabilities:
+  - Merge multiple audit/verification/gap-fill reports into a single coherent consolidated report
+  - De-duplicate findings by file+line+violation_type across reports
+  - Harmonize severity ratings when multiple reports disagree on the same finding
+  - Separate RECORD_KEEPING items into a distinct PRESERVE section
+  - Classify findings as VIOLATION, RECORD_KEEPING, or FALSE_POSITIVE
 maxTurns: 20
 ---
 

@@ -12,6 +12,12 @@ tools:
   - Bash
   - Grep
   - Glob
+capabilities:
+  - Exact deduplication of truly identical findings across multiple review agents
+  - Semantic analysis to preserve distinct findings that share the same file and line
+  - Handle same-line-different-bug cases by comparing finding body and violation type
+  - Produce accurate severity counts (MUST-FIX, SHOULD-FIX, NIT) after deduplication
+  - Generate final deduplicated report with clear verdict (PASS/FAIL)
 ---
 
 # CAA Deduplication Agent

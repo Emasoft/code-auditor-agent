@@ -61,9 +61,13 @@ jobs:
           else
             LOG=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
           fi
-          echo "CHANGELOG<<CHANGELOG_DELIM" >> $GITHUB_OUTPUT
-          echo "$LOG" >> $GITHUB_OUTPUT
-          echo "CHANGELOG_DELIM" >> $GITHUB_OUTPUT
+          # Use dynamic delimiter to prevent commit messages from injecting output boundaries
+          DELIM="CHANGELOG_DELIMITER_$(date +%s%N)"
+          {
+            echo "CHANGELOG<<${DELIM}"
+            echo "$LOG"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

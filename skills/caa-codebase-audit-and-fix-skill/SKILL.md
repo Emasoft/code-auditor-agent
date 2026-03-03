@@ -22,6 +22,7 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 | `caa-domain-auditor-agent` | 1, 3 | Discovery and gap-fill auditing of file batches |
 | `caa-verification-agent` | 2, 3 | Cross-check audit reports and detect missed files |
 | `caa-consolidation-agent` | 4 | Merge per-domain reports, dedup, classify findings |
+| `caa-security-review-agent` | 4b | Security scan: vulnerabilities, secrets, dependency CVEs |
 | `caa-todo-generator-agent` | 5 | Generate actionable TODO files from consolidated reports |
 | `caa-fix-agent` | 6 | Implement TODO fixes with checkpoint recovery |
 | `caa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
@@ -52,9 +53,10 @@ Follow these steps to run the audit pipeline:
 5. Run Phase 2: spawn `caa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
 6. Run Phase 3: gap-fill missed files, re-verify, loop max 3 times until 100% coverage
 7. Run Phase 4: consolidate per-domain reports (max 5 inputs per agent, hierarchical if more)
-8. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
-9. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes
-10. Run Phase 8: compile final merged report with stats and links to all artifacts
+8. Run Phase 4b: spawn `caa-security-review-agent` (MANDATORY, never skip) against all audited files. The security agent runs automated tools (trufflehog, bandit, osv-scanner, etc.) and performs manual vulnerability analysis. Its findings are appended to the consolidated reports before TODO generation.
+9. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
+10. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes
+11. Run Phase 8: compile final merged report with stats and links to all artifacts
 
 ### Parameters
 
@@ -81,6 +83,7 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 | 2 | Verification: verify each Phase 1 report + missed-file detection | `caa-verification-agent` | 10 |
 | 3 | Gap-fill: audit missed files, re-verify, loop max 3x | `caa-domain-auditor-agent` + verifier | 20 |
 | 4 | Consolidation: merge per-domain (max 5 inputs/agent, hierarchical if more) | `caa-consolidation-agent` | 5 |
+| 4b | Security scan: vulnerabilities, secrets, dependency CVEs (MANDATORY) | `caa-security-review-agent` | 1 |
 | 5 | TODO generation: actionable TODO-{scope}-changes.md per domain | `caa-todo-generator-agent` | 5 |
 | 6 | Fix (if FIX_ENABLED): implement TODOs with checkpoints | `caa-fix-agent` | 20 |
 | 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `caa-fix-verifier-agent` | 20 |
@@ -98,6 +101,7 @@ All files use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent gen
 | Verify | `caa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
 | Gap-fill | `caa-gapfill-P{N}-R{RUN_ID}-{UUID}.md` |
 | Consolidated | `caa-consolidated-{domain}.md` |
+| Security | `caa-security-P{N}-R{RUN_ID}-{UUID}.md` |
 | TODO | `TODO-{scope}-changes.md` |
 | Fix done | `caa-fixes-done-P{N}-{domain}.md` |
 | Fix checkpoint | `caa-checkpoint-P{N}-{domain}.json` |
@@ -119,6 +123,7 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 **P2 Verify**: `AUDIT_REPORT` path, `DOMAIN_FILES` list. 3 checks: violation claims, clean claims, missed files. Report to `caa-verify-*`.
 **P3 Gap-fill**: Same as P1 but `TRIAGE_STATUS=MISSED`, prefix=GF, report to `caa-gapfill-*`.
 **P4 Consolidate**: `INPUT_REPORTS` (max 5 paths), `DOMAIN_NAME`, `OUTPUT_PATH`. Merge, dedup, classify as VIOLATION/RECORD_KEEPING/FALSE_POSITIVE.
+**P4b Security**: `DOMAIN=all-audited-files`, `FILES=ALL` (or list from manifest), `PASS=PASS_NUMBER`, `RUN_ID`, `FINDING_ID_PREFIX=SC-P{N}`, `REPORT_DIR`. Single instance. Runs automated security tools (trufflehog, bandit, osv-scanner) and manual vulnerability analysis. This phase is MANDATORY — never skip it. Append security findings to consolidated reports before TODO generation.
 **P5 TODO**: `CONSOLIDATED_REPORT`, `SCOPE_NAME`, `TODO_PREFIX`, `OUTPUT_PATH`. Each TODO must have file:line:evidence triple.
 **P6 Fix**: `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
 **P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
@@ -218,6 +223,7 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 - `caa-verification-agent` - Report cross-checking (Phase 2, 3)
 - `caa-consolidation-agent` - Per-domain report merging (Phase 4)
 - `caa-todo-generator-agent` - TODO file generation (Phase 5)
+- `caa-security-review-agent` - Security vulnerability scanning (Phase 4b)
 - `caa-fix-agent` - Automated fix application (Phase 6)
 - `caa-fix-verifier-agent` - Fix verification (Phase 7)
 
@@ -239,7 +245,8 @@ Copy this checklist and track your progress:
 - [ ] Phase 2: Verification swarm cross-checked all reports
 - [ ] Phase 3: Gap-fill achieved 100% file coverage
 - [ ] Phase 4: Per-domain consolidation completed
-- [ ] Phase 5: TODO files generated for each scope
+- [ ] Phase 4b: Security review agent spawned and completed (caa-security-P{N}-*.md)
+- [ ] Phase 5: TODO files generated for each scope (including security findings)
 - [ ] Phase 6: Fixes applied (if FIX_ENABLED)
 - [ ] Phase 7: Fix verification passed (if FIX_ENABLED)
 - [ ] Phase 8: Final merged report generated

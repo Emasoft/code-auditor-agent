@@ -6,7 +6,18 @@ description: >
   Verifies that every "CLEAN" claim is accurate (quick-checks with grep patterns). Detects missed
   files by diffing the report's file list against the full domain inventory.
 model: opus
-tools: Read, Write, Bash, Grep, Glob
+tools:
+  - Read
+  - Write
+  - Bash
+  - Grep
+  - Glob
+capabilities:
+  - Verify violation claims against actual code (file exists, line exists, code matches evidence)
+  - Detect false positives — fabricated findings, wrong line numbers, misquoted evidence
+  - Quick-check CLEAN claims by grepping for violation patterns in supposedly clean files
+  - Find missed files by comparing report coverage against the full domain file inventory
+  - Calculate accuracy metrics and flag unreliable audit reports
 maxTurns: 25
 ---
 

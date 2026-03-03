@@ -18,8 +18,10 @@ tools:
 capabilities:
   - Deep analysis of injection vectors (SQL, command, XSS, LDAP, template, header)
   - Attack surface mapping — identify all entry points (APIs, CLI args, env vars, file inputs)
-  - Secrets detection (hardcoded credentials, API keys, tokens, private keys)
-  - Dependency vulnerability scanning (known CVEs in imported packages)
+  - Secrets detection via trufflehog (700+ credential detectors) and manual review
+  - Python SAST via bandit (hardcoded passwords, shell injection, unsafe deserialization)
+  - Dependency CVE scanning via osv-scanner, pip-audit, npm audit, gh api advisories
+  - Comprehensive scanning via trivy (vulns + secrets + misconfigs) and semgrep (SAST)
   - Authentication and authorization flow analysis
   - Cryptographic misuse detection (weak algorithms, improper key management)
   - Path traversal and file access control analysis
@@ -177,12 +179,71 @@ After individual vulnerability scanning, think like an attacker:
 3. If I compromised one component, what else could I reach?
 4. Are there any "assume breach" scenarios the code doesn't handle?
 
-### Phase D: Latest Threat Intelligence
+### Phase D: Automated Security Scanning
 
-Use Bash with `gh api` or `curl` to check (skip if network unavailable):
-1. Recent CVEs for specific package versions found in the codebase
-2. Latest attack techniques relevant to the tech stack
-3. Security advisories for frameworks and libraries in use
+Run each available tool via Bash. Check tool availability first (`command -v <tool>`).
+Skip any tool that is not installed — never fail the audit because a tool is missing.
+Capture output as JSON when possible and integrate findings into your report.
+
+#### D1. Secrets Detection — trufflehog (if available)
+```bash
+# Check for leaked secrets in the repository
+command -v trufflehog && trufflehog filesystem <PROJECT_DIR> --json --no-update 2>/dev/null | head -100
+```
+Interpret results: each JSON line is a detected secret. Check `DetectorName`, `Raw`, and `SourceMetadata.Data.Filesystem.file`.
+Mark verified secrets as MUST-FIX. Mark unverified potential secrets as SHOULD-FIX.
+
+#### D2. Python SAST — bandit (if available)
+```bash
+# Static analysis for Python security issues
+command -v bandit && bandit -r <PROJECT_DIR> -f json -ll 2>/dev/null
+```
+Interpret results: check `results[]` array. Each entry has `issue_severity`, `issue_confidence`, `filename`, `line_number`, `issue_text`, `test_id`.
+Map bandit severity HIGH → MUST-FIX, MEDIUM → SHOULD-FIX, LOW → NIT.
+
+#### D3. Dependency CVE Scanning — osv-scanner or pip-audit (if available)
+```bash
+# Option A: osv-scanner (scans lockfiles against OSV database)
+command -v osv-scanner && osv-scanner --lockfile=<PROJECT_DIR>/uv.lock --json 2>/dev/null
+
+# Option B: pip-audit (Python-specific, uses OSV + PyPI advisories)
+command -v pip-audit && pip-audit --requirement <PROJECT_DIR>/pyproject.toml --format json 2>/dev/null
+
+# Option C: npm audit (for JavaScript/TypeScript projects only)
+test -f <PROJECT_DIR>/package.json && cd <PROJECT_DIR> && npm audit --json 2>/dev/null
+```
+Interpret results: each vulnerability entry has CVE ID, severity, affected package, and fixed version.
+Mark CRITICAL/HIGH CVEs as MUST-FIX. MEDIUM as SHOULD-FIX. LOW as NIT.
+
+#### D4. GitHub Security Advisories — gh api (if authenticated)
+```bash
+# Check Dependabot alerts for GitHub-hosted repos
+gh api repos/<OWNER>/<REPO>/dependabot/alerts --jq '.[] | {package: .security_vulnerability.package.name, severity: .security_advisory.severity, summary: .security_advisory.summary}' 2>/dev/null
+
+# Check secret scanning alerts
+gh api repos/<OWNER>/<REPO>/secret-scanning/alerts --jq '.[] | {type: .secret_type_display_name, state: .state}' 2>/dev/null
+
+# Check code scanning alerts (if CodeQL is enabled)
+gh api repos/<OWNER>/<REPO>/code-scanning/alerts --jq '.[] | {rule: .rule.id, severity: .rule.severity, description: .rule.description}' 2>/dev/null
+```
+Note: Extract OWNER/REPO from git remote URL. Skip if not a GitHub repo or gh is not authenticated.
+
+#### D5. Comprehensive Scanning — trivy or semgrep (if available, optional)
+```bash
+# trivy: vulnerabilities + secrets + misconfigs in one pass
+command -v trivy && trivy fs --scanners vuln,secret,misconfig <PROJECT_DIR> --format json --quiet 2>/dev/null
+
+# semgrep: advanced SAST with security rulesets
+command -v semgrep && semgrep --config auto <PROJECT_DIR> --json --quiet 2>/dev/null
+```
+These are heavier tools — run only if available and if the audit scope warrants deep analysis.
+
+#### D6. Interpreting Tool Results
+- **Cross-reference** tool findings with your manual Phase B analysis to avoid duplicates
+- **Validate** tool findings — tools produce false positives; verify each finding against actual code
+- **Elevate** findings confirmed by both manual review AND tooling to higher severity
+- **Add tool-only findings** that you missed in manual review with appropriate severity
+- Include a "Tool Scan Summary" table in your report showing which tools ran and their result counts
 
 ## OUTPUT FORMAT
 
@@ -238,6 +299,18 @@ Write your findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.md`:
 |---------|---------|------------|------|
 | ... | ... | ... | ... |
 
+## Tool Scan Summary
+
+| Tool | Available | Ran | Findings | Notes |
+|------|-----------|-----|----------|-------|
+| trufflehog | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+| bandit | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+| osv-scanner | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+| pip-audit | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+| gh api advisories | yes/no | yes/no/skipped | {N} | {auth status} |
+| trivy | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+| semgrep | yes/no | yes/no/skipped | {N} | {version or reason skipped} |
+
 ## CLEAN
 
 Files with no security issues found:
@@ -251,7 +324,7 @@ Files with no security issues found:
 3. **Verify before claiming.** Trace the data flow from input to sink. Don't flag theoretical issues without evidence.
 4. **Severity must be justified.** MUST-FIX means "exploitable with real-world impact." Don't cry wolf.
 5. **Include attack scenarios.** Every finding must explain HOW an attacker would exploit it, not just that it's theoretically possible.
-6. **Check dependencies.** Use `Bash` to inspect package.json, requirements.txt, pyproject.toml for known vulnerable versions.
+6. **Check dependencies.** Use `Bash` to run osv-scanner, pip-audit, or npm audit on lockfiles. Inspect pyproject.toml, requirements.txt, package.json for known vulnerable versions. Use `gh api` for GitHub security advisories.
 7. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] security-{domain} - {N} issues ({M} must-fix). Report: {path}`
 
@@ -320,6 +393,8 @@ assistant: |
 - [ ] I checked for insecure cryptographic practices
 - [ ] I checked for security misconfigurations
 - [ ] I inspected dependency versions for known CVEs (where applicable)
+- [ ] I ran available security tools (trufflehog, bandit, osv-scanner, etc.) and integrated their findings
+- [ ] I filled in the Tool Scan Summary table showing which tools ran and which were unavailable
 - [ ] I analyzed potential exploit chains (multi-step attacks)
 - [ ] For each finding, I included a realistic attack scenario
 - [ ] For each finding, I included specific remediation steps

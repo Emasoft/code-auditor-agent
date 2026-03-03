@@ -5,7 +5,17 @@ description: >
   priority classification, and exact change instructions. Each TODO includes file, line range,
   current code, required change, and verification steps.
 model: sonnet
-tools: Read, Write, Grep, Glob
+tools:
+  - Read
+  - Write
+  - Grep
+  - Glob
+capabilities:
+  - Convert consolidated violation reports into structured, actionable TODO files
+  - Assign priorities based on severity and create dependency chains between TODOs
+  - Group violations by file and category for efficient batch fixing
+  - Provide exact file:line references and minimal change instructions per TODO item
+  - Add harmonization notes for RECORD_KEEPING items (what to preserve vs what to add)
 maxTurns: 20
 ---
 

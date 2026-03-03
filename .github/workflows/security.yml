@@ -1,0 +1,91 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install security tools
+        run: |
+          uv python install 3.12
+          uv pip install --system bandit pip-audit
+
+      - name: Run Bandit (static analysis)
+        continue-on-error: true
+        run: |
+          mkdir -p security-results
+          bandit -r scripts/ -ll -f json -o security-results/bandit-report.json || true
+          echo "## Bandit Results" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat security-results/bandit-report.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Run pip-audit (dependency vulnerabilities)
+        continue-on-error: true
+        run: |
+          pip-audit --requirement <(uv pip compile pyproject.toml --quiet) --format json --output security-results/pip-audit-report.json
+          echo "## pip-audit Results" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat security-results/pip-audit-report.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Install TruffleHog
+        run: |
+          INSTALL_DIR="${RUNNER_TOOL_CACHE:-/tmp}/trufflehog"
+          mkdir -p "$INSTALL_DIR"
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "$INSTALL_DIR"
+          echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+
+      - name: Run TruffleHog (secret scanning - advisory)
+        continue-on-error: true
+        run: |
+          trufflehog filesystem . --json > security-results/trufflehog-report.json 2>&1 || true
+          echo "## TruffleHog Results" >> $GITHUB_STEP_SUMMARY
+          if [ -s security-results/trufflehog-report.json ]; then
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            head -100 security-results/trufflehog-report.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No secrets detected." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check Dependabot alerts
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          alert_count=$(gh api "repos/${REPO_NAME}/dependabot/alerts" --jq 'length' 2>/dev/null || echo "N/A")
+          echo "## Dependabot Alerts" >> $GITHUB_STEP_SUMMARY
+          echo "Open alerts: ${alert_count}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload security results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-scan-results
+          path: security-results/
+          retention-days: 30

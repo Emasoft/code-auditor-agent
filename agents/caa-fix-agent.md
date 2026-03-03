@@ -5,7 +5,19 @@ description: >
   Uses checkpoint-based recovery to resume after crashes. Re-reads each file after fixing
   to verify no syntax errors. Makes MINIMAL changes — only what the TODO specifies.
 model: sonnet
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Grep
+  - Glob
+capabilities:
+  - Apply targeted, minimal code fixes from TODO file instructions to source files
+  - Checkpoint-based crash recovery to resume incomplete fix sessions
+  - Re-read modified files after each fix to verify no syntax errors or broken imports
+  - Handle RECORD_KEEPING items by adding alongside existing code, never replacing
+  - Process batches of 3-4 files per invocation with strict file assignment boundaries
 maxTurns: 30
 ---
 
