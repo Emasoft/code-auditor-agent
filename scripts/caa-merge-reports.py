@@ -358,6 +358,11 @@ def main() -> None:
     # comparison is therefore unreliable. Instead we simply verify the merged file
     # exists and is non-empty before cleaning up source files.
 
+    if not intermediate_report.exists():
+        print(f"{RED}Integrity check FAILED: merged file does not exist{NC}")
+        print(f"{RED}Source files NOT deleted — investigate data loss.{NC}")
+        sys.exit(1)
+
     merged_size = intermediate_report.stat().st_size
 
     if merged_size > 0:

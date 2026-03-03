@@ -13,6 +13,7 @@ permissions:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -31,7 +32,7 @@ jobs:
       - name: Install security tools
         run: |
           uv python install 3.12
-          uv pip install --system bandit pip-audit
+          uv pip install --system bandit==1.9.2 pip-audit==2.7.3
 
       - name: Run Bandit (static analysis)
         continue-on-error: true

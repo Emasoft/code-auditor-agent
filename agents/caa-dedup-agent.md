@@ -52,7 +52,8 @@ Finding {
   file: string         // Primary file path mentioned (first file:line reference)
   lines: number[]      // All line numbers mentioned
   body: string         // Full finding text (all lines from heading to next heading)
-  phase: string        // "CC" (correctness), "CV" (claims), "SR" (skeptical review), "SC" (security)
+  phase: string        // PR review phases: "CC" (correctness), "CV" (claims), "SR" (skeptical review), "SC" (security)
+                       // Codebase audit phases: "DA" (domain-auditor), "VR" (verification), "CN" (consolidation), "TD" (todo-generator), "FX" (fix), "FV" (fix-verifier), "SA" (security-audit)
 }
 ```
 
@@ -118,14 +119,22 @@ When merging duplicate findings:
 
 3. Preserve original IDs as `Original IDs:` annotation in each finding.
 
-4. Write the final report to `OUTPUT_PATH` with this exact structure:
+4. Determine report metadata from the intermediate report source:
+   - If the intermediate report was produced by `caa-merge-reports.py` (PR review pipeline, phases CC/CV/SR/SC):
+     - `{report_type}` = `PR Review`
+     - `{pipeline_description}` = `Code Correctness → Claim Verification → Skeptical Review → Security Review`
+   - If the intermediate report was produced by `caa-merge-audit-reports.py` (codebase audit pipeline, phases DA/VR/CN/TD/FX/FV/SA):
+     - `{report_type}` = `Codebase Audit`
+     - `{pipeline_description}` = `Domain Audit → Verification → Consolidation → Todo Generation → Fix → Fix Verification → Security Audit`
+
+5. Write the final report to `OUTPUT_PATH` with this exact structure:
 
 ```markdown
-# CAA Final PR Review Report
+# CAA Final {report_type} Report
 
 **Generated:** {timestamp}
 **Pass:** {pass_number}
-**Pipeline:** Code Correctness → Claim Verification → Skeptical Review → Security Review
+**Pipeline:** {pipeline_description}
 **Dedup:** {raw_count} raw findings → {dedup_count} unique findings ({removed} duplicates removed)
 
 ---

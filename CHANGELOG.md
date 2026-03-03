@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.4] - 2026-03-03
+
+### Changes
+- fix: SHA-pin all GitHub Actions (checkout, setup-uv, action-gh-release) for supply-chain safety
+- fix: add timeout-minutes and concurrency groups to all CI/CD workflows
+- fix: add job-level permissions to release.yml
+- fix: pin bandit/pip-audit versions in security.yml
+- fix: file existence guard in caa-merge-reports.py before .stat() call
+- fix: safer colon parsing in caa-generate-todos.py (split vs index)
+- fix: pip-audit two-step command in security agent (uv pip compile + pip-audit)
+- fix: "Four-phase" → "Six-phase" in procedure-1-review.md
+- fix: add security agent to agent-recovery.md scope/timeout/enum
+- fix: add Phase 4b security scan to caa-audit-codebase-cmd.md
+- fix: add codebase audit phase codes to dedup agent
+- docs: update README CI/CD section count, add publishing scripts table
+
 ## [3.1.3] - 2026-03-03
 
 ### Changes

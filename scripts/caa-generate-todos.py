@@ -285,10 +285,9 @@ def main() -> None:
                 # Extract file reference: **File:** path or `path:line`
                 if RE_FILE_LINE.search(line):
                     # Everything after the colon, stripped of markdown formatting
-                    colon_pos = line.index(":")
-                    # Find the colon after "File" (skip any colon inside the label)
-                    # The pattern matches "file:", so find after label
-                    file_part = line[colon_pos + 1 :]
+                    # Use split to avoid ValueError if colon is missing
+                    parts = line.split(":", 1)
+                    file_part = parts[1] if len(parts) == 2 else line
                     current_file = strip_markdown_formatting(file_part)
 
                 # Extract file reference from inline code: at `path/to/file.ts:42`
@@ -299,8 +298,9 @@ def main() -> None:
 
                 # Extract category: **Category:** TYPE or **Type:** TYPE
                 if RE_CATEGORY_LINE.search(line):
-                    colon_pos = line.index(":")
-                    cat_part = line[colon_pos + 1 :]
+                    # Use split to avoid ValueError if colon is missing
+                    cat_parts = line.split(":", 1)
+                    cat_part = cat_parts[1] if len(cat_parts) == 2 else line
                     current_category = strip_markdown_formatting(cat_part)
 
                 # Extract category from inline markers: HARDCODED_API, DIRECT_DEPENDENCY, etc.

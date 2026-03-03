@@ -1,11 +1,11 @@
 # code-auditor-agent
 
 [![CI](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-3.1.3-blue)](https://github.com/Emasoft/code-auditor-agent)
+[![Version](https://img.shields.io/badge/version-3.1.4-blue)](https://github.com/Emasoft/code-auditor-agent)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 
-**Version:** 3.1.3
+**Version:** 3.1.4
 **License:** MIT
 **Author:** Emasoft
 
@@ -151,6 +151,9 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 | Script | Purpose |
 |--------|---------|
 | `bump_version.py` | Semantic version bumping across `plugin.json` and `pyproject.toml` |
+| `sync_cpv_scripts.py` | Syncs CPV validation scripts from upstream GitHub repo |
+| `prepare_release.py` | Automates release preparation with version bump and changelog |
+| `setup_git_hooks.py` | Installs pre-commit and pre-push hooks from git-hooks/ |
 
 ### Git Hooks (in `git-hooks/`)
 
@@ -279,13 +282,14 @@ Where:
 
 ## CI/CD
 
-Three GitHub Actions workflows are configured:
+Four GitHub Actions workflows are configured:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `ci.yml` | Pull Request, Manual dispatch | Lint, typecheck, validate `plugin.json`, check version consistency |
 | `release.yml` | Tag push (`v*`) | Tag-triggered GitHub Release with changelog generation |
 | `notify-marketplace.yml` | Push to main (plugin changes) | Notifies the marketplace repository when the plugin is updated |
+| `security.yml` | Push, Pull Request, Schedule | Security scanning (bandit, pip-audit, trufflehog, dependabot alerts) |
 
 ---
 

@@ -64,10 +64,11 @@ This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 3. **Phase 2**: Verification swarm cross-checks all audit reports
 4. **Phase 3**: Gap-fill audits missed files (iterative until 100% coverage)
 5. **Phase 4**: Consolidation per domain (dedup, severity harmonization)
-6. **Phase 5**: Generates actionable TODO files per scope
-7. **Phase 6** (if --fix): Applies fixes from TODOs
-8. **Phase 7** (if --fix): Verifies fixes, loops if regressions found
-9. **Phase 8**: Final merged report
+6. **Phase 4b**: Security review — spawns caa-security-review-agent for vulnerability, secrets, and dependency scanning
+7. **Phase 5**: Generates actionable TODO files per scope
+8. **Phase 6** (if --fix): Applies fixes from TODOs
+9. **Phase 7** (if --fix): Verifies fixes, loops if regressions found
+10. **Phase 8**: Final merged report
 - When `--worktrees` is enabled, each agent swarm runs in isolated git worktrees. Fix agent branches are merged back sequentially after completion.
 
 ## Reports

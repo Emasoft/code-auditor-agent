@@ -2,7 +2,7 @@
 
 > **Maintenance Note:** The review protocol below is shared with `caa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
 
-Four-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup.
+Six-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup, then present results.
 
 **Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call. See the parent SKILL.md for full worktree protocol.
 
@@ -303,7 +303,7 @@ The merge script:
 - When RUN_ID is omitted, collects all `caa-*-P{N}-*.md` files (legacy mode)
 - Skips files with `-STALE` in the name
 - Skips checkpoint, agent manifest, recovery, lint, fix, and test files
-- Sorts by phase (correctness -> claims -> review)
+- Sorts by phase (correctness -> claims -> review -> security)
 - Concatenates severity sections WITHOUT deduplication
 - Reports raw finding counts
 - Verifies merged file integrity (byte-size check)

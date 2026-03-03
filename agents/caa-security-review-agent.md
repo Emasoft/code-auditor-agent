@@ -207,7 +207,8 @@ Map bandit severity HIGH → MUST-FIX, MEDIUM → SHOULD-FIX, LOW → NIT.
 command -v osv-scanner && osv-scanner --lockfile=<PROJECT_DIR>/uv.lock --json 2>/dev/null
 
 # Option B: pip-audit (Python-specific, uses OSV + PyPI advisories)
-command -v pip-audit && pip-audit --requirement <PROJECT_DIR>/pyproject.toml --format json 2>/dev/null
+# pip-audit does not support pyproject.toml directly; compile to a requirements file first
+command -v pip-audit && uv pip compile <PROJECT_DIR>/pyproject.toml -o /tmp/_audit_requirements.txt 2>/dev/null && pip-audit -r /tmp/_audit_requirements.txt --format json 2>/dev/null
 
 # Option C: npm audit (for JavaScript/TypeScript projects only)
 test -f <PROJECT_DIR>/package.json && cd <PROJECT_DIR> && npm audit --json 2>/dev/null
