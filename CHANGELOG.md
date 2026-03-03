@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.5] - 2026-03-03
+
+### Changes
+- chore: sync 21 CPV validation scripts from upstream v1.5.2
+
 ## [3.1.4] - 2026-03-03
 
 ### Changes
