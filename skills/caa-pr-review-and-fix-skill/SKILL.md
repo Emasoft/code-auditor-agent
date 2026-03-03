@@ -356,7 +356,7 @@ Follow the iterative review-fix protocol strictly:
 1. Initialize `PASS_NUMBER = 1`, `MAX_PASSES = 25`.
 2. Run **PROCEDURE 1** (Phases 1-6): spawn correctness swarm, claim verification, skeptical review, security review (`caa-security-review-agent`), merge reports, present results.
 3. If zero issues found -> write final report and exit.
-4. If `PASS_NUMBER >= MAX_PASSES` -> write escalation report and exit.
+4. If `PASS_NUMBER > MAX_PASSES` -> write escalation report and exit.
 5. Run **PROCEDURE 2**: spawn fix agents per domain, run tests, fix regressions, lint (if Docker available), fix lint errors, commit.
 6. Increment `PASS_NUMBER`, go to step 2.
 

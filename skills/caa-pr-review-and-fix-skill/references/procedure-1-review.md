@@ -256,6 +256,7 @@ Spawn **one `caa-security-review-agent`** (single instance, runs in parallel wit
 Task(
   subagent_type: "caa-security-review-agent",
   prompt: """
+    PR_NUMBER: {PR_NUMBER}
     DOMAIN: all-changed-files
     FILES: {all_changed_files_list}
     PASS: {PASS_NUMBER}

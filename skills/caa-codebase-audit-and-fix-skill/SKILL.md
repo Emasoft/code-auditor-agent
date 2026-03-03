@@ -11,7 +11,7 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 ## Overview
 
-9-phase pipeline that audits every file in a codebase against a reference standard. Uses grep triage to skip clean files, 3-4 file batches to prevent hallucination, multi-wave verification to eliminate false positives, and iterative gap-fill for 100% coverage. When FIX_ENABLED, applies automated fixes with checkpoint-based recovery and multi-pass verification until all violations are resolved.
+10-phase pipeline that audits every file in a codebase against a reference standard. Uses grep triage to skip clean files, 3-4 file batches to prevent hallucination, multi-wave verification to eliminate false positives, and iterative gap-fill for 100% coverage. When FIX_ENABLED, applies automated fixes with checkpoint-based recovery and multi-pass verification until all violations are resolved.
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ Follow these steps to run the audit pipeline:
 | `SCOPE_PATH` | Y | path | -- | Directory to audit |
 | `REFERENCE_STANDARD` | Y | path | -- | Path to compliance doc |
 | `VIOLATION_TYPES` | N | comma-separated string | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
-| `AUDIT_PATTERNS` | N | list | 14 defaults (see reference) | Grep triage patterns |
+| `AUDIT_PATTERNS` | N | list | auto-derived from VIOLATION_TYPES | Grep triage patterns (e.g. `localhost`, `http://`, `curl`, `fetch`, `hardcoded`, `direct.*import`) |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory |
 | `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
 | `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |
@@ -156,6 +156,7 @@ The pipeline produces the following artifacts in `REPORT_DIR`:
 | Verification reports | `caa-verify-*` files confirming or rejecting findings |
 | Gap-fill reports | `caa-gapfill-*` files for previously missed files |
 | Consolidated domain reports | `caa-consolidated-{domain}.md` with deduplicated, classified findings |
+| Security review report | `caa-security-P{N}-R{RUN_ID}-{UUID}.md` with vulnerability findings and tool scan summary |
 | TODO files | `TODO-{scope}-changes.md` with actionable items per domain (file:line:evidence) |
 | Fix reports (if FIX_ENABLED) | `caa-fixes-done-*` with applied changes and checkpoints |
 | Fix verification (if FIX_ENABLED) | `caa-fixverify-*` with PASS/FAIL/REGRESSION verdicts |
