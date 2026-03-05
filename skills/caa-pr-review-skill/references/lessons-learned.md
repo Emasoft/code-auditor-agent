@@ -24,5 +24,5 @@ Copy this checklist and track your progress:
 - [ ] Phase 2 (claim verification) catches PR description lies and missing implementations
 - [ ] Phase 3 (skeptical review) catches cross-file inconsistencies and UX concerns
 - [ ] Phase 4 (security review) catches vulnerabilities, secrets exposure, and insecure patterns
-- [ ] All four phases are necessary — no single phase catches everything
+- [ ] All four review perspectives are necessary — no single perspective catches everything
 - [ ] Re-run the full pipeline after fixes to verify no regressions

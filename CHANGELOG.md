@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.7] - 2026-03-05
+
+### Changes
+- fix: correct "Four-phase" to "Six-phase" across all docs, skills, config (pipeline has 6 phases)
+- fix: add Phase 5+6 note to review perspective table in SKILL.md
+- fix: update SKILL.md versions from 2.0.0 to 3.1.7, add missing version field to codebase-audit skill
+- fix: worktree range "Phase 1-3" → "Phase 1-4" to include security review
+- fix: dedup agent phase code "SA" → "SC" for security, add codebase audit codes to checklist
+- fix: add 6 missing agents to agent-recovery.md timeout table and agentType enum
+- fix: REPORT_PATH → REPORT_DIR in correctness, claim-verification, skeptical-reviewer agents
+- fix: add AGENT_PREFIX, FINDING_ID_PREFIX to agent INPUT FORMAT sections
+- fix: .stat() guards, missing_ok=True, sys.exit(1) in merge scripts
+- fix: add errors="replace" for UTF-8 resilience in caa-generate-todos.py
+- fix: add missing CHANGELOG entries for v3.1.1 and v3.1.2
+
 ## [3.1.6] - 2026-03-05
 
 ### Changes
@@ -40,6 +55,16 @@ All notable changes to this project will be documented in this file.
 - fix: resolve critical skill audit findings (off-by-one, missing PR_NUMBER)
 - fix: CI version check uses --plugin-dir flag instead of positional arg
 - chore: bump version through 3.1.1, 3.1.2, 3.1.3
+
+## [3.1.2] - 2026-03-03
+
+### Changes
+- chore: sync 2 CPV skill validators from upstream, bump to 3.1.2
+
+## [3.1.1] - 2026-03-03
+
+### Changes
+- chore: sync 11 CPV validation scripts from upstream, bump to 3.1.1
 
 ## [3.1.0] - 2026-03-01
 

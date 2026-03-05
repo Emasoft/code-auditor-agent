@@ -1,15 +1,15 @@
 # code-auditor-agent
 
 [![CI](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-3.1.6-blue)](https://github.com/Emasoft/code-auditor-agent)
+[![Version](https://img.shields.io/badge/version-3.1.7-blue)](https://github.com/Emasoft/code-auditor-agent)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 
-**Version:** 3.1.6
+**Version:** 3.1.7
 **License:** MIT
 **Author:** Emasoft
 
-Four-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
+Six-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
 
 ---
 
@@ -76,13 +76,13 @@ This plugin provides 11 agents, split across two pipelines.
 
 | Skill | Purpose |
 |-------|---------|
-| `caa-pr-review-skill` | Four-phase PR review: correctness swarm, claim verification, skeptical review, security analysis, merge + dedup |
+| `caa-pr-review-skill` | Six-phase PR review pipeline: correctness swarm, claim verification, skeptical review, security analysis, merge + dedup |
 | `caa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
 | `caa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
 
 ### `caa-pr-review-skill` (review only)
 
-Review a PR without modifying code. Runs the four-phase pipeline and presents a verdict.
+Review a PR without modifying code. Runs the six-phase pipeline and presents a verdict.
 
 ```text
 review PR 206
@@ -96,7 +96,7 @@ Review a PR AND automatically fix all findings. Loops until zero issues remain (
 review and fix PR 206
 ```
 
-Each pass runs the PR Review Pipeline (four-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 25 passes are reached.
+Each pass runs the PR Review Pipeline (six-phase review) then a fix cycle (fix swarm + tests + commit). The loop terminates when a review pass finds zero issues or 25 passes are reached.
 
 Fix agents are dynamically selected from whatever agents are available in the user's Claude Code instance, with `general-purpose` as the universal fallback.
 

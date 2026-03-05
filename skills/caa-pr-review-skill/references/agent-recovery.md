@@ -28,7 +28,7 @@ these steps to ensure the task is completed and no corrupt artifacts remain.
 | **Out of tokens** | Agent returns truncated output, `[MAX TURNS]`, or incomplete report file |
 | **API errors** | Agent returns "overloaded", rate limit (429), server error (500), or auth failure |
 | **Connection errors** | Task tool hangs then returns timeout or network error |
-| **Timeout** | Agent does not return within deadline (correctness/claims/skeptical/security agents: 10 min, dedup agent: 5 min) |
+| **Timeout** | Agent does not return within deadline (correctness/claims/skeptical/security agents: 10 min, dedup agent: 5 min, consolidation/domain-auditor/verification/todo-generator/fix/fix-verifier agents: 3 min) |
 | **Lost during compaction** | Orchestrator's context was summarized; agent task ID no longer in memory and no result was ever received |
 | **Broken reference** | TaskOutput returns "agent not found" or "invalid task ID" |
 | **ID collision** | Two agents wrote to overlapping filenames (prevented by UUID filenames -- verify if suspected) |
@@ -40,7 +40,7 @@ The orchestrator MUST mentally track every spawned agent with these fields:
 
 ```
 taskId:        string    // Task tool's returned ID
-agentType:     string    // "correctness" | "claims" | "skeptical" | "security" | "dedup"
+agentType:     string    // "correctness" | "claims" | "skeptical" | "security" | "dedup" | "consolidation" | "domain-auditor" | "verification" | "todo-generator" | "fix" | "fix-verifier"
 domain:        string    // Domain label (e.g., "governance-core") or "N/A" for single agents
 outputPath:    string    // Expected report file path (with UUID)
 findingPrefix: string    // e.g., "CC-P1-A2" — for re-spawn consistency

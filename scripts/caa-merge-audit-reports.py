@@ -380,15 +380,19 @@ def main() -> None:
         # Safe to delete source files — merged file written successfully
         print(f"Cleaning up {len(ordered_reports)} source report(s)...")
         for report in ordered_reports:
-            report.unlink()
+            report.unlink(missing_ok=True)
             print(f"  Deleted: {report.name}")
     else:
         print(f"{RED}Integrity check FAILED: merged file missing or empty{NC}")
         print(f"{RED}Source files NOT deleted \u2014 investigate write failure.{NC}")
         print(f"{YELLOW}Source files preserved for manual inspection:{NC}")
         for report in ordered_reports:
-            size = report.stat().st_size
-            print(f"  {report.name} ({size} bytes)")
+            if report.exists():
+                size = report.stat().st_size
+                print(f"  {report.name} ({size} bytes)")
+            else:
+                print(f"  {report.name} (file missing)")
+        sys.exit(1)
 
     # ── Print summary to stdout ──────────────────────────────────────────────
     print()

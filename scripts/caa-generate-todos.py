@@ -237,7 +237,7 @@ def main() -> None:
     output_lines.append("")
 
     # ── Parse consolidated report and extract findings ───────────────────────
-    with consolidated_report.open("r", encoding="utf-8") as f:
+    with consolidated_report.open("r", encoding="utf-8", errors="replace") as f:
         for line in f:
             line = line.rstrip("\n")
 

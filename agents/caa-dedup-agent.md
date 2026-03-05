@@ -53,7 +53,7 @@ Finding {
   lines: number[]      // All line numbers mentioned
   body: string         // Full finding text (all lines from heading to next heading)
   phase: string        // PR review phases: "CC" (correctness), "CV" (claims), "SR" (skeptical review), "SC" (security)
-                       // Codebase audit phases: "DA" (domain-auditor), "VR" (verification), "CN" (consolidation), "TD" (todo-generator), "FX" (fix), "FV" (fix-verifier), "SA" (security-audit)
+                       // Codebase audit phases: "DA" (domain-auditor), "VR" (verification), "CN" (consolidation), "TD" (todo-generator), "FX" (fix), "FV" (fix-verifier), "SC" (security)
 }
 ```
 
@@ -260,7 +260,9 @@ Phase 3: lib/auth.ts:42 — MUST-FIX "Missing null check allows crash"
 - [ ] I did NOT merge findings from different files even if they describe the same pattern
 - [ ] For merged findings: I kept the HIGHEST severity (N/A if no duplicates found)
 - [ ] For merged findings: I preserved ALL original IDs in "Also identified by" annotation (N/A if no duplicates found)
-- [ ] For merged findings: I noted ALL source phases (CC, CV, SR, SC) (N/A if no duplicates found)
+- [ ] For merged findings: I noted ALL source phases (N/A if no duplicates found)
+      For PR review: CC, CV, SR, SC
+      For codebase audit: DA, VR, CN, TD, FX, FV, SC
 - [ ] My final IDs use sequential numbering: MF-001, SF-001, NT-001
 - [ ] My deduplication log has an entry for EVERY final finding (including unique ones)
 - [ ] Each dedup log entry includes the merge reasoning

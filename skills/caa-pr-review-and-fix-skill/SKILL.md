@@ -3,7 +3,7 @@ name: caa-pr-review-and-fix-skill
 description: >
   Use when reviewing and fixing PRs with automated iterative resolution.
   Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
-version: 2.0.0
+version: 3.1.7
 author: Emasoft
 license: MIT
 tags:
@@ -20,7 +20,7 @@ tags:
 
 Iterative review-and-fix pipeline that combines two procedures in a loop until zero issues remain:
 
-1. **PROCEDURE 1 -- Code Review**: Four-phase PR review (correctness swarm -> claim verification -> skeptical review -> security review) that produces a merged findings report.
+1. **PROCEDURE 1 -- Code Review**: Six-phase PR review pipeline (correctness swarm -> claim verification -> skeptical review -> security review -> merge + dedup -> present results) that produces a merged findings report.
 2. **PROCEDURE 2 -- Code Fix**: Swarm of fixing agents (dynamically selected from available agents) that resolve all findings from PROCEDURE 1, then run tests to verify no regressions.
 
 The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25) is reached.
@@ -205,7 +205,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 
 1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` (or `$(pwd)/{REPORT_DIR}` if custom). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
 
-2. **Review agents** (Phase 1-3, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
+2. **Review agents** (Phase 1-4, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
 
 3. **Fix agents** (Procedure 2): Each gets an isolated worktree on a separate branch. They modify code in their worktree and write reports to the main `REPORT_DIR`. After ALL fix agents complete, the orchestrator merges their branches back to the current branch sequentially:
    ```
@@ -232,7 +232,7 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 
 ## PROCEDURE 1 -- Code Review
 
-Four-phase review: correctness swarm, claim verification, skeptical review, security review, then merge + dedup.
+Six-phase review pipeline: correctness swarm, claim verification, skeptical review, security review, then merge + dedup, then present results.
 
 See [Procedure 1: Code Review](references/procedure-1-review.md) for full protocol.
 

@@ -3,7 +3,7 @@ name: caa-pr-review-skill
 description: >
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
-version: 2.0.0
+version: 3.1.7
 author: Emasoft
 license: MIT
 tags:
@@ -17,7 +17,7 @@ tags:
 
 ## Overview
 
-Four-phase PR review that catches what standard code audits miss. Spawns specialized agents
+Six-phase PR review pipeline that catches what standard code audits miss. Spawns specialized agents
 in sequence: correctness swarm, claim verification, skeptical review + security review (in parallel) — then merges findings.
 
 ## Prerequisites
@@ -65,6 +65,8 @@ issues:
 | 2 | Claim Verification (single) | PR description lies, missing implementations | Fact-checker |
 | 3 | Skeptical Review (single) | UX concerns, cross-file issues, design judgment | Telescope |
 | 4 | Security Review (single, parallel with Phase 3) | OWASP Top 10, injections, secrets, auth bypasses, dependency vulns | Threat model |
+
+> Plus Phase 5 (Merge + Deduplicate) and Phase 6 (Present Results) which handle report infrastructure.
 
 ## Protocol
 
@@ -490,6 +492,6 @@ See [Lessons Learned](references/lessons-learned.md) for the full list with cont
 
 ### Lessons Checklist
 
-- [ ] All four phases (correctness, claims, skeptical, security) included in every review
+- [ ] All four review perspectives (correctness, claims, skeptical, security) included in every review
 - [ ] PR description claims verified against actual code, not trusted at face value
 - [ ] Cross-file consistency checked; security review covers OWASP Top 10 and secrets exposure
