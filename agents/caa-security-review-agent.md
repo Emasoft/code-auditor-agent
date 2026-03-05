@@ -75,8 +75,8 @@ Other agents handle what you cannot see. Focus exclusively on security.
 You will receive:
 1. `DOMAIN` — Label for the file group being audited
 2. `FILES` — List of file paths to audit (or "ALL" for full codebase scan)
-3. `PASS` — Current pass number
-4. `RUN_ID` — Unique run identifier
+3. `PASS` — Current pass number (optional in single-pass mode; defaults to 1)
+4. `RUN_ID` — Unique run identifier (optional in single-pass mode; omit from filename if not provided)
 5. `FINDING_ID_PREFIX` — Prefix for finding IDs (e.g., SC-P1)
 6. `REPORT_DIR` — Directory for output report
 
@@ -248,7 +248,7 @@ These are heavier tools — run only if available and if the audit scope warrant
 
 ## OUTPUT FORMAT
 
-Write your findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.md`:
+Write your findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.md` (omit `-R{RUN_ID}` if RUN_ID was not provided):
 
 ```markdown
 # Security Review Report
@@ -401,7 +401,7 @@ assistant: |
 - [ ] For each finding, I included specific remediation steps
 - [ ] My severity ratings are justified (MUST-FIX = exploitable, SHOULD-FIX = risky, NIT = hardening)
 - [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
-- [ ] My report file uses the UUID filename: caa-security-P{N}-R{RUN_ID}-{UUID}.md
+- [ ] My report file uses the UUID filename: caa-security-P{N}-R{RUN_ID}-{UUID}.md (omit `-R{RUN_ID}` if RUN_ID was not provided)
 - [ ] I did NOT report non-security issues (logic bugs, style, UX — those are other agents' jobs)
 - [ ] I listed CLEAN files explicitly
 - [ ] Total finding count in my return message matches the actual count in the report

@@ -50,11 +50,11 @@ claims match reality.
 You will receive:
 1. `PR_NUMBER` — The PR number
 2. `PR_DESCRIPTION` — Full PR description text
-3. `DIFF_PATH` — Path to the full git diff, or instructions to get it via `gh pr diff`
+3. `DIFF` — Path to the full git diff file, or instructions to get it via `gh pr diff`
 4. `REPORT_DIR` — Directory where to write your findings report
 5. `FINDING_ID_PREFIX` — Prefix for finding IDs (e.g., SR-P1)
-5. `CORRECTNESS_REPORTS` — (Optional) Paths to Phase 1 correctness reports
-6. `CLAIMS_REPORT` — (Optional) Path to Phase 2 claims report
+6. `CORRECTNESS_REPORTS` — (Optional) Paths to Phase 1 correctness reports
+7. `CLAIMS_REPORT` — (Optional) Path to Phase 2 claims report
 
 ## REVIEW PROTOCOL
 

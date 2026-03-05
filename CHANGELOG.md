@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.8] - 2026-03-05
+
+### Changes
+- fix: make PASS and RUN_ID optional in security-review-agent INPUT FORMAT for single-pass mode
+- fix: align DIFF_PATH → DIFF in skeptical-reviewer and claim-verification agents to match SKILL.md
+- fix: duplicate item number "5" → correct numbering (5,6,7) in skeptical-reviewer INPUT FORMAT
+- fix: add RUN_ID-omission note to security agent output filename and self-verification checklist
+
 ## [3.1.7] - 2026-03-05
 
 ### Changes
