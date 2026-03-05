@@ -163,6 +163,8 @@ The orchestrator's context was summarized and one or more agent task IDs were lo
 5. For fix agents: check `git log` for the most recent fix commit -- if fixes were already committed, the fix agent completed successfully even though its task ID was lost
 6. For fix agents: also check checkpoint file `docs_dev/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` to see which findings were already resolved
 
+> **Note (Claude Code 2.1.69+):** Resuming after compaction no longer produces a preamble recap. The agent simply continues from where it left off. Recovery steps remain the same — read the manifest to restore pipeline state.
+
 ### Agent wrote report with wrong pass number (version/cache collision)
 
 If an agent writes a report with `P2` instead of `P3` (stale prompt from a cached agent definition):

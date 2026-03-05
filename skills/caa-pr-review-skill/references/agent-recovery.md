@@ -141,6 +141,8 @@ The orchestrator's context was summarized and one or more agent task IDs were lo
 3. For each expected report that is missing: check if a complete file exists under a different-than-expected UUID (the agent may have written it but the ID was lost)
 4. For each truly missing report: re-spawn from scratch (Step 4)
 
+> **Note (Claude Code 2.1.69+):** Resuming after compaction no longer produces a preamble recap. The agent simply continues from where it left off. Recovery steps remain the same — read the manifest to restore pipeline state.
+
 ### Agent wrote report with wrong pass number (version/cache collision)
 
 If an agent writes a report with `P2` instead of `P1` (stale prompt from a cached agent definition):

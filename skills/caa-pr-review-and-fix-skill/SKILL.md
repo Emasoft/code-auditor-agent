@@ -1,8 +1,8 @@
 ---
 name: caa-pr-review-and-fix-skill
 description: >
-  Use when reviewing PRs, auditing code, or running pre-merge quality gates.
-  Trigger with "review and fix the PR", "review and fix PR", "audit and fix the PR", "pre-merge review and fix".
+  Use when reviewing and fixing PRs with automated iterative resolution.
+  Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
 version: 2.0.0
 author: Emasoft
 license: MIT
@@ -55,8 +55,8 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 - `gh` CLI installed and authenticated (for `gh pr view`, `gh pr diff`)
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output. Create it if missing, and ensure it is in `.gitignore`.
-- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` must exist
-- $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- The merge script at `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py` must exist
+- ${CLAUDE_PLUGIN_ROOT} must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes). Run `git status` to verify.
 
 ## Parameters
@@ -66,7 +66,7 @@ The loop runs until PROCEDURE 1 finds zero issues, or the maximum pass limit (25
 | `PR_NUMBER` | Y | string | -- | GitHub PR number or branch name |
 | `MAX_PASSES` | N | int | `25` | Maximum review-fix loop iterations |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
-| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
+| `MERGE_SCRIPT` | N | path | `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees. Prevents concurrent file conflicts and gives each agent a clean snapshot. |
 
 ## Use When
@@ -486,10 +486,10 @@ See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with ful
 
 ## Resources
 
-- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py`
-- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/caa-dedup-agent.md`
-- Security review agent: `$CLAUDE_PLUGIN_ROOT/agents/caa-security-review-agent.md`
-- Other agents: `$CLAUDE_PLUGIN_ROOT/agents/`
+- Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
+- Dedup agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-dedup-agent.md`
+- Security review agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-security-review-agent.md`
+- Other agents: `${CLAUDE_PLUGIN_ROOT}/agents/`
 - Report output directory: `docs_dev/`
 
 ## Examples

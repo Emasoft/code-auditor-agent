@@ -1,6 +1,6 @@
 ---
 name: caa-codebase-audit-and-fix-skill
-description: "Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes. Trigger with /audit-codebase, 'audit the codebase', or 'compliance audit'."
+description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit'. Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes."
 version: 1.0.0
 author: Emasoft
 license: MIT
@@ -31,15 +31,15 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 
 | Script | Phase | Purpose |
 |--------|-------|---------|
-| `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
-| `$CLAUDE_PLUGIN_ROOT/scripts/caa-generate-todos.py` | 5 | Structured TODO generation helper |
+| `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-audit-reports.py` | 8 | Compile final merged report with stats |
+| `${CLAUDE_PLUGIN_ROOT}/scripts/caa-generate-todos.py` | 5 | Structured TODO generation helper |
 
 ### Environment
 
 - Python 3.12+ with `uv`
 - Git repository (for diff-based change tracking)
 - Sufficient disk space for report artifacts in `REPORT_DIR`
-- `$CLAUDE_PLUGIN_ROOT` must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- `${CLAUDE_PLUGIN_ROOT}` must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes). Sufficient disk space for N worktree copies.
 
 ## Instructions
@@ -230,8 +230,8 @@ Runs all 9 phases including the P6-P7 fix loop (up to 3 passes). Produces fix re
 
 ### Scripts
 
-- `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-audit-reports.py` - Final report compilation
-- `$CLAUDE_PLUGIN_ROOT/scripts/caa-generate-todos.py` - Structured TODO generation
+- `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-audit-reports.py` - Final report compilation
+- `${CLAUDE_PLUGIN_ROOT}/scripts/caa-generate-todos.py` - Structured TODO generation
 
 ### Related Commands
 

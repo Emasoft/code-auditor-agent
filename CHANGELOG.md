@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.6] - 2026-03-05
+
+### Changes
+- compat: adopt `${CLAUDE_PLUGIN_ROOT}` brace notation in all SKILL.md and reference files (Claude Code 2.1.69)
+- compat: update skill descriptions to use "Trigger with" + "Use when" format for validator compliance
+- compat: add post-compaction behavior note to agent-recovery.md (Claude Code 2.1.69 no longer produces preamble recap)
+- chore: standardize variable references in procedure-1-review.md and procedure-2-fix.md
+
 ## [3.1.5] - 2026-03-03
 
 ### Changes

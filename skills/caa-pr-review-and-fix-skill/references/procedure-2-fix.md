@@ -182,7 +182,7 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
 
 If the check fails, log: `"[SKIP] MegaLinter step -- Docker not available."` and proceed to commit.
 
-**Linter script location:** `$CLAUDE_PLUGIN_ROOT/scripts/universal_pr_linter.py`
+**Linter script location:** `${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py`
 
 The script uses MegaLinter inside Docker to lint the entire codebase. It runs in `--plugin-mode`
 which lints the working directory directly (no temp copy) with APPLY_FIXES=none (read-only --
@@ -203,7 +203,7 @@ Task(
        If Docker is NOT available, write "[SKIP] Docker not available" to the report and return immediately.
 
     2. Run the linter:
-       uv run $CLAUDE_PLUGIN_ROOT/scripts/universal_pr_linter.py \
+       uv run ${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py \
          {PROJECT_ROOT} \
          --plugin-mode \
          --all \

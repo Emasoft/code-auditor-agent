@@ -1,8 +1,8 @@
 ---
 name: caa-pr-review-skill
 description: >
-  Use when reviewing PRs, auditing code, or running pre-merge quality gates.
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
+  Use when reviewing PRs, auditing code, or running pre-merge quality gates.
 version: 2.0.0
 author: Emasoft
 license: MIT
@@ -25,8 +25,8 @@ in sequence: correctness swarm, claim verification, skeptical review + security 
 - `gh` CLI installed and authenticated (for `gh pr view`, `gh pr diff`)
 - The PR must exist on GitHub (need PR number or branch name)
 - `docs_dev/` directory must exist for report output
-- The merge script at `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` must exist
-- $CLAUDE_PLUGIN_ROOT must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
+- The merge script at `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py` must exist
+- ${CLAUDE_PLUGIN_ROOT} must be set by the Claude Code plugin loader. Verify it is non-empty before running any scripts.
 - If `USE_WORKTREES=true`: Git working tree must be clean (no uncommitted changes)
 
 ## Parameters
@@ -35,7 +35,7 @@ in sequence: correctness swarm, claim verification, skeptical review + security 
 |-------|-----|------|---------|-------------|
 | `PR_NUMBER` | Y | string | -- | GitHub PR number or branch name |
 | `REPORT_DIR` | N | path | `docs_dev/` | Output directory for all reports |
-| `MERGE_SCRIPT` | N | path | `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py` | Path to merge script |
+| `MERGE_SCRIPT` | N | path | `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py` | Path to merge script |
 | `USE_WORKTREES` | N | bool | false | Run agent swarms in isolated git worktrees for isolation |
 
 ### Worktree Mode
@@ -284,7 +284,7 @@ After all 4 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (Python script — simple concatenation, no dedup)**
 
 ```bash
-uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py ${REPORT_DIR} 1
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py ${REPORT_DIR} 1
 ```
 
 This produces an intermediate report at `${REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md`.
@@ -402,7 +402,7 @@ Follow the 6-phase protocol strictly:
 5. Wait for Phase 2 to complete before proceeding.
 6. Spawn BOTH a single `caa-skeptical-reviewer-agent` (Phase 3) AND a single `caa-security-review-agent` (Phase 4) in parallel. Both agents generate UUID filenames.
 7. Wait for BOTH Phase 3 and Phase 4 to complete before proceeding.
-8. Run the two-stage merge: `uv run $CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
+8. Run the two-stage merge: `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
 9. Read the final deduplicated report and present the verdict summary including security findings to the user (Phase 6).
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 
@@ -479,9 +479,9 @@ User: "re-run the PR review"
 
 ## Resources
 
-- Merge script: `$CLAUDE_PLUGIN_ROOT/scripts/caa-merge-reports.py`
-- Dedup agent: `$CLAUDE_PLUGIN_ROOT/agents/caa-dedup-agent.md`
-- Agents: `$CLAUDE_PLUGIN_ROOT/agents/`
+- Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
+- Dedup agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-dedup-agent.md`
+- Agents: `${CLAUDE_PLUGIN_ROOT}/agents/`
 - Report output directory: `docs_dev/`
 
 ## Lessons Learned
