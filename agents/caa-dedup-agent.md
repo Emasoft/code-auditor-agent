@@ -6,12 +6,6 @@ description: >
   Produces final report with accurate counts and verdict.
 model: opus
 maxTurns: 25
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Exact deduplication of truly identical findings across multiple review agents
   - Semantic analysis to preserve distinct findings that share the same file and line

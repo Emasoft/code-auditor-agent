@@ -5,13 +5,6 @@ description: >
   Uses checkpoint-based recovery to resume after crashes. Re-reads each file after fixing
   to verify no syntax errors. Makes MINIMAL changes — only what the TODO specifies.
 model: sonnet
-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Apply targeted, minimal code fixes from TODO file instructions to source files
   - Checkpoint-based crash recovery to resume incomplete fix sessions

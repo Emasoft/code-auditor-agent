@@ -8,12 +8,6 @@ description: >
   claimed in the PR description but never implemented in convertAMPToMessage().
 model: opus
 maxTurns: 30
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Extract structured claims from PR descriptions and commit messages
   - Verify each claim against actual source code by reading full functions

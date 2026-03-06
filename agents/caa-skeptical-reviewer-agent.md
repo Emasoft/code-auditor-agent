@@ -7,12 +7,6 @@ description: >
   This is the telescope that sees what the microscope (correctness swarm) misses.
 model: opus
 maxTurns: 30
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Read the entire PR diff holistically, not per-file
   - Identify UX concerns and surprising behavior changes

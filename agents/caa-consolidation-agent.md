@@ -6,12 +6,6 @@ description: >
   HARD LIMIT: max 5 input reports per invocation. If more reports exist, the orchestrator must
   split them into sub-groups.
 model: sonnet
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Merge multiple audit/verification/gap-fill reports into a single coherent consolidated report
   - De-duplicate findings by file+line+violation_type across reports

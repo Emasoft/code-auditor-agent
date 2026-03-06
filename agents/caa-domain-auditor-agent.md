@@ -6,12 +6,6 @@ description: >
   violations such as hardcoded API calls, hardcoded governance rules, direct dependency coupling,
   and other compliance issues. HARD LIMIT: never processes more than 4 files per invocation.
 model: opus
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Audit source files line-by-line against a reference standard document for compliance violations
   - Detect hardcoded API URLs, direct API calls that bypass required abstraction layers

@@ -7,12 +7,6 @@ description: >
   bugs but structurally blind to cross-file inconsistencies and PR-level claim mismatches.
 model: opus
 maxTurns: 30
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
 capabilities:
   - Read every file in a domain completely and audit for type safety, logic, and security
   - Check API contracts (function signatures, caller/callee consistency)
