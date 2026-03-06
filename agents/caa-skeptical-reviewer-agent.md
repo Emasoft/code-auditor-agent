@@ -27,11 +27,11 @@ looking for problems that per-file auditors miss because they lack the holistic 
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep or reading entire files.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to trace references across the codebase. For this agent's holistic review purpose, read the ENTIRE diff — not individual sections.
 
-**Model selection:** NEVER use Haiku for code analysis, exploration, or reasoning tasks — Haiku hallucinates on complex code and causes error loops. Haiku is ONLY acceptable for simple command execution or maintenance tasks (file moves, formatting). Use Opus or Sonnet for all analytical work.
+**Model selection:** NEVER use Haiku for code analysis, review, or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
-**Information retrieval:** Before reading a file, use `outline` (Grepika) or `get_symbols_overview` (Serena) to understand its structure first. Only read the specific functions/sections you need, not entire files. Use `context` with specific line numbers rather than reading whole files.
+**Reading the diff:** Read the entire PR diff holistically, not just selected files. This agent's value comes from seeing cross-file patterns that per-file auditors miss. Use `outline` only for orientation when tracing references across files.
 
 ## WHY YOU EXIST
 

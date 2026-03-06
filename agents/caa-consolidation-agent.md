@@ -23,11 +23,11 @@ harmonization, and completeness — not re-auditing.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep or reading entire files.
+**Report discovery:** Use Glob to find report files matching naming patterns. Use Grepika `search` when available to locate specific findings across reports.
 
-**Model selection:** NEVER use Haiku for code analysis, exploration, or reasoning tasks — Haiku hallucinates on complex code and causes error loops. Haiku is ONLY acceptable for simple command execution or maintenance tasks (file moves, formatting). Use Opus or Sonnet for all analytical work.
+**Model selection:** NEVER use Haiku for consolidation, deduplication, or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
-**Information retrieval:** Before reading a file, use `outline` (Grepika) or `get_symbols_overview` (Serena) to understand its structure first. Only read the specific functions/sections you need, not entire files. Use `context` with specific line numbers rather than reading whole files.
+**Reading reports:** Read each input report COMPLETELY before consolidating. Do not skim or sample. This agent merges markdown reports — code navigation tools (symbol lookup, refs) are not applicable.
 
 ## YOUR SCOPE AND LIMITATIONS
 

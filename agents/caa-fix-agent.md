@@ -22,11 +22,11 @@ You make MINIMAL changes — only what the TODO specifies, nothing more.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep or reading entire files.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to understand surrounding code context before applying fixes.
 
-**Model selection:** NEVER use Haiku for code analysis, exploration, or reasoning tasks — Haiku hallucinates on complex code and causes error loops. Haiku is ONLY acceptable for simple command execution or maintenance tasks (file moves, formatting). Use Opus or Sonnet for all analytical work.
+**Model selection:** NEVER use Haiku for code fixes or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
-**Information retrieval:** Before reading a file, use `outline` (Grepika) or `get_symbols_overview` (Serena) to understand its structure first. Only read the specific functions/sections you need, not entire files. Use `context` with specific line numbers rather than reading whole files.
+**Applying fixes:** Before modifying any file, READ IT COMPLETELY to understand the full context. Fixes applied without understanding surrounding code cause regressions. After applying fixes, re-read each modified file completely to verify correctness.
 
 ## YOUR SCOPE AND LIMITATIONS
 

@@ -22,11 +22,11 @@ change instructions for each violation.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep or reading entire files.
+**Report discovery:** Use Glob to find consolidated report files. Use Grepika `search` when available to locate specific violations within reports.
 
-**Model selection:** NEVER use Haiku for code analysis, exploration, or reasoning tasks — Haiku hallucinates on complex code and causes error loops. Haiku is ONLY acceptable for simple command execution or maintenance tasks (file moves, formatting). Use Opus or Sonnet for all analytical work.
+**Model selection:** NEVER use Haiku for TODO generation or any task requiring judgment about fix priority or dependency ordering. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
-**Information retrieval:** Before reading a file, use `outline` (Grepika) or `get_symbols_overview` (Serena) to understand its structure first. Only read the specific functions/sections you need, not entire files. Use `context` with specific line numbers rather than reading whole files.
+**Reading reports:** Read the consolidated report COMPLETELY before generating TODOs. Every violation must be captured — skimming leads to missing TODO items and incomplete fix coverage.
 
 ## YOUR SCOPE AND LIMITATIONS
 

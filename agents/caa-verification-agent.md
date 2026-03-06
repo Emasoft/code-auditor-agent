@@ -23,11 +23,11 @@ and determine whether the audit report is reliable enough to act on.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep or reading entire files.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to verify that files and code referenced in audit reports actually exist. Use Grep to quick-check patterns for CLEAN claims.
 
-**Model selection:** NEVER use Haiku for code analysis, exploration, or reasoning tasks — Haiku hallucinates on complex code and causes error loops. Haiku is ONLY acceptable for simple command execution or maintenance tasks (file moves, formatting). Use Opus or Sonnet for all analytical work.
+**Model selection:** NEVER use Haiku for verification or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
-**Information retrieval:** Before reading a file, use `outline` (Grepika) or `get_symbols_overview` (Serena) to understand its structure first. Only read the specific functions/sections you need, not entire files. Use `context` with specific line numbers rather than reading whole files.
+**Verifying claims:** Read the audit report COMPLETELY first. Then for each claim, verify against the actual code — READ the referenced file and line range to confirm the violation exists (or that CLEAN claims are accurate).
 
 ## YOUR SCOPE AND LIMITATIONS
 
