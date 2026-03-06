@@ -74,10 +74,11 @@ NC = "\033[0m" if _USE_COLOR else ""
 FINDING_ID_RE = re.compile(r"\[[A-Z]{2,4}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]")
 
 # -- Section header regexes ----------------------------------------------------
-MUST_FIX_RE = re.compile(r"^#{1,3}\s.*(MUST.FIX|FAILED\sCLAIMS)", re.IGNORECASE)
-SHOULD_FIX_RE = re.compile(r"^#{1,3}\s.*(SHOULD.FIX|PARTIALLY\sIMPLEMENTED)", re.IGNORECASE)
-NIT_RE = re.compile(r"^#{1,3}\s.*(NIT|CONSISTENCY\sISSUES)", re.IGNORECASE)
-CLEAN_RE = re.compile(r"^#{1,3}\s.*(CLEAN|VERIFIED)", re.IGNORECASE)
+# NOTE: #{1,4} to capture #### headers from skeptical-reviewer agent (CONTRACT-PR-001)
+MUST_FIX_RE = re.compile(r"^#{1,4}\s.*(MUST.FIX|FAILED\sCLAIMS)", re.IGNORECASE)
+SHOULD_FIX_RE = re.compile(r"^#{1,4}\s.*(SHOULD.FIX|PARTIALLY\sIMPLEMENTED)", re.IGNORECASE)
+NIT_RE = re.compile(r"^#{1,4}\s.*(NIT|CONSISTENCY\sISSUES)", re.IGNORECASE)
+CLEAN_RE = re.compile(r"^#{1,4}\s.*(CLEAN|VERIFIED)", re.IGNORECASE)
 # New top-level section that resets the current section (matches the bash regex)
 NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9A-Z]")
 
