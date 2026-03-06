@@ -77,8 +77,9 @@ BOLD = "\033[1m" if _USE_COLOR else ""
 NC = "\033[0m" if _USE_COLOR else ""
 
 # ── Finding ID regex ─────────────────────────────────────────────────────────
-# Matches: [CA-P1-A0-001], [CV-P1-001], [GF-P1-001], [CA-001], etc.
-FINDING_ID_RE = re.compile(r"\[[A-Z]{2,4}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]")
+# Matches standard IDs: [DA-P1-A3-001], [VE-P1-001], [GF-P1-001]
+# Also matches consolidation IDs: [CA-AMCOS-001], [CA-networking-003]
+FINDING_ID_RE = re.compile(r"\[[A-Z]{2,4}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?(-[A-Za-z][-A-Za-z0-9]*)?-[0-9]+\]")
 
 # ── Section header regexes ───────────────────────────────────────────────────
 # NOTE: #{1,4} to capture #### headers from agents using nested structures (CONTRACT-PR-001)
@@ -86,6 +87,7 @@ MUST_FIX_RE = re.compile(r"^#{1,4}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)", re.IGNO
 SHOULD_FIX_RE = re.compile(r"^#{1,4}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)", re.IGNORECASE)
 NIT_RE = re.compile(r"^#{1,4}\s*(NIT|CONSISTENCY ISSUES|STYLE|SUGGESTION)", re.IGNORECASE)
 CLEAN_RE = re.compile(r"^#{1,4}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS)", re.IGNORECASE)
+RECORD_KEEPING_RE = re.compile(r"^#{1,4}\s*(RECORD.KEEPING)", re.IGNORECASE)
 # New top-level section that resets the current section
 NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]")
 
@@ -183,12 +185,14 @@ def main() -> None:
         sys.exit(2)
 
     # ── Find all audit reports for this pass ─────────────────────────────────
+    # Also find consolidated reports which lack -P{N}- in their filename (#5)
+    consolidated_pattern = "caa-consolidated-*.md"
     reports: list[Path] = []
     for entry in sorted(output_dir.iterdir()):
         if not entry.is_file():
             continue
         basename = entry.name
-        if not fnmatch.fnmatch(basename, pattern):
+        if not fnmatch.fnmatch(basename, pattern) and not fnmatch.fnmatch(basename, consolidated_pattern):
             continue
 
         # Skip non-pipeline reports
@@ -235,6 +239,7 @@ def main() -> None:
     should_fix_lines: list[str] = []
     nit_lines: list[str] = []
     clean_lines: list[str] = []
+    record_keeping_lines: list[str] = []
 
     # ── Raw finding counts (pre-dedup) ───────────────────────────────────────
     raw_must_fix = 0
@@ -268,6 +273,9 @@ def main() -> None:
                 elif CLEAN_RE.search(line_stripped):
                     in_section = "clean"
                     continue
+                elif RECORD_KEEPING_RE.search(line_stripped):
+                    in_section = "record-keeping"
+                    continue
                 elif in_section and NEW_SECTION_RE.search(line_stripped):
                     # New top-level section, exit current parsing
                     in_section = ""
@@ -295,6 +303,8 @@ def main() -> None:
                     nit_lines.append(line_stripped)
                 elif in_section == "clean":
                     clean_lines.append(line_stripped)
+                elif in_section == "record-keeping":
+                    record_keeping_lines.append(line_stripped)
 
     # ── Write intermediate report (atomic: write to tmp, then rename) ────────
     tmp_fd, tmp_path = tempfile.mkstemp(
@@ -362,6 +372,12 @@ def main() -> None:
             if clean_lines:
                 tmp_f.write("---\n\n## Clean / Verified Files\n\n")
                 tmp_f.write("\n".join(clean_lines))
+                tmp_f.write("\n\n")
+
+            # Record-keeping section (preserved items, not actionable findings)
+            if record_keeping_lines:
+                tmp_f.write("---\n\n## RECORD_KEEPING (PRESERVE)\n\n")
+                tmp_f.write("\n".join(record_keeping_lines))
                 tmp_f.write("\n\n")
 
             # Source reports section

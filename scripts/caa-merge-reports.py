@@ -79,8 +79,9 @@ MUST_FIX_RE = re.compile(r"^#{1,4}\s*(MUST.FIX|FAILED\sCLAIMS)", re.IGNORECASE)
 SHOULD_FIX_RE = re.compile(r"^#{1,4}\s*(SHOULD.FIX|PARTIALLY\sIMPLEMENTED)", re.IGNORECASE)
 NIT_RE = re.compile(r"^#{1,4}\s*(NIT|CONSISTENCY\sISSUES)", re.IGNORECASE)
 CLEAN_RE = re.compile(r"^#{1,4}\s*(CLEAN|VERIFIED)", re.IGNORECASE)
-# New top-level section that resets the current section (matches the bash regex)
-NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9A-Z]")
+RECORD_KEEPING_RE = re.compile(r"^#{1,4}\s*(RECORD.KEEPING)", re.IGNORECASE)
+# New top-level section that resets the current section
+NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]")
 
 # -- Finding line regex (lines starting with ## to ##### then a bracket) --------
 FINDING_LINE_RE = re.compile(r"^#{2,5}\s*\[")
@@ -232,6 +233,7 @@ def main() -> None:
     should_fix_lines: list[str] = []
     nit_lines: list[str] = []
     clean_lines: list[str] = []
+    record_keeping_lines: list[str] = []
 
     # -- Raw finding counts (pre-dedup) ----------------------------------------
     raw_must_fix = 0
@@ -265,6 +267,9 @@ def main() -> None:
                 elif CLEAN_RE.search(line_stripped):
                     in_section = "clean"
                     continue
+                elif RECORD_KEEPING_RE.search(line_stripped):
+                    in_section = "record-keeping"
+                    continue
                 elif in_section and NEW_SECTION_RE.search(line_stripped):
                     # New top-level section, exit current parsing
                     in_section = ""
@@ -292,6 +297,8 @@ def main() -> None:
                     nit_lines.append(line_stripped)
                 elif in_section == "clean":
                     clean_lines.append(line_stripped)
+                elif in_section == "record-keeping":
+                    record_keeping_lines.append(line_stripped)
 
     # -- Write intermediate report (atomic: write to tmp, then os.replace) -----
     tmp_fd, tmp_path = tempfile.mkstemp(
@@ -351,6 +358,12 @@ def main() -> None:
             if clean_lines:
                 tmp_f.write("---\n\n## Clean / Verified Files\n\n")
                 tmp_f.write("\n".join(clean_lines))
+                tmp_f.write("\n\n")
+
+            # Record-keeping section (preserved items, not actionable findings)
+            if record_keeping_lines:
+                tmp_f.write("---\n\n## RECORD_KEEPING (PRESERVE)\n\n")
+                tmp_f.write("\n".join(record_keeping_lines))
                 tmp_f.write("\n\n")
 
             # Source reports section
