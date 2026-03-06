@@ -51,6 +51,7 @@ from pathlib import Path
 
 # -- ANSI Color Configuration -------------------------------------------------
 
+
 def _colors_supported() -> bool:
     """Return True only when the terminal supports ANSI escape sequences."""
     if os.environ.get("NO_COLOR"):
@@ -58,6 +59,7 @@ def _colors_supported() -> bool:
     if os.name == "nt":
         return bool(os.environ.get("WT_SESSION") or os.environ.get("ANSICON"))
     return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
 
 _USE_COLOR = _colors_supported()
 RED = "\033[0;31m" if _USE_COLOR else ""
@@ -146,7 +148,13 @@ def main() -> None:
         default="",
         help="Optional run ID to scope to a single invocation",
     )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress verbose output, print only final summary line",
+    )
     args = parser.parse_args()
+    quiet: bool = args.quiet
 
     output_dir = Path(args.output_dir)
     pass_number = args.pass_number
@@ -156,10 +164,12 @@ def main() -> None:
     # Build glob pattern: if run_id provided, scope to that run only
     if run_id:
         pattern = f"caa-*-P{pass_number}-R{run_id}-*.md"
-        print(f"{CYAN}Run ID: {run_id} (scoped merge){NC}")
+        if not quiet:
+            print(f"{CYAN}Run ID: {run_id} (scoped merge){NC}")
     else:
         pattern = f"caa-*-P{pass_number}-*.md"
-        print(f"{YELLOW}No run ID -- merging ALL files for pass {pass_number} (legacy mode){NC}")
+        if not quiet:
+            print(f"{YELLOW}No run ID -- merging ALL files for pass {pass_number} (legacy mode){NC}")
 
     intermediate_report = output_dir / f"caa-pr-review-P{pass_number}-intermediate-{timestamp}.md"
 
@@ -179,7 +189,7 @@ def main() -> None:
 
         # Skip non-phase reports (intermediate, final, fixes, tests, lint, checkpoints, stale)
         if is_skipped(basename):
-            if "-STALE" in basename:
+            if "-STALE" in basename and not quiet:
                 print(f"  {YELLOW}Skipping stale: {basename}{NC}")
             continue
 
@@ -189,9 +199,10 @@ def main() -> None:
         print(f"{RED}Error: No reports matching '{pattern}' found in '{output_dir}'{NC}", file=sys.stderr)
         sys.exit(2)
 
-    print(f"{CYAN}{BOLD}CAA Report Merger v2 (no-dedup, UUID-aware){NC}")
-    print(f"Found {len(reports)} reports to merge for pass {pass_number}")
-    print()
+    if not quiet:
+        print(f"{CYAN}{BOLD}CAA Report Merger v2 (no-dedup, UUID-aware){NC}")
+        print(f"Found {len(reports)} reports to merge for pass {pass_number}")
+        print()
 
     # -- Sort reports by phase: correctness -> claims -> review -> security -> other -------
     correctness_reports: list[Path] = []
@@ -230,7 +241,8 @@ def main() -> None:
     # -- Process each report ---------------------------------------------------
     for report in ordered_reports:
         report_name = report.name
-        print(f"  Processing: {report_name}")
+        if not quiet:
+            print(f"  Processing: {report_name}")
 
         in_section = ""
 
@@ -369,14 +381,17 @@ def main() -> None:
     merged_size = intermediate_report.stat().st_size
 
     if merged_size > 0:
-        print(f"{GREEN}Integrity check PASSED: merged file exists and is non-empty ({merged_size} bytes){NC}")
-        print()
+        if not quiet:
+            print(f"{GREEN}Integrity check PASSED: merged file exists and is non-empty ({merged_size} bytes){NC}")
+            print()
 
         # Safe to delete source files -- merged output confirmed non-empty
-        print(f"Cleaning up {len(ordered_reports)} source report(s)...")
+        if not quiet:
+            print(f"Cleaning up {len(ordered_reports)} source report(s)...")
         for report in ordered_reports:
             report.unlink(missing_ok=True)
-            print(f"  Deleted: {report.name}")
+            if not quiet:
+                print(f"  Deleted: {report.name}")
     else:
         print(f"{RED}Integrity check FAILED: merged file is empty (0 bytes){NC}", file=sys.stderr)
         print(f"{RED}Source files NOT deleted \u2014 investigate data loss.{NC}", file=sys.stderr)
@@ -390,18 +405,22 @@ def main() -> None:
         sys.exit(2)
 
     # -- Print summary to stdout -----------------------------------------------
-    print()
-    separator = "\u2550" * 59
-    print(f"{CYAN}{separator}{NC}")
-    print(f"{CYAN}  CAA Intermediate Report: {intermediate_report}{NC}")
-    print(f"{CYAN}{separator}{NC}")
-    print()
-    print(f"  Raw MUST-FIX:    {raw_must_fix}")
-    print(f"  Raw SHOULD-FIX:  {raw_should_fix}")
-    print(f"  Raw NIT:         {raw_nit}")
-    print(f"  Raw Total:       {raw_total}")
-    print()
-    print(f"{YELLOW}Awaiting caa-dedup-agent for final counts and verdict.{NC}")
+    if not quiet:
+        print()
+        separator = "\u2550" * 59
+        print(f"{CYAN}{separator}{NC}")
+        print(f"{CYAN}  CAA Intermediate Report: {intermediate_report}{NC}")
+        print(f"{CYAN}{separator}{NC}")
+        print()
+        print(f"  Raw MUST-FIX:    {raw_must_fix}")
+        print(f"  Raw SHOULD-FIX:  {raw_should_fix}")
+        print(f"  Raw NIT:         {raw_nit}")
+        print(f"  Raw Total:       {raw_total}")
+        print()
+        print(f"{YELLOW}Awaiting caa-dedup-agent for final counts and verdict.{NC}")
+
+    # Always print concise summary (even in --quiet mode)
+    print(f"[OK] {intermediate_report} — {raw_total} raw findings from {len(ordered_reports)} reports")
 
     # Always exit 0 -- the dedup agent determines the final verdict
     sys.exit(0)

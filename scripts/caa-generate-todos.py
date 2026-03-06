@@ -118,6 +118,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional prefix for TODO IDs (default: scope_name uppercase with hyphens replaced by underscores)",
     )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress verbose output, print only final summary line",
+    )
     return parser.parse_args()
 
 
@@ -133,6 +138,7 @@ def main() -> None:
     scope_name: str = args.scope_name
     output_path: Path = args.output_path
     todo_prefix: str = args.todo_prefix or scope_name.upper().replace("-", "_")
+    quiet: bool = args.quiet
 
     # ── Validate input ───────────────────────────────────────────────────────
     if not consolidated_report.is_file():
@@ -150,12 +156,13 @@ def main() -> None:
         )
         sys.exit(2)
 
-    print(f"{CYAN}{BOLD}CAA TODO Generator{NC}")
-    print(f"  Report:  {consolidated_report}")
-    print(f"  Scope:   {scope_name}")
-    print(f"  Prefix:  {todo_prefix}")
-    print(f"  Output:  {output_path}")
-    print()
+    if not quiet:
+        print(f"{CYAN}{BOLD}CAA TODO Generator{NC}")
+        print(f"  Report:  {consolidated_report}")
+        print(f"  Scope:   {scope_name}")
+        print(f"  Prefix:  {todo_prefix}")
+        print(f"  Output:  {output_path}")
+        print()
 
     # ── Counters ─────────────────────────────────────────────────────────────
     todo_num = 0
@@ -247,17 +254,20 @@ def main() -> None:
             if RE_MUST_FIX.search(line):
                 flush_finding()
                 current_priority = "P1"
-                print(f"  Entering section: {BOLD}MUST-FIX (P1){NC}")
+                if not quiet:
+                    print(f"  Entering section: {BOLD}MUST-FIX (P1){NC}")
                 continue
             elif RE_SHOULD_FIX.search(line):
                 flush_finding()
                 current_priority = "P2"
-                print(f"  Entering section: {BOLD}SHOULD-FIX (P2){NC}")
+                if not quiet:
+                    print(f"  Entering section: {BOLD}SHOULD-FIX (P2){NC}")
                 continue
             elif RE_NIT.search(line):
                 flush_finding()
                 current_priority = "P3"
-                print(f"  Entering section: {BOLD}NIT (P3){NC}")
+                if not quiet:
+                    print(f"  Entering section: {BOLD}NIT (P3){NC}")
                 continue
             elif RE_END_SECTION.search(line):
                 # End of findings sections — flush and stop priority parsing
@@ -342,25 +352,30 @@ def main() -> None:
         sys.exit(2)
 
     # ── Print summary ────────────────────────────────────────────────────────
-    print()
-    print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
-    print(f"{CYAN}  CAA TODO File: {output_path}{NC}")
-    print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
-    print()
-    print(f"  P1 (MUST-FIX):    {p1_count}")
-    print(f"  P2 (SHOULD-FIX):  {p2_count}")
-    print(f"  P3 (NIT):         {p3_count}")
-    print(f"  Total TODOs:      {todo_num}")
-    print()
+    if not quiet:
+        print()
+        print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
+        print(f"{CYAN}  CAA TODO File: {output_path}{NC}")
+        print(f"{CYAN}═══════════════════════════════════════════════════════════{NC}")
+        print()
+        print(f"  P1 (MUST-FIX):    {p1_count}")
+        print(f"  P2 (SHOULD-FIX):  {p2_count}")
+        print(f"  P3 (NIT):         {p3_count}")
+        print(f"  Total TODOs:      {todo_num}")
+        print()
 
-    if todo_num == 0:
-        print(
-            f"{YELLOW}No findings extracted. Check that the consolidated report has "
-            f"## MUST-FIX / ## SHOULD-FIX / ## NIT sections.{NC}"
-        )
-    else:
-        print(f"{GREEN}Generated {todo_num} skeleton TODO entries.{NC}")
-        print(f"{YELLOW}Run caa-todo-generator-agent to add implementation details.{NC}")
+    if not quiet:
+        if todo_num == 0:
+            print(
+                f"{YELLOW}No findings extracted. Check that the consolidated report has "
+                f"## MUST-FIX / ## SHOULD-FIX / ## NIT sections.{NC}"
+            )
+        else:
+            print(f"{GREEN}Generated {todo_num} skeleton TODO entries.{NC}")
+            print(f"{YELLOW}Run caa-todo-generator-agent to add implementation details.{NC}")
+
+    # Always print concise summary (even in --quiet mode)
+    print(f"[OK] {output_path} — {todo_num} TODOs generated ({p1_count} P1, {p2_count} P2, {p3_count} P3)")
 
     sys.exit(0)
 

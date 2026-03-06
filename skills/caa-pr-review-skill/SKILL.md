@@ -3,7 +3,7 @@ name: caa-pr-review-skill
 description: >
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
-version: 3.1.10
+version: 3.1.11
 author: Emasoft
 license: MIT
 tags:
@@ -286,7 +286,7 @@ After all 4 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (Python script — simple concatenation, no dedup)**
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py ${REPORT_DIR} 1
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet ${REPORT_DIR} 1
 ```
 
 This produces an intermediate report at `${REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md`.
@@ -404,7 +404,7 @@ Follow the 6-phase protocol strictly:
 5. Wait for Phase 2 to complete before proceeding.
 6. Spawn BOTH a single `caa-skeptical-reviewer-agent` (Phase 3) AND a single `caa-security-review-agent` (Phase 4) in parallel. Both agents generate UUID filenames.
 7. Wait for BOTH Phase 3 and Phase 4 to complete before proceeding.
-8. Run the two-stage merge: `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
+8. Run the two-stage merge: `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
 9. Read the final deduplicated report and present the verdict summary including security findings to the user (Phase 6).
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 

@@ -373,6 +373,14 @@ assistant: |
 - **Documentation changes**: Check for leaked secrets in examples, insecure code patterns in docs.
 - **Dependency-only changes**: Focus entirely on CVE checking and version analysis.
 
+## REPORTING RULES
+
+- Write ALL detailed findings to the report file (path provided in your prompt)
+- Return to orchestrator ONLY 1-2 lines in this format:
+  `[DONE/FAILED] <agent-short-name> - <brief result summary>. Report: <output_path>`
+- NEVER return code blocks, file contents, long lists, or verbose explanations to orchestrator
+- Max 2 lines of text back to orchestrator
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**

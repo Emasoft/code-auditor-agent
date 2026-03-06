@@ -213,6 +213,14 @@ assistant: |
   Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 failed. Report: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md"
 </example>
 
+## REPORTING RULES
+
+- Write ALL detailed findings to the report file (path provided in your prompt)
+- Return to orchestrator ONLY 1-2 lines in this format:
+  `[DONE/FAILED] <agent-short-name> - <brief result summary>. Report: <output_path>`
+- NEVER return code blocks, file contents, long lists, or verbose explanations to orchestrator
+- Max 2 lines of text back to orchestrator
+
 ## SELF-VERIFICATION CHECKLIST
 
 **Before returning your result, copy this checklist into your report file and mark each item. Do NOT return until all items are addressed.**

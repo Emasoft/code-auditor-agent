@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.11] - 2026-03-06
+
+### Changes
+- feat: add --quiet flag to caa-generate-todos.py, caa-merge-reports.py, caa-merge-audit-reports.py
+- feat: add REPORTING RULES section to all 10 CAA agent definitions (dedup already had it)
+- feat: pass --quiet to script invocations in skill SKILL.md files
+- refactor: gate verbose print() calls behind `if not quiet:` in all 3 CAA scripts
+- refactor: always print 1-line summary with output path regardless of --quiet flag
+
 ## [3.1.10] - 2026-03-06
 
 ### Changes

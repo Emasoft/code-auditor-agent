@@ -294,7 +294,7 @@ After all 4 phases complete, run the **two-stage merge pipeline**:
 **Stage 1: Merge (Python script -- simple concatenation, no dedup)**
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
 ```
 
 This produces an intermediate report at `docs_dev/caa-pr-review-P{N}-intermediate-{timestamp}.md`.
