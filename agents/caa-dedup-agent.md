@@ -10,7 +10,7 @@ capabilities:
   - Exact deduplication of truly identical findings across multiple review agents
   - Semantic analysis to preserve distinct findings that share the same file and line
   - Handle same-line-different-bug cases by comparing finding body and violation type
-  - Produce accurate severity counts (MUST-FIX, SHOULD-FIX, NIT) after deduplication
+  - Produce accurate severity counts (MUST-FIX, SHOULD-FIX, NIT, RECORD_KEEPING) after deduplication
   - Generate final deduplicated report with clear verdict (PASS/FAIL)
 ---
 
@@ -49,13 +49,13 @@ extract a structured record:
 ```
 Finding {
   id: string           // e.g., "CC-P4-A0-001"
-  severity: string     // "MUST-FIX" | "SHOULD-FIX" | "NIT" (from which section it appeared in)
+  severity: string     // "MUST-FIX" | "SHOULD-FIX" | "NIT" | "RECORD_KEEPING" (from which section it appeared in)
   title: string        // The heading text after the ID
   file: string         // Primary file path mentioned (first file:line reference)
   lines: number[]      // All line numbers mentioned
   body: string         // Full finding text (all lines from heading to next heading)
   phase: string        // PR review phases: "CC" (correctness), "CV" (claims), "SR" (skeptical review), "SC" (security)
-                       // Codebase audit phases: "DA" (domain-auditor), "VR" (verification), "CN" (consolidation), "TD" (todo-generator), "FX" (fix), "FV" (fix-verifier), "SC" (security)
+                       // Codebase audit phases: "DA" (domain-auditor), "VE" (verification), "CN" (consolidation), "TD" (todo-generator), "FX" (fix), "FV" (fix-verifier), "SC" (security)
 }
 ```
 
@@ -111,13 +111,14 @@ When merging duplicate findings:
 
 ### Step 5: Assign Final IDs and Write Output
 
-1. Sort remaining findings by severity (MUST-FIX first, then SHOULD-FIX, then NIT),
+1. Sort remaining findings by severity (MUST-FIX first, then SHOULD-FIX, then NIT, then RECORD_KEEPING),
    then by file path, then by line number.
 
 2. Assign sequential final IDs within each severity:
    - MUST-FIX: `MF-001`, `MF-002`, ...
    - SHOULD-FIX: `SF-001`, `SF-002`, ...
    - NIT: `NT-001`, `NT-002`, ...
+   - RECORD_KEEPING: `RK-001`, `RK-002`, ...
 
 3. Preserve original IDs as `Original IDs:` annotation in each finding.
 
@@ -125,7 +126,7 @@ When merging duplicate findings:
    - If the intermediate report was produced by `caa-merge-reports.py` (PR review pipeline, phases CC/CV/SR/SC):
      - `{report_type}` = `PR Review`
      - `{pipeline_description}` = `Code Correctness → Claim Verification → Skeptical Review → Security Review`
-   - If the intermediate report was produced by `caa-merge-audit-reports.py` (codebase audit pipeline, phases DA/VR/CN/TD/FX/FV/SA):
+   - If the intermediate report was produced by `caa-merge-audit-reports.py` (codebase audit pipeline, phases DA/VE/CN/TD/FX/FV/SC):
      - `{report_type}` = `Codebase Audit`
      - `{pipeline_description}` = `Domain Audit → Verification → Consolidation → Todo Generation → Fix → Fix Verification → Security Audit`
 
@@ -148,6 +149,7 @@ When merging duplicate findings:
 | **MUST-FIX** | {count} |
 | **SHOULD-FIX** | {count} |
 | **NIT** | {count} |
+| **RECORD_KEEPING** | {count} |
 | **Total findings** | {total} |
 
 **Verdict: {VERDICT}**
@@ -178,6 +180,13 @@ When merging duplicate findings:
 
 ---
 
+## Record Keeping
+
+### [RK-001] {title}
+...
+
+---
+
 ## Deduplication Log
 
 | Final ID | Original IDs | Duplicates Removed | Reason |
@@ -195,6 +204,7 @@ When merging duplicate findings:
 - MUST-FIX count > 0 → `REQUEST CHANGES — {count} must-fix issue(s) found.`
 - MUST-FIX = 0, SHOULD-FIX > 0 → `APPROVE WITH NITS — No blocking issues, but {count} recommended fix(es).`
 - All counts = 0 → `APPROVE — No significant issues found.`
+- RECORD_KEEPING items are preserved as-is in the report but do NOT factor into the pass/fail verdict. They are informational observations (e.g., documentation gaps, naming conventions) that should be tracked but do not block approval.
 
 ## Edge Cases Reference
 
@@ -264,8 +274,8 @@ Phase 3: lib/auth.ts:42 — MUST-FIX "Missing null check allows crash"
 - [ ] For merged findings: I preserved ALL original IDs in "Also identified by" annotation (N/A if no duplicates found)
 - [ ] For merged findings: I noted ALL source phases (N/A if no duplicates found)
       For PR review: CC, CV, SR, SC
-      For codebase audit: DA, VR, CN, TD, FX, FV, SC
-- [ ] My final IDs use sequential numbering: MF-001, SF-001, NT-001
+      For codebase audit: DA, VE, CN, TD, FX, FV, SC
+- [ ] My final IDs use sequential numbering: MF-001, SF-001, NT-001, RK-001
 - [ ] My deduplication log has an entry for EVERY final finding (including unique ones)
 - [ ] Each dedup log entry includes the merge reasoning
 - [ ] My verdict follows the rules: MUST-FIX>0 → REQUEST CHANGES; else SHOULD-FIX>0 → APPROVE WITH NITS; else → APPROVE

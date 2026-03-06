@@ -435,7 +435,8 @@ The pipeline produces these deliverables across all passes:
     two bugs, not one.
 
 12. **Merge script verifies before deleting.** The v2 merge script deletes source files
-    only after verifying the intermediate file's byte size equals the sum of inputs.
+    only after verifying the intermediate file exists and is non-empty. (The merged
+    output extracts only severity-section content, so byte-size comparison is not used.)
     This prevents data loss from partial writes or filesystem errors.
 
 13. **Linting is conditional on Docker.** The MegaLinter step runs ONLY if Docker is installed
@@ -452,7 +453,7 @@ The pipeline produces these deliverables across all passes:
 
 - If any Phase 1 agent fails, re-run it for that domain only (with a new UUID)
 - If Phase 2, 3, or 4 fails, re-run that phase (single agents, new UUID)
-- If merge script exits code 2 or byte-size verification fails, investigate (do NOT delete source files)
+- If merge script exits code 2 (missing reports, invalid dir, or empty merged file), investigate (source files are preserved)
 - If dedup agent reports MUST-FIX > 0, proceed to PROCEDURE 2; if dedup fails, re-run on same intermediate
 - If `gh` CLI not authenticated, stop and ask user to run `gh auth login`
 - If fix agent fails, re-run for that domain; if tests fail, spawn domain agents to investigate

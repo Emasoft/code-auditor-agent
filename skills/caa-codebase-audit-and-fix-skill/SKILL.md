@@ -56,7 +56,7 @@ Follow these steps to run the audit pipeline:
 8. Run Phase 4b: spawn `caa-security-review-agent` (MANDATORY, never skip) against all audited files. The security agent runs automated tools (trufflehog, bandit, osv-scanner, etc.) and performs manual vulnerability analysis. Its findings are appended to the consolidated reports before TODO generation.
 9. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
 10. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes
-11. Run Phase 8: compile final merged report with stats and links to all artifacts
+11. Run Phase 8: run the merge script to produce an intermediate report, then spawn `caa-dedup-agent` to produce the final deduplicated report. Rename the dedup output to `caa-audit-FINAL-{timestamp}.md`
 
 ### Parameters
 
@@ -93,7 +93,7 @@ If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until
 
 ### Report Naming
 
-All files use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. Each agent generates its own UUID.
+Most pipeline reports use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md` (agent-generated UUID). Exceptions: consolidated, TODO, and final reports use simpler naming (see table).
 
 | Type | Pattern |
 |------|---------|
@@ -126,7 +126,7 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 **P4b Security**: `DOMAIN=all-audited-files`, `FILES=ALL` (or list from manifest), `PASS=PASS_NUMBER`, `RUN_ID`, `FINDING_ID_PREFIX=SC-P{N}`, `REPORT_DIR`. Single instance. Runs automated security tools (trufflehog, bandit, osv-scanner) and manual vulnerability analysis. This phase is MANDATORY — never skip it. Append security findings to consolidated reports before TODO generation.
 **P5 TODO**: `CONSOLIDATED_REPORT`, `SCOPE_NAME`, `TODO_PREFIX`, `OUTPUT_PATH`. Each TODO must have file:line:evidence triple.
 **P6 Fix**: `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
-**P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
+**P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `TODO_FILE`, `REFERENCE_STANDARD`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
 
 All agents end with: `REPORTING RULES: Write details to report file. Return ONLY: "[DONE/FAILED] {task} - {summary}. Report: {path}". Max 2 lines.`
 

@@ -57,7 +57,7 @@ You will receive:
 5. `REPORT_PATH` — Where to write your findings
 6. `PASS` — Which audit pass this is (e.g., "P1", "P2")
 7. `RUN_ID` — Unique identifier for this audit run
-8. `FINDING_ID_PREFIX` — Prefix for finding IDs (e.g., "DA-P1-A3")
+8. `FINDING_ID_AGENT_SUFFIX` — The agent suffix used in finding IDs (e.g., "A3"). This is NOT the full prefix — the template already includes `DA-{PASS}-`, so pass only the agent-specific suffix here.
 
 ## AUDIT PROTOCOL
 
@@ -119,7 +119,7 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## MUST-FIX
 
-### [DA-{PASS}-{PREFIX}-001] {Brief title}
+### [DA-{PASS}-{AGENT_SUFFIX}-001] {Brief title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
 - **Category:** {HARDCODED_API|HARDCODED_GOVERNANCE|DIRECT_DEPENDENCY|HARDCODED_PATH|MISSING_ABSTRACTION}
@@ -130,17 +130,17 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ## SHOULD-FIX
 
-### [DA-{PASS}-{PREFIX}-002] {Brief title}
+### [DA-{PASS}-{AGENT_SUFFIX}-002] {Brief title}
 ...
 
 ## NIT
 
-### [DA-{PASS}-{PREFIX}-003] {Brief title}
+### [DA-{PASS}-{AGENT_SUFFIX}-003] {Brief title}
 ...
 
 ## RECORD_KEEPING (PRESERVE)
 
-### [DA-{PASS}-{PREFIX}-RK-001] {Brief title}
+### [DA-{PASS}-{AGENT_SUFFIX}-RK-001] {Brief title}
 - **File:** {path}:{line}
 - **Category:** RECORD_KEEPING
 - **Description:** {What it is and why it should be preserved}
@@ -187,7 +187,7 @@ user: |
   REPORT_PATH: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md
   PASS: P1
   RUN_ID: 3a
-  FINDING_ID_PREFIX: A3
+  FINDING_ID_AGENT_SUFFIX: A3
 
   Audit these files against the reference standard. Read every file completely.
   Write findings to the report path.
@@ -210,7 +210,7 @@ user: |
   REPORT_PATH: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md
   PASS: P2
   RUN_ID: 7f
-  FINDING_ID_PREFIX: B7
+  FINDING_ID_AGENT_SUFFIX: B7
 
   Audit these files against the reference standard. Read every file completely.
   Write findings to the report path.
@@ -251,7 +251,7 @@ assistant: |
       MUST-FIX = direct API coupling, hardcoded governance, security bypass
       SHOULD-FIX = indirect coupling, suboptimal abstraction usage
       NIT = style, convention, minor improvement
-- [ ] My finding IDs use the assigned prefix: {FINDING_ID_PREFIX}-001, -002, ...
+- [ ] My finding IDs use the assigned agent suffix: DA-{PASS}-{FINDING_ID_AGENT_SUFFIX}-001, -002, ...
 - [ ] My report has all required sections: MUST-FIX, SHOULD-FIX, NIT, RECORD_KEEPING (PRESERVE), CLEAN
 - [ ] I listed CLEAN files explicitly (files with no violations)
 - [ ] If I could not finish all files, I noted which are complete and which are pending

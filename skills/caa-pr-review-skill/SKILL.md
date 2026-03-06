@@ -383,9 +383,10 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 8. **Re-run after fixes.** After fixing issues, re-run the full pipeline to verify the fixes
    are correct and didn't introduce new issues.
 
-9. **The v2 merge script deletes source files only after verifying the intermediate file's
-   byte size equals or exceeds the sum of inputs.** If verification fails, source files are
-   preserved for manual inspection.
+9. **The v2 merge script deletes source files only after verifying the intermediate file
+   exists and is non-empty.** (The merged output extracts only severity-section content,
+   so it is typically smaller than source files — byte-size comparison is not used.)
+   If verification fails, source files are preserved for manual inspection.
 
 ## Quick Reference
 
@@ -411,7 +412,7 @@ Follow the 6-phase protocol strictly:
 5. Wait for Phase 2 to complete before proceeding.
 6. Spawn BOTH a single `caa-skeptical-reviewer-agent` (Phase 3) AND a single `caa-security-review-agent` (Phase 4) in parallel. Both agents generate UUID filenames.
 7. Wait for BOTH Phase 3 and Phase 4 to complete before proceeding.
-8. Run the two-stage merge: `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet docs_dev/ 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
+8. Run the two-stage merge: `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet ${REPORT_DIR} 1` (Stage 1, collects correctness, claims, review, and security reports), then spawn `caa-dedup-agent` on the intermediate report (Phase 5, Stage 2).
 9. Read the final deduplicated report and present the verdict summary including security findings to the user (Phase 6).
 10. If MUST-FIX issues exist, do NOT push the PR until issues are resolved and pipeline re-run.
 
@@ -433,8 +434,8 @@ original finding ID cross-references.
 
 - If any Phase 1 agent fails, re-run it for that domain only (UUID filename avoids collision)
 - If Phase 2, 3, or 4 fails, re-run that phase (they are single agents)
-- If the merge script exits with code 2, there was an input error (missing reports, invalid dir)
-- If the merge script's byte-size verification fails, source files are preserved — investigate manually
+- If the merge script exits with code 2: input error (missing reports, invalid dir) or
+  post-merge integrity failure (merged file missing or empty). Source files are preserved — investigate manually
 - If the dedup agent fails, re-run it on the intermediate report (it's idempotent)
 - If `gh` CLI is not authenticated, stop and ask the user to run `gh auth login`
 

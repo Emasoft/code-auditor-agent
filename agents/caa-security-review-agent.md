@@ -32,7 +32,7 @@ is a misconfiguration waiting to happen.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for symbol-level code exploration. Use Grepika MCP tools (`search`, `refs`, `outline`, `context`) for structured file search and code outlines. These are far more token-efficient than manual grep for initial discovery.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`, `context`) when available for symbol-level code exploration and structured file search. These are far more token-efficient than manual grep for initial discovery. Fall back to Grep/Glob/Read if MCP tools are not available.
 
 **Model selection:** NEVER use Haiku for code analysis, review, or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 

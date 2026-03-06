@@ -156,16 +156,12 @@ Write your findings to `REPORT_PATH` in this exact format:
 **Description quality:** {A-F grade with brief justification}
 **Concern:** {any red flags from first read}
 
-## 2. Code Quality
-
 ### Strengths
 {What's done well, with specific examples and letter grades}
 
-### Issues Found
+## MUST-FIX
 
-#### MUST-FIX
-
-##### [SR-P1-001] {Title}
+### [SR-P1-001] {Title}
 - **Severity:** MUST-FIX
 - **Category:** {breaking-change|ux-concern|missing-implementation|consistency|security|design}
 - **Description:** {Clear explanation of what's wrong}
@@ -173,30 +169,35 @@ Write your findings to `REPORT_PATH` in this exact format:
 - **Impact:** {What breaks or what users experience}
 - **Recommendation:** {How to fix it}
 
-#### SHOULD-FIX
+## SHOULD-FIX
 
-##### [SR-P1-002] {Title}
+### [SR-P1-002] {Title}
 ...
 
-#### NIT
+## NIT
 
-##### [SR-P1-003] {Title}
+### [SR-P1-003] {Title}
 ...
 
-## 3. Risk Assessment
+## CLEAN
+
+Files with no issues found:
+- {path} — No issues detected
+
+## 2. Risk Assessment
 
 **Breaking changes:** {List with risk level}
 **Data migration:** {Any needed? Is it safe?}
 **Performance:** {Any concerns?}
 **Security:** {Any concerns?}
 
-## 4. Test Coverage Assessment
+## 3. Test Coverage Assessment
 
 **What's tested well:** {List}
 **What's NOT tested:** {List}
 **Test quality:** {Are tests meaningful or just checking types compile?}
 
-## 5. Verdict Justification
+## 4. Verdict Justification
 
 {2-3 paragraphs explaining the verdict. What must change before merge?
 What's good enough as-is? What are the risks of merging vs not merging?}

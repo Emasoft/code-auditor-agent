@@ -88,6 +88,15 @@ if they are in the same file.
 - **P3 — Nice-to-Have:** Style issues, minor improvements, documentation gaps,
   non-critical refactoring suggestions.
 
+**Mapping from consolidated severity:**
+
+| Consolidated Severity | Default Priority | Override Allowed |
+|----------------------|------------------|------------------|
+| MUST-FIX | P1 | Only downgrade to P2 with documented justification |
+| SHOULD-FIX | P2 | Only upgrade to P1 if it breaks runtime |
+| NIT | P3 | No override |
+| RECORD_KEEPING | — | Preserve as-is, do not convert to TODO |
+
 ### Step E: Order by Priority and Dependency
 
 1. All P1 items come first, then P2, then P3.
@@ -98,9 +107,9 @@ if they are in the same file.
 ### Step F: Add Dependency References
 
 For each TODO that depends on another:
-- If the dependency is within this scope: reference by TODO ID (e.g., `TODO-AMS3`)
+- If the dependency is within this scope: reference by TODO ID (e.g., `TODO-AMS-P1-003`)
 - If the dependency is in another scope: reference with the DEPENDENCY_PREFIX
-  (e.g., `TODO-AMCOS12`)
+  (e.g., `TODO-AMCOS-P2-002`)
 
 ### Step G: Add Harmonization Notes for RECORD_KEEPING Items
 
@@ -115,10 +124,11 @@ but need governance integration added alongside):
 Each TODO entry must follow this exact format:
 
 ```markdown
-### TODO-{PREFIX}{N}: {title}
+### TODO-{PREFIX}-{PRIORITY}-{SEQ}: {title}
 - **File:** {path}
 - **Lines:** {start}-{end}
 - **Priority:** P1/P2/P3
+- **Source:** {consolidation finding ID, e.g. [CA-networking-003]}
 - **Depends on:** TODO-{X} or "None"
 - **Category:** {violation type}
 - **Current:** {what the code currently does - brief}
@@ -143,16 +153,16 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
 **By priority:** P1: {n}, P2: {n}, P3: {n}
 
 ## Priority 1 — Blockers
-### TODO-{PREFIX}1: ...
-### TODO-{PREFIX}2: ...
+### TODO-{PREFIX}-P1-001: ...
+### TODO-{PREFIX}-P1-002: ...
 
 ## Priority 2 — Required
-### TODO-{PREFIX}10: ...
-### TODO-{PREFIX}11: ...
+### TODO-{PREFIX}-P2-001: ...
+### TODO-{PREFIX}-P2-002: ...
 
 ## Priority 3 — Nice-to-Have
-### TODO-{PREFIX}20: ...
-### TODO-{PREFIX}21: ...
+### TODO-{PREFIX}-P3-001: ...
+### TODO-{PREFIX}-P3-002: ...
 
 ## Dependency Graph
 {text description of which TODOs depend on which, formatted as a list}
@@ -170,7 +180,7 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
    applied first, the dependency must be explicit.
 5. **RECORD_KEEPING items must have harmonization notes.** If a violation is flagged as
    RECORD_KEEPING, the TODO must explain what to preserve and what to add alongside.
-6. **Numbering is sequential within priority range.** P1 items use 1-9, P2 items use 10-19, P3 items use 20+. This provides visual priority grouping.
+6. **Numbering uses priority-prefixed sequential IDs.** P1 items use `{PREFIX}-P1-001`, `{PREFIX}-P1-002`, ...; P2 items use `{PREFIX}-P2-001`, `{PREFIX}-P2-002`, ...; P3 items use `{PREFIX}-P3-001`, `{PREFIX}-P3-002`, .... This gives unlimited items per priority level and clear visual grouping.
 7. **Minimal report to orchestrator.** Write full details to the TODO file. Return to the
    orchestrator ONLY: `[DONE] todo-gen-{scope} - {N} TODOs (P1:{n}, P2:{n}, P3:{n}). File: {path}`
 
@@ -188,7 +198,7 @@ assistant: |
   Reads docs_dev/caa-consolidated-AMCOS.md completely.
   Groups 14 violations by file (5 files), then by category.
   Assigns priorities: 2 P1 (missing null checks causing crashes), 8 P2 (governance compliance), 4 P3 (style).
-  Identifies dependency: TODO-AMCOS3 depends on TODO-AMS7 (type definition in server).
+  Identifies dependency: TODO-AMCOS-P1-001 depends on TODO-AMS-P2-003 (type definition in server).
   Adds harmonization notes for 3 RECORD_KEEPING items.
   Writes TODO file to docs_dev/TODO-AMCOS-changes.md.
   Returns: "[DONE] todo-gen-AMCOS - 14 TODOs (P1:2, P2:8, P3:4). File: docs_dev/TODO-AMCOS-changes.md"
@@ -234,7 +244,7 @@ assistant: |
 - [ ] Priorities are correctly assigned: P1=blocker, P2=required, P3=nice-to-have
 - [ ] P1 items that block P2/P3 have explicit dependency references
 - [ ] All RECORD_KEEPING items have harmonization notes explaining what to preserve
-- [ ] TODO numbering is sequential within priority range: P1 items use {PREFIX}1-{PREFIX}9, P2 items use {PREFIX}10-{PREFIX}19, P3 items use {PREFIX}20+
+- [ ] TODO numbering uses priority-prefixed sequential IDs: P1 items use {PREFIX}-P1-001, P1-002, ...; P2 items use {PREFIX}-P2-001, P2-002, ...; P3 items use {PREFIX}-P3-001, P3-002, ...
 - [ ] Dependency graph section is present and accurate
 - [ ] Header counts (Total, P1, P2, P3) match the actual TODO entries
 - [ ] My return message to the orchestrator is exactly 1-2 lines (full details in TODO file only)

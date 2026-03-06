@@ -51,15 +51,18 @@ You will receive:
 3. `FIX_REPORT` — Path to the fix agent's report (shows what was changed)
 4. `REFERENCE_STANDARD` — Path to the reference standard to audit against
 5. `REPORT_PATH` — Where to write the verification report
+6. `TODO_FILE` — Path to the TODO file (for reading "Change", "Current", and "Verify" fields)
 
 ## VERIFICATION PROTOCOL
 
 Follow these steps in exact order:
 
-### Step A: Read the Fix Report
+### Step A: Read the Fix Report and TODO File
 
 Read the fix report to understand what was changed, which TODOs were applied, and which
-(if any) failed. This gives you context for what to look for in the fixed files.
+(if any) failed. Then read the TODO file at `TODO_FILE` and extract the "Change", "Current",
+and "Verify" fields for each TODO ID listed in ORIGINAL_TODOS. These fields are required
+for Check 1 (TODO Verification) — without them you cannot confirm what was supposed to change.
 
 ### Step B: Read the Reference Standard
 
@@ -189,10 +192,12 @@ user: |
   FIX_REPORT: docs_dev/caa-fixes-done-P1-AMS-batch1.md
   REFERENCE_STANDARD: docs_dev/governance-rules-summary-for-plugin-audit.md
   REPORT_PATH: docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md
+  TODO_FILE: docs_dev/caa-todos-P1-AMS.md
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
   Reads fix report — all 3 TODOs reported as completed.
+  Reads TODO file — extracts Change/Current/Verify fields for TODO-AMS1, AMS2, AMS3.
   Reads reference standard for audit criteria.
   Reads services/governance-service.ts completely.
   Verifies TODO-AMS1 (null check at line 42) — VERIFIED, check present.
@@ -213,10 +218,12 @@ user: |
   FIX_REPORT: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md
   REFERENCE_STANDARD: docs_dev/governance-rules-summary-for-plugin-audit.md
   REPORT_PATH: docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md
+  TODO_FILE: docs_dev/caa-todos-P1-AMCOS.md
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
   Reads fix report — TODO-AMCOS5 and TODO-AMCOS7 reported as completed, TODO-AMCOS6 failed.
+  Reads TODO file — extracts Change/Current/Verify fields for TODO-AMCOS5, AMCOS7.
   Reads reference standard for audit criteria.
   Reads amp-send.sh completely.
   Verifies TODO-AMCOS5 (quote variable on line 30) — VERIFIED, variable properly quoted.

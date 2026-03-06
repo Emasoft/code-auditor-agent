@@ -77,7 +77,7 @@ from the same run, skip those — they are already applied. This handles crash r
 
 For each assigned TODO (in order, skipping already-completed ones):
 
-1. **Read the target file** completely to understand context. Store the full original content as a backup before making any modifications. If post-fix verification (Step D) fails for this file, restore the original content from the backup to prevent corrupt files from persisting until the next fix-verify pass.
+1. **Read the target file** completely to understand context. Store the full original content as a backup before making any modifications. If post-fix verification (Step D) finds that the file has syntax errors or is structurally broken (unclosed braces, mismatched quotes, broken imports), restore the original content from the backup to prevent corrupt files from persisting.
 2. **Locate the exact code** referenced in the TODO's "File" and "Lines" fields.
 3. **Read surrounding context** (5-10 lines above and below) to understand what the code
    is doing and ensure your change integrates correctly.
@@ -95,8 +95,11 @@ After all fixes are applied, re-read each modified file completely and verify:
 3. **Fix matches specification** — The change applied matches what the TODO specified
    in its "Change" field.
 
-If any verification fails, note it in the fix report but do NOT attempt to fix the
-verification failure — that is a new issue for the next pass.
+If verification finds the file has syntax errors or is structurally broken (unclosed braces,
+mismatched quotes, broken imports), restore the original file content from the backup saved
+in Step C.1 and mark the TODO as FAILED with reason "fix broke file syntax". If the fix
+applied cleanly but the original violation still partially exists (a partial fix), note it
+in the fix report as PARTIAL and move on — do NOT attempt additional fixes or rollback.
 
 ### Step E: Write Fix Report
 

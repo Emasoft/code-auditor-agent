@@ -306,7 +306,7 @@ The merge script:
 - Sorts by phase (correctness -> claims -> review -> security)
 - Concatenates severity sections WITHOUT deduplication
 - Reports raw finding counts
-- Verifies merged file integrity (byte-size check)
+- Verifies merged file integrity (exists and is non-empty)
 - Deletes original source files only after successful merge verification
 - Always exits 0 (dedup agent determines final verdict)
 
