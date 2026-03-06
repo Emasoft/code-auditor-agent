@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.13] - 2026-03-06
+
+### Changes
+- fix: merge scripts — RECORD_KEEPING section support, FINDING_ID_RE expanded for domain IDs, consolidated report glob
+- fix: merge scripts — NEW_SECTION_RE harmonized between caa-merge-reports.py and caa-merge-audit-reports.py
+- fix: dedup agent — RECORD_KEEPING severity, phase codes VR→VE / SA→SC per SKILL.md
+- fix: skeptical-reviewer agent — added CLEAN section, restructured severity headers
+- fix: fix-agent — resolved contradictory rollback (restore only for syntax/structural errors)
+- fix: todo-generator agent — Source field traceability, severity-to-priority mapping, priority-level numbering
+- fix: fix-verifier agent — added TODO_FILE as input parameter
+- fix: domain-auditor agent — renamed PREFIX→AGENT_SUFFIX for clarity
+- fix: code-correctness, claim-verification, security-review agents — MCP "when available" caveat
+- fix: PR review skill — docs_dev→${REPORT_DIR}, integrity check docs corrected
+- fix: codebase audit skill — Phase 8 FINAL flow, P7 spawning pattern, naming convention clarification
+- fix: PR review-and-fix skill — byte-size claims corrected, exit code 2 docs expanded
+- fix: procedure-1-review.md — byte-size→non-empty integrity check
+- feat: add caa-generate-prompts.py — domain-splitting and prompt generation for agent spawning
+
 ## [3.1.12] - 2026-03-06
 
 ### Changes
