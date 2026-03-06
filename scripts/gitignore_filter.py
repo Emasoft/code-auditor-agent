@@ -26,7 +26,7 @@ _scripts_dir = str(Path(__file__).parent)
 if _scripts_dir not in sys.path:
     sys.path.insert(0, _scripts_dir)
 
-from cpv_validation_common import is_path_gitignored, parse_gitignore
+from cpv_validation_common import is_path_gitignored, parse_gitignore  # noqa: E402
 
 
 class GitignoreFilter:
