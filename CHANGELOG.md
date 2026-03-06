@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.10] - 2026-03-06
+
+### Changes
+- fix: atomic write in caa-generate-todos.py — use tempfile.mkstemp() instead of deterministic .tmp suffix
+- fix: smart_exec.py choose_best() — respect prefer_latest flag (try ecosystem executors first)
+- fix: smart_exec.py deno_npm_argv — stop passing cmd as argument after `--`
+- fix: smart_exec.py executor_versions() — report both uvx and uv (elif→if)
+- fix: bump_version.py — extract duplicate exclude_dirs to module-level _EXCLUDE_DIRS constant
+- fix: prepare_release.py — detect current branch dynamically instead of hardcoding "main"
+- fix: sync_cpv_scripts.py — add error count message before SystemExit(1)
+- fix: gitignore_filter.py — add sys.path setup before bare cpv_validation_common import
+- fix: update_marketplace_metadata.py — add sys.path setup before bare cpv_validation_common import
+- fix: caa-merge-reports.py — route all error/failure messages to stderr
+- fix: caa-merge-audit-reports.py — route all error/failure messages to stderr
+- fix: add top-level exception handling (__main__ guard) to all 3 CAA scripts
+- fix: caa-merge-reports.py pass_number argparse type str→int
+- fix: caa-merge-audit-reports.py pass_number argparse type str→int
+
 ## [3.1.9] - 2026-03-06
 
 ### Changes

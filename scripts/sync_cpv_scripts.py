@@ -224,6 +224,7 @@ def sync_targets(
             errored += 1
 
     if errored > 0:
+        _err(f"  {errored} file(s) failed to sync.")
         raise SystemExit(1)
 
     return checked, updated, skipped, stale

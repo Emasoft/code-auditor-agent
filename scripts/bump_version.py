@@ -20,6 +20,9 @@ from pathlib import Path
 
 from cpv_validation_common import get_plugin_root
 
+# Directories to exclude when scanning for __version__ in .py files
+_EXCLUDE_DIRS = {"__pycache__", ".venv", "venv", "env", ".env", "node_modules", ".git", ".mypy_cache", ".ruff_cache"}
+
 
 def parse_semver(version: str) -> tuple[int, int, int] | None:
     """
@@ -156,14 +159,11 @@ def update_python_version_variables(plugin_root: Path, new_version: str) -> list
     """
     results: list[tuple[bool, str]] = []
 
-    # Directories to exclude from scanning
-    exclude_dirs = {"__pycache__", ".venv", "venv", "env", ".env", "node_modules", ".git", ".mypy_cache", ".ruff_cache"}
-
     # Search for Python files with __version__ variable
     for py_file in plugin_root.rglob("*.py"):
         # Skip excluded directories and hidden directories
         parts_set = set(py_file.relative_to(plugin_root).parts)
-        if parts_set & exclude_dirs or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
+        if parts_set & _EXCLUDE_DIRS or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
             continue
 
         try:
@@ -301,22 +301,9 @@ Examples:
         if (plugin_root / "pyproject.toml").exists():
             all_results.append((True, "[DRY-RUN] pyproject.toml would be updated"))
 
-        # Directories to exclude from scanning
-        exclude_dirs = {
-            "__pycache__",
-            ".venv",
-            "venv",
-            "env",
-            ".env",
-            "node_modules",
-            ".git",
-            ".mypy_cache",
-            ".ruff_cache",
-        }
-
         for py_file in plugin_root.rglob("*.py"):
             parts_set = set(py_file.relative_to(plugin_root).parts)
-            if parts_set & exclude_dirs or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
+            if parts_set & _EXCLUDE_DIRS or any(p.startswith(".") for p in py_file.relative_to(plugin_root).parts):
                 continue
             try:
                 content = py_file.read_text(encoding="utf-8")

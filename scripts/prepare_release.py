@@ -607,7 +607,10 @@ Examples:
         print_push_instructions(new_version)
     else:
         _step("Step 6: Push instructions")
-        _info(f"  [DRY-RUN] Would print: git push origin main && git push origin v{new_version}")
+        # Detect current branch for accurate dry-run message
+        _branch_res = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        _branch = _branch_res.stdout.strip() if _branch_res.returncode == 0 else "main"
+        _info(f"  [DRY-RUN] Would print: git push origin {_branch} && git push origin v{new_version}")
 
     print()
     print(f"{_BOLD}{'=' * 60}{_NC}")

@@ -192,7 +192,7 @@ def executor_versions() -> dict[str, str | None]:
     v: dict[str, str | None] = {}
     if have("uvx"):
         v["uvx"] = get_version(["uvx", "--version"])
-    elif have("uv"):
+    if have("uv"):
         v["uv"] = get_version(["uv", "--version"])
     if have("pipx"):
         v["pipx"] = get_version(["pipx", "--version"])
@@ -260,9 +260,16 @@ def npm_exec_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
 
 
 def deno_npm_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True) -> list[str]:
-    """Build argv for running an npm package via Deno with minimal permissions."""
+    """Build argv for running an npm package via Deno with minimal permissions.
+
+    Note: Deno's npm: specifier runs the package's default binary.
+    When cmd != pkg, Deno cannot select a non-default binary — the cmd
+    is omitted and the default binary receives tool_args directly.
+    """
+    _ = cmd  # kept for signature consistency with other *_argv functions
     ver = "@latest" if latest else ""
     spec = f"npm:{pkg}{ver}"
+    # deno run npm:pkg -- [tool_args]  (cmd is the default binary, not an arg)
     return [
         "deno",
         "run",
@@ -273,7 +280,6 @@ def deno_npm_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True)
         "--no-prompt",
         spec,
         "--",
-        cmd,
     ] + tool_args
 
 
@@ -451,15 +457,19 @@ def build_argv_for_executor(executor: str, spec: ToolSpec, tool_args: list[str])
 
 
 def choose_best(spec: ToolSpec, tool_args: list[str], executors: dict[str, bool]) -> tuple[list[str], str]:
-    # Prefer direct if already available (fast, avoids downloads)
+    # When prefer_latest is False (or no ecosystem executors), use direct binary first
     direct_cmd = spec.command or spec.name
-    if have(direct_cmd):
+    if not spec.prefer_latest and have(direct_cmd):
         return [direct_cmd] + tool_args, "direct"
 
     for ex in PRIORITY.get(spec.ecosystem, []):
         argv = build_argv_for_executor(ex, spec, tool_args)
         if argv is not None:
             return argv, ex
+
+    # Fallback: use direct binary even when prefer_latest (better than failing)
+    if have(direct_cmd):
+        return [direct_cmd] + tool_args, "direct"
 
     # Last chance: docker if configured
     if executors.get("docker") and spec.docker is not None:

@@ -18,7 +18,13 @@ Usage:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+# Add scripts dir to sys.path so we can import cpv_validation_common
+_scripts_dir = str(Path(__file__).parent)
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
 
 from cpv_validation_common import is_path_gitignored, parse_gitignore
 

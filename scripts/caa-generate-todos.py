@@ -34,9 +34,11 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import re
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -326,14 +328,16 @@ def main() -> None:
     output_lines.append("")
     output_lines.append("**Next step:** Run caa-todo-generator-agent to fill in descriptions and fix guidance.")
 
-    # ── Atomic write: write to .tmp then rename ──────────────────────────────
-    tmp_output = output_path.with_suffix(output_path.suffix + ".tmp")
+    # ── Atomic write: mkstemp then os.replace (safe under concurrent access) ─
+    fd, tmp_path = tempfile.mkstemp(suffix=".tmp", dir=str(output_path.parent), prefix="caa-todo-")
     try:
-        tmp_output.write_text("\n".join(output_lines) + "\n", encoding="utf-8")
-        tmp_output.replace(output_path)
+        with os.fdopen(fd, "w", encoding="utf-8") as tmp_f:
+            tmp_f.write("\n".join(output_lines) + "\n")
+        os.replace(tmp_path, str(output_path))
     except Exception as exc:
         # Clean up temp file on failure
-        tmp_output.unlink(missing_ok=True)
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
         print(f"{RED}Error: Failed to write output: {exc}{NC}", file=sys.stderr)
         sys.exit(2)
 
@@ -362,4 +366,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except Exception as exc:
+        print(f"{RED}Fatal: {exc}{NC}", file=sys.stderr)
+        sys.exit(2)

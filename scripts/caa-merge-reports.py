@@ -136,7 +136,7 @@ def main() -> None:
     )
     parser.add_argument(
         "pass_number",
-        type=str,
+        type=int,
         help="Current pass number (1-25)",
     )
     parser.add_argument(
@@ -165,7 +165,7 @@ def main() -> None:
 
     # -- Validate input --------------------------------------------------------
     if not output_dir.is_dir():
-        print(f"{RED}Error: Output directory '{output_dir}' does not exist{NC}")
+        print(f"{RED}Error: Output directory '{output_dir}' does not exist{NC}", file=sys.stderr)
         sys.exit(2)
 
     # -- Find all phase reports for this pass ----------------------------------
@@ -186,7 +186,7 @@ def main() -> None:
         reports.append(entry)
 
     if not reports:
-        print(f"{RED}Error: No reports matching '{pattern}' found in '{output_dir}'{NC}")
+        print(f"{RED}Error: No reports matching '{pattern}' found in '{output_dir}'{NC}", file=sys.stderr)
         sys.exit(2)
 
     print(f"{CYAN}{BOLD}CAA Report Merger v2 (no-dedup, UUID-aware){NC}")
@@ -362,8 +362,8 @@ def main() -> None:
     # exists and is non-empty before cleaning up source files.
 
     if not intermediate_report.exists():
-        print(f"{RED}Integrity check FAILED: merged file does not exist{NC}")
-        print(f"{RED}Source files NOT deleted — investigate data loss.{NC}")
+        print(f"{RED}Integrity check FAILED: merged file does not exist{NC}", file=sys.stderr)
+        print(f"{RED}Source files NOT deleted — investigate data loss.{NC}", file=sys.stderr)
         sys.exit(1)
 
     merged_size = intermediate_report.stat().st_size
@@ -378,15 +378,15 @@ def main() -> None:
             report.unlink(missing_ok=True)
             print(f"  Deleted: {report.name}")
     else:
-        print(f"{RED}Integrity check FAILED: merged file is empty (0 bytes){NC}")
-        print(f"{RED}Source files NOT deleted \u2014 investigate data loss.{NC}")
-        print(f"{YELLOW}Source files preserved for manual inspection:{NC}")
+        print(f"{RED}Integrity check FAILED: merged file is empty (0 bytes){NC}", file=sys.stderr)
+        print(f"{RED}Source files NOT deleted \u2014 investigate data loss.{NC}", file=sys.stderr)
+        print(f"{YELLOW}Source files preserved for manual inspection:{NC}", file=sys.stderr)
         for report in ordered_reports:
             if report.exists():
                 size = report.stat().st_size
-                print(f"  {report.name} ({size} bytes)")
+                print(f"  {report.name} ({size} bytes)", file=sys.stderr)
             else:
-                print(f"  {report.name} (file missing)")
+                print(f"  {report.name} (file missing)", file=sys.stderr)
         sys.exit(1)
 
     # -- Print summary to stdout -----------------------------------------------
@@ -408,4 +408,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except Exception as exc:
+        print(f"{RED}Fatal: {exc}{NC}", file=sys.stderr)
+        sys.exit(2)
