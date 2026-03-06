@@ -28,7 +28,7 @@ these steps to ensure the task is completed and no corrupt artifacts remain.
 | **Out of tokens** | Agent returns truncated output, `[MAX TURNS]`, or incomplete report file |
 | **API errors** | Agent returns "overloaded", rate limit (429), server error (500), or auth failure |
 | **Connection errors** | Task tool hangs then returns timeout or network error |
-| **Timeout** | Agent does not return within deadline (correctness/claims/skeptical/security agents: 10 min, dedup agent: 5 min, consolidation/domain-auditor/verification/todo-generator/fix/fix-verifier agents: 3 min) |
+| **Timeout** | Agent does not return within deadline (correctness/claims/skeptical/security agents: 10 min, dedup agent: 5 min) |
 | **Lost during compaction** | Orchestrator's context was summarized; agent task ID no longer in memory and no result was ever received |
 | **Broken reference** | TaskOutput returns "agent not found" or "invalid task ID" |
 | **ID collision** | Two agents wrote to overlapping filenames (prevented by UUID filenames -- verify if suspected) |

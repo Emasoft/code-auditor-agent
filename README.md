@@ -145,6 +145,7 @@ Run a comprehensive 10-phase codebase audit with optional automatic fix applicat
 | `caa-merge-reports.py` | Concatenates phase reports into intermediate merged report (UUID-aware) |
 | `caa-merge-audit-reports.py` | Python merger for codebase audit reports |
 | `caa-generate-todos.py` | Converts consolidated findings into skeleton TODO files |
+| `caa-collect-context.py` | Pre-gathers PR info, file context, or codebase overview for agents |
 | `universal_pr_linter.py` | Runs MegaLinter via Docker for PR linting |
 
 ### Publishing and Infrastructure Scripts (in `scripts/`)
@@ -297,10 +298,10 @@ Four GitHub Actions workflows are configured:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Pull Request, Manual dispatch | Lint, typecheck, validate `plugin.json`, check version consistency |
+| `ci.yml` | Push to main, Pull Request, Manual dispatch | Lint, typecheck, validate `plugin.json`, check version consistency |
 | `release.yml` | Tag push (`v*`) | Tag-triggered GitHub Release with changelog generation |
 | `notify-marketplace.yml` | Push to main (plugin changes) | Notifies the marketplace repository when the plugin is updated |
-| `security.yml` | Push, Pull Request, Schedule | Security scanning (bandit, pip-audit, trufflehog, dependabot alerts) |
+| `security.yml` | Push, Pull Request | Security scanning (bandit, pip-audit, trufflehog, dependabot alerts) |
 
 ---
 

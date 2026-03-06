@@ -546,7 +546,8 @@ Examples:
     bump_group.add_argument("--set", metavar="VERSION", help="Set explicit version (format: X.Y.Z)")
 
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="Show what would change without writing files or committing",
     )
 

@@ -364,8 +364,8 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 3. **Each agent writes to a UUID-named file.** Agents return only 1-2 lines to the orchestrator.
    Full findings go in the report files. This prevents context flooding and file collisions.
 
-4. **Two-stage merge pipeline.** Stage 1 (bash script) concatenates without dedup.
-   Stage 2 (caa-dedup-agent) performs semantic deduplication. The bash script handles
+4. **Two-stage merge pipeline.** Stage 1 (Python script) concatenates without dedup.
+   Stage 2 (caa-dedup-agent) performs semantic deduplication. The Python script handles
    simple concatenation; the AI agent handles complex same-line-different-bug decisions.
 
 5. **Agent prefix assignment.** Each Phase 1 agent gets a unique hex prefix (A0, A1, ...)

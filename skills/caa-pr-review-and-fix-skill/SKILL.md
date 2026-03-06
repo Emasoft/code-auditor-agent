@@ -406,7 +406,7 @@ The pipeline produces these deliverables across all passes:
 3. **Each agent writes to a UUID-named file.** Agents return only 1-2 lines to the orchestrator.
    Full findings go in the report files. This prevents context flooding AND file collisions.
 
-4. **Two-stage merge: script + AI agent.** The bash merge script (v2) does simple concatenation.
+4. **Two-stage merge: script + AI agent.** The Python merge script (v2) does simple concatenation.
    The `caa-dedup-agent` does semantic deduplication. NEVER rely on the merge script alone
    for dedup -- it deliberately does NOT deduplicate.
 
