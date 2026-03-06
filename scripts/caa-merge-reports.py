@@ -364,7 +364,7 @@ def main() -> None:
     if not intermediate_report.exists():
         print(f"{RED}Integrity check FAILED: merged file does not exist{NC}", file=sys.stderr)
         print(f"{RED}Source files NOT deleted — investigate data loss.{NC}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
 
     merged_size = intermediate_report.stat().st_size
 
@@ -387,7 +387,7 @@ def main() -> None:
                 print(f"  {report.name} ({size} bytes)", file=sys.stderr)
             else:
                 print(f"  {report.name} (file missing)", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
 
     # -- Print summary to stdout -----------------------------------------------
     print()

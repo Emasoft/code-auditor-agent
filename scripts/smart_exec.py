@@ -286,17 +286,16 @@ def deno_npm_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True)
 def uvx_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True) -> list[str]:
     """Build argv for running a Python package via uvx/uv tool run."""
     # uvx TOOL@latest ... (when pkg==cmd), else uvx --from <pkg> <cmd> ...
+    suffix = "@latest" if latest else ""
     if have("uvx"):
         if pkg == cmd:
-            suffix = "@latest" if latest else ""
             return ["uvx", f"{pkg}{suffix}"] + tool_args
-        return ["uvx", "--from", pkg, cmd] + tool_args
+        return ["uvx", "--from", f"{pkg}{suffix}", cmd] + tool_args
 
     if have("uv"):
         if pkg == cmd:
-            suffix = "@latest" if latest else ""
             return ["uv", "tool", "run", f"{pkg}{suffix}"] + tool_args
-        return ["uv", "tool", "run", "--from", pkg, cmd] + tool_args
+        return ["uv", "tool", "run", "--from", f"{pkg}{suffix}", cmd] + tool_args
 
     raise RuntimeError("uvx/uv not available")
 

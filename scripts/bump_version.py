@@ -18,6 +18,12 @@ import re
 import sys
 from pathlib import Path
 
+# Ensure scripts/ is on sys.path so bare import of cpv_validation_common works
+# when this script is invoked from a different working directory
+_scripts_dir = str(Path(__file__).parent)
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
+
 from cpv_validation_common import get_plugin_root
 
 # Directories to exclude when scanning for __version__ in .py files

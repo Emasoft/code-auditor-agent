@@ -392,7 +392,7 @@ def main() -> None:
                 print(f"  {report.name} ({size} bytes)", file=sys.stderr)
             else:
                 print(f"  {report.name} (file missing)", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
 
     # ── Print summary to stdout ──────────────────────────────────────────────
     print()
