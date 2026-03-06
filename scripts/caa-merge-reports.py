@@ -68,8 +68,8 @@ BOLD = "\033[1m" if _USE_COLOR else ""
 NC = "\033[0m" if _USE_COLOR else ""
 
 # -- Finding ID regex ----------------------------------------------------------
-# Matches: [CC-P4-A0-001], [CV-P4-001], [SR-P4-001], [CC-001], etc.
-FINDING_ID_RE = re.compile(r"\[[A-Z]{2}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]")
+# Matches: [CC-P4-A0-001], [CV-P4-001], [SR-P4-001], [CC-001], [CAA-P1-001], etc.
+FINDING_ID_RE = re.compile(r"\[[A-Z]{2,4}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?-[0-9]+\]")
 
 # -- Section header regexes ----------------------------------------------------
 MUST_FIX_RE = re.compile(r"^#{1,3}\s.*(MUST.FIX|FAILED\sCLAIMS)", re.IGNORECASE)
@@ -99,6 +99,9 @@ def is_skipped(basename: str) -> bool:
     for prefix in SKIP_PREFIXES:
         if basename.startswith(prefix):
             return True
+    # Skip intermediate merge outputs to prevent re-merging on subsequent runs
+    if "-intermediate-" in basename:
+        return True
     # Skip files manually marked as stale
     return "-STALE" in basename
 

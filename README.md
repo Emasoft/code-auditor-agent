@@ -1,15 +1,15 @@
 # code-auditor-agent
 
 [![CI](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-3.1.8-blue)](https://github.com/Emasoft/code-auditor-agent)
+[![Version](https://img.shields.io/badge/version-3.1.9-blue)](https://github.com/Emasoft/code-auditor-agent)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 
-**Version:** 3.1.8
+**Version:** 3.1.9
 **License:** MIT
 **Author:** Emasoft
 
-Six-phase PR review pipeline and full codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
+Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
 
 ---
 
@@ -66,6 +66,7 @@ This plugin provides 11 agents, split across two pipelines.
 | `caa-domain-auditor-agent` | Per-domain file auditing against reference standard | Swarm (one per batch) |
 | `caa-verification-agent` | Cross-checks audit reports for accuracy, finds missed files | Swarm (one per report) |
 | `caa-consolidation-agent` | Merges per-domain findings, deduplicates, harmonizes severity | Up to 5 |
+| `caa-security-review-agent` | Deep security scan: OWASP, secrets, dependency CVEs (Phase 4b) | Single instance |
 | `caa-todo-generator-agent` | Generates actionable TODO files from consolidated findings | Up to 5 |
 | `caa-fix-agent` | Implements TODO fixes with checkpoint tracking | Swarm (one per domain) |
 | `caa-fix-verifier-agent` | Verifies fixes were applied correctly, detects regressions | Swarm (one per fix report) |
@@ -78,7 +79,7 @@ This plugin provides 11 agents, split across two pipelines.
 |-------|---------|
 | `caa-pr-review-skill` | Six-phase PR review pipeline: correctness swarm, claim verification, skeptical review, security analysis, merge + dedup |
 | `caa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
-| `caa-codebase-audit-and-fix-skill` | Full 9-phase codebase audit: discovery, verify, gap-fill, consolidate, TODOs, fix, verify fixes |
+| `caa-codebase-audit-and-fix-skill` | Full 10-phase codebase audit: discovery, verify, gap-fill, consolidate, security scan, TODOs, fix, verify fixes |
 
 ### `caa-pr-review-skill` (review only)
 
@@ -119,7 +120,7 @@ Requirements: clean git state, sufficient disk space for worktree copies.
 
 ### `caa-codebase-audit-and-fix-skill` (full codebase audit)
 
-Run a comprehensive 9-phase codebase audit with optional automatic fix application.
+Run a comprehensive 10-phase codebase audit with optional automatic fix application.
 
 ```text
 /audit-codebase
@@ -146,14 +147,21 @@ Run a comprehensive 9-phase codebase audit with optional automatic fix applicati
 | `caa-generate-todos.py` | Converts consolidated findings into skeleton TODO files |
 | `universal_pr_linter.py` | Runs MegaLinter via Docker for PR linting |
 
-### Publishing Scripts (in `scripts/`)
+### Publishing and Infrastructure Scripts (in `scripts/`)
 
 | Script | Purpose |
 |--------|---------|
 | `bump_version.py` | Semantic version bumping across `plugin.json` and `pyproject.toml` |
+| `check_version_consistency.py` | Verifies version strings match across all config files |
 | `sync_cpv_scripts.py` | Syncs CPV validation scripts from upstream GitHub repo |
 | `prepare_release.py` | Automates release preparation with version bump and changelog |
 | `setup_git_hooks.py` | Installs pre-commit and pre-push hooks from git-hooks/ |
+| `setup_plugin_pipeline.py` | Configures plugin CI/CD pipeline and validates structure |
+| `setup_marketplace_automation.py` | Sets up marketplace notification workflow and metadata |
+| `update_marketplace_metadata.py` | Updates marketplace.json with current plugin metadata |
+| `lint_files.py` | Runs ruff linting and mypy type checking on Python sources |
+| `gitignore_filter.py` | Filters file lists through .gitignore rules for validation |
+| `smart_exec.py` | Intelligent script executor with timeout and error handling |
 
 ### Git Hooks (in `git-hooks/`)
 
@@ -205,18 +213,19 @@ Fix Cycle (Procedure 2, only if issues found):
 
 ## Codebase Audit Pipeline
 
-The codebase audit pipeline runs nine phases:
+The codebase audit pipeline runs ten phases:
 
 ```
-Phase 0: File inventory + grep triage
-Phase 1: Discovery swarm (parallel auditors, 3-4 files each)
-Phase 2: Verification swarm
-Phase 3: Gap-fill (iterative until 100% coverage)
-Phase 4: Per-domain consolidation
-Phase 5: TODO generation
-Phase 6: Fix implementation (if --fix)
-Phase 7: Fix verification (if --fix)
-Phase 8: Final merged report
+Phase 0:  File inventory + grep triage
+Phase 1:  Discovery swarm (parallel auditors, 3-4 files each)
+Phase 2:  Verification swarm
+Phase 3:  Gap-fill (iterative until 100% coverage)
+Phase 4:  Per-domain consolidation
+Phase 4b: Security scan (vulnerabilities, secrets, dependency CVEs)
+Phase 5:  TODO generation
+Phase 6:  Fix implementation (if --fix)
+Phase 7:  Fix verification (if --fix)
+Phase 8:  Final merged report
 ```
 
 **Phase 0 -- File Inventory + Grep Triage.** The pipeline inventories all files in scope and runs grep-based triage to classify files by domain and identify high-priority targets.
@@ -228,6 +237,8 @@ Phase 8: Final merged report
 **Phase 3 -- Gap-Fill.** Any files not covered in Phase 1 are assigned to additional auditor agents. This phase iterates until 100% file coverage is achieved.
 
 **Phase 4 -- Per-Domain Consolidation.** `caa-consolidation-agent` instances merge findings within each domain, deduplicate issues, and harmonize severity ratings across reports.
+
+**Phase 4b -- Security Scan (mandatory).** A single `caa-security-review-agent` performs deep security analysis of all audited files. It runs automated tools (trufflehog, bandit, osv-scanner, pip-audit, trivy, semgrep) when available, checks for OWASP Top 10 vulnerabilities, secrets exposure, dependency CVEs, and attack surface analysis. Security findings are appended to consolidated reports before TODO generation.
 
 **Phase 5 -- TODO Generation.** `caa-todo-generator-agent` instances convert consolidated findings into actionable TODO files, one per domain.
 

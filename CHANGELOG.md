@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.9] - 2026-03-06
+
+### Changes
+- docs: update README — add Phase 4b (security scan) to codebase audit pipeline description
+- docs: update README — add 7 missing scripts to Scripts tables
+- docs: update README — add caa-security-review-agent to codebase audit agents table
+- docs: correct "9-phase" → "10-phase" across README, plugin.json, pyproject.toml, CHANGELOG
+- docs: add "security scan" to plugin.json and pyproject.toml descriptions
+- fix: FINDING_ID_RE regex in caa-merge-reports.py — allow 2-4 letter prefixes (was 2 only)
+- fix: add -intermediate- skip check to caa-merge-reports.py is_skipped() to prevent re-merging
+- fix: case-insensitive file extension matching in caa-generate-todos.py RE_INLINE_FILE regex
+
 ## [3.1.8] - 2026-03-05
 
 ### Changes
@@ -99,7 +111,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 - Renamed plugin from emasoft-pr-checking-plugin to code-auditor-agent
 - Unified prefix from epcp-/epca- to caa- across all agents, scripts, and commands
-- Added caa-codebase-audit-and-fix-skill with 9-phase audit pipeline
+- Added caa-codebase-audit-and-fix-skill with 10-phase audit pipeline
 - Added 6 new agents for codebase auditing: domain-auditor, verification, consolidation, todo-generator, fix, fix-verifier
 - Added caa-audit-codebase-cmd command for launching codebase audits
 - Added CI/CD workflows for validation, release, and marketplace notification

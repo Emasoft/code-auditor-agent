@@ -81,8 +81,8 @@ RE_TITLE_STRIP = re.compile(r"^[\s#]*\[[^\]]*\]\s*")
 # File reference line: - **File:** path or * **file** : path
 RE_FILE_LINE = re.compile(r"^\s*[-*]\s*\*?\*?file\*?\*?\s*:", re.IGNORECASE)
 
-# Inline file:line reference in backticks: `path/to/file.ts:42`
-RE_INLINE_FILE = re.compile(r"`([a-zA-Z0-9_./-]+\.[a-z]+:[0-9]+)`")
+# Inline file:line reference in backticks: `path/to/file.ts:42` or `path/to/README.MD:10`
+RE_INLINE_FILE = re.compile(r"`([a-zA-Z0-9_./-]+\.[a-zA-Z]+:[0-9]+)`")
 
 # Category/type/violation line
 RE_CATEGORY_LINE = re.compile(r"^\s*[-*]\s*\*?\*?(category|type|violation)\*?\*?\s*:", re.IGNORECASE)
