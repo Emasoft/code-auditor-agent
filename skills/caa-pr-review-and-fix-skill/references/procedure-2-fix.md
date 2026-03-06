@@ -322,6 +322,13 @@ This creates a rollback point and ensures subsequent passes see a clean diff.
 
 ---
 
+## Model Selection Rules
+
+- **Opus/Sonnet ONLY** for all code fixing, test analysis, lint analysis, and reasoning tasks
+- **Haiku PROHIBITED** for code fixing and analysis — it hallucinates on complex code and causes error loops
+- Haiku is acceptable ONLY for: running shell commands, file moves, formatting, and simple maintenance
+- When spawning subagents for fix, test, or lint phases: always specify `model: opus` or `model: sonnet`
+
 ## Procedure 2 Checklist
 
 Copy this checklist and track your progress:

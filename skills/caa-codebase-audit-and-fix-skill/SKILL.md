@@ -1,7 +1,7 @@
 ---
 name: caa-codebase-audit-and-fix-skill
 description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit'. Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes."
-version: 3.1.11
+version: 3.1.12
 author: Emasoft
 license: MIT
 tags: [codebase-audit, compliance, todo-generation, iterative-fix]
@@ -162,6 +162,13 @@ The pipeline produces the following artifacts in `REPORT_DIR`:
 | Fix verification (if FIX_ENABLED) | `caa-fixverify-*` with PASS/FAIL/REGRESSION verdicts |
 | Manifest | `caa-manifest-R{RUN_ID}.json` tracking all files, batches, and agent assignments |
 | Final merged report | `caa-audit-FINAL-{timestamp}.md` with aggregate stats, violation counts, and links to all artifacts |
+
+## Model Selection Rules
+
+- **Opus/Sonnet ONLY** for all code analysis, auditing, fixing, reasoning, and verification tasks
+- **Haiku PROHIBITED** for code analysis and auditing — it hallucinates on complex code and causes error loops
+- Haiku is acceptable ONLY for: running shell commands, file moves, formatting, and simple maintenance
+- When spawning subagents for audit, fix, or verification phases: always specify `model: opus` or `model: sonnet`
 
 ## Error Handling
 

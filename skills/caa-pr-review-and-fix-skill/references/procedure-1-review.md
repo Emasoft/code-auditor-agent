@@ -363,6 +363,13 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 
 ---
 
+## Model Selection Rules
+
+- **Opus/Sonnet ONLY** for all code analysis, review, reasoning, and audit tasks
+- **Haiku PROHIBITED** for code analysis — it hallucinates on complex code and causes error loops
+- Haiku is acceptable ONLY for: running shell commands, file moves, formatting, and simple maintenance
+- When spawning subagents for any review phase: always specify `model: opus` or `model: sonnet`
+
 ## Procedure 1 Checklist
 
 Copy this checklist and track your progress:

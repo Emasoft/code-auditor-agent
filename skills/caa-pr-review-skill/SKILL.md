@@ -3,7 +3,7 @@ name: caa-pr-review-skill
 description: >
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
-version: 3.1.11
+version: 3.1.12
 author: Emasoft
 license: MIT
 tags:
@@ -342,6 +342,13 @@ Read the **final deduplicated report** (NOT the intermediate) and present a summ
 
 ### Full report: docs_dev/caa-pr-review-P1-{timestamp}.md
 ```
+
+## Model Selection Rules
+
+- **Opus/Sonnet ONLY** for all code analysis, exploration, reasoning, and audit tasks
+- **Haiku PROHIBITED** for code analysis — it hallucinates on complex code and causes error loops
+- Haiku is acceptable ONLY for: running shell commands, file moves, formatting, and simple maintenance
+- When spawning subagents for code review: always specify `model: opus` or `model: sonnet`
 
 ## CRITICAL RULES
 

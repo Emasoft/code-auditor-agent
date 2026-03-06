@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.12] - 2026-03-06
+
+### Changes
+- feat: add TOOL GUIDANCE section to all 11 agent definitions (Serena MCP, Grepika MCP, haiku avoidance)
+- feat: add Model Selection Rules to all 3 SKILL.md files (Opus/Sonnet only for analysis, Haiku prohibited)
+- feat: create caa-collect-context.py — information retrieval script with 3 modes (pr-info, file-context, codebase-overview)
+- docs: token consumption audit report (docs_dev/token-consumption-audit-20260306.md)
+
 ## [3.1.11] - 2026-03-06
 
 ### Changes

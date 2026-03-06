@@ -3,7 +3,7 @@ name: caa-pr-review-and-fix-skill
 description: >
   Use when reviewing and fixing PRs with automated iterative resolution.
   Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
-version: 3.1.11
+version: 3.1.12
 author: Emasoft
 license: MIT
 tags:
@@ -385,6 +385,13 @@ The pipeline produces these deliverables across all passes:
 - **Per-pass review reports** provide the detailed audit trail of findings and resolutions
 
 ---
+
+## Model Selection Rules
+
+- **Opus/Sonnet ONLY** for all code analysis, review, fix, reasoning, and audit tasks
+- **Haiku PROHIBITED** for code analysis and code fixing — it hallucinates on complex code and causes error loops
+- Haiku is acceptable ONLY for: running shell commands, file moves, formatting, and simple maintenance
+- When spawning subagents for code review or code fix: always specify `model: opus` or `model: sonnet`
 
 ## CRITICAL RULES
 
