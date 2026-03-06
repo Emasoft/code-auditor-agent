@@ -26,6 +26,12 @@ Thumbs.db
 # Node
 node_modules/
 
+# Claude Code
+.claude/
+
+# TLDR
+.tldr/
+
 # IDE
 .idea/
 .vscode/
