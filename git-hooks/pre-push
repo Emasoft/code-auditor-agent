@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""Pre-push hook for claude-plugins-validation.
+"""Pre-push hook for code-auditor-agent.
 
-Performs full validation before allowing push.
+Performs full validation before allowing push:
+1. Detect changed plugin files
+2. Enforce version bump (local version must be > remote version)
+3. Lint all files
+4. Validate plugin (--strict)
 
 Exit codes from validate_plugin.py:
   0 - All checks passed
@@ -219,6 +223,43 @@ def main() -> int:
         cprint(f"{GREEN}No plugin files changed. Skipping full validation.{NC}")
         return 0
 
+    # --- Version bump enforcement ---
+    cprint(f"{BLUE}Checking version bump...{NC}")
+
+    local_version = extract_version(repo_root / ".claude-plugin" / "plugin.json")
+    if local_version:
+        try:
+            # Try origin/main first, fall back to origin/master
+            remote_result = subprocess.run(
+                ["git", "show", "origin/main:.claude-plugin/plugin.json"],
+                capture_output=True, text=True, cwd=str(repo_root),
+            )
+            if remote_result.returncode != 0:
+                remote_result = subprocess.run(
+                    ["git", "show", "origin/master:.claude-plugin/plugin.json"],
+                    capture_output=True, text=True, cwd=str(repo_root),
+                )
+            if remote_result.returncode == 0:
+                remote_version = json.loads(remote_result.stdout).get("version")
+                if remote_version and local_version == remote_version:
+                    cprint(f"{RED}========================================{NC}")
+                    cprint(f"{RED}  BLOCKED: Version not bumped!{NC}")
+                    cprint(f"{RED}  Local: {local_version}  Remote: {remote_version}{NC}")
+                    cprint(f"{RED}  Run: uv run python scripts/publish.py --patch{NC}")
+                    cprint(f"{RED}========================================{NC}")
+                    return 1
+                elif remote_version:
+                    cprint(f"{GREEN}Version bump OK: {remote_version} → {local_version}{NC}")
+                else:
+                    cprint(f"{GREEN}Version: {local_version} (no remote version to compare){NC}")
+            else:
+                cprint(f"{GREEN}Version: {local_version} (first push){NC}")
+        except Exception:
+            cprint(f"{YELLOW}Could not check remote version — proceeding{NC}")
+    else:
+        cprint(f"{YELLOW}No local version found — skipping version check{NC}")
+
+    cprint("")
     cprint(f"{BLUE}Running full plugin validation...{NC}")
     cprint("")
 
@@ -245,7 +286,7 @@ def main() -> int:
 
     # --- Validation ---
     validate_script = repo_root / "scripts" / "validate_plugin.py"
-    validation_exit = run_script(python_cmd, validate_script, [".", "--verbose"], cwd=repo_root)
+    validation_exit = run_script(python_cmd, validate_script, [".", "--verbose", "--strict"], cwd=repo_root)
 
     cprint("")
     cprint(f"{BLUE}----------------------------------------{NC}")
