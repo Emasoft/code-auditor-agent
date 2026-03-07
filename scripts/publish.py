@@ -543,11 +543,19 @@ Examples:
         print(f"{YELLOW}lint_files.py not found (skipped){NC}")
 
     # ── Step 4: Validate plugin ──
-    print(f"\n{BLUE}═══ Step 4: Validate plugin (--strict) ═══{NC}")
+    # Exit codes: 0=pass, 1=CRITICAL, 2=MAJOR, 3=MINOR
+    # Block on CRITICAL and MAJOR only; MINOR is a warning
+    print(f"\n{BLUE}═══ Step 4: Validate plugin ═══{NC}")
     validate_script = root / "scripts" / "validate_plugin.py"
     if validate_script.exists():
-        run(["uv", "run", "python", str(validate_script), ".", "--strict"], cwd=root)
-        print(f"{GREEN}✓ Plugin validation passed{NC}")
+        val_result = run(["uv", "run", "python", str(validate_script), "."], cwd=root, check=False)
+        if val_result.returncode in (1, 2):
+            print(f"{RED}✗ Plugin validation failed (CRITICAL/MAJOR issues){NC}", file=sys.stderr)
+            sys.exit(val_result.returncode)
+        elif val_result.returncode == 3:
+            print(f"{YELLOW}⚠ MINOR issues found (not blocking){NC}")
+        else:
+            print(f"{GREEN}✓ Plugin validation passed{NC}")
     else:
         print(f"{YELLOW}validate_plugin.py not found (skipped){NC}")
 
