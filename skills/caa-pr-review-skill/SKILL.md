@@ -474,33 +474,13 @@ Copy this checklist and track your progress:
 
 ## Examples
 
-```
-# Full pipeline on PR 206
-User: "review PR 206"
-→ Skill activates, runs all 6 phases, presents merged verdict
-
-# Quick claim check only
-User: "just verify the claims in PR 206"
-→ Spawn only caa-claim-verification-agent
-
-# Re-run after fixes
-User: "re-run the PR review"
-→ Full pipeline again to verify fixes didn't introduce new issues
-```
+- `"review PR 206"` → full 6-phase pipeline with merged verdict
+- `"just verify the claims in PR 206"` → spawn only caa-claim-verification-agent
+- `"re-run the PR review"` → full pipeline again to verify fixes
 
 ## Resources
 
-- Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
-- Dedup agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-dedup-agent.md`
-- Agents: `${CLAUDE_PLUGIN_ROOT}/agents/`
-- Report output directory: `docs_dev/`
-
-## Lessons Learned
-
-See [Lessons Learned](references/lessons-learned.md) for the full list with context (swarm blind spots, PR description lies, absence bugs, cross-file consistency, UX judgment, stranger's perspective).
-
-### Lessons Checklist
-
-- [ ] All four review perspectives (correctness, claims, skeptical, security) included in every review
-- [ ] PR description claims verified against actual code, not trusted at face value
-- [ ] Cross-file consistency checked; security review covers OWASP Top 10 and secrets exposure
+- Agents: `${CLAUDE_PLUGIN_ROOT}/agents/` | Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
+- Reports: `docs_dev/`
+- [Lessons Learned](references/lessons-learned.md):
+  - [Checklist](references/lessons-learned.md#checklist)

@@ -478,28 +478,17 @@ See [Agent Recovery Protocol](references/agent-recovery.md) for full protocol.
 - [How to handle special cases](references/agent-recovery.md#special-cases)
 - [Agent recovery checklist](references/agent-recovery.md#agent-recovery-checklist)
 
-### Recovery Checklist
+## Examples
 
-- [ ] Failure detected and classified; loss verified (output file checked)
-- [ ] Partial artifacts cleaned up; replacement agent spawned with new UUID
-- [ ] Recovery log entry written; if 3 consecutive failures: escalated to user
-
----
-
-## Lessons Learned
-
-See [Lessons Learned](references/lessons-learned.md) for all 13 lessons with full context (swarm blind spots, PR description lies, absence bugs, cross-file consistency, UX judgment, stranger's perspective, regression loops, clean diffs, lint catches, stale file isolation, rate limit checkpoints, line drift, ephemeral task IDs).
-
----
+See [examples.md](references/examples.md):
+- [Full Review-and-Fix Pipeline](references/examples.md#full-review-and-fix-pipeline)
 
 ## Resources
 
-- Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
-- Dedup agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-dedup-agent.md`
-- Security review agent: `${CLAUDE_PLUGIN_ROOT}/agents/caa-security-review-agent.md`
-- Other agents: `${CLAUDE_PLUGIN_ROOT}/agents/`
-- Report output directory: `docs_dev/`
-
-## Examples
-
-See [examples.md](references/examples.md) for usage examples.
+- Agents: `${CLAUDE_PLUGIN_ROOT}/agents/` | Merge script: `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
+- Reports: `docs_dev/`
+- [Lessons Learned](references/lessons-learned.md):
+  - [Review Architecture Lessons](references/lessons-learned.md#review-architecture-lessons)
+  - [Fix Cycle Lessons](references/lessons-learned.md#fix-cycle-lessons)
+  - [Pipeline Robustness Lessons](references/lessons-learned.md#pipeline-robustness-lessons)
+  - [Lessons Learned Review Checklist](references/lessons-learned.md#lessons-learned-review-checklist)

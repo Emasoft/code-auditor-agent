@@ -2,6 +2,13 @@
 
 Hard-won insights from real incidents that shaped the design of the PR Review And Fix pipeline.
 
+## Table of Contents
+
+- [Review Architecture Lessons](#review-architecture-lessons)
+- [Fix Cycle Lessons](#fix-cycle-lessons)
+- [Pipeline Robustness Lessons](#pipeline-robustness-lessons)
+- [Lessons Learned Review Checklist](#lessons-learned-review-checklist)
+
 ## Review Architecture Lessons
 
 1. **Swarms are microscopes.** Great at per-file correctness. Blind to the big picture.

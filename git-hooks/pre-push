@@ -4,8 +4,9 @@
 Performs full validation before allowing push:
 1. Detect changed plugin files
 2. Enforce version bump (local version must be > remote version)
-3. Lint all files
-4. Validate plugin (--strict)
+3. Sync CPV validator scripts from upstream (non-blocking)
+4. Lint all files
+5. Validate plugin (--strict)
 
 Exit codes from validate_plugin.py:
   0 - All checks passed
@@ -171,7 +172,8 @@ def extract_version(filepath: Path) -> str | None:
     """Extract the ``version`` field from a JSON file, or return None."""
     try:
         data = json.loads(filepath.read_text(encoding="utf-8"))
-        return data.get("version")
+        version: str | None = data.get("version")
+        return version
     except (FileNotFoundError, json.JSONDecodeError, OSError):
         return None
 
@@ -264,6 +266,19 @@ def main() -> int:
     cprint("")
 
     python_cmd = find_python_command()
+
+    # --- Sync CPV validator scripts from upstream ---
+    cprint(f"{BLUE}Syncing CPV validator scripts...{NC}")
+    sync_script = repo_root / "scripts" / "sync_cpv_scripts.py"
+    if sync_script.is_file():
+        sync_exit = run_script(python_cmd, sync_script, cwd=repo_root)
+        if sync_exit != 0:
+            cprint(f"{YELLOW}CPV sync had errors (non-blocking){NC}")
+        else:
+            cprint(f"{GREEN}CPV validators synced.{NC}")
+    else:
+        cprint(f"{YELLOW}sync_cpv_scripts.py not found — skipping sync{NC}")
+    cprint("")
 
     # --- Lint ---
     cprint(f"{BLUE}Running file linting...{NC}")

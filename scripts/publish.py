@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unified publish pipeline: clean tree → test → lint → validate → consistency → bump → README → CHANGELOG → commit → push.
+"""Unified publish pipeline: clean → test → sync → lint → validate → bump → README → CHANGELOG → commit → push.
 
 Absorbs all release logic into a single fail-fast script.
 
@@ -363,8 +363,6 @@ def update_readme_badges(plugin_root: Path, version: str, dry_run: bool) -> bool
             badges_end = i + 1
         elif badges_start is not None and stripped.startswith("[!["):
             badges_end = i + 1
-        elif badges_start is not None and stripped == "":
-            break
         elif badges_start is not None:
             break
 
@@ -488,7 +486,10 @@ def prepend_changelog_entry(plugin_root: Path, version: str, dry_run: bool) -> b
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Publish pipeline: clean tree → test → lint → validate → consistency → bump → README → CHANGELOG → commit → push",
+        description=(
+            "Publish pipeline: clean → test → sync CPV → lint"
+            " → validate (strict) → bump → README → CHANGELOG → commit → push"
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
@@ -533,8 +534,20 @@ Examples:
         reason = "--skip-tests" if args.skip_tests else "no tests/ directory"
         print(f"\n{YELLOW}═══ Step 2: Tests skipped ({reason}) ═══{NC}")
 
-    # ── Step 3: Lint ──
-    print(f"\n{BLUE}═══ Step 3: Lint files ═══{NC}")
+    # ── Step 3: Sync CPV validator scripts from upstream ──
+    print(f"\n{BLUE}═══ Step 3: Sync CPV validator scripts ═══{NC}")
+    sync_script = root / "scripts" / "sync_cpv_scripts.py"
+    if sync_script.exists():
+        sync_result = run(["uv", "run", "python", str(sync_script)], cwd=root, check=False)
+        if sync_result.returncode != 0:
+            print(f"{YELLOW}⚠ CPV sync had errors (non-blocking){NC}")
+        else:
+            print(f"{GREEN}✓ CPV validator scripts synced{NC}")
+    else:
+        print(f"{YELLOW}sync_cpv_scripts.py not found (skipped){NC}")
+
+    # ── Step 4: Lint ──
+    print(f"\n{BLUE}═══ Step 4: Lint files ═══{NC}")
     lint_script = root / "scripts" / "lint_files.py"
     if lint_script.exists():
         run(["uv", "run", "python", str(lint_script), str(root)], cwd=root)
@@ -542,25 +555,25 @@ Examples:
     else:
         print(f"{YELLOW}lint_files.py not found (skipped){NC}")
 
-    # ── Step 4: Validate plugin ──
-    # Exit codes: 0=pass, 1=CRITICAL, 2=MAJOR, 3=MINOR
-    # Block on CRITICAL and MAJOR only; MINOR is a warning
-    print(f"\n{BLUE}═══ Step 4: Validate plugin ═══{NC}")
+    # ── Step 5: Validate plugin (strict) ──
+    # Exit codes: 0=pass, 1=CRITICAL, 2=MAJOR, 3=MINOR, 4=NIT (strict)
+    # ALL non-zero exit codes block publishing. Only WARNINGs pass through.
+    print(f"\n{BLUE}═══ Step 5: Validate plugin (strict) ═══{NC}")
     validate_script = root / "scripts" / "validate_plugin.py"
     if validate_script.exists():
-        val_result = run(["uv", "run", "python", str(validate_script), "."], cwd=root, check=False)
-        if val_result.returncode in (1, 2):
-            print(f"{RED}✗ Plugin validation failed (CRITICAL/MAJOR issues){NC}", file=sys.stderr)
-            sys.exit(val_result.returncode)
-        elif val_result.returncode == 3:
-            print(f"{YELLOW}⚠ MINOR issues found (not blocking){NC}")
-        else:
-            print(f"{GREEN}✓ Plugin validation passed{NC}")
+        val_result = run(["uv", "run", "python", str(validate_script), ".", "--strict"], cwd=root, check=False)
+        if val_result.returncode != 0:
+            sev_map = {1: "CRITICAL", 2: "MAJOR", 3: "MINOR", 4: "NIT"}
+            severity = sev_map.get(val_result.returncode, f"exit {val_result.returncode}")
+            print(f"{RED}✗ Plugin validation failed ({severity} issues){NC}", file=sys.stderr)
+            print(f"{RED}  Fix ALL issues before publishing.{NC}", file=sys.stderr)
+            return val_result.returncode
+        print(f"{GREEN}✓ Plugin validation passed (strict){NC}")
     else:
         print(f"{YELLOW}validate_plugin.py not found (skipped){NC}")
 
-    # ── Step 5: Version consistency ──
-    print(f"\n{BLUE}═══ Step 5: Check version consistency ═══{NC}")
+    # ── Step 6: Version consistency ──
+    print(f"\n{BLUE}═══ Step 6: Check version consistency ═══{NC}")
     ok, msg = check_version_consistency(root)
     print(f"  {msg}")
     if not ok:
@@ -568,7 +581,7 @@ Examples:
         return 1
     print(f"{GREEN}✓ Version consistency OK{NC}")
 
-    # ── Step 6: Bump version ──
+    # ── Step 7: Bump version ──
     current = get_current_version(root)
     if current is None:
         print(f"{RED}✗ Cannot read current version from plugin.json{NC}", file=sys.stderr)
@@ -579,28 +592,28 @@ Examples:
         print(f"{RED}✗ Current version '{current}' is not valid semver{NC}", file=sys.stderr)
         return 1
 
-    print(f"\n{BLUE}═══ Step 6: Bump version ({bump_type}: {current} → {new_version}) ═══{NC}")
+    print(f"\n{BLUE}═══ Step 7: Bump version ({bump_type}: {current} → {new_version}) ═══{NC}")
     if not do_bump(root, new_version, dry_run=args.dry_run):
         print(f"{RED}✗ Version bump failed{NC}", file=sys.stderr)
         return 1
     print(f"{GREEN}✓ Version bumped to {new_version}{NC}")
 
-    # ── Step 7: Update README badges ──
-    print(f"\n{BLUE}═══ Step 7: Update README badges ═══{NC}")
+    # ── Step 8: Update README badges ──
+    print(f"\n{BLUE}═══ Step 8: Update README badges ═══{NC}")
     if not update_readme_badges(root, new_version, args.dry_run):
         print(f"{RED}✗ README badge update failed{NC}", file=sys.stderr)
         return 1
     print(f"{GREEN}✓ README badges updated{NC}")
 
-    # ── Step 8: Update README version text ──
-    print(f"\n{BLUE}═══ Step 8: Update README version text ═══{NC}")
+    # ── Step 9: Update README version text ──
+    print(f"\n{BLUE}═══ Step 9: Update README version text ═══{NC}")
     if not update_readme_version_text(root, new_version, args.dry_run):
         print(f"{RED}✗ README version text update failed{NC}", file=sys.stderr)
         return 1
     print(f"{GREEN}✓ README version text updated{NC}")
 
-    # ── Step 9: Prepend CHANGELOG entry ──
-    print(f"\n{BLUE}═══ Step 9: Prepend CHANGELOG entry ═══{NC}")
+    # ── Step 10: Prepend CHANGELOG entry ──
+    print(f"\n{BLUE}═══ Step 10: Prepend CHANGELOG entry ═══{NC}")
     if not prepend_changelog_entry(root, new_version, args.dry_run):
         print(f"{RED}✗ CHANGELOG update failed{NC}", file=sys.stderr)
         return 1
@@ -610,16 +623,16 @@ Examples:
         print(f"\n{GREEN}✓ Dry run complete — no changes made.{NC}")
         return 0
 
-    # ── Step 10: Commit + tag ──
-    print(f"\n{BLUE}═══ Step 10: Commit and tag ═══{NC}")
+    # ── Step 11: Commit + tag ──
+    print(f"\n{BLUE}═══ Step 11: Commit and tag ═══{NC}")
     tag = f"v{new_version}"
     run(["git", "add", "-A"], cwd=root)
     run(["git", "commit", "-m", f"release: {tag}"], cwd=root)
     run(["git", "tag", "-a", tag, "-m", f"Release {tag}"], cwd=root)
     print(f"{GREEN}✓ Committed and tagged {tag}{NC}")
 
-    # ── Step 11: Push ──
-    print(f"\n{BLUE}═══ Step 11: Push to origin ═══{NC}")
+    # ── Step 12: Push ──
+    print(f"\n{BLUE}═══ Step 12: Push to origin ═══{NC}")
     # Detect current branch
     branch_result = subprocess.run(
         ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True, text=True

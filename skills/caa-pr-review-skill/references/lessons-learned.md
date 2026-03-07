@@ -1,5 +1,10 @@
 # Lessons Learned (Baked Into This Pipeline)
 
+## Table of Contents
+
+- [Lessons](#lessons-learned-baked-into-this-pipeline)
+- [Checklist](#checklist)
+
 These lessons emerged from a real incident where 20+ specialized audit agents checked a 40-file PR and found zero issues, while a single external reviewer immediately found 3 real bugs.
 
 1. **Swarms are microscopes.** Great at per-file correctness. Blind to the big picture.

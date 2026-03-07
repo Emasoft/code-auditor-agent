@@ -27,7 +27,7 @@ from pathlib import Path
 
 UPSTREAM_OWNER = "Emasoft"
 UPSTREAM_REPO = "claude-plugins-validation"
-UPSTREAM_REF = "main"
+UPSTREAM_REF = "master"
 
 # ---------------------------------------------------------------------------
 # Sync targets: (upstream_path, local_path_relative_to_repo_root)
@@ -55,16 +55,16 @@ SYNC_TARGETS: list[tuple[str, str]] = [
     ("scripts/validate_skill_comprehensive.py", "scripts/validate_skill_comprehensive.py"),
     ("scripts/validate_xref.py", "scripts/validate_xref.py"),
     # Utilities
-    ("scripts/bump_version.py", "scripts/bump_version.py"),
-    ("scripts/check_version_consistency.py", "scripts/check_version_consistency.py"),
+    # NOTE: bump_version.py is excluded — local version has update_skill_md_versions()
+    # NOTE: check_version_consistency.py removed upstream, kept locally as standalone utility
     ("scripts/gitignore_filter.py", "scripts/gitignore_filter.py"),
     ("scripts/lint_files.py", "scripts/lint_files.py"),
     ("scripts/setup_marketplace_automation.py", "scripts/setup_marketplace_automation.py"),
     ("scripts/setup_plugin_pipeline.py", "scripts/setup_plugin_pipeline.py"),
     ("scripts/smart_exec.py", "scripts/smart_exec.py"),
     ("scripts/update_marketplace_metadata.py", "scripts/update_marketplace_metadata.py"),
-    # git-hooks/ (pre-commit excluded — local override with CPV sync call)
-    ("git-hooks/pre-push", "git-hooks/pre-push"),
+    # git-hooks/ (pre-commit and pre-push excluded — local overrides with
+    # CPV sync call and version bump enforcement respectively)
 ]
 
 # ---------------------------------------------------------------------------
