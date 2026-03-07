@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.16] - 2026-03-07
+
+### Changes
+- fix: publish.py only blocks on CRITICAL/MAJOR validation, warns on MINOR (9eda67f)
+- chore: add types-pyyaml dev dependency for mypy stubs (f6470fe)
+- chore: update uv.lock (e1576e3)
+- feat: unified publish.py pipeline + pre-push version enforcement (275d98c)
+
 ## [3.1.15] - 2026-03-07
 
 ### Changes
