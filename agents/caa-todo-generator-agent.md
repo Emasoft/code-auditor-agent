@@ -195,13 +195,8 @@ user: |
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
-  Reads docs_dev/caa-consolidated-AMCOS.md completely.
-  Groups 14 violations by file (5 files), then by category.
-  Assigns priorities: 2 P1 (missing null checks causing crashes), 8 P2 (governance compliance), 4 P3 (style).
-  Identifies dependency: TODO-AMCOS-P1-001 depends on TODO-AMS-P2-003 (type definition in server).
-  Adds harmonization notes for 3 RECORD_KEEPING items.
-  Writes TODO file to docs_dev/TODO-AMCOS-changes.md.
-  Returns: "[DONE] todo-gen-AMCOS - 14 TODOs (P1:2, P2:8, P3:4). File: docs_dev/TODO-AMCOS-changes.md"
+  Reads consolidated report. Converts violations to actionable TODOs with dependency ordering and priority classification.
+  Returns: "[DONE] todo-gen-AMCOS - 14 TODOs (P1:2, P2:8, P3:4). Report: docs_dev/TODO-AMCOS-changes.md"
 </example>
 
 <example>
@@ -214,12 +209,8 @@ user: |
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
-  Reads docs_dev/caa-consolidated-aimaestro.md completely.
-  Groups 9 violations by file (3 files), then by category.
-  Assigns priorities: 1 P1 (security: unquoted shell variable), 6 P2 (type safety), 2 P3 (nits).
-  Orders P2 items: type definition changes before caller updates.
-  Writes TODO file to docs_dev/TODO-aimaestro-server-changes.md.
-  Returns: "[DONE] todo-gen-AMS - 9 TODOs (P1:1, P2:6, P3:2). File: docs_dev/TODO-aimaestro-server-changes.md"
+  Reads consolidated report. Converts violations to actionable TODOs with dependency ordering and priority classification.
+  Returns: "[DONE] todo-gen-AMS - 9 TODOs (P1:1, P2:6, P3:2). Report: docs_dev/TODO-aimaestro-server-changes.md"
 </example>
 
 ## REPORTING RULES

@@ -283,7 +283,6 @@ def find_scripts_dir(repo_root: str) -> str | None:
     """Locate scripts/ directory — may be at root or in a subdirectory."""
     candidates = [
         os.path.join(repo_root, "scripts"),
-        os.path.join(repo_root, "claude-plugins-validation", "scripts"),
     ]
     for d in candidates:
         if os.path.isdir(d):
@@ -543,8 +542,6 @@ jobs:
         run: |
           if [ -f "scripts/validate_plugin.py" ]; then
             echo "validator=scripts/validate_plugin.py" >> $GITHUB_OUTPUT
-          elif [ -f "claude-plugins-validation/scripts/validate_plugin.py" ]; then
-            echo "validator=claude-plugins-validation/scripts/validate_plugin.py" >> $GITHUB_OUTPUT
           else
             echo "validator=" >> $GITHUB_OUTPUT
           fi

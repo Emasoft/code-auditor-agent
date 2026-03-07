@@ -94,9 +94,9 @@ Group changed files by domain. Common domain splits:
 | ui-components | `components/*.tsx`, `app/page.tsx` |
 | api-routes | `app/api/**/*.ts` |
 | memory | `lib/consolidate.ts`, `lib/cozo-*.ts` |
-| docs | `docs/**`, `README.md` |
+| docs | `docs/**`, `README.md`. If `.md` files are agent definitions or skill files (in `agents/`, `skills/`, `commands/` dirs), also route to security-review for prompt injection scanning. |
 | tests | `tests/**` |
-| config | `package.json`, `version.json`, `*.config.*` |
+| config | `package.json`, `version.json`, `*.config.*`. Route to code-correctness for syntax validation AND to security-review for secrets check. |
 
 **Prefix assignment:**
 
@@ -120,6 +120,7 @@ For each domain with changed files (using assigned AGENT_PREFIX):
       AGENT_PREFIX: {AGENT_PREFIX}
       FINDING_ID_PREFIX: CC-P1-{AGENT_PREFIX}
       REPORT_DIR: {ABSOLUTE_REPORT_DIR}
+      DIFF: {git_diff_for_domain}  # (optional — provides the git diff for the domain's changed files, enabling targeted auditing of changed regions)
 
       IMPORTANT — UUID FILENAME:
       Generate a UUID for your output file:

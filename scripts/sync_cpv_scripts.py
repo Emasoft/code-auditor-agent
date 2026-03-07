@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sync CPV validation scripts from the upstream claude-plugins-validation repo.
 
-Downloads the latest CPV validation scripts from Emasoft/claude-plugins-validation@master
+Downloads the latest CPV validation scripts from Emasoft/claude-plugins-validation@main
 via the GitHub CLI (`gh api`), comparing git blob SHAs to detect staleness.
 Updates local copies only when content has actually changed.
 
@@ -27,7 +27,7 @@ from pathlib import Path
 
 UPSTREAM_OWNER = "Emasoft"
 UPSTREAM_REPO = "claude-plugins-validation"
-UPSTREAM_REF = "master"
+UPSTREAM_REF = "main"
 
 # ---------------------------------------------------------------------------
 # Sync targets: (upstream_path, local_path_relative_to_repo_root)

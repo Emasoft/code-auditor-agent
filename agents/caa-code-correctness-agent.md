@@ -38,6 +38,10 @@ test coverage.
 - Detecting shell script quoting issues (SC2086), variable expansion bugs
 - Spotting security vulnerabilities (injection, XSS, command injection)
 - Checking that new code paths have corresponding tests
+- Validating YAML/TOML/JSON syntax (malformed files, duplicate keys, invalid values)
+- Checking pyproject.toml structure (valid sections, dependency format)
+- Checking plugin.json schema (required fields present, types correct)
+- Verifying GitHub Actions workflow .yml syntax and pinned action versions
 
 **You are BLIND to:**
 - Whether the PR description accurately describes what the code does
@@ -174,10 +178,7 @@ user: |
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
 assistant: |
-  Reads lib/messageQueue.ts completely. Checks type safety, null handling, return types.
-  Reads app/api/messages/route.ts completely. Checks API contracts, error handling, security.
-  Finds that convertAMPToMessage() declares fromLabel in return type but never assigns it.
-  Writes detailed report to docs_dev/caa-correctness-messaging.md.
+  Reads all FILES completely. Audits for type safety, null handling, return types, API contracts, error handling, security.
   Returns: "[DONE] correctness-messaging - 2 issues (1 must-fix). Report: docs_dev/caa-correctness-messaging.md"
 </example>
 
@@ -191,12 +192,19 @@ user: |
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
 assistant: |
-  Reads scripts/bump-version.sh completely. Checks quoting (SC2086), set -e, variable initialization.
-  Reads install-messaging.sh completely. Checks temp file cleanup, atomic writes, error paths.
-  Finds unquoted variable expansion on line 42 of bump-version.sh.
-  Writes detailed report to docs_dev/caa-correctness-shell-scripts.md.
+  Reads all FILES completely. Audits for quoting (SC2086), set -e, variable initialization, temp file cleanup, atomic writes, error paths.
   Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: docs_dev/caa-correctness-shell-scripts.md"
 </example>
+
+### Config/Metadata File Checks
+When auditing `.yaml`, `.yml`, `.toml`, or `.json` files:
+- Verify syntax is valid (parseable without errors)
+- Check for duplicate keys
+- Check for obviously wrong values (empty required fields, wrong types)
+- For `pyproject.toml`: verify [project] section has name/version, dependencies use valid PEP 508 format
+- For `plugin.json`: verify all referenced agent/skill paths exist on disk
+- For GitHub Actions `.yml`: verify `uses:` references are pinned (tag or SHA, not `@main`)
+- For `Dockerfile`: check for unpinned base images, unnecessary privilege escalation
 
 ## Special Cases
 

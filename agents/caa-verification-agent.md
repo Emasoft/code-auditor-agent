@@ -194,13 +194,8 @@ user: |
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
 assistant: |
-  Reads the audit report. Extracts 2 violations, 1 CLEAN claim, 3 files covered.
-  Reads lifecycle.ts — confirms curl call at line 87. CONFIRMED.
-  Reads comms-recovery.ts — line 23 contains a comment, not a governance check. WRONG_LINE.
-  Reads approval-transfer.ts — confirms CLEAN (no violation patterns found).
-  Diffs file list: session-memory.ts not covered by audit. MISSED FILE.
-  Accuracy: 50% (1/2 confirmed). Coverage: 75% (3/4 files).
-  Writes report. Returns: "[DONE] verify-AMCOS-lifecycle - PARTIALLY_RELIABLE, 50% accuracy, 1 missed file. Report: docs_dev/caa-verify-P1-R3a-d2e1f4a5.md"
+  Reads audit report and cross-checks every finding against actual code. Spot-checks CLEAN files for missed violations.
+  Returns: "[DONE] verify-AMCOS-lifecycle - 1 confirmed, 1 false positive, 1 potentially missed. Report: docs_dev/caa-verify-P1-R3a-d2e1f4a5.md"
 </example>
 
 <example>
@@ -214,12 +209,8 @@ user: |
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
 assistant: |
-  Reads the audit report. Extracts 1 violation, 1 RECORD_KEEPING, 2 files covered.
-  Reads task-delegator.md — confirms curl command at line 34. CONFIRMED.
-  Reads memory-indexer.md — confirms version metadata is record-keeping. CONFIRMED.
-  Diffs file list: planner.md not covered by audit. MISSED FILE.
-  Accuracy: 100% (1/1 confirmed). Coverage: 67% (2/3 files).
-  Writes report. Returns: "[DONE] verify-AMAMA-agents - RELIABLE, 100% accuracy, 1 missed file. Report: docs_dev/caa-verify-P2-R7f-c8b7a6d5.md"
+  Reads audit report and cross-checks every finding against actual code. Spot-checks CLEAN files for missed violations.
+  Returns: "[DONE] verify-AMAMA-agents - 2 confirmed, 0 false positives, 0 potentially missed. Report: docs_dev/caa-verify-P2-R7f-c8b7a6d5.md"
 </example>
 
 ## REPORTING RULES

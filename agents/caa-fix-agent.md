@@ -192,14 +192,8 @@ user: |
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
-  Reads TODO file, extracts TODO-AMS1, TODO-AMS2, TODO-AMS3.
-  No checkpoint exists — starting fresh.
-  Reads services/governance-service.ts. Applies TODO-AMS1 (add null check at line 42). Writes checkpoint.
-  Applies TODO-AMS2 (fix return type at line 78). Writes checkpoint.
-  Reads lib/agent-registry.ts. Applies TODO-AMS3 (add governance header at line 15). Writes checkpoint.
-  Re-reads both files — no syntax errors, no broken imports.
-  Writes fix report to docs_dev/caa-fixes-done-P1-AMS-batch1.md.
-  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 failed. Report: docs_dev/caa-fixes-done-P1-AMS-batch1.md"
+  Reads TODO file. Applies fixes one by one with backup/restore for syntax errors. Re-reads each file after fixing.
+  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 skipped. Report: docs_dev/caa-fixes-done-P1-AMS-batch1.md"
 </example>
 
 <example>
@@ -213,15 +207,8 @@ user: |
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
-  Reads TODO file, extracts TODO-AMCOS5, TODO-AMCOS6, TODO-AMCOS7.
-  No checkpoint exists — starting fresh.
-  Reads amp-send.sh. Applies TODO-AMCOS5 (quote variable on line 30). Writes checkpoint.
-  Reads amp-inbox.sh. TODO-AMCOS6 says line 55 should have `curl -s`, but line 55 is a comment.
-  Marks TODO-AMCOS6 as FAILED: "context mismatch — line 55 is a comment, not a curl command".
-  Applies TODO-AMCOS7 (add set -u at line 3). Writes checkpoint.
-  Re-reads both files — no syntax errors.
-  Writes fix report to docs_dev/caa-fixes-done-P1-AMCOS-batch2.md.
-  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 failed. Report: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md"
+  Reads TODO file. Applies fixes one by one with backup/restore for syntax errors. Re-reads each file after fixing.
+  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 skipped. Report: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md"
 </example>
 
 ## REPORTING RULES

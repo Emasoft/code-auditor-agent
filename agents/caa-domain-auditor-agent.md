@@ -192,11 +192,7 @@ user: |
   Audit these files against the reference standard. Read every file completely.
   Write findings to the report path.
 assistant: |
-  Reads docs/PLUGIN-ABSTRACTION-PRINCIPLE.md completely. Understands rules about abstraction layers.
-  Reads plugins/chief-of-staff/src/lifecycle.ts completely. Finds curl call to localhost:23000/api/teams on line 87.
-  Reads plugins/chief-of-staff/src/approval-transfer.ts completely. No violations found.
-  Reads plugins/chief-of-staff/src/comms-recovery.ts completely. Finds hardcoded governance role check on line 23.
-  Writes detailed report to docs_dev/caa-audit-P1-R3a-a3b4c5d6.md.
+  Reads all FILES completely against REFERENCE_STANDARD. Checks for hardcoded APIs, governance rules, direct dependencies.
   Returns: "[DONE] audit-AMCOS-decoupling-P1 - 2 violations (1 must-fix, 0 record-keeping). Report: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md"
 </example>
 
@@ -215,10 +211,7 @@ user: |
   Audit these files against the reference standard. Read every file completely.
   Write findings to the report path.
 assistant: |
-  Reads docs/PLUGIN-ABSTRACTION-PRINCIPLE.md completely. Notes rule: plugin agents must not embed API syntax.
-  Reads plugins/assistant-manager/agents/task-delegator.md completely. Finds embedded curl command on line 34.
-  Reads plugins/assistant-manager/agents/memory-indexer.md completely. Finds version metadata comment — classifies as RECORD_KEEPING.
-  Writes detailed report to docs_dev/caa-audit-P2-R7f-e9f8a7b6.md.
+  Reads all FILES completely against REFERENCE_STANDARD. Checks for hardcoded APIs, governance rules, direct dependencies.
   Returns: "[DONE] audit-plugin-compliance-P2 - 1 violation (1 must-fix, 1 record-keeping). Report: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md"
 </example>
 

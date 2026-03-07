@@ -196,18 +196,8 @@ user: |
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
-  Reads fix report — all 3 TODOs reported as completed.
-  Reads TODO file — extracts Change/Current/Verify fields for TODO-AMS1, AMS2, AMS3.
-  Reads reference standard for audit criteria.
-  Reads services/governance-service.ts completely.
-  Verifies TODO-AMS1 (null check at line 42) — VERIFIED, check present.
-  Verifies TODO-AMS2 (return type at line 78) — VERIFIED, type matches.
-  Checks for regressions — none found.
-  Reads lib/agent-registry.ts completely.
-  Verifies TODO-AMS3 (governance header at line 15) — VERIFIED, header added.
-  Checks for regressions — none found.
-  Writes verification report to docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md.
-  Returns: "[DONE] verify-AMS-batch1 - PASS, 3/3 TODOs verified, 0 regressions. Report: docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md"
+  Reads each fixed file. Checks fix against TODO spec and reference standard. Verifies no regressions introduced.
+  Returns: "[DONE] fix-verify - 3 PASS, 0 FAIL, 0 remaining issues. Report: docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md"
 </example>
 
 <example>
@@ -222,16 +212,8 @@ user: |
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
-  Reads fix report — TODO-AMCOS5 and TODO-AMCOS7 reported as completed, TODO-AMCOS6 failed.
-  Reads TODO file — extracts Change/Current/Verify fields for TODO-AMCOS5, AMCOS7.
-  Reads reference standard for audit criteria.
-  Reads amp-send.sh completely.
-  Verifies TODO-AMCOS5 (quote variable on line 30) — VERIFIED, variable properly quoted.
-  Verifies TODO-AMCOS7 (add set -u at line 3) — FAILED: set -u was added at line 5, not line 3,
-  and it appears AFTER a variable reference on line 4, which would cause an immediate crash.
-  Regression detected: set -u placement causes unbound variable error on startup.
-  Writes verification report with FAIL verdict and remaining issue to docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md.
-  Returns: "[DONE] verify-AMCOS-batch2 - FAIL, 1/2 TODOs verified, 1 regressions. Report: docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md"
+  Reads each fixed file. Checks fix against TODO spec and reference standard. Verifies no regressions introduced.
+  Returns: "[DONE] fix-verify - 1 PASS, 1 FAIL, 1 remaining issues. Report: docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md"
 </example>
 
 ## REPORTING RULES

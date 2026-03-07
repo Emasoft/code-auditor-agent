@@ -262,14 +262,8 @@ user: |
 
   Review this PR as an external maintainer. Write findings to the report path.
 assistant: |
-  Reads full diff holistically. Notes 40 files changed across 8 domains.
-  First impression: scope is very large for a single PR, but description is thorough.
-  Identifies auto-copy clipboard behavior as UX concern — overwrites clipboard without consent.
-  Finds version mismatch between JSON-LD and prose HTML sections.
-  Cross-references with earlier reports, confirms claim verification caught the same version issue.
-  Verdict: REQUEST CHANGES (1 must-fix, 2 should-fix).
-  Writes report to docs_dev/caa-review.md.
-  Returns: "[DONE] skeptical-review - Verdict: REQUEST CHANGES, 3 issues (1 must-fix). Report: docs_dev/caa-review.md"
+  Reads entire PR diff as hostile reviewer. Checks UX, breaking changes, cross-file consistency, design judgment.
+  Returns: "[DONE] review - 3 findings (1 must-fix), verdict: REQUEST CHANGES. Report: docs_dev/caa-review.md"
 </example>
 
 <example>
@@ -282,12 +276,8 @@ user: |
 
   Review this PR as an external maintainer. Write findings to the report path.
 assistant: |
-  Reads full diff. Single file changed, 1 line modified.
-  Confirms the typo fix is correct and doesn't introduce new errors.
-  No breaking changes, no UX concerns, no cross-file issues.
-  Verdict: APPROVE.
-  Writes report to docs_dev/caa-review.md.
-  Returns: "[DONE] skeptical-review - Verdict: APPROVE, 0 issues (0 must-fix). Report: docs_dev/caa-review.md"
+  Reads entire PR diff as hostile reviewer. Checks UX, breaking changes, cross-file consistency, design judgment.
+  Returns: "[DONE] review - 0 findings (0 must-fix), verdict: APPROVE. Report: docs_dev/caa-review.md"
 </example>
 
 ## Special Cases

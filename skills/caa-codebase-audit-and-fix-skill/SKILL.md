@@ -49,6 +49,18 @@ Follow these steps to run the audit pipeline:
 1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path. Verify `REFERENCE_STANDARD` file exists and is non-empty before proceeding. If not, STOP with error: 'REFERENCE_STANDARD not found or empty at {path}.'
 2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
 3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4. If the file inventory returns zero files, STOP immediately with error: 'No files found in SCOPE_PATH ({path}). Verify the path exists and contains auditable files.' Do not proceed to Phase 1 with an empty file list.
+
+   **File type coverage**: The inventory MUST include ALL text files, not just source code:
+   - Source code: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.java`, `.rb`, `.sh`, `.bash`
+   - Config files: `.yaml`, `.yml`, `.toml`, `.json`, `.xml`, `.ini`, `.cfg`
+   - Prompt/definition files: `.md` files in `agents/`, `skills/`, `commands/` directories
+   - CI/CD files: `.github/workflows/*.yml`, `Dockerfile`, `.dockerignore`
+   - Metadata: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`
+
+   Route config/metadata files to the code-correctness agent for syntax validation.
+   Route prompt/definition `.md` files to the security-review agent for prompt injection scanning.
+   Route CI/CD files to both code-correctness (syntax) and security-review (secrets/permissions).
+
 4. Run Phase 1: spawn `caa-domain-auditor-agent` for each batch (concurrency 20)
 5. Run Phase 2: spawn `caa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
 6. Run Phase 3: gap-fill missed files, re-verify, loop max 3 times until 100% coverage
@@ -89,6 +101,8 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 | 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `caa-fix-verifier-agent` | 20 |
 | 8 | Final report: compile stats, link artifacts | orchestrator | -- |
 
+**Gap-fill queue consumption:** Before running Phase 3, read all Phase 2 verification reports. Extract files listed under POTENTIALLY_MISSED sections. These files MUST be added to the Phase 3 re-audit file list along with any gap-fill files identified during Phase 0 inventory.
+
 If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until all PASS or `PASS_NUMBER > MAX_FIX_PASSES`.
 
 ### Report Naming
@@ -113,6 +127,8 @@ Most pipeline reports use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md` (ag
 
 Format: `{PREFIX}-P{PASS}-{AGENT_PREFIX}-{SEQ}` where PREFIX=DA/VE/GF/FV, AGENT_PREFIX=A0..AF..A10.., SEQ=001+. Consolidation uses `CA-{DOMAIN}-{SEQ}` (no PASS/AGENT_PREFIX since it operates per-domain).
 
+**Deterministic suffix assignment:** Domain-to-AGENT_SUFFIX mapping MUST be alphabetically sorted and stable across passes. Sort domains alphabetically, then assign A0, A1, A2... in that order. This prevents finding ID collisions between passes.
+
 ### Spawning Patterns
 
 **Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/{REPORT_DIR}` before spawning. Pass this absolute path as `REPORT_DIR` in every agent prompt and add `isolation: "worktree"` to every Task() call. For Phase 6 fix agents, after all complete, merge worktree branches back sequentially (see below).
@@ -124,6 +140,7 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 **P3 Gap-fill**: Same as P1 but `TRIAGE_STATUS=MISSED`, prefix=GF, report to `caa-gapfill-*`.
 **P4 Consolidate**: `INPUT_REPORTS` (max 5 paths), `DOMAIN_NAME`, `OUTPUT_PATH`. Merge, dedup, classify as VIOLATION/RECORD_KEEPING/FALSE_POSITIVE.
 **P4b Security**: `DOMAIN=all-audited-files`, `FILES=ALL` (or list from manifest), `PASS=PASS_NUMBER`, `RUN_ID`, `FINDING_ID_PREFIX=SC-P{N}`, `REPORT_DIR`. Single instance. Runs automated security tools (trufflehog, bandit, osv-scanner) and manual vulnerability analysis. This phase is MANDATORY — never skip it. Append security findings to consolidated reports before TODO generation.
+**Security scope:** Pass FILES = the complete file inventory from Phase 0 (all files in scope, not just those that had findings in Phase 1-3).
 **P5 TODO**: `CONSOLIDATED_REPORT`, `SCOPE_NAME`, `TODO_PREFIX`, `OUTPUT_PATH`. Each TODO must have file:line:evidence triple.
 **P6 Fix**: `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
 **P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `TODO_FILE`, `REFERENCE_STANDARD`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
@@ -258,3 +275,65 @@ Copy this checklist and track your progress:
 - [ ] Phase 6: Fixes applied (if FIX_ENABLED)
 - [ ] Phase 7: Fix verification passed (if FIX_ENABLED)
 - [ ] Phase 8: Final merged report generated
+
+---
+
+## Remote Repository Scanning
+
+For auditing a GitHub repo without a local clone:
+1. Shallow clone: `gh repo clone {owner}/{repo} -- --depth=1 /tmp/caa-audit-{repo}`
+2. Set `SCOPE_PATH` to the clone directory
+3. Run standard Phase 0-8 pipeline
+4. After final report is saved to `REPORT_DIR`, cleanup: remove the clone directory
+
+For GitHub repos accessible via API only (no clone):
+1. Use `gh api repos/{owner}/{repo}/git/trees/HEAD?recursive=1` to get file inventory
+2. Use `gh api repos/{owner}/{repo}/contents/{path}` to read individual files
+3. This is slower but avoids disk usage for very large repos
+
+---
+
+## Monorepo & Workspaces
+
+For monorepos with multiple packages/workspaces:
+1. **Phase 0 detection**: Check for workspace configs: `package.json` (workspaces field), `pnpm-workspace.yaml`, `lerna.json`, Cargo workspace `Cargo.toml`
+2. **Domain mapping**: Treat each workspace as a separate DOMAIN. Name domains after the workspace package name.
+3. **Parallel auditing**: Run Phase 1 domain-auditor swarms per workspace in parallel. Each workspace batch respects the 3-4 files per agent limit.
+4. **Cross-workspace check**: After per-workspace audits complete, run one additional domain-auditor pass checking cross-workspace imports and dependency consistency.
+5. **Consolidation**: Consolidate per-workspace reports, then run single dedup pass across all workspaces.
+
+---
+
+## Large Codebase Strategy (1000+ files)
+
+Tiered approach to keep agent count manageable:
+
+**Tier 1 — Automated Triage (no agents):**
+- Run linter/type-checker (e.g., `ruff check`, `tsc --noEmit`, `tldr diagnostics .`) to identify files with existing issues
+- Use `git log --since="6 months ago" --name-only` to identify recently changed files
+- Prioritize: files with lint errors > recently changed files > high-complexity files > remainder
+- Typically reduces audit scope to 10-30% of codebase
+
+**Tier 2 — Selective Audit (agents):**
+- Audit only Tier 1 priority files
+- Batch into groups of 3-4 files, max 20 concurrent agents per round
+- Track progress in `{REPORT_DIR}/caa-audit-checkpoint.json`:
+  ```json
+  {"completed_batches": [0,1,2], "current_batch": 3, "total_batches": 67, "scope_files": 200}
+  ```
+- If context compaction occurs, resume from checkpoint
+
+**Tier 3 — Full Coverage (optional):**
+- After Tier 2 fixes are applied, audit remaining files in batches
+- Use checkpoint file to track progress across sessions
+
+---
+
+## Delta Audit Mode
+
+Re-audit only changed files since last full audit:
+1. Identify changes: `git diff --name-only {LAST_AUDIT_COMMIT}` → changed file list
+2. Find affected dependents: `tldr change-impact {changed_files}` (if available) or manual import tracing
+3. Combine changed files + affected dependents into the audit scope
+4. Run standard Phase 1-5 on this reduced file set
+5. Merge delta findings with previous full audit report using the merge script

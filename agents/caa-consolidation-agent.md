@@ -202,12 +202,8 @@ user: |
   De-duplicate findings, harmonize severities, separate RECORD_KEEPING.
   Write consolidated report to the output path.
 assistant: |
-  Reads all 3 reports. Extracts 5 total findings across reports.
-  Finds 2 duplicates (same file:line:type in lifecycle and verify reports). Keeps verified versions.
-  Moves 1 RECORD_KEEPING item to PRESERVE section.
-  Harmonizes 1 severity disagreement (SHOULD-FIX vs NIT → SHOULD-FIX).
-  3 unique violations remain, 1 record-keeping, 2 clean files.
-  Writes report. Returns: "[DONE] consolidate-AMCOS - 3 unique violations (1 must-fix), 1 record-keeping, 2 duplicates removed. Report: docs_dev/caa-consolidated-AMCOS.md"
+  Reads all input reports. De-duplicates by file+line+violation_type. Classifies as VIOLATION, RECORD_KEEPING, or FALSE_POSITIVE.
+  Returns: "[DONE] consolidate-AMCOS - 3 unique violations, 1 record-keeping. Report: docs_dev/caa-consolidated-AMCOS.md"
 </example>
 
 <example>
@@ -222,11 +218,8 @@ user: |
   De-duplicate findings, harmonize severities, separate RECORD_KEEPING.
   Write consolidated report to the output path.
 assistant: |
-  Reads all 3 reports. Extracts 8 total findings.
-  Finds 3 duplicates between audit and gap-fill reports. Merges evidence.
-  Moves 2 RECORD_KEEPING items to PRESERVE section.
-  5 unique violations remain, 2 record-keeping, 4 clean files.
-  Writes report. Returns: "[DONE] consolidate-AMAMA - 5 unique violations (2 must-fix), 2 record-keeping, 3 duplicates removed. Report: docs_dev/caa-consolidated-AMAMA.md"
+  Reads all input reports. De-duplicates by file+line+violation_type. Classifies as VIOLATION, RECORD_KEEPING, or FALSE_POSITIVE.
+  Returns: "[DONE] consolidate-AMAMA - 5 unique violations, 2 record-keeping. Report: docs_dev/caa-consolidated-AMAMA.md"
 </example>
 
 ## REPORTING RULES

@@ -203,13 +203,8 @@ user: |
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
-  Extracts claim: "fromLabel/toLabel population via registry lookup".
-  Reads convertAMPToMessage() in lib/messageQueue.ts completely.
-  Traces return statement — finds fromLabel and toLabel are NOT in the return object.
-  The type declares them, the claim mentions them, but the code never assigns them.
-  Marks as NOT IMPLEMENTED with file:line evidence.
-  Writes report to docs_dev/caa-claims.md.
-  Returns: "[DONE] claim-verification - 5 claims, 1 failed, 0 partial. Report: docs_dev/caa-claims.md"
+  Extracts all claims from PR description. Reads code files to verify each claim against actual implementation.
+  Returns: "[DONE] claims-messagequeue - 5 claims verified, 1 gaps found. Report: docs_dev/caa-claims.md"
 </example>
 
 <example>
@@ -222,12 +217,8 @@ user: |
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
-  Extracts claim: "version 0.22.5 across all files".
-  Searches for version references in package.json, version.json, docs/ai-index.html, README.md.
-  Finds version.json has 0.22.5, package.json has 0.22.5, but ai-index.html prose section still says 0.22.4.
-  Marks as PARTIALLY IMPLEMENTED with all file:line evidence.
-  Writes report to docs_dev/caa-claims.md.
-  Returns: "[DONE] claim-verification - 3 claims, 0 failed, 1 partial. Report: docs_dev/caa-claims.md"
+  Extracts all claims from PR description. Reads code files to verify each claim against actual implementation.
+  Returns: "[DONE] claims-versioning - 3 claims verified, 1 gaps found. Report: docs_dev/caa-claims.md"
 </example>
 
 ## Special Cases
