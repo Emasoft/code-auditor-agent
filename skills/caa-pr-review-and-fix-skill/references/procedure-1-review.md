@@ -1,11 +1,5 @@
 # Procedure 1: Code Review
 
-> **Maintenance Note:** The review protocol below is shared with `caa-pr-review-skill` via its `SKILL.md` Protocol section (which inlines a single-pass variant). When updating shared steps here, also update that skill. Key differences: this file supports multi-pass (variable PASS_NUMBER, with RUN_ID), while pr-review-skill uses single-pass (P1 hardcoded, no RUN_ID).
-
-Six-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup, then present results.
-
-**Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call. See the parent SKILL.md for full worktree protocol.
-
 ## Table of Contents
 
 - [Pre-Pass Cleanup (MANDATORY)](#pre-pass-cleanup-mandatory)
@@ -18,6 +12,10 @@ Six-phase review pipeline: correctness swarm, claim verification, skeptical revi
 - [Phase 5: Merge Reports + Deduplicate](#phase-5-merge-reports--deduplicate)
 - [Phase 6: Present Results](#phase-6-present-results)
 - [Procedure 1 Checklist](#procedure-1-checklist)
+
+Six-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup, then present results.
+
+**Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call.
 
 ## Pre-Pass Cleanup (MANDATORY)
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Sync CPV validation scripts from the upstream claude-plugins-validation repo.
 
-Downloads the latest CPV validation scripts from Emasoft/claude-plugins-validation@main
-via the GitHub CLI (`gh api`), comparing git blob SHAs to detect staleness.
-Updates local copies only when content has actually changed.
+Auto-discovers all .py scripts in the upstream scripts/ directory via the GitHub
+Contents API, then syncs them locally — skipping only files in LOCAL_ONLY_SCRIPTS
+(locally-customized files that must not be overwritten).
 
 Usage:
     uv run python scripts/sync_cpv_scripts.py             # sync all targets
@@ -30,42 +30,18 @@ UPSTREAM_REPO = "claude-plugins-validation"
 UPSTREAM_REF = "master"
 
 # ---------------------------------------------------------------------------
-# Sync targets: (upstream_path, local_path_relative_to_repo_root)
+# Local-only scripts: filenames that must NOT be overwritten by upstream sync.
+# These have local customizations (e.g. update_skill_md_versions in bump_version,
+# version enforcement in pre-push, local publish pipeline).
 # ---------------------------------------------------------------------------
 
-SYNC_TARGETS: list[tuple[str, str]] = [
-    # Core validation framework
-    ("scripts/cpv_validation_common.py", "scripts/cpv_validation_common.py"),
-    ("scripts/validate_plugin.py", "scripts/validate_plugin.py"),
-    # Component validators
-    ("scripts/validate_agent.py", "scripts/validate_agent.py"),
-    ("scripts/validate_command.py", "scripts/validate_command.py"),
-    ("scripts/validate_documentation.py", "scripts/validate_documentation.py"),
-    ("scripts/validate_encoding.py", "scripts/validate_encoding.py"),
-    ("scripts/validate_enterprise.py", "scripts/validate_enterprise.py"),
-    ("scripts/validate_hook.py", "scripts/validate_hook.py"),
-    ("scripts/validate_lsp.py", "scripts/validate_lsp.py"),
-    ("scripts/validate_marketplace.py", "scripts/validate_marketplace.py"),
-    ("scripts/validate_marketplace_pipeline.py", "scripts/validate_marketplace_pipeline.py"),
-    ("scripts/validate_mcp.py", "scripts/validate_mcp.py"),
-    ("scripts/validate_rules.py", "scripts/validate_rules.py"),
-    ("scripts/validate_scoring.py", "scripts/validate_scoring.py"),
-    ("scripts/validate_security.py", "scripts/validate_security.py"),
-    ("scripts/validate_skill.py", "scripts/validate_skill.py"),
-    ("scripts/validate_skill_comprehensive.py", "scripts/validate_skill_comprehensive.py"),
-    ("scripts/validate_xref.py", "scripts/validate_xref.py"),
-    # Utilities
-    # NOTE: bump_version.py is excluded — local version has update_skill_md_versions()
-    # NOTE: check_version_consistency.py removed upstream, kept locally as standalone utility
-    ("scripts/gitignore_filter.py", "scripts/gitignore_filter.py"),
-    ("scripts/lint_files.py", "scripts/lint_files.py"),
-    ("scripts/setup_marketplace_automation.py", "scripts/setup_marketplace_automation.py"),
-    ("scripts/setup_plugin_pipeline.py", "scripts/setup_plugin_pipeline.py"),
-    ("scripts/smart_exec.py", "scripts/smart_exec.py"),
-    ("scripts/update_marketplace_metadata.py", "scripts/update_marketplace_metadata.py"),
-    # git-hooks/ (pre-commit and pre-push excluded — local overrides with
-    # CPV sync call and version bump enforcement respectively)
-]
+LOCAL_ONLY_SCRIPTS: set[str] = {
+    "bump_version.py",           # local version has update_skill_md_versions()
+    "check_version_consistency.py",  # removed upstream, kept locally
+    "prepare_release.py",        # local-only release orchestrator
+    "publish.py",                # local-only unified publish pipeline
+    "sync_cpv_scripts.py",       # this file itself — never overwrite
+}
 
 # ---------------------------------------------------------------------------
 # Color helpers -- disabled on Windows cmd.exe / when stdout is not a tty
@@ -158,6 +134,48 @@ def _decode_content(api_response: dict) -> bytes:
     raw = api_response.get("content", "")
     # GitHub returns base64 with newlines sprinkled in; strip them before decoding
     return base64.b64decode(raw.replace("\n", ""))
+
+
+# ---------------------------------------------------------------------------
+# Auto-discovery
+# ---------------------------------------------------------------------------
+
+
+def discover_upstream_scripts() -> list[tuple[str, str]]:
+    """List the upstream scripts/ directory and return sync targets.
+
+    Queries the GitHub Contents API for all .py files in the upstream
+    scripts/ directory, filtering out LOCAL_ONLY_SCRIPTS.
+    Returns list of (upstream_path, local_relative_path) tuples.
+    """
+    endpoint = (
+        f"repos/{UPSTREAM_OWNER}/{UPSTREAM_REPO}/contents/scripts"
+        f"?ref={UPSTREAM_REF}"
+    )
+    result = subprocess.run(
+        ["gh", "api", endpoint],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to list upstream scripts/: {result.stderr.strip()}"
+        )
+
+    entries: list[dict[str, object]] = json.loads(result.stdout)
+    targets: list[tuple[str, str]] = []
+    for entry in entries:
+        name = str(entry.get("name", ""))
+        if not name.endswith(".py"):
+            continue
+        if name in LOCAL_ONLY_SCRIPTS:
+            continue
+        upstream_path = f"scripts/{name}"
+        # Map to same local path
+        targets.append((upstream_path, upstream_path))
+
+    targets.sort(key=lambda t: t[0])
+    return targets
 
 
 # ---------------------------------------------------------------------------
@@ -274,10 +292,22 @@ def main() -> int:
         _info("Mode: sync (files will be updated)")
     print()
 
+    # Auto-discover upstream scripts (minus LOCAL_ONLY_SCRIPTS)
+    try:
+        targets = discover_upstream_scripts()
+    except RuntimeError as exc:
+        _err(str(exc))
+        return 1
+
+    _info(f"Discovered {len(targets)} syncable scripts upstream")
+    if LOCAL_ONLY_SCRIPTS:
+        _info(f"Excluded (local-only): {', '.join(sorted(LOCAL_ONLY_SCRIPTS))}")
+    print()
+
     try:
         checked, updated, skipped, stale = sync_targets(
             repo_root,
-            SYNC_TARGETS,
+            targets,
             dry_run=args.dry_run,
             check_only=args.check,
         )

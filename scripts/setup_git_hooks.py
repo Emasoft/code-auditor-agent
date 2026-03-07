@@ -21,9 +21,9 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Local override — excluded from CPV sync (project needs pre-commit)
+# Only pre-push is used (per project decision -- NOT pre-commit)
 # ---------------------------------------------------------------------------
-HOOKS: list[str] = ["pre-commit", "pre-push"]
+HOOKS: list[str] = ["pre-push"]
 
 
 # ---------------------------------------------------------------------------
@@ -33,13 +33,13 @@ HOOKS: list[str] = ["pre-commit", "pre-push"]
 
 def _colors_supported() -> bool:
     """Return True when the terminal likely supports ANSI escape codes."""
-    if os.environ.get("NO_COLOR"):
-        return False
     if os.name == "nt":
         # Windows Terminal and recent cmd.exe honour VIRTUAL_TERMINAL_PROCESSING,
         # but the safest heuristic is checking for the WT_SESSION env var (Windows
         # Terminal) or ANSICON. Fall back to False for classic cmd.exe.
-        return bool(os.environ.get("WT_SESSION") or os.environ.get("ANSICON"))
+        if os.environ.get("WT_SESSION") or os.environ.get("ANSICON"):
+            return True
+        return False
     # On Unix-like systems respect isatty
     return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
@@ -146,14 +146,12 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
     _ok("Git hooks installed successfully!")
     print()
     _info("Installed hooks:")
-    print("  - pre-commit: CPV sync + plugin validation (allows MINOR issues)")
     print("  - pre-push: Read-only linting + plugin validation (blocks ALL issues)")
     print()
     _info("To test the hooks:")
     print("  git push --dry-run origin HEAD")
     print()
     _info("To bypass hooks temporarily:")
-    print("  git commit --no-verify -m 'message'")
     print("  git push --no-verify")
     print()
     if use_symlinks:
@@ -169,7 +167,7 @@ def _make_executable(path: Path) -> None:
     bits, but calling it keeps the logic unconditional.
     """
     current_mode = path.stat().st_mode
-    path.chmod(current_mode | 0o111)
+    path.chmod(current_mode | 0o755)
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +178,7 @@ def _make_executable(path: Path) -> None:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Install git hooks for plugin validation.",
-        epilog="Default behavior: Copy hooks from git-hooks/ to .git/hooks/.",
+        epilog="Default behavior: Copy hooks from git-hooks/ to .git/hooks/.\nExample: uv run python scripts/setup_git_hooks.py --symlink",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(

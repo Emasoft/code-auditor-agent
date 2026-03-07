@@ -1,7 +1,5 @@
 # Agent Recovery Protocol
 
-> **Maintenance Note:** This file shares ~70% content with `skills/caa-pr-review-and-fix-skill/references/agent-recovery.md`. When updating shared recovery steps, also update the other copy. The pr-review-and-fix version is a superset with additional multi-pass recovery steps.
-
 ## Table of Contents
 
 - [Failure Modes & Detection](#failure-modes--detection)
