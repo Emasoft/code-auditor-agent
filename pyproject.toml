@@ -35,3 +35,8 @@ exclude = ["scripts_dev/", "docs_dev/", "builds_dev/"]
 
 [tool.pyright]
 pythonVersion = "3.12"
+
+[dependency-groups]
+dev = [
+    "types-pyyaml>=6.0.12.20250915",
+]
