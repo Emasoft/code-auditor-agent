@@ -1,6 +1,6 @@
 {
   "name": "code-auditor-agent",
-  "version": "3.1.13",
+  "version": "3.1.14",
   "description": "Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, security scan, TODO generation, and optional fix loop with verification.",
   "author": {
     "name": "Emasoft",

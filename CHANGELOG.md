@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.14] - 2026-03-07
+
+### Changes
+- fix: remove stale claude-plugins-validation/scripts paths from setup_plugin_pipeline.py
+- fix: sync_cpv_scripts.py UPSTREAM_REF master → main
+- fix: check_version_consistency.py sys.path setup for cross-directory invocation
+- perf: compress all agent example blocks (11 agents, ~170 lines saved ≈ 1,700 tokens)
+- fix: codebase-audit SKILL.md — Phase 3 gap-fill queue consumption, Phase 4b security scope, deterministic AGENT_SUFFIX
+- fix: pr-review SKILL.md — add optional DIFF parameter, domain routing for config/docs
+- feat: code-correctness agent — config/metadata file syntax checks (YAML/TOML/JSON/Dockerfile)
+- feat: security-review agent — prompt injection detection + config file secrets
+- feat: codebase-audit SKILL.md — Phase 0 file type coverage (config, prompts, CI/CD, metadata)
+- feat: codebase-audit SKILL.md — Remote Repository Scanning procedure
+- feat: codebase-audit SKILL.md — Monorepo & Workspaces procedure
+- feat: codebase-audit SKILL.md — Large Codebase Strategy (1000+ files) procedure
+- feat: codebase-audit SKILL.md — Delta Audit Mode procedure
+
 ## [3.1.13] - 2026-03-06
 
 ### Changes
