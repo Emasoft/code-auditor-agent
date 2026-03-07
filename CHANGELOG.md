@@ -5,19 +5,24 @@ All notable changes to this project will be documented in this file.
 ## [3.1.14] - 2026-03-07
 
 ### Changes
-- fix: remove stale claude-plugins-validation/scripts paths from setup_plugin_pipeline.py
-- fix: sync_cpv_scripts.py UPSTREAM_REF master → main
-- fix: check_version_consistency.py sys.path setup for cross-directory invocation
-- perf: compress all agent example blocks (11 agents, ~170 lines saved ≈ 1,700 tokens)
-- fix: codebase-audit SKILL.md — Phase 3 gap-fill queue consumption, Phase 4b security scope, deterministic AGENT_SUFFIX
-- fix: pr-review SKILL.md — add optional DIFF parameter, domain routing for config/docs
-- feat: code-correctness agent — config/metadata file syntax checks (YAML/TOML/JSON/Dockerfile)
-- feat: security-review agent — prompt injection detection + config file secrets
-- feat: codebase-audit SKILL.md — Phase 0 file type coverage (config, prompts, CI/CD, metadata)
-- feat: codebase-audit SKILL.md — Remote Repository Scanning procedure
-- feat: codebase-audit SKILL.md — Monorepo & Workspaces procedure
-- feat: codebase-audit SKILL.md — Large Codebase Strategy (1000+ files) procedure
-- feat: codebase-audit SKILL.md — Delta Audit Mode procedure
+- chore: bump version 3.1.13 → 3.1.14, update changelog (77acbe8)
+- fix: stale paths, trim examples, contract gaps, procedures, non-code auditing (6454bd3)
+- chore: bump version 3.1.12 → 3.1.13, update changelog (d3a9f4e)
+- fix: agent definitions, skill docs, and procedure references from re-audit (2853604)
+- fix: critical merge script bugs — RECORD_KEEPING, FINDING_ID_RE, consolidated glob (f4f53b8)
+- chore: add .claude/ and .tldr/ to .gitignore (d1fdb7f)
+- chore: remove duplicate pyyaml from dev dependencies in uv.lock (51dd401)
+- fix: regex false positives, audit merge #{1,4}, add prompt generator script (705f50a)
+- fix: tailor TOOL GUIDANCE per agent, resolve read-completely contradiction (9293da6)
+- fix: update GHA action versions, security tools, and workflow bugs (4c4ad41)
+- fix: section header regex #{1,3} → #{1,4} for skeptical reviewer (CONTRACT-PR-001) (030866e)
+- fix: audit6 findings — README CI/CD table, stale "bash script" refs, agent-recovery timeouts (b0b677a)
+- feat: add TOOL GUIDANCE, model selection rules, and context collection script (4c678ed)
+- feat: reduce token consumption — add --quiet to scripts, REPORTING RULES to agents (1f763d7)
+- feat: remove tool restrictions from all agent frontmatter (e22baf8)
+- fix: suppress ruff E402 for cpv_validation_common imports after sys.path setup (14b99d2)
+- fix: suppress ruff E402 for cpv_validation_common import in bump_version.py (f03abce)
+- fix: post-audit corrections from v3.1.10 verification (a819dcb)
 
 ## [3.1.13] - 2026-03-06
 
