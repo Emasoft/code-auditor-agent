@@ -3,7 +3,7 @@
 bump_version.py - CLI tool to bump semantic version across all plugin files.
 
 Supports bumping major, minor, or patch versions following semver format.
-Updates version in: plugin.json, pyproject.toml, and any __version__ variables.
+Updates version in: plugin.json, pyproject.toml, SKILL.md frontmatter, and any __version__ variables.
 
 Exit codes:
     0 - Success
@@ -198,6 +198,57 @@ def update_python_version_variables(plugin_root: Path, new_version: str) -> list
     return results
 
 
+def update_skill_md_versions(plugin_root: Path, new_version: str) -> list[tuple[bool, str]]:
+    """Update version in SKILL.md frontmatter (YAML 'version:' field).
+
+    Scans skills/*/SKILL.md for lines matching 'version: X.Y.Z' inside
+    the YAML frontmatter block (between --- delimiters) and replaces
+    with the new version.
+
+    Args:
+        plugin_root: Root directory of the plugin
+        new_version: New version string to set
+
+    Returns:
+        List of (success, message) tuples for each file updated
+    """
+    results: list[tuple[bool, str]] = []
+    skills_dir = plugin_root / "skills"
+
+    if not skills_dir.is_dir():
+        return results
+
+    for skill_md in skills_dir.rglob("SKILL.md"):
+        try:
+            content = skill_md.read_text(encoding="utf-8")
+
+            # Only replace version inside YAML frontmatter (between --- markers)
+            # Match 'version: X.Y.Z' at the start of a line
+            pattern = r'^(version:\s*)(\d+\.\d+\.\d+)(.*)$'
+
+            old_version = None
+
+            def replace_fm_version(match: re.Match[str]) -> str:
+                nonlocal old_version
+                old_version = match.group(2)
+                return f"{match.group(1)}{new_version}{match.group(3)}"
+
+            new_content, count = re.subn(pattern, replace_fm_version, content, count=1, flags=re.MULTILINE)
+
+            if count > 0 and old_version != new_version:
+                skill_md.write_text(new_content, encoding="utf-8")
+                rel_path = skill_md.relative_to(plugin_root)
+                results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
+            elif count > 0 and old_version == new_version:
+                rel_path = skill_md.relative_to(plugin_root)
+                results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
+        except Exception as e:
+            rel_path = skill_md.relative_to(plugin_root)
+            results.append((False, f"Error updating {rel_path}: {e}"))
+
+    return results
+
+
 def get_current_version(plugin_root: Path) -> str | None:
     """
     Get the current version from plugin.json.
@@ -301,6 +352,10 @@ Examples:
         # Update __version__ variables
         py_results = update_python_version_variables(plugin_root, new_version)
         all_results.extend(py_results)
+
+        # Update SKILL.md frontmatter versions
+        skill_results = update_skill_md_versions(plugin_root, new_version)
+        all_results.extend(skill_results)
     else:
         # Dry run - just list files that would be updated
         all_results.append((True, "[DRY-RUN] plugin.json would be updated"))
@@ -318,6 +373,18 @@ Examples:
                     all_results.append((True, f"[DRY-RUN] {rel_path} would be updated"))
             except Exception:
                 pass
+
+        # Dry run - list SKILL.md files that would be updated
+        skills_dir = plugin_root / "skills"
+        if skills_dir.is_dir():
+            for skill_md in skills_dir.rglob("SKILL.md"):
+                try:
+                    content = skill_md.read_text(encoding="utf-8")
+                    if re.search(r"^version:\s*\d+\.\d+\.\d+", content, re.MULTILINE):
+                        rel_path = skill_md.relative_to(plugin_root)
+                        all_results.append((True, f"[DRY-RUN] {rel_path} would be updated"))
+                except Exception:
+                    pass
 
     # Print summary
     print("Summary:")

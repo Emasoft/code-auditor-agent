@@ -434,8 +434,8 @@ def prepend_changelog_entry(version: str, dry_run: bool) -> bool:
 def git_commit_and_tag(version: str, dry_run: bool) -> bool:
     """Stage changed files, commit, and create annotated tag.
 
-    Stages: README.md, CHANGELOG.md, plugin.json, pyproject.toml, and any .py files
-    modified by bump_version.py.
+    Stages: README.md, CHANGELOG.md, plugin.json, pyproject.toml, SKILL.md frontmatter,
+    and any .py files modified by bump_version.py.
 
     Args:
         version: The version string for the commit message and tag.
@@ -456,11 +456,13 @@ def git_commit_and_tag(version: str, dry_run: bool) -> bool:
         "pyproject.toml",
     ]
 
-    # Also find any .py files that were modified (from bump_version)
+    # Also find any .py or SKILL.md files that were modified (from bump_version)
     result = run_cmd(["git", "diff", "--name-only"])
     if result.returncode == 0 and result.stdout.strip():
         for changed_file in result.stdout.strip().splitlines():
-            if changed_file.endswith(".py") and changed_file not in files_to_stage:
+            if changed_file not in files_to_stage and (
+                changed_file.endswith(".py") or changed_file.endswith("SKILL.md")
+            ):
                 files_to_stage.append(changed_file)
 
     if dry_run:
