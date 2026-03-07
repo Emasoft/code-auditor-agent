@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.18] - 2026-03-07
+
+### Changes
+- feat: auto-discover upstream CPV scripts + progressive disclosure SKILL.md refactor (681c6b4)
+
 ## [3.1.17] - 2026-03-07
 
 ### Changes
