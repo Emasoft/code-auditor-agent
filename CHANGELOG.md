@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.17] - 2026-03-07
+
+### Changes
+- feat: strict quality gate + CPV sync in publish pipeline (f376910)
+
 ## [3.1.16] - 2026-03-07
 
 ### Changes
