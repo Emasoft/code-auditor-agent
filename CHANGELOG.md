@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changes
 - fix: remove auto-discovered commands/agents/skills fields from plugin.json (CRITICAL — caused malformed manifest errors preventing plugin from loading)
-- chore: update SKILL.md versions to 3.1.15
+- fix: bump_version.py now updates SKILL.md frontmatter versions
+- fix: prepare_release.py now stages SKILL.md files in git commit
 
 ## [3.1.14] - 2026-03-07
 
