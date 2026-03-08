@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.21] - 2026-03-08
+
+### Changes
+- fix: embed complete TOC headings in all SKILL.md files (d8592b2)
+
 ## [3.1.20] - 2026-03-08
 
 ### Changes
