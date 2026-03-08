@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.20] - 2026-03-08
+
+### Changes
+- chore: sync CPV validator scripts from upstream (ffa1751)
+
 ## [3.1.19] - 2026-03-08
 
 ### Changes
