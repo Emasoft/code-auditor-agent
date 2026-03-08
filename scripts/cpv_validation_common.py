@@ -2057,8 +2057,9 @@ _TOC_SECTION_RE = re.compile(
     re.DOTALL,
 )
 
-# Regex to extract individual TOC heading titles (strip numbering, links, bullets)
-_TOC_ENTRY_RE = re.compile(r"(?m)^[\s]*[-*]?\s*(?:\d+\.?\s*)?(?:\[([^\]]+)\]\([^)]*\)|(.+))")
+# Regex to extract individual TOC heading titles from list items only.
+# Must start with a list marker (-, *, +, or digit.) to avoid matching prose paragraphs.
+_TOC_ENTRY_RE = re.compile(r"(?m)^[\s]*(?:[-*+]|\d+\.)\s+(?:\[([^\]]+)\]\([^)]*\)|(.+))")
 
 # Regex to find markdown links pointing to .md files in references/
 _MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(((?:references/)?[^\s)]+\.md)\)")
@@ -2203,8 +2204,8 @@ def validate_toc_embedding(
 
         embedded_count = sum(1 for heading in toc_headings if heading.lower() in nearby_text.lower())
 
-        min_required = min(2, len(toc_headings))
-        if embedded_count >= min_required:
+        # All TOC headings must be embedded — partial TOCs hide content from agents
+        if embedded_count == len(toc_headings):
             refs_with_toc += 1
         elif is_list_item:
             # Ambiguous: link in a list item could be a TOC title that
@@ -2212,20 +2213,26 @@ def validate_toc_embedding(
             # Report as WARNING since we cannot tell which it is.
             report.warning(
                 f"Link to '{ref_path.name}' in a list entry of {rel_file} "
-                f"points to a file with a TOC ({len(toc_headings)} sections) "
-                f"but the TOC is not embedded after the link. If this is a "
-                f"reference, embed the TOC so agents know what it contains. "
-                f"If this is an embedded TOC title, avoid using markdown "
-                f"links in TOC entries to prevent this ambiguity.",
+                f"has {embedded_count}/{len(toc_headings)} TOC headings "
+                f"embedded. SKILL.md must copy the COMPLETE TOC of each "
+                f"referenced .md file immediately after its link. Any missing "
+                f"TOC entry will never be discovered by the progressive "
+                f"discovery algorithm — that content becomes invisible to "
+                f"agents. If this is a reference, embed all "
+                f"{len(toc_headings)} headings. If this is a TOC title, "
+                f"avoid using markdown links to prevent this ambiguity.",
                 rel_file,
             )
         else:
-            # Clear standalone reference — TOC must be embedded
+            # Clear standalone reference — full TOC must be embedded
             report.minor(
-                f"Reference to '{ref_path.name}' in {rel_file} does not "
-                f"include the file's Table of Contents ({len(toc_headings)} "
-                f"sections). Embed the TOC inline so agents can see what "
-                f"content is available before navigating to it.",
+                f"Reference to '{ref_path.name}' in {rel_file} has "
+                f"{embedded_count}/{len(toc_headings)} TOC headings embedded. "
+                f"SKILL.md must copy the COMPLETE TOC of each referenced .md "
+                f"file immediately after its link. Any missing TOC entry will "
+                f"never be discovered by the progressive discovery algorithm "
+                f"— that content becomes invisible to agents. Embed all "
+                f"{len(toc_headings)} headings.",
                 rel_file,
             )
 
