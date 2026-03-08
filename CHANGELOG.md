@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.19] - 2026-03-08
+
+### Changes
+- feat: enforce publish.py for all pushes via pre-push hook gate (7a85e03)
+
 ## [3.1.18] - 2026-03-07
 
 ### Changes
