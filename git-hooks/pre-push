@@ -184,6 +184,27 @@ def extract_version(filepath: Path) -> str | None:
 
 
 def main() -> int:
+    # ── Gate: reject pushes not initiated by publish.py ──
+    # publish.py sets CAA_PUBLISH_PIPELINE=1 before calling git push.
+    # Any other push path (manual git push, IDE push, etc.) is blocked.
+    if not os.environ.get("CAA_PUBLISH_PIPELINE"):
+        cprint(f"{RED}========================================{NC}")
+        cprint(f"{RED}  BLOCKED: Direct git push is forbidden{NC}")
+        cprint(f"{RED}========================================{NC}")
+        cprint("")
+        cprint(f"  All pushes MUST go through the publish pipeline:")
+        cprint(f"  {YELLOW}uv run python scripts/publish.py --patch{NC}")
+        cprint(f"  (or --minor / --major)")
+        cprint("")
+        cprint(f"  The pipeline handles: version bump, README update,")
+        cprint(f"  SKILL.md update, CHANGELOG, validation, commit,")
+        cprint(f"  tag, and push — ensuring marketplace auto-update.")
+        cprint("")
+        cprint(f"{RED}  Direct push bypasses critical steps and breaks{NC}")
+        cprint(f"{RED}  the marketplace notification chain.{NC}")
+        cprint(f"{RED}========================================{NC}")
+        return 1
+
     repo_root = get_repo_root()
 
     cprint(f"{BLUE}========================================{NC}")

@@ -66,10 +66,10 @@ def get_plugin_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def run(cmd: list[str], cwd: Path, *, check: bool = True, timeout: int = 600) -> subprocess.CompletedProcess[str]:
+def run(cmd: list[str], cwd: Path, *, check: bool = True, timeout: int = 600, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     """Run a command, print it, and fail fast on error."""
     print(f"  $ {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
     if result.stdout.strip():
         print(result.stdout.strip())
     if result.stderr.strip():
@@ -638,8 +638,10 @@ Examples:
         ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True, text=True
     )
     branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "main"
-    run(["git", "push", "origin", branch], cwd=root)
-    run(["git", "push", "origin", tag], cwd=root)
+    # Set env var so pre-push hook knows this is a legitimate publish pipeline push
+    push_env = {**os.environ, "CAA_PUBLISH_PIPELINE": "1"}
+    run(["git", "push", "origin", branch], cwd=root, env=push_env)
+    run(["git", "push", "origin", tag], cwd=root, env=push_env)
 
     print(f"\n{GREEN}{'=' * 60}{NC}")
     print(f"{GREEN}  ✓ Published {tag} successfully!{NC}")
