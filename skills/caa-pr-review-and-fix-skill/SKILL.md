@@ -1,95 +1,89 @@
 ---
 name: caa-pr-review-and-fix-skill
 description: >
-  Use when reviewing and fixing PRs with automated iterative resolution.
   Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
+  Use when reviewing and fixing PRs with automated iterative resolution.
 version: 3.1.20
 author: Emasoft
 license: MIT
-tags:
-  - caa-pr-review
-  - code-audit
-  - claim-verification
-  - quality-gate
-  - auto-fix
+tags: [caa-pr-review, code-audit, claim-verification, quality-gate, auto-fix]
 ---
 
 # PR Review And Fix
 
 ## Overview
 
-Iterative review-and-fix loop combining two procedures until zero issues remain or max passes reached. PROCEDURE 1 runs a six-phase review pipeline (correctness swarm, claim verification, skeptical review, security review, merge+dedup, present). PROCEDURE 2 spawns fix agents, runs tests, commits. Loop repeats up to 25 passes.
+Iterative review-and-fix: six-phase review (P1) then fix+test+commit (P2), repeating up to 25 passes.
 
 ## Prerequisites
 
-Copy this checklist and track your progress:
-
-- [ ] `gh` CLI installed and authenticated
-- [ ] PR exists on GitHub (need PR number or branch)
-- [ ] `docs_dev/` exists and is in `.gitignore`
-- [ ] `${CLAUDE_PLUGIN_ROOT}` is set and non-empty
-- [ ] Merge script exists at `${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py`
+`gh` authenticated, PR on GitHub, `docs_dev/` exists, `${CLAUDE_PLUGIN_ROOT}` set, `scripts/caa-merge-reports.py`
 
 ## Instructions
 
-1. Initialize `PASS_NUMBER=1`, `MAX_PASSES=25`. Read [Critical Rules](references/critical-rules.md) first.
-2. Run **PROCEDURE 1** (six-phase review): see [Procedure 1](references/procedure-1-review.md).
+1. Initialize `PASS_NUMBER=1`, `MAX_PASSES=25`. Read critical-rules.md first.
+2. Run **PROCEDURE 1** (six-phase review): see procedure-1-review.md.
 3. If zero issues found, write final report and exit with APPROVE.
 4. If `PASS_NUMBER > MAX_PASSES`, write escalation report and exit.
-5. Run **PROCEDURE 2** (fix cycle): see [Procedure 2](references/procedure-2-fix.md).
+5. Run **PROCEDURE 2** (fix cycle): see procedure-2-fix.md.
 6. Increment `PASS_NUMBER`, go to step 2.
 
 ## Output
 
-Produces per-pass review reports and a final summary in `docs_dev/`:
-
 - [Output Format](references/output-format.md):
-  - [Deliverables Table](references/output-format.md#deliverables-table)
+  - Deliverables Table, Key Outputs for the User
 
 ## Error Handling
 
-On agent failure: detect, clean up, re-spawn. On phase failure: retry once, then escalate.
-
 - [Error Handling](references/error-handling.md):
-  - [Error Recovery by Phase](references/error-handling.md#error-recovery-by-phase)
+  - Error Recovery by Phase
 - [Agent Recovery](references/agent-recovery.md):
-  - [Failure Modes](references/agent-recovery.md#failure-modes--detection)
+  - Failure Modes & Detection, Step 1: Detect the Loss, Step 2: Verify the Loss, Step 3: Clean Up Partial Artifacts
+  - Step 4: Re-Spawn the Task, Step 5: Record the Failure, Special Cases, Lost during context compaction
+  - Agent wrote report with wrong pass number (version/cache collision), Agent Recovery Checklist
+  - Multiple correctness agents for the same domain (domain label collision), Test runner left no report but tests actually ran
+
+## Checklist
+
+Copy this checklist and track your progress:
+
+- [ ] All passes completed, zero issues
+- [ ] Final report in docs_dev/
 
 ## Examples
 
-**Input:**
 ```
-User: "review and fix PR 206"
-```
-
-**Output:**
-```
-Pass 1: Review finds 8 issues -> fix agents resolve all -> commit
-Pass 2: Review finds 2 regressions -> fix agents resolve -> commit
-Pass 3: Review finds 0 issues -> APPROVE, final report written
+Input: "review and fix PR 206"
+Output: Pass 1: 8 issues fixed. Pass 2: 2 regressions. Pass 3: 0 issues → APPROVE.
 ```
 
 ## Resources
 
 - [Procedure 1: Code Review](references/procedure-1-review.md):
-  - [Phase 1: Correctness Swarm](references/procedure-1-review.md#phase-1-code-correctness-swarm)
+  - Pre-Pass Cleanup (MANDATORY), Agent Manifest, Prerequisites, Phase 1: Code Correctness Swarm
+  - Phase 2: Claim Verification, Phase 3: Skeptical Review, Phase 4: Security Review
+  - Phase 5: Merge Reports + Deduplicate, Phase 6: Present Results, Procedure 1 Checklist
 - [Procedure 2: Code Fix](references/procedure-2-fix.md):
-  - [Fix Protocol](references/procedure-2-fix.md#fix-protocol)
+  - Agent Selection (Dynamic), Fix Protocol, Linting Step (Docker Required)
+  - Commit After Fixes, Procedure 2 Output, Procedure 2 Checklist
 - [Pass Counter](references/pass-counter.md):
-  - [Initialization](references/pass-counter.md#initialization)
+  - Initialization, Run ID Generation, Pass Increment and Limit
 - [Loop Termination](references/loop-termination.md):
-  - [Termination Logic](references/loop-termination.md#termination-logic)
+  - Termination Logic, Final Report Format
 - [Report Naming](references/report-naming.md):
-  - [Filename Table](references/report-naming.md#filename-table)
+  - Overview, Filename Table, UUID Filename Generation, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
 - [Critical Rules](references/critical-rules.md):
-  - [Rule 1](references/critical-rules.md#rule-1-never-skip-phases)
+  - Rule 1: Never Skip Phases, Rule 2: Phase Order Matters, Rule 3: UUID-Named Files, Rule 4: Two-Stage Merge
+  - Rule 5: Dedup Agent Determines Verdict, Rule 6: Fix All Severities, Rule 7: Commit After Each Fix Pass
+  - Rule 8: Maximum 25 Passes, Rule 9: Agent-Prefixed Finding IDs, Rule 10: UUID-Based Report Filenames
+  - Rule 11: Same Line Different Bugs, Rule 12: Merge Script Verifies Before Deleting, Rule 13: Linting Is Conditional on Docker, Rule 14: Lint-Fix Loop Is Separate
 - [Model Selection](references/model-selection.md):
-  - [Rules](references/model-selection.md#rules)
+  - Rules
 - [Worktree Mode](references/worktree-mode.md):
-  - [How It Works](references/worktree-mode.md#how-it-works)
+  - How It Works, Prerequisites for Worktree Mode, When NOT to Use Worktrees
 - [Rationale](references/rationale.md):
-  - [The Incident](references/rationale.md#the-incident)
+  - The Incident, Four Complementary Review Perspectives
 - [Lessons Learned](references/lessons-learned.md):
-  - [Review Architecture](references/lessons-learned.md#review-architecture-lessons)
+  - Review Architecture Lessons, Fix Cycle Lessons, Pipeline Robustness Lessons, Lessons Learned Review Checklist
 - [Examples](references/examples.md):
-  - [Full Review-and-Fix Pipeline](references/examples.md#full-review-and-fix-pipeline)
+  - Full Review-and-Fix Pipeline

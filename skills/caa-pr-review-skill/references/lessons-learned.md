@@ -2,8 +2,10 @@
 
 ## Table of Contents
 
-- [Lessons](#lessons-learned-baked-into-this-pipeline)
+- [Lessons](#lessons)
 - [Checklist](#checklist)
+
+## Lessons
 
 These lessons emerged from a real incident where 20+ specialized audit agents checked a 40-file PR and found zero issues, while a single external reviewer immediately found 3 real bugs.
 

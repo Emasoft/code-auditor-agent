@@ -37,7 +37,7 @@ Requires: Python 3.12+, `uv`, Git repo, `${CLAUDE_PLUGIN_ROOT}` set.
 6. P4: Consolidate per-domain, then run P4b security scan (MANDATORY).
 7. P5: Generate actionable TODOs via `caa-todo-generator-agent`.
 8. P6-P7: If `FIX_ENABLED=true`, apply fixes and verify (else skip).
-9. P8: Compile final report. See [detailed instructions](references/instructions.md).
+9. P8: Compile final report. See `references/instructions.md` for details.
 
 ## Output
 
@@ -71,7 +71,8 @@ Copy this checklist and track your progress:
 ## Resources
 
 - [Instructions](references/instructions.md)
-  - Full phase steps, parameters, spawning patterns, loop termination
+  - Phase Steps, Parameters, Pipeline, Report Naming
+  - Finding IDs, Spawning Patterns, Fix Agent Worktree Merge-Back, Loop Termination
 - [Output Format](references/output-format.md)
   - Pipeline artifacts and report structure
 - [Model Selection](references/model-selection.md)
@@ -81,10 +82,10 @@ Copy this checklist and track your progress:
 - [Completion Checklist](references/completion-checklist.md)
   - Progress tracking criteria
 - [Remote Scanning](references/remote-scanning.md)
-  - Local clone and API-only methods
+  - Local Clone Method, API-Only Method
 - [Monorepo & Workspaces](references/monorepo.md)
   - Workspace detection and audit strategy
 - [Large Codebase Strategy](references/large-codebase.md)
-  - Tiered triage and selective audit
+  - Tier 1 - Automated Triage, Tier 2 - Selective Audit, Tier 3 - Full Coverage
 - [Delta Audit Mode](references/delta-audit.md)
-  - Incremental audit workflow
+  - Delta Audit Workflow
