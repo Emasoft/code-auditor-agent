@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.23] - 2026-03-10
+
+### Changes
+- update llm-externalizer parameter names to new MCP syntax (38d3172)
+
 ## [3.1.22] - 2026-03-10
 
 ### Changes
