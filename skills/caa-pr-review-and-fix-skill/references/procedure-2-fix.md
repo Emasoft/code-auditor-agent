@@ -88,8 +88,9 @@ When the `llm-externalizer` MCP is available, use it instead of spawning full fi
 
 **CRITICAL RULES:**
 - **Do NOT merge review reports** before sending to the externalizer. Process each review agent's report individually against its own file list. Merging loses the file-to-agent mapping and overwhelms the external LLM with too much context.
-- **ALWAYS include project context** in every `fix_code` call. The external LLM has ZERO knowledge of your project. Always say: what the project is, what language/framework, what this file does, and any relevant interfaces/types.
-- **One report at a time, one file at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues, and call `fix_code` for each file individually.
+- **ALWAYS include project context** in `prompt_text`. The external LLM has ZERO knowledge of your project. Always say: what the project is, what language/framework, what this file does, and any relevant interfaces/types.
+- **Do NOT use line numbers** in fix instructions — they are unreliable. Instead, reference function names, variable names, string literals, or quote the exact code snippet that needs fixing.
+- **One report at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues, and fix files individually or in small batches (up to 5 parallel calls).
 
 **Fix dispatch algorithm:**
 
@@ -97,19 +98,21 @@ When the `llm-externalizer` MCP is available, use it instead of spawning full fi
 2. For each entry with `fix_status: "pending"`:
    a. Set `fix_status: "in_progress"`, write ledger to disk
    b. Read the review report at `entry.report`
-   c. Parse the report: extract per-file findings (group by file path). Each finding needs: line number, code snippet, what is wrong, how to fix it
-   d. For each file in `entry.files` that has findings:
+   c. Parse the report: extract per-file findings (group by file path). Each finding needs: function/class name, a quote of the broken code, what is wrong, what the correct behavior should be
+   d. Write per-file fix instructions to a temporary .md file (e.g., `docs_dev/caa-fix-instructions-{domain}-{file}.md`) — one file per source file to fix
+   e. For each file in `entry.files` that has findings:
       - Call `mcp__llm-externalizer__fix_code` with:
-        - `file_path`: absolute path to the source file
-        - `instructions`: numbered list of issues for THIS file only, each with line number, description, and suggested fix
-        - Brief project context (language, framework, file purpose)
+        - `file_paths`: absolute path to the source file
+        - `prompt_text`: project context + summary of what to fix
+        - `prompt_files_paths`: path to the per-file fix instructions .md file (loads instructions from disk, saves orchestrator context)
+      - Up to 5 `fix_code` calls can run in parallel — launch multiple at once
       - If `fix_code` succeeds: note file as fixed
-      - If `fix_code` fails: call `mcp__llm-externalizer__revert_file` to restore the `.externbak` backup, note as failed
-   e. For files with no findings: set as `"skipped"`
-   f. Update `fix_status` to `"done"` (all files fixed or skipped) or `"failed"` (any file failed), write ledger to disk
+      - If `fix_code` fails: call `mcp__llm-externalizer__revert_file` with `file_paths` to restore the `.externbak` backup, note as failed
+   f. For files with no findings: set as `"skipped"`
+   g. Update `fix_status` to `"done"` (all files fixed or skipped) or `"failed"` (any file failed), write ledger to disk
 3. For entries that failed: fall back to spawning a fix agent for that domain (see spawning pattern below)
 
-**Batch optimization:** For entries with 3+ files that all have findings, use `mcp__llm-externalizer__batch_fix` to process them in parallel. Each file still gets its own issue list extracted from the report.
+**Batch optimization:** For entries with 3+ files that share the same set of issues (e.g., lint fixes), use `mcp__llm-externalizer__batch_fix` with `file_paths` as an array and `prompt_text` containing the common issues. The tool processes files in parallel on OpenRouter. Use `answer_mode: 0` for per-file reports.
 
 **When to fall back to fix agents:** If `discover` fails (externalizer unavailable), OR if `fix_code` fails on >50% of files in an entry, switch to the full fix agent protocol for all remaining entries.
 
