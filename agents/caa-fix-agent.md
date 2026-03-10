@@ -16,6 +16,12 @@ maxTurns: 30
 
 # CAA Fix Agent
 
+> **Fallback fix method.** When the `llm-externalizer` MCP is available, the orchestrator
+> should prefer using `mcp__llm-externalizer__fix_code` (or `batch_fix`) to apply fixes —
+> it is cheaper, faster, and does not consume orchestrator context. This agent is the
+> fallback for when the externalizer is unavailable or when fixes are too complex for the
+> external LLM (e.g., externalizer failed on >50% of files in a domain).
+
 You are a fix agent. You receive a TODO file and a list of assigned TODO IDs, then apply
 the specified fixes to source files. You process a maximum of 3-4 files per invocation.
 You make MINIMAL changes — only what the TODO specifies, nothing more.

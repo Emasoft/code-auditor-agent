@@ -44,12 +44,83 @@ and always fall back to `general-purpose` if the preferred agent is not found.
 
 ## Fix Protocol
 
+### Fix Dispatch Ledger (Compaction-Safe Tracking)
+
+The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. This file maps each review agent's report to the exact source files it scanned, enabling crash recovery and compaction survival.
+
+**Ledger path:** `{REPORT_DIR}/caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json`
+
+**When to create:** During PROCEDURE 1 setup, when the orchestrator divides the PR into domains and assigns file groups to review agents. At this point you already know which files go to which agent — record that mapping immediately.
+
+**When to update:** After each review agent completes, update its entry with the report path and set `agent_status: "completed"`. Write the updated ledger to disk after every change.
+
+**Format:**
+
+```json
+{
+  "run_id": "{RUN_ID}",
+  "pass_number": 1,
+  "created_at": "ISO timestamp",
+  "entries": [
+    {
+      "domain": "server",
+      "agent": "caa-code-correctness-agent",
+      "report": "docs_dev/caa-pr-review-P1-abc123.md",
+      "files": ["src/server.ts", "src/routes.ts", "src/middleware.ts"],
+      "agent_status": "completed",
+      "fix_status": "pending",
+      "fixed_at": null,
+      "error": null
+    }
+  ]
+}
+```
+
+**fix_status lifecycle:** `pending` → `in_progress` → `done` | `failed` | `skipped` (no findings in report)
+
+**Crash recovery:** On restart, read the ledger from disk. Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `mcp__llm-externalizer__revert_file` or git checkout). Resume from the first `pending` entry.
+
+### LLM Externalizer Fix Protocol (Preferred When Available)
+
+When the `llm-externalizer` MCP is available, use it instead of spawning full fix agents. The externalizer is cheaper, faster, and avoids consuming orchestrator context tokens.
+
+**Availability check:** At the start of PROCEDURE 2, call `mcp__llm-externalizer__discover`. If it succeeds, use the externalizer protocol below. If it fails or the MCP is not configured, fall back to the standard fix agent protocol (spawning pattern section below).
+
+**CRITICAL RULES:**
+- **Do NOT merge review reports** before sending to the externalizer. Process each review agent's report individually against its own file list. Merging loses the file-to-agent mapping and overwhelms the external LLM with too much context.
+- **ALWAYS include project context** in every `fix_code` call. The external LLM has ZERO knowledge of your project. Always say: what the project is, what language/framework, what this file does, and any relevant interfaces/types.
+- **One report at a time, one file at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues, and call `fix_code` for each file individually.
+
+**Fix dispatch algorithm:**
+
+1. Read the Fix Dispatch Ledger from disk
+2. For each entry with `fix_status: "pending"`:
+   a. Set `fix_status: "in_progress"`, write ledger to disk
+   b. Read the review report at `entry.report`
+   c. Parse the report: extract per-file findings (group by file path). Each finding needs: line number, code snippet, what is wrong, how to fix it
+   d. For each file in `entry.files` that has findings:
+      - Call `mcp__llm-externalizer__fix_code` with:
+        - `file_path`: absolute path to the source file
+        - `instructions`: numbered list of issues for THIS file only, each with line number, description, and suggested fix
+        - Brief project context (language, framework, file purpose)
+      - If `fix_code` succeeds: note file as fixed
+      - If `fix_code` fails: call `mcp__llm-externalizer__revert_file` to restore the `.externbak` backup, note as failed
+   e. For files with no findings: set as `"skipped"`
+   f. Update `fix_status` to `"done"` (all files fixed or skipped) or `"failed"` (any file failed), write ledger to disk
+3. For entries that failed: fall back to spawning a fix agent for that domain (see spawning pattern below)
+
+**Batch optimization:** For entries with 3+ files that all have findings, use `mcp__llm-externalizer__batch_fix` to process them in parallel. Each file still gets its own issue list extracted from the report.
+
+**When to fall back to fix agents:** If `discover` fails (externalizer unavailable), OR if `fix_code` fails on >50% of files in an entry, switch to the full fix agent protocol for all remaining entries.
+
+### Fix Steps
+
 1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
 2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
-3. For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
-4. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved.
-5. Wait for all fixing agents to complete and save their partial reports.
-6. Read all fix reports and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
+3. **Check LLM Externalizer availability** via `mcp__llm-externalizer__discover`. If available, use the LLM Externalizer Fix Protocol above (read dispatch ledger, process reports one by one). Skip to step 6 after externalizer completes.
+4. **Fallback (no externalizer):** For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
+5. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved. Wait for all fixing agents to complete and save their partial reports.
+6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
 7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions.
 8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause.
 9. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.

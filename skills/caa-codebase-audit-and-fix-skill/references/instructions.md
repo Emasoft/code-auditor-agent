@@ -16,7 +16,7 @@ Follow these steps to run the audit pipeline:
 
 1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path. Verify `REFERENCE_STANDARD` file exists and is non-empty before proceeding. If not, STOP with error: 'REFERENCE_STANDARD not found or empty at {path}.'
 2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
-3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4. If the file inventory returns zero files, STOP immediately with error: 'No files found in SCOPE_PATH ({path}). Verify the path exists and contains auditable files.' Do not proceed to Phase 1 with an empty file list.
+3. Run Phase 0: inventory all files, classify by domain, triage with grep, batch into groups of 3-4. If the file inventory returns zero files, STOP immediately with error: 'No files found in SCOPE_PATH ({path}). Verify the path exists and contains auditable files.' Do not proceed to Phase 1 with an empty file list. **Create the Fix Dispatch Ledger** at `{REPORT_DIR}/caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json` — record each domain's batch of files so the fix phase can map reports to source files (see Phase 6).
 
    **File type coverage**: The inventory MUST include ALL text files, not just source code:
    - Source code: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.java`, `.rb`, `.sh`, `.bash`
@@ -35,7 +35,7 @@ Follow these steps to run the audit pipeline:
 7. Run Phase 4: consolidate per-domain reports (max 5 inputs per agent, hierarchical if more)
 8. Run Phase 4b: spawn `caa-security-review-agent` (MANDATORY, never skip) against all audited files. The security agent runs automated tools (trufflehog, bandit, osv-scanner, etc.) and performs manual vulnerability analysis. Its findings are appended to the consolidated reports before TODO generation.
 9. Run Phase 5: generate `TODO-{scope}-changes.md` per domain with file:line:evidence triples
-10. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes
+10. If `FIX_ENABLED=true`: run Phase 6 (apply fixes) and Phase 7 (verify fixes), loop until all PASS or max passes. **Phase 6 LLM Externalizer protocol:** At the start of Phase 6, call `mcp__llm-externalizer__discover`. If available, use the externalizer to apply fixes (cheaper, faster): read the Fix Dispatch Ledger, process each domain's audit reports ONE BY ONE (never merge them), extract per-file findings, and call `fix_code` for each source file with its specific issues. Update the ledger entry's `fix_status` after each file. If externalizer is unavailable or fails on >50% of files, fall back to spawning `caa-fix-agent` per the standard protocol. The ledger survives context compactions — on crash/restart, resume from the first `pending` entry.
 11. Run Phase 8: run the merge script to produce an intermediate report, then spawn `caa-dedup-agent` to produce the final deduplicated report. Rename the dedup output to `caa-audit-FINAL-{timestamp}.md`
 
 ## Parameters
@@ -89,6 +89,7 @@ Most pipeline reports use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md` (ag
 | Fix checkpoint | `caa-checkpoint-P{N}-{domain}.json` |
 | Fix verify | `caa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` |
 | Manifest | `caa-manifest-R{RUN_ID}.json` |
+| Fix dispatch ledger | `caa-fix-dispatch-P{N}-R{RUN_ID}.json` |
 | Final | `caa-audit-FINAL-{timestamp}.md` |
 
 ## Finding IDs
@@ -110,7 +111,7 @@ All agents receive: `REFERENCE_STANDARD, REPORT_PATH`. Phase 1-3 agents also rec
 **P4b Security**: `DOMAIN=all-audited-files`, `FILES=ALL` (or list from manifest), `PASS=PASS_NUMBER`, `RUN_ID`, `FINDING_ID_PREFIX=SC-P{N}`, `REPORT_DIR`. Single instance. Runs automated security tools (trufflehog, bandit, osv-scanner) and manual vulnerability analysis. This phase is MANDATORY — never skip it. Append security findings to consolidated reports before TODO generation.
 **Security scope:** Pass FILES = the complete file inventory from Phase 0 (all files in scope, not just those that had findings in Phase 1-3).
 **P5 TODO**: `CONSOLIDATED_REPORT`, `SCOPE_NAME`, `TODO_PREFIX`, `OUTPUT_PATH`. Each TODO must have file:line:evidence triple.
-**P6 Fix**: `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
+**P6 Fix**: If `llm-externalizer` MCP is available (check via `discover`), prefer it: read the Fix Dispatch Ledger, process each report individually, call `fix_code` per file with extracted findings. Update ledger `fix_status` after each file. Fall back to `caa-fix-agent` if externalizer unavailable or fails. **Fallback params:** `TODO_FILE`, `ASSIGNED_TODOS`, `FILES`, `CHECKPOINT_PATH`, `REPORT_PATH`. Checkpoint after each fix. Harmonization: preserve existing + add new.
 **P7 Fix-verify**: `FIXED_FILES`, `ORIGINAL_TODOS`, `FIX_REPORT`, `TODO_FILE`, `REFERENCE_STANDARD`, `REPORT_PATH`. Verdict: PASS/FAIL/REGRESSION.
 
 All agents end with: `REPORTING RULES: Write details to report file. Return ONLY: "[DONE/FAILED] {task} - {summary}. Report: {path}". Max 2 lines.`
