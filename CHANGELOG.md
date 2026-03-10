@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.22] - 2026-03-10
+
+### Changes
+- chore: sync updated CPV validator (backtick reference detection) (c139a74)
+- fix: restore markdown link for instructions.md reference in SKILL.md (bfcd2cd)
+- chore: update uv.lock (bd4bcc3)
+- feat: add LLM Externalizer fix protocol and Fix Dispatch Ledger (845ce0c)
+
 ## [3.1.21] - 2026-03-08
 
 ### Changes
