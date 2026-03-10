@@ -37,7 +37,7 @@ Requires: Python 3.12+, `uv`, Git repo, `${CLAUDE_PLUGIN_ROOT}` set.
 6. P4: Consolidate per-domain, then run P4b security scan (MANDATORY).
 7. P5: Generate actionable TODOs via `caa-todo-generator-agent`.
 8. P6-P7: If `FIX_ENABLED=true`, apply fixes and verify (else skip).
-9. P8: Compile final report. See `references/instructions.md` for details.
+9. P8: Compile final report. See [instructions](references/instructions.md).
 
 ## Output
 
