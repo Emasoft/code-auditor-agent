@@ -1,6 +1,6 @@
 [project]
 name = "code-auditor-agent"
-version = "3.1.23"
+version = "3.1.24"
 description = "Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Code"
 requires-python = ">=3.12"
 license = "MIT"

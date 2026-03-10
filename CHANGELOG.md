@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.24] - 2026-03-10
+
+### Changes
+- update uv.lock (0f7ade1)
+- integrate llm-externalizer for consolidation and TODO generation steps (ab910f9)
+
 ## [3.1.23] - 2026-03-10
 
 ### Changes
