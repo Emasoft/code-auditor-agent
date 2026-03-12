@@ -51,7 +51,7 @@ You will receive:
 2. `COMMIT_MESSAGES` — All commit messages in the PR
 3. `DIFF` — Path to the git diff file (or use `gh pr diff`)
 4. `PR_NUMBER` — The PR number (for `gh` commands)
-5. `REPORT_DIR` — Directory where to write your findings report
+5. `REPORT_PATH` — File path where to write your findings report
 6. `FINDING_ID_PREFIX` — Prefix for finding IDs (e.g., CV-P1)
 
 ## VERIFICATION PROTOCOL

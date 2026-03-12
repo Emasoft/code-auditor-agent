@@ -69,7 +69,7 @@ jobs:
             echo "## Changes"
             echo ""
             echo "$LOG"
-          } > "$RUNNER_TEMP/release-body.md"
+          } > "${{ runner.temp }}/release-body.md"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2

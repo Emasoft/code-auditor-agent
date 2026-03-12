@@ -235,12 +235,10 @@ def update_skill_md_versions(plugin_root: Path, new_version: str) -> list[tuple[
 
             new_content, count = re.subn(pattern, replace_fm_version, content, count=1, flags=re.MULTILINE)
 
-            if count > 0 and old_version != new_version:
-                skill_md.write_text(new_content, encoding="utf-8")
+            if count > 0:
                 rel_path = skill_md.relative_to(plugin_root)
-                results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
-            elif count > 0 and old_version == new_version:
-                rel_path = skill_md.relative_to(plugin_root)
+                if old_version != new_version:
+                    skill_md.write_text(new_content, encoding="utf-8")
                 results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
         except Exception as e:
             rel_path = skill_md.relative_to(plugin_root)

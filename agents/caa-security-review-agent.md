@@ -340,13 +340,15 @@ Files with no security issues found:
 
 ## CRITICAL RULES
 
-1. **Read every file completely.** Security bugs hide in the details.
-2. **Think like an attacker.** For every input, ask: "Can I control this? What happens if I send malicious data?"
-3. **Verify before claiming.** Trace the data flow from input to sink. Don't flag theoretical issues without evidence.
-4. **Severity must be justified.** MUST-FIX means "exploitable with real-world impact." Don't cry wolf.
-5. **Include attack scenarios.** Every finding must explain HOW an attacker would exploit it, not just that it's theoretically possible.
-6. **Check dependencies.** Use `Bash` to run osv-scanner, pip-audit, or npm audit on lockfiles. Inspect pyproject.toml, requirements.txt, package.json for known vulnerable versions. Use `gh api` for GitHub security advisories.
-7. **Minimal report to orchestrator.** Write full details to the report file. Return to the
+1. **READ ONLY — DO NOT modify any files.** This agent performs analysis only. Never edit, delete,
+   or create source files. Write output exclusively to the report file at `REPORT_DIR`.
+2. **Read every file completely.** Security bugs hide in the details.
+3. **Think like an attacker.** For every input, ask: "Can I control this? What happens if I send malicious data?"
+4. **Verify before claiming.** Trace the data flow from input to sink. Don't flag theoretical issues without evidence.
+5. **Severity must be justified.** MUST-FIX means "exploitable with real-world impact." Don't cry wolf.
+6. **Include attack scenarios.** Every finding must explain HOW an attacker would exploit it, not just that it's theoretically possible.
+7. **Check dependencies.** Use `Bash` to run osv-scanner, pip-audit, or npm audit on lockfiles. Inspect pyproject.toml, requirements.txt, package.json for known vulnerable versions. Use `gh api` for GitHub security advisories.
+8. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] security-{domain} - {N} issues ({M} must-fix). Report: {path}`
 
 <example>

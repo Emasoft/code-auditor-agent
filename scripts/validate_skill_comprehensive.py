@@ -1202,9 +1202,7 @@ def validate_path_formats(body: str, report: ValidationReport, skip_platform_che
         report: ValidationReport to add results to
         skip_platform_checks: List of platforms to skip checks for (e.g., ['windows'])
     """
-    skip_windows = skip_platform_checks is not None and (
-        "windows" in skip_platform_checks or len(skip_platform_checks) == 0
-    )
+    skip_windows = skip_platform_checks is not None and "windows" in skip_platform_checks
 
     lines = body.split("\n")
     in_code_block = False
