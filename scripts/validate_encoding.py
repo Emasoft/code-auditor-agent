@@ -201,6 +201,18 @@ def check_bom(content: bytes, file_path: str, report: EncodingValidationReport) 
         report.stats["bom_issues"] += 1
         return False
 
+    # UTF-32 LE BOM (must check before UTF-16 LE, since UTF-32 LE starts with \xff\xfe)
+    if content.startswith(b"\xff\xfe\x00\x00"):
+        report.critical(f"File has UTF-32 LE BOM (must use UTF-8): {file_path}")
+        report.stats["bom_issues"] += 1
+        return False
+
+    # UTF-32 BE BOM
+    if content.startswith(b"\x00\x00\xfe\xff"):
+        report.critical(f"File has UTF-32 BE BOM (must use UTF-8): {file_path}")
+        report.stats["bom_issues"] += 1
+        return False
+
     # UTF-16 LE BOM
     if content.startswith(b"\xff\xfe"):
         report.critical(f"File has UTF-16 LE BOM (must use UTF-8): {file_path}")
@@ -210,18 +222,6 @@ def check_bom(content: bytes, file_path: str, report: EncodingValidationReport) 
     # UTF-16 BE BOM
     if content.startswith(b"\xfe\xff"):
         report.critical(f"File has UTF-16 BE BOM (must use UTF-8): {file_path}")
-        report.stats["bom_issues"] += 1
-        return False
-
-    # UTF-32 LE BOM
-    if content.startswith(b"\xff\xfe\x00\x00"):
-        report.critical(f"File has UTF-32 LE BOM (must use UTF-8): {file_path}")
-        report.stats["bom_issues"] += 1
-        return False
-
-    # UTF-32 BE BOM
-    if content.startswith(b"\x00\x00\xfe\xff"):
-        report.critical(f"File has UTF-32 BE BOM (must use UTF-8): {file_path}")
         report.stats["bom_issues"] += 1
         return False
 

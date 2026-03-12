@@ -18,9 +18,13 @@ maxTurns: 30
 
 > **Fallback fix method.** When the `llm-externalizer` MCP is available, the orchestrator
 > should prefer using `mcp__llm-externalizer__fix_code` (or `batch_fix`) to apply fixes —
-> it is cheaper, faster, and does not consume orchestrator context. This agent is the
-> fallback for when the externalizer is unavailable or when fixes are too complex for the
-> external LLM (e.g., externalizer failed on >50% of files in a domain).
+> it is cheaper, faster, and does not consume orchestrator context. Always use
+> `scan_secrets: true` to prevent leaking secrets to the external LLM. The LLM applies fixes
+> mechanically — YOU must diagnose the bugs and provide detailed, actionable descriptions
+> referencing function/variable names (not line numbers). Note: 300s timeout per call — set
+> `max_tokens` for large files. This agent is the fallback for when the externalizer is
+> unavailable or when fixes are too complex for the external LLM (e.g., externalizer failed
+> on >50% of files in a domain).
 
 You are a fix agent. You receive a TODO file and a list of assigned TODO IDs, then apply
 the specified fixes to source files. You process a maximum of 3-4 files per invocation.

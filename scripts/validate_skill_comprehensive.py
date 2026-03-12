@@ -1447,7 +1447,7 @@ def validate_content_patterns(body: str, report: ValidationReport, strict_mode: 
             "SKILL.md",
             category="Content Patterns",
         )
-    elif strict_mode and "workflow" in body.lower() or "step" in body.lower():
+    elif strict_mode and ("workflow" in body.lower() or "step" in body.lower()):
         report.minor(
             "Workflow mentioned but few numbered steps found (best practice: use 1. 2. 3. format)",
             "SKILL.md",
