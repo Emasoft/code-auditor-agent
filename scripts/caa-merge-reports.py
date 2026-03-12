@@ -81,7 +81,8 @@ NIT_RE = re.compile(r"^#{1,4}\s*(NIT|CONSISTENCY\sISSUES)", re.IGNORECASE)
 CLEAN_RE = re.compile(r"^#{1,4}\s*(CLEAN|VERIFIED)", re.IGNORECASE)
 RECORD_KEEPING_RE = re.compile(r"^#{1,4}\s*(RECORD.KEEPING)", re.IGNORECASE)
 # New top-level section that resets the current section
-NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9]|^#{1,2}\s*[A-Z]")
+# Only single-hash (#) for [A-Z] branch to avoid matching sub-headers like ## Evidence
+NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9]|^#\s+[A-Z]")
 
 # -- Finding line regex (lines starting with ## to ##### then a bracket) --------
 FINDING_LINE_RE = re.compile(r"^#{2,5}\s*\[")

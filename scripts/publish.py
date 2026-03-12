@@ -626,7 +626,8 @@ Examples:
     # ── Step 11: Commit + tag ──
     print(f"\n{BLUE}═══ Step 11: Commit and tag ═══{NC}")
     tag = f"v{new_version}"
-    run(["git", "add", "-A"], cwd=root)
+    # Use -u (tracked files only) instead of -A to avoid staging untracked files
+    run(["git", "add", "-u"], cwd=root)
     run(["git", "commit", "-m", f"release: {tag}"], cwd=root)
     run(["git", "tag", "-a", tag, "-m", f"Release {tag}"], cwd=root)
     print(f"{GREEN}✓ Committed and tagged {tag}{NC}")

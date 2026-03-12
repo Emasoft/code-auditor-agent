@@ -64,19 +64,15 @@ jobs:
           else
             LOG=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
           fi
-          # Use dynamic delimiter to prevent commit messages from injecting output boundaries
-          DELIM="CHANGELOG_DELIMITER_$(date +%s%N)"
+          # Write changelog to a file to avoid YAML injection via commit messages
           {
-            echo "CHANGELOG<<${DELIM}"
+            echo "## Changes"
+            echo ""
             echo "$LOG"
-            echo "${DELIM}"
-          } >> "$GITHUB_OUTPUT"
+          } > "$RUNNER_TEMP/release-body.md"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
-          body: |
-            ## Changes
-
-            ${{ steps.changelog.outputs.CHANGELOG }}
+          body_path: ${{ runner.temp }}/release-body.md
           files: validation-report.txt

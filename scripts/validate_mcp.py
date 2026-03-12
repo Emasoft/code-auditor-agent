@@ -387,12 +387,9 @@ def validate_mcp_config(
     report.info(f"Found {len(servers)} MCP server(s) in {rel_path}")
 
     # Validate each server
-    server_names = set()
+    # NOTE: Python json.loads() silently deduplicates dict keys, so duplicate server names
+    # cannot be detected here. Duplicate detection would require a custom JSON parser.
     for server_name, server_config in servers.items():
-        # Check for duplicate names
-        if server_name in server_names:
-            report.major(f"Duplicate server name: {server_name}")
-        server_names.add(server_name)
 
         # Validate server name format — uses shared validate_component_name for uniform rules
         validate_component_name(server_name, "mcp-server", report)

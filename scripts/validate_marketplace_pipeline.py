@@ -17,9 +17,9 @@ This validator ensures your marketplace can:
 
 Exit Codes:
   0 - Score >= 90 (A grade) - Pipeline fully operational
-  1 - Score >= 70 (B or C grade) - Minor gaps, mostly functional
+  1 - Score < 60 (F grade) - Pipeline broken or not configured
   2 - Score >= 60 (D grade) - Manual updates required
-  3 - Score < 60 (F grade) - Pipeline broken or not configured
+  3 - Score >= 70 (B or C grade) - Minor gaps, mostly functional
 
 Usage:
     uv run python scripts/validate_marketplace_pipeline.py /path/to/marketplace
@@ -269,13 +269,13 @@ class PipelineValidationReport:
         """Return appropriate exit code based on score."""
         score = self.total_score
         if score >= 90:
-            return EXIT_OK  # A grade
+            return EXIT_OK  # A grade — pipeline fully operational
         elif score >= 70:
-            return EXIT_CRITICAL  # B or C grade
+            return EXIT_MINOR  # B or C grade — minor gaps, mostly functional
         elif score >= 60:
-            return EXIT_MAJOR  # D grade
+            return EXIT_MAJOR  # D grade — manual updates required
         else:
-            return EXIT_MINOR  # F grade (ironic but follows spec)
+            return EXIT_CRITICAL  # F grade — pipeline broken or not configured
 
     def to_dict(self) -> dict[str, Any]:
         """Convert report to dictionary for JSON serialization."""

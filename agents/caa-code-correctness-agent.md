@@ -57,7 +57,7 @@ You will receive:
 1. `DOMAIN` — A label for the file group (e.g., "shell-scripts", "agent-registry", "messaging")
 2. `FILES` — A list of file paths to audit
 3. `DIFF` — The git diff for these files (optional, may be provided as file path)
-4. `REPORT_DIR` — Directory where to write your findings report
+4. `REPORT_PATH` — File path where to write your findings report
 5. `AGENT_PREFIX` — Prefix for this agent instance (used in finding IDs and filenames)
 6. `FINDING_ID_PREFIX` — Prefix for finding IDs (e.g., CC-P1-A0)
 

@@ -63,11 +63,11 @@ NC = "\033[0m" if _USE_COLOR else ""
 
 # ── Section detection patterns ───────────────────────────────────────────────
 # These regexes detect severity section headers in the consolidated report
-RE_MUST_FIX = re.compile(r"^#{1,3}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)", re.IGNORECASE)
-RE_SHOULD_FIX = re.compile(r"^#{1,3}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)", re.IGNORECASE)
-RE_NIT = re.compile(r"^#{1,3}\s*(NIT|CONSISTENCY|STYLE|SUGGESTION)", re.IGNORECASE)
+RE_MUST_FIX = re.compile(r"^#{1,3}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)\s*$", re.IGNORECASE)
+RE_SHOULD_FIX = re.compile(r"^#{1,3}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)\s*$", re.IGNORECASE)
+RE_NIT = re.compile(r"^#{1,3}\s*(NIT|CONSISTENCY|STYLE|SUGGESTION)\s*$", re.IGNORECASE)
 RE_END_SECTION = re.compile(
-    r"^#{1,3}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS|SOURCE REPORTS)",
+    r"^#{1,3}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS|SOURCE REPORTS)\s*$",
     re.IGNORECASE,
 )
 

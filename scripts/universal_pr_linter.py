@@ -725,7 +725,10 @@ Dry run:
                 else:
                     _copy_tree_readonly(src, workspace)
             else:
-                _clone_repo(repo_or_path or "", workspace, token=token)
+                if not repo_or_path:
+                    print("ERROR: Repository URL or path is empty.", file=sys.stderr)
+                    return 1
+                _clone_repo(repo_or_path, workspace, token=token)
 
             files_to_lint: list[str] | None = None
             validate_all = True
