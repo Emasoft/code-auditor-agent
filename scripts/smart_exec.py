@@ -260,13 +260,7 @@ def npm_exec_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
 
 
 def deno_npm_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True) -> list[str]:
-    """Build argv for running an npm package via Deno with minimal permissions.
-
-    NOTE: `deno run npm:<pkg>` runs the package's default binary. The `cmd` parameter
-    is ignored because Deno's npm: specifier does not support selecting a specific
-    binary within a package. The `--` separator passes tool_args to the script.
-    """
-    _ = cmd  # kept in signature for API consistency with npx_argv/npm_exec_argv
+    """Build argv for running an npm package via Deno with minimal permissions."""
     ver = "@latest" if latest else ""
     spec = f"npm:{pkg}{ver}"
     return [
@@ -279,6 +273,7 @@ def deno_npm_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True)
         "--no-prompt",
         spec,
         "--",
+        cmd,
     ] + tool_args
 
 

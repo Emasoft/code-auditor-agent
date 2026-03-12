@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.25] - 2026-03-12
+
+### Changes
+- chore: update uv.lock (bff0214)
+- fix: resolve remaining audit findings (6 files) (7c47944)
+- fix: self-audit batch 2 — 14 remaining MUST-FIX issues (c0712a9)
+- fix: self-audit batch 1 — 5 Python bugs + llm-externalizer docs update (d1cd4c0)
+- fix: correct llm-externalizer parameter names (self-audit MUST-FIX #1) (0677f9f)
+
 ## [3.1.24] - 2026-03-10
 
 ### Changes

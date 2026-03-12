@@ -535,7 +535,7 @@ def validate_plugin_source(
             # Accept relative paths (./path or ../path) as local source
             if source.startswith("./") or source.startswith("../"):
                 # Validate that the local path exists
-                resolved = marketplace_dir / source.removeprefix("./")
+                resolved = marketplace_dir / source.lstrip("./")
                 if not resolved.exists():
                     results.append(
                         ValidationResult(
