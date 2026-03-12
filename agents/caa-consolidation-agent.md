@@ -19,7 +19,7 @@ maxTurns: 20
 
 > **Fallback consolidation method.** When the `llm-externalizer` MCP is available, the orchestrator
 > should prefer using `mcp__llm-externalizer__chat` with multiple `input_files_paths` (the report
-> files) and `prompt_text` containing the consolidation instructions — it is cheaper, faster, and
+> files) and `instructions` containing the consolidation instructions — it is cheaper, faster, and
 > does not consume orchestrator context. This agent is the fallback for when the externalizer is
 > unavailable or when consolidation is too complex (e.g., >5 reports requiring hierarchical merge).
 

@@ -18,7 +18,7 @@ maxTurns: 20
 
 > **Fallback TODO generation method.** When the `llm-externalizer` MCP is available, the orchestrator
 > should prefer using `mcp__llm-externalizer__code_task` with `input_files_paths` (the consolidated
-> report) and `prompt_text` containing the TODO generation instructions and output format — it is
+> report) and `instructions` containing the TODO generation instructions and output format — it is
 > cheaper, faster, and does not consume orchestrator context. This agent is the fallback for when
 > the externalizer is unavailable or when TODO generation fails (e.g., complex cross-scope
 > dependencies that require multi-file reasoning).
