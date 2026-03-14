@@ -78,21 +78,20 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
 
 **fix_status lifecycle:** `pending` → `in_progress` → `done` | `failed` | `skipped` (no findings in report)
 
-**Crash recovery:** On restart, read the ledger from disk. Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `mcp__llm-externalizer__revert_file` or git checkout). Resume from the first `pending` entry.
+**Crash recovery:** On restart, read the ledger from disk. Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `git checkout` on the affected files). Resume from the first `pending` entry.
 
-### LLM Externalizer Fix Protocol (Preferred When Available)
+### LLM Externalizer Analysis Protocol (When Available)
 
-When the `llm-externalizer` MCP is available, use it instead of spawning full fix agents. The externalizer is cheaper, faster, and avoids consuming orchestrator context tokens.
+The `llm-externalizer` MCP has **read-only analysis tools only** — write tools (`fix_code`, `batch_fix`, `revert_file`) were removed. Use the externalizer for **diagnosis** (cheaper than spawning full agents), then apply fixes manually with Read+Edit tools or by spawning `caa-fix-agent`.
 
-**Availability check:** At the start of PROCEDURE 2, call `mcp__llm-externalizer__discover`. If it succeeds, use the externalizer protocol below. If it fails or the MCP is not configured, fall back to the standard fix agent protocol (spawning pattern section below).
+**Availability check:** At the start of PROCEDURE 2, call `mcp__llm-externalizer__discover`. If it succeeds, use the externalizer for analysis below. If it fails or the MCP is not configured, fall back to the standard fix agent protocol (spawning pattern section below).
 
 **CRITICAL RULES:**
 - **Do NOT merge review reports** before sending to the externalizer. Process each review agent's report individually against its own file list. Merging loses the file-to-agent mapping and overwhelms the external LLM with too much context.
 - **ALWAYS include project context** in `instructions`. The external LLM has ZERO knowledge of your project. Always say: what the project is, what language/framework, what this file does, and any relevant interfaces/types.
-- **Do NOT use line numbers** in fix instructions — they are unreliable. Instead, reference function names, variable names, string literals, or quote the exact code snippet that needs fixing. The LLM applies fixes mechanically — YOU must diagnose the bugs and provide detailed, actionable descriptions.
-- **One report at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues, and fix files individually or in small batches (up to 5 parallel calls).
-- **300s timeout per call** (MCP spec limit). Large files may truncate — set `max_tokens` appropriately or split large files into separate calls.
-- **Use `scan_secrets: true`** on `fix_code`/`batch_fix` calls to prevent sending API keys, tokens, or passwords to the external LLM. The call aborts if secrets are found — move secrets to `.env` (gitignored) first.
+- **One report at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues.
+- **120s timeout per call** (MCP spec limit). Large files may truncate — set `max_tokens` appropriately or split large files into separate calls.
+- **Use `scan_secrets: true`** on analysis calls to prevent sending API keys, tokens, or passwords to the external LLM.
 
 **Fix dispatch algorithm:**
 
@@ -101,30 +100,17 @@ When the `llm-externalizer` MCP is available, use it instead of spawning full fi
    a. Set `fix_status: "in_progress"`, write ledger to disk
    b. Read the review report at `entry.report`
    c. Parse the report: extract per-file findings (group by file path). Each finding needs: function/class name, a quote of the broken code, what is wrong, what the correct behavior should be
-   d. Write per-file fix instructions to a temporary .md file (e.g., `docs_dev/caa-fix-instructions-{domain}-{file}.md`) — one file per source file to fix
-   e. For each file in `entry.files` that has findings:
-      - Call `mcp__llm-externalizer__fix_code` with:
-        - `input_files_paths`: absolute path to the source file
-        - `instructions`: project context + summary of what to fix
-        - `instructions_files_paths`: path to the per-file fix instructions .md file (loads instructions from disk, saves orchestrator context)
-        - `scan_secrets: true` (abort if secrets found — prevents leaking to external LLM)
-        - `language` is auto-detected from the file extension (override only if needed)
-      - Up to 5 `fix_code` calls can run in parallel — launch multiple at once
-      - If `fix_code` succeeds: note file as fixed
-      - If `fix_code` fails: call `mcp__llm-externalizer__revert_file` with `input_files_paths` to restore the `.externbak` backup, note as failed
+   d. **Analysis (optional):** If findings are complex, call `mcp__llm-externalizer__code_task` with `input_files_paths` (the source file), `instructions` (project context + "Generate exact fix instructions for these issues: {issues}"), and `scan_secrets: true`. The response provides detailed fix guidance. Up to 5 analysis calls can run in parallel.
+   e. **Apply fixes:** Use Read+Edit tools to apply each fix directly, or spawn `caa-fix-agent` for complex multi-file fixes. Reference function/variable names (not line numbers) when locating code to change.
    f. For files with no findings: set as `"skipped"`
    g. Update `fix_status` to `"done"` (all files fixed or skipped) or `"failed"` (any file failed), write ledger to disk
 3. For entries that failed: fall back to spawning a fix agent for that domain (see spawning pattern below)
-
-**Batch optimization:** For entries with 3+ files that share the same set of issues (e.g., lint fixes), use `mcp__llm-externalizer__batch_fix` with `input_files_paths` as an array, `instructions` containing the common issues, and `scan_secrets: true`. The tool processes files in parallel on OpenRouter. Use `answer_mode: 0` for per-file reports.
-
-**When to fall back to fix agents:** If `discover` fails (externalizer unavailable), OR if `fix_code` fails on >50% of files in an entry, switch to the full fix agent protocol for all remaining entries.
 
 ### Fix Steps
 
 1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
 2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
-3. **Check LLM Externalizer availability** via `mcp__llm-externalizer__discover`. If available, use the LLM Externalizer Fix Protocol above (read dispatch ledger, process reports one by one). Skip to step 6 after externalizer completes.
+3. **Check LLM Externalizer availability** via `mcp__llm-externalizer__discover`. If available, use the LLM Externalizer Analysis Protocol above to diagnose issues cheaply, then apply fixes with Read+Edit or caa-fix-agent. Skip to step 6 after fixes are applied.
 4. **Fallback (no externalizer):** For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
 5. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved. Wait for all fixing agents to complete and save their partial reports.
 6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.

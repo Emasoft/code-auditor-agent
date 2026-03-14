@@ -21,8 +21,8 @@ maxTurns: 20
 > should prefer using `mcp__llm-externalizer__chat` with multiple `input_files_paths` (the report
 > files), `instructions` containing the consolidation instructions, and `system` set to a relevant
 > persona (e.g. "Senior code auditor specializing in compliance review"). Use `temperature: 0.3`
-> for analysis. It is cheaper, faster, and does not consume orchestrator context. Note: 300s timeout
-> per call — for large reports, set `max_tokens` to avoid truncation. This agent is the fallback
+> for analysis. It is cheaper, faster, and does not consume orchestrator context. Note: 120s timeout
+> per call (MCP spec limit) — for large reports, set `max_tokens` to avoid truncation. This agent is the fallback
 > for when the externalizer is unavailable or when consolidation is too complex (e.g., >5 reports
 > requiring hierarchical merge).
 
