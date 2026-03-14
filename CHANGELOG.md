@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.26] - 2026-03-14
+
+### Changes
+- docs: update llm-externalizer references for removed write tools (8b3612c)
+
 ## [3.1.25] - 2026-03-12
 
 ### Changes
