@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.28] - 2026-03-15
+
+### Changes
+- chore: update uv.lock (0cb551c)
+- docs: add ensemble parameter guidance to externalizer references (3990519)
+
 ## [3.1.27] - 2026-03-15
 
 ### Changes
