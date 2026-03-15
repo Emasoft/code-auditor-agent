@@ -92,6 +92,7 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 - **One report at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues.
 - **120s timeout per call** (MCP spec limit). Large files may truncate — set `max_tokens` appropriately or split large files into separate calls.
 - **Use `scan_secrets: true`** on analysis calls to prevent sending API keys, tokens, or passwords to the external LLM.
+- **Use `ensemble: true`** (default) for fix analysis — two-model diagnosis catches more issues. Use `ensemble: false` only for simple lookups or summaries to save tokens.
 
 **Fix dispatch algorithm:**
 

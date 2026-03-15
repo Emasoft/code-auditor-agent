@@ -18,11 +18,12 @@ maxTurns: 20
 
 > **Fallback TODO generation method.** When the `llm-externalizer` MCP is available, the orchestrator
 > should prefer using `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the consolidated
-> report) and `instructions` containing the TODO generation instructions and output format. The
-> `language` is auto-detected from the file extension. Note: 120s timeout per call (MCP spec limit) — for large
-> reports, set `max_tokens` to avoid truncation. It is cheaper, faster, and does not consume
-> orchestrator context. This agent is the fallback for when the externalizer is unavailable or when
-> TODO generation fails (e.g., complex cross-scope dependencies that require multi-file reasoning).
+> report), `instructions` containing the TODO generation instructions and output format, and
+> `ensemble: false` (TODO generation is template-based — single model saves tokens). The `language`
+> is auto-detected from the file extension. Note: 120s timeout per call (MCP spec limit) — for large
+> reports, set `max_tokens` to avoid truncation. This agent is the fallback for when the externalizer
+> is unavailable or when TODO generation fails (e.g., complex cross-scope dependencies that require
+> multi-file reasoning).
 
 You are a TODO generator agent. You receive a consolidated violation report and convert it into
 a structured, actionable TODO file with dependency ordering, priority classification, and exact
