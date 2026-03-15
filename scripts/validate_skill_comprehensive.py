@@ -116,6 +116,9 @@ MAX_FRONTMATTER_CHARS_ERROR = 15000
 # VALID_CONTEXT_VALUES and BUILTIN_AGENT_TYPES imported from cpv_validation_common
 VALID_MODEL_VALUES = {"sonnet", "opus", "haiku", "inherit"}
 
+# v2.1.74+: full model IDs also accepted (claude-opus-4-6, claude-sonnet-4-6, etc.)
+_FULL_MODEL_ID_RE = re.compile(r"^claude-(?:opus|sonnet|haiku)-\d[\w.-]*$")
+
 # VALID_TOOLS imported from cpv_validation_common
 
 # --- Nixtla Strict Mode Required Sections ---
@@ -927,13 +930,14 @@ def validate_model_field(
         )
         return
 
-    if model not in VALID_MODEL_VALUES:
+    # v2.1.74+: accept short names AND full model IDs (claude-opus-4-6)
+    if model not in VALID_MODEL_VALUES and not _FULL_MODEL_ID_RE.match(model):
         report.major(
-            f"Invalid 'model' value: '{model}'. Valid values: {sorted(VALID_MODEL_VALUES)}",
+            f"Invalid 'model' value: '{model}'. Valid: {sorted(VALID_MODEL_VALUES)} or full ID like claude-opus-4-6",
             "SKILL.md",
             category="Frontmatter",
         )
-    elif model == "haiku":
+    elif model == "haiku" or (model.startswith("claude-haiku") and _FULL_MODEL_ID_RE.match(model)):
         # Haiku penalty: haiku is less reliable for complex skills
         report.minor(
             "'model: haiku' specified - haiku is less reliable for complex tasks. "
@@ -1202,9 +1206,7 @@ def validate_path_formats(body: str, report: ValidationReport, skip_platform_che
         report: ValidationReport to add results to
         skip_platform_checks: List of platforms to skip checks for (e.g., ['windows'])
     """
-    skip_windows = skip_platform_checks is not None and (
-        "windows" in skip_platform_checks or len(skip_platform_checks) == 0
-    )
+    skip_windows = skip_platform_checks is not None and "windows" in skip_platform_checks
 
     lines = body.split("\n")
     in_code_block = False
@@ -1447,7 +1449,7 @@ def validate_content_patterns(body: str, report: ValidationReport, strict_mode: 
             "SKILL.md",
             category="Content Patterns",
         )
-    elif strict_mode and "workflow" in body.lower() or "step" in body.lower():
+    elif strict_mode and ("workflow" in body.lower() or "step" in body.lower()):
         report.minor(
             "Workflow mentioned but few numbered steps found (best practice: use 1. 2. 3. format)",
             "SKILL.md",

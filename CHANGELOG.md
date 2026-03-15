@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.27] - 2026-03-15
+
+### Changes
+- docs: update llm-externalizer MCP tool prefix for plugin structure (780c938)
+
 ## [3.1.26] - 2026-03-14
 
 ### Changes
