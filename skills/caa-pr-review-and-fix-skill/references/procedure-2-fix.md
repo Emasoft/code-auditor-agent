@@ -84,7 +84,7 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
 
 The `llm-externalizer` MCP has **read-only analysis tools only** — write tools (`fix_code`, `batch_fix`, `revert_file`) were removed. Use the externalizer for **diagnosis** (cheaper than spawning full agents), then apply fixes manually with Read+Edit tools or by spawning `caa-fix-agent`.
 
-**Availability check:** At the start of PROCEDURE 2, call `mcp__llm-externalizer__discover`. If it succeeds, use the externalizer for analysis below. If it fails or the MCP is not configured, fall back to the standard fix agent protocol (spawning pattern section below).
+**Availability check:** At the start of PROCEDURE 2, call `mcp__plugin_llm-externalizer_llm-externalizer__discover`. If it succeeds, use the externalizer for analysis below. If it fails or the MCP is not configured, fall back to the standard fix agent protocol (spawning pattern section below).
 
 **CRITICAL RULES:**
 - **Do NOT merge review reports** before sending to the externalizer. Process each review agent's report individually against its own file list. Merging loses the file-to-agent mapping and overwhelms the external LLM with too much context.
@@ -100,7 +100,7 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
    a. Set `fix_status: "in_progress"`, write ledger to disk
    b. Read the review report at `entry.report`
    c. Parse the report: extract per-file findings (group by file path). Each finding needs: function/class name, a quote of the broken code, what is wrong, what the correct behavior should be
-   d. **Analysis (optional):** If findings are complex, call `mcp__llm-externalizer__code_task` with `input_files_paths` (the source file), `instructions` (project context + "Generate exact fix instructions for these issues: {issues}"), and `scan_secrets: true`. The response provides detailed fix guidance. Up to 5 analysis calls can run in parallel.
+   d. **Analysis (optional):** If findings are complex, call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the source file), `instructions` (project context + "Generate exact fix instructions for these issues: {issues}"), and `scan_secrets: true`. The response provides detailed fix guidance. Up to 5 analysis calls can run in parallel.
    e. **Apply fixes:** Use Read+Edit tools to apply each fix directly, or spawn `caa-fix-agent` for complex multi-file fixes. Reference function/variable names (not line numbers) when locating code to change.
    f. For files with no findings: set as `"skipped"`
    g. Update `fix_status` to `"done"` (all files fixed or skipped) or `"failed"` (any file failed), write ledger to disk
@@ -110,7 +110,7 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 
 1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
 2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
-3. **Check LLM Externalizer availability** via `mcp__llm-externalizer__discover`. If available, use the LLM Externalizer Analysis Protocol above to diagnose issues cheaply, then apply fixes with Read+Edit or caa-fix-agent. Skip to step 6 after fixes are applied.
+3. **Check LLM Externalizer availability** via `mcp__plugin_llm-externalizer_llm-externalizer__discover`. If available, use the LLM Externalizer Analysis Protocol above to diagnose issues cheaply, then apply fixes with Read+Edit or caa-fix-agent. Skip to step 6 after fixes are applied.
 4. **Fallback (no externalizer):** For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
 5. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved. Wait for all fixing agents to complete and save their partial reports.
 6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.

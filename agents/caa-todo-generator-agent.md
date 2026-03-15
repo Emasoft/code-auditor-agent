@@ -17,7 +17,7 @@ maxTurns: 20
 # CAA TODO Generator Agent
 
 > **Fallback TODO generation method.** When the `llm-externalizer` MCP is available, the orchestrator
-> should prefer using `mcp__llm-externalizer__code_task` with `input_files_paths` (the consolidated
+> should prefer using `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the consolidated
 > report) and `instructions` containing the TODO generation instructions and output format. The
 > `language` is auto-detected from the file extension. Note: 120s timeout per call (MCP spec limit) — for large
 > reports, set `max_tokens` to avoid truncation. It is cheaper, faster, and does not consume

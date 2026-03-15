@@ -17,7 +17,7 @@ maxTurns: 30
 # CAA Fix Agent
 
 > **Primary fix method.** The `llm-externalizer` MCP no longer has write tools (`fix_code`,
-> `batch_fix`, `revert_file` were removed). Use `mcp__llm-externalizer__code_task` for
+> `batch_fix`, `revert_file` were removed). Use `mcp__plugin_llm-externalizer_llm-externalizer__code_task` for
 > **analysis only** (diagnose bugs, generate fix instructions), then apply fixes manually
 > with Read+Edit tools. This agent handles all fix application directly. Note: 120s timeout
 > per externalizer call (MCP spec limit) — set `max_tokens` for large files.

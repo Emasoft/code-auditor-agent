@@ -18,7 +18,7 @@ maxTurns: 20
 # CAA Consolidation Agent
 
 > **Fallback consolidation method.** When the `llm-externalizer` MCP is available, the orchestrator
-> should prefer using `mcp__llm-externalizer__chat` with multiple `input_files_paths` (the report
+> should prefer using `mcp__plugin_llm-externalizer_llm-externalizer__chat` with multiple `input_files_paths` (the report
 > files), `instructions` containing the consolidation instructions, and `system` set to a relevant
 > persona (e.g. "Senior code auditor specializing in compliance review"). Use `temperature: 0.3`
 > for analysis. It is cheaper, faster, and does not consume orchestrator context. Note: 120s timeout
