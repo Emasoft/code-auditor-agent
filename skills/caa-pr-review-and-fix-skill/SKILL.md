@@ -3,7 +3,7 @@ name: caa-pr-review-and-fix-skill
 description: >
   Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
   Use when reviewing and fixing PRs with automated iterative resolution.
-version: 3.1.28
+version: 3.2.0
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, code-audit, claim-verification, quality-gate, auto-fix]
