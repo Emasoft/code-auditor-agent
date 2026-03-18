@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.1] - 2026-03-18
+
+### Changes
+- feat: comprehensive plugin spec sync for Claude Code v2.1.76-2.1.78 (8cbbd2d)
+
 ## [3.2.0] - 2026-03-18
 
 ### Changes
