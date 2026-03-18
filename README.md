@@ -42,10 +42,40 @@ Install from the `emasoft-plugins` marketplace:
 
 After installing, run `/reload-plugins` to activate without restarting.
 
+Choose an installation scope:
+
+| Scope | Command | Use case |
+|-------|---------|----------|
+| User (default) | `/plugin install code-auditor-agent@emasoft-plugins` | Personal use across all projects |
+| Project | `claude plugin install code-auditor-agent@emasoft-plugins --scope project` | Shared with team via `.claude/settings.json` |
+| Local | `claude plugin install code-auditor-agent@emasoft-plugins --scope local` | Project-specific, gitignored |
+
+To uninstall: `/plugin uninstall code-auditor-agent@emasoft-plugins`. Use `--keep-data` to preserve persistent audit state in `${CLAUDE_PLUGIN_DATA}`.
+
 For local development, launch Claude Code with the plugin directory:
 
 ```bash
 claude --plugin-dir /path/to/code-auditor-agent
+```
+
+### Team Setup
+
+Add the marketplace to your project's `.claude/settings.json` so team members get prompted to install it automatically:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "emasoft-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "Emasoft/emasoft-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "code-auditor-agent@emasoft-plugins": true
+  }
+}
 ```
 
 ---
@@ -53,11 +83,19 @@ claude --plugin-dir /path/to/code-auditor-agent
 ## Features
 
 - **11 specialized agents** across two pipelines (PR review + codebase audit)
-- **3 skills** with progressive disclosure and reference documentation
+- **3 skills** with progressive disclosure, reference documentation, and explicit `allowed-tools` declarations
 - **Tool safety enforcement** via `disallowedTools` frontmatter — all 10 read-only agents are blocked from using Edit/NotebookEdit, preventing accidental source code modification
 - **LLM Externalizer integration** — offloads consolidation, TODO generation, and fix analysis to cheaper external LLMs when available, with `ensemble` mode for thorough two-model analysis
 - **Worktree isolation** — optional `USE_WORKTREES=true` for concurrent agent swarms in isolated git worktrees
-- **Persistent plugin data** — uses `${CLAUDE_PLUGIN_DATA}` for audit state (ledger files, checkpoints) that survives plugin updates
+- **Persistent plugin data** — uses `${CLAUDE_PLUGIN_DATA}` for audit state (Fix Dispatch Ledger, agent checkpoints) that survives plugin updates and context compactions
+
+### Plugin Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `${CLAUDE_PLUGIN_ROOT}` | Absolute path to plugin installation directory. Used to reference bundled scripts and configs. Changes on plugin update. |
+| `${CLAUDE_PLUGIN_DATA}` | Persistent directory for plugin state (`~/.claude/plugins/data/code-auditor-agent/`). Survives plugin updates. Used for Fix Dispatch Ledger, agent checkpoints. Deleted on uninstall unless `--keep-data` is passed. |
+| `${CLAUDE_SKILL_DIR}` | Absolute path to the current skill's directory. Used in SKILL.md to reference `references/` subdirectories. |
 
 ---
 

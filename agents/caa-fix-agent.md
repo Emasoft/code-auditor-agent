@@ -62,7 +62,7 @@ You will receive:
 1. `TODO_FILE` — Path to the TODO file containing fix instructions
 2. `ASSIGNED_TODOS` — List of TODO IDs to apply (e.g., "TODO-AMS1, TODO-AMS2, TODO-AMS3")
 3. `FILES` — List of file paths to modify (max 4 files)
-4. `CHECKPOINT_PATH` — Path for checkpoint file (for crash recovery)
+4. `CHECKPOINT_PATH` — Path for checkpoint file (for crash recovery). When `${CLAUDE_PLUGIN_DATA}` is available, the orchestrator sets this inside that directory so checkpoints survive context compactions and plugin updates.
 5. `REPORT_PATH` — Where to write the fix report
 
 ## FIX PROTOCOL

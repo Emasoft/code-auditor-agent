@@ -5,6 +5,7 @@ version: 3.2.0
 author: Emasoft
 license: MIT
 tags: [codebase-audit, compliance, todo-generation, iterative-fix]
+allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(python:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 
 # Codebase Audit And Fix
@@ -25,7 +26,7 @@ tags: [codebase-audit, compliance, todo-generation, iterative-fix]
 | `caa-fix-agent` | 6 | Implement fixes with checkpoints |
 | `caa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
 
-Requires: Python 3.12+, `uv`, Git repo, `${CLAUDE_PLUGIN_ROOT}` set.
+Requires: Python 3.12+, `uv`, Git repo. Uses `${CLAUDE_PLUGIN_ROOT}` for scripts, `${CLAUDE_SKILL_DIR}` for reference docs, `${CLAUDE_PLUGIN_DATA}` for persistent audit state.
 
 ## Instructions
 

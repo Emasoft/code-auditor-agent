@@ -7,6 +7,7 @@ version: 3.2.0
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, code-audit, claim-verification, quality-gate, auto-fix]
+allowed-tools: "Read, Write, Edit, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 
 # PR Review And Fix
@@ -73,10 +74,7 @@ Output: Pass 1: 8 issues fixed. Pass 2: 2 regressions. Pass 3: 0 issues → APPR
 - [Report Naming](references/report-naming.md):
   - Overview, Filename Table, UUID Filename Generation, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
 - [Critical Rules](references/critical-rules.md):
-  - Rule 1: Never Skip Phases, Rule 2: Phase Order Matters, Rule 3: UUID-Named Files, Rule 4: Two-Stage Merge
-  - Rule 5: Dedup Agent Determines Verdict, Rule 6: Fix All Severities, Rule 7: Commit After Each Fix Pass
-  - Rule 8: Maximum 25 Passes, Rule 9: Agent-Prefixed Finding IDs, Rule 10: UUID-Based Report Filenames
-  - Rule 11: Same Line Different Bugs, Rule 12: Merge Script Verifies Before Deleting, Rule 13: Linting Is Conditional on Docker, Rule 14: Lint-Fix Loop Is Separate
+  - Rules 1-14: Phase ordering, UUID naming, two-stage merge, dedup verdict, fix-all, commit cadence, 25-pass limit
 - [Model Selection](references/model-selection.md):
   - Rules
 - [Worktree Mode](references/worktree-mode.md):
