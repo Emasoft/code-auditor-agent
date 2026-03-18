@@ -5,6 +5,9 @@ description: >
   Checks each fixed file against the reference standard and the original TODO that prompted
   the fix. Reports PASS or FAIL with specific remaining issues.
 model: opus
+disallowedTools:
+  - Edit
+  - NotebookEdit
 capabilities:
   - Re-audit fixed files to confirm changes match TODO specifications exactly
   - Detect regressions — new violations introduced by the fix itself

@@ -6,6 +6,9 @@ description: >
   Verifies that every "CLEAN" claim is accurate (quick-checks with grep patterns). Detects missed
   files by diffing the report's file list against the full domain inventory.
 model: opus
+disallowedTools:
+  - Edit
+  - NotebookEdit
 capabilities:
   - Verify violation claims against actual code (file exists, line exists, code matches evidence)
   - Detect false positives — fabricated findings, wrong line numbers, misquoted evidence

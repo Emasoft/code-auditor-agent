@@ -5,6 +5,9 @@ description: >
   priority classification, and exact change instructions. Each TODO includes file, line range,
   current code, required change, and verification steps.
 model: sonnet
+disallowedTools:
+  - Edit
+  - NotebookEdit
 capabilities:
   - Convert consolidated violation reports into structured, actionable TODO files
   - Assign priorities based on severity and create dependency chains between TODOs

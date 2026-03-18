@@ -78,7 +78,9 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
 
 **fix_status lifecycle:** `pending` → `in_progress` → `done` | `failed` | `skipped` (no findings in report)
 
-**Crash recovery:** On restart, read the ledger from disk. Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `git checkout` on the affected files). Resume from the first `pending` entry.
+**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger there so it survives context compactions and plugin updates. Fall back to `docs_dev/` if the variable is not set.
+
+**Crash recovery:** On restart, read the ledger from disk (check `${CLAUDE_PLUGIN_DATA}` first, then `docs_dev/`). Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `git checkout` on the affected files). Resume from the first `pending` entry.
 
 ### LLM Externalizer Analysis Protocol (When Available)
 

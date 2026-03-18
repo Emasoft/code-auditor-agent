@@ -9,6 +9,9 @@ description: >
   security as one checklist item among many.
 model: opus
 maxTurns: 30
+disallowedTools:
+  - Edit
+  - NotebookEdit
 capabilities:
   - Deep analysis of injection vectors (SQL, command, XSS, LDAP, template, header)
   - Attack surface mapping — identify all entry points (APIs, CLI args, env vars, file inputs)

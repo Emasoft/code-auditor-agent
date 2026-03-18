@@ -16,6 +16,7 @@ Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Cod
 ## Table of Contents
 
 - [Installation](#installation)
+- [Features](#features)
 - [Agents](#agents)
 - [Skills](#skills)
 - [Commands](#commands)
@@ -31,17 +32,32 @@ Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Cod
 
 ## Installation
 
+**Requirements:** Claude Code v2.1.76 or later.
+
 Install from the `emasoft-plugins` marketplace:
 
 ```text
-/install-plugin emasoft-plugins:code-auditor-agent
+/plugin install code-auditor-agent@emasoft-plugins
 ```
 
-For local development, launch Claude Code with the plugin path:
+After installing, run `/reload-plugins` to activate without restarting.
+
+For local development, launch Claude Code with the plugin directory:
 
 ```bash
-claude --use-plugin /path/to/code-auditor-agent
+claude --plugin-dir /path/to/code-auditor-agent
 ```
+
+---
+
+## Features
+
+- **11 specialized agents** across two pipelines (PR review + codebase audit)
+- **3 skills** with progressive disclosure and reference documentation
+- **Tool safety enforcement** via `disallowedTools` frontmatter — all 10 read-only agents are blocked from using Edit/NotebookEdit, preventing accidental source code modification
+- **LLM Externalizer integration** — offloads consolidation, TODO generation, and fix analysis to cheaper external LLMs when available, with `ensemble` mode for thorough two-model analysis
+- **Worktree isolation** — optional `USE_WORKTREES=true` for concurrent agent swarms in isolated git worktrees
+- **Persistent plugin data** — uses `${CLAUDE_PLUGIN_DATA}` for audit state (ledger files, checkpoints) that survives plugin updates
 
 ---
 
@@ -307,26 +323,27 @@ Four GitHub Actions workflows are configured:
 
 ## Development
 
-### Bumping the Version
+### Publishing
 
-Use the bump script to increment the version across `plugin.json` and `pyproject.toml`:
-
-```bash
-uv run scripts/bump_version.py --patch   # 3.0.0 -> 3.0.1
-uv run scripts/bump_version.py --minor   # 3.0.0 -> 3.1.0
-uv run scripts/bump_version.py --major   # 3.0.0 -> 4.0.0
-```
-
-### Creating a Release
-
-Tag the commit and push to trigger the release workflow:
+Always use the unified publish pipeline (never push directly):
 
 ```bash
-git tag v3.0.0
-git push --tags
+uv run python scripts/publish.py --patch   # 3.1.28 -> 3.1.29
+uv run python scripts/publish.py --minor   # 3.1.28 -> 3.2.0
+uv run python scripts/publish.py --major   # 3.1.28 -> 4.0.0
 ```
 
-The `release.yml` workflow will create a GitHub Release with an auto-generated changelog.
+The pipeline runs 12 steps: clean check, CPV sync, lint, validate (strict), version consistency, bump, README badges, SKILL.md frontmatter, CHANGELOG, commit, tag, push. The pre-push hook enforces that all pushes go through this pipeline.
+
+### Validating
+
+Run the full validation suite:
+
+```bash
+uv run python scripts/validate_plugin.py . --verbose --strict
+```
+
+Claude Code also validates frontmatter (skills, agents, commands) and hook configs via `claude plugin validate`.
 
 ### CI
 

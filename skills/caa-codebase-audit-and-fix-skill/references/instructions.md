@@ -54,6 +54,8 @@ Follow these steps to run the audit pipeline:
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
+**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger and agent checkpoints there so they survive context compactions and plugin updates. Fall back to `docs_dev/` if the variable is not set.
+
 ## Pipeline
 
 | Phase | Action | Agent | Concurrency |

@@ -7,6 +7,9 @@ description: >
   This is the telescope that sees what the microscope (correctness swarm) misses.
 model: opus
 maxTurns: 30
+disallowedTools:
+  - Edit
+  - NotebookEdit
 capabilities:
   - Read the entire PR diff holistically, not per-file
   - Identify UX concerns and surprising behavior changes
