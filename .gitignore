@@ -56,3 +56,6 @@ logs/
 
 # UV
 # uv.lock is committed for reproducibility
+# TLDR artifacts (added by rechecker)
+.tldrignore
+.tldr_session_*
