@@ -2,8 +2,8 @@
   "uid": "main",
   "status": "running",
   "created": "2026-03-25T13:10:12.824657",
-  "updated": "2026-03-25T13:10:44.520331",
-  "current_loop": 1,
+  "updated": "2026-03-25T13:10:49.289491",
+  "current_loop": 2,
   "current_iter": 1,
   "loops": {
     "1": {
@@ -12,8 +12,8 @@
       "files_clean": []
     },
     "2": {
-      "status": "pending",
-      "iter": 0,
+      "status": "running",
+      "iter": 1,
       "files_done": [],
       "files_clean": []
     },
