@@ -1,0 +1,24 @@
+{
+  "uid": "main",
+  "created": "2026-03-25T13:10:09.553274",
+  "total_files": 1,
+  "files": {
+    "FID00001": {
+      "path": ".rechecker/merge-worktrees.sh",
+      "lines": 681,
+      "bytes": 22289,
+      "category": "big"
+    }
+  },
+  "groups": {
+    "G001": [
+      "FID00001"
+    ]
+  },
+  "macro_groups": {
+    "MG001": [
+      "G001"
+    ]
+  },
+  "huge_fids": []
+}

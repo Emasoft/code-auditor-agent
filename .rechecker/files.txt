@@ -1,0 +1,3 @@
+.gitignore
+.rechecker/merge-worktrees.sh
+uv.lock
