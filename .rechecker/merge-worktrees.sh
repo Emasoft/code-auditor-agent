@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=all
 # merge-worktrees.sh — Ultra-safe merge or discard of rechecker worktree branches
 #
 # Standalone script. Only requires: git, bash. No Claude Code dependency.
