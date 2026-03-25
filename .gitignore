@@ -56,6 +56,10 @@ logs/
 
 # UV
 # uv.lock is committed for reproducibility
-# TLDR artifacts (added by rechecker)
+
+# Rechecker plugin (auto-managed runtime state, overwrites tracked files)
+.rechecker/
+
+# TLDR artifacts
 .tldrignore
 .tldr_session_*
