@@ -31,7 +31,8 @@ jobs:
       - name: Install security tools
         run: |
           uv python install 3.12
-          uv pip install --system bandit==1.9.4 pip-audit==2.10.0
+          uv tool install bandit==1.9.4
+          uv tool install pip-audit==2.10.0
 
       - name: Run Bandit (static analysis)
         continue-on-error: true
