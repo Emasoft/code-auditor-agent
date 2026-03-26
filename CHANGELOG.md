@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.4] - 2026-03-26
+
+### Changes
+- chore: add CPV cli.py and __init__.py from upstream sync (bd4728c)
+- chore: disable mypy warn_return_any (all 60 errors are in CPV-synced upstream scripts) (109d611)
+- fix: address 12 SHOULD-FIX audit findings (30b3871)
+
 ## [3.2.3] - 2026-03-26
 
 ### Changes
