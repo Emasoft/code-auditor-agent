@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -61,6 +62,8 @@ from validate_rules import validate_rules_directory
 
 # Import comprehensive skill validator (190+ rules from AgentSkills OpenSpec, Nixtla, Meta-Skills)
 from validate_skill_comprehensive import validate_skill as validate_skill_comprehensive
+
+IS_WINDOWS = platform.system() == "Windows"
 
 # Module-level gitignore filter — initialized in main(), used by scan functions
 _gi: GitignoreFilter | None = None
@@ -131,10 +134,15 @@ def validate_manifest(plugin_root: Path, report: ValidationReport, marketplace_o
         if isinstance(name, str):
             validate_component_name(name, "plugin", report)
 
-    # Version validation
+    # Version validation — guard against non-string values (e.g. "version": 123)
     if "version" in manifest:
         version = manifest["version"]
-        if not re.match(r"^\d+\.\d+\.\d+", version):
+        if not isinstance(version, str):
+            report.major(
+                f"Version must be a string, got {type(version).__name__}: {version}",
+                ".claude-plugin/plugin.json",
+            )
+        elif not re.match(r"^\d+\.\d+\.\d+", version):
             report.major(
                 f"Version must be semver format: {version}",
                 ".claude-plugin/plugin.json",
@@ -239,7 +247,12 @@ def validate_manifest(plugin_root: Path, report: ValidationReport, marketplace_o
                 )
             elif isinstance(value, list):
                 for i, path in enumerate(value):
-                    if isinstance(path, str) and not path.startswith("./"):
+                    if not isinstance(path, str):
+                        report.major(
+                            f"Field '{key}[{i}]' must be a string path, got {type(path).__name__}",
+                            ".claude-plugin/plugin.json",
+                        )
+                    elif not path.startswith("./"):
                         report.major(
                             f"Field '{key}[{i}]' path must start with './': {path}",
                             ".claude-plugin/plugin.json",
@@ -284,6 +297,19 @@ def validate_manifest(plugin_root: Path, report: ValidationReport, marketplace_o
                     ".claude-plugin/plugin.json",
                 )
 
+    # Check for duplicate hooks loading — Claude Code auto-discovers hooks/hooks.json,
+    # so explicitly pointing to it in plugin.json causes it to load twice (runtime error)
+    hooks_value = manifest.get("hooks")
+    if isinstance(hooks_value, str):
+        normalized_hooks = hooks_value.replace("\\", "/")
+        if normalized_hooks in ("./hooks/hooks.json", "hooks/hooks.json"):
+            report.warning(
+                "Field 'hooks' points to './hooks/hooks.json' which Claude Code already auto-loads by convention. "
+                "This causes a 'Duplicate hooks file detected' runtime error. Remove the 'hooks' field from plugin.json "
+                "or use a non-default path.",
+                ".claude-plugin/plugin.json",
+            )
+
     return cast(dict[str, Any], manifest)
 
 
@@ -320,6 +346,7 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
         "hooks": "INFO",
         "scripts": "INFO",
         "docs": "INFO",
+        "output-styles": "INFO",
     }
 
     for d, level in common_dirs.items():
@@ -370,6 +397,7 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
         "build",
         "out",
         "target",
+        "output-styles",
     }
     # Also skip hidden dirs and _dev dirs
     for item in plugin_root.iterdir():
@@ -407,7 +435,7 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
             report.major(f"settings.json: JSON parse error: {e}", "settings.json")
 
     # Check that plugin has at least some actual content beyond just a manifest
-    content_indicators = ["commands", "skills", "agents", "hooks", "scripts"]
+    content_indicators = ["commands", "skills", "agents", "hooks", "scripts", "output-styles"]
     file_indicators = [".mcp.json", ".lsp.json"]
     has_content = any((plugin_root / d).is_dir() for d in content_indicators) or any((plugin_root / f).exists() for f in file_indicators)
     if not has_content:
@@ -415,6 +443,18 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
             "Plugin has a manifest but no content — expected at least one of: commands/, skills/, agents/, hooks/, scripts/, .mcp.json, or .lsp.json",
             ".claude-plugin/plugin.json",
         )
+
+    # Check pyproject.toml for Python plugins
+    has_py_scripts = (plugin_root / "scripts").is_dir() and any((plugin_root / "scripts").glob("*.py"))
+    if has_py_scripts:
+        if (plugin_root / "pyproject.toml").exists():
+            report.passed("pyproject.toml exists")
+        else:
+            report.minor("pyproject.toml not found — recommended for Python plugins")
+        if (plugin_root / ".python-version").exists():
+            report.passed(".python-version exists")
+        else:
+            report.warning(".python-version not found — recommended for reproducible builds")
 
 
 def validate_commands(plugin_root: Path, report: ValidationReport) -> None:
@@ -577,6 +617,15 @@ def validate_mcp(plugin_root: Path, report: ValidationReport) -> None:
         report.add(result.level, result.message, result.file, result.line)
 
 
+def _has_shebang(path: Path) -> bool:
+    """Check if a file starts with a shebang (#!) line."""
+    try:
+        with open(path, "rb") as f:
+            return f.read(2) == b"#!"
+    except Exception:
+        return False
+
+
 def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
     """Validate Python and shell scripts."""
     scripts_dir = plugin_root / "scripts"
@@ -597,15 +646,19 @@ def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
             if pyproject.exists():
                 ruff_args.extend(["--config", str(pyproject)])
             ruff_args.extend([str(f) for f in py_files])
-            result = subprocess.run(
-                ruff_args,
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-            if result.returncode == 0:
+            try:
+                result = subprocess.run(
+                    ruff_args,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+            except subprocess.TimeoutExpired:
+                report.warning("Ruff timed out after 60s — skipping lint check")
+                result = None
+            if result is not None and result.returncode == 0:
                 report.passed(f"Ruff check passed for {len(py_files)} Python files")
-            else:
+            elif result is not None:
                 # Aggregate ruff errors per-file to avoid inflating MAJOR count
                 # Ruff output format: "path/to/file.py:line:col: CODE message"
                 errors_by_file: dict[str, int] = {}
@@ -639,15 +692,19 @@ def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
             if pyproject.exists():
                 mypy_args.extend(["--config-file", str(pyproject)])
             mypy_args.extend([str(f) for f in py_files])
-            result = subprocess.run(
-                mypy_args,
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-            if result.returncode == 0:
+            try:
+                result = subprocess.run(
+                    mypy_args,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+            except subprocess.TimeoutExpired:
+                report.warning("Mypy timed out after 60s — skipping type check")
+                result = None
+            if result is not None and result.returncode == 0:
                 report.passed(f"Mypy check passed for {len(py_files)} Python files")
-            else:
+            elif result is not None:
                 for line in result.stdout.strip().split("\n"):
                     if line and not line.startswith("Success"):
                         report.minor(f"Mypy: {line}")
@@ -667,25 +724,49 @@ def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
         else:
             report.passed(f"Shell script executable: {sh_file.name}", f"scripts/{sh_file.name}")
 
-        # Shellcheck lint
+        # Shellcheck lint — use -x to follow source directives, inline disables are respected
         if shellcheck_cmd:
-            result = subprocess.run(
-                shellcheck_cmd + [str(sh_file)],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+            try:
+                result = subprocess.run(
+                    shellcheck_cmd + ["-x", "-f", "json", str(sh_file)],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+            except subprocess.TimeoutExpired:
+                report.warning(f"Shellcheck timed out on {sh_file.name}")
+                continue
             if result.returncode == 0:
                 report.passed(f"Shellcheck passed: {sh_file.name}")
             else:
-                report.minor(f"Shellcheck issues in {sh_file.name}", f"scripts/{sh_file.name}")
+                # Parse JSON output to report individual issues (respecting inline disables)
+                try:
+                    findings = json.loads(result.stdout) if result.stdout.strip() else []
+                except (json.JSONDecodeError, ValueError):
+                    findings = []
+                if findings:
+                    for finding in findings[:5]:
+                        code = finding.get("code", "?")
+                        msg = finding.get("message", "unknown")
+                        line = finding.get("line", 0)
+                        report.minor(f"Shellcheck SC{code} (line {line}): {msg}", f"scripts/{sh_file.name}")
+                else:
+                    report.minor(f"Shellcheck issues in {sh_file.name}", f"scripts/{sh_file.name}")
     # Report shellcheck availability once (after loop)
     if sh_files and not shellcheck_cmd:
         report.minor("shellcheck not available locally or via bunx/npx, skipping shell lint")
 
+    # Check Python scripts with shebang are executable (Unix only)
+    if not IS_WINDOWS:
+        if scripts_dir.is_dir():
+            for py_file in scripts_dir.glob("*.py"):
+                if _has_shebang(py_file) and not os.access(py_file, os.X_OK):
+                    report.warning(f"scripts/{py_file.name} has shebang but is not executable — run: chmod +x scripts/{py_file.name}", f"scripts/{py_file.name}")
+
     # Check shebangs on script files — scripts without shebangs may not run cross-platform
     shebang_extensions = {".py", ".sh", ".bash", ".rb", ".pl", ".php"}
-    all_scripts = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix.lower() in shebang_extensions]
+    # __init__.py and _-prefixed files are module markers/internal modules — never need shebangs
+    all_scripts = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix.lower() in shebang_extensions and f.name != "__init__.py" and not f.stem.startswith("_")]
     scripts_missing_shebang = []
     for script in all_scripts:
         try:
@@ -997,12 +1078,20 @@ def validate_skills(plugin_root: Path, report: ValidationReport, skip_platform_c
 
 
 def validate_readme(plugin_root: Path, report: ValidationReport) -> None:
-    """Validate README.md exists."""
+    """Validate README.md exists and has recommended markers."""
     readme = plugin_root / "README.md"
     if readme.exists():
         report.passed("README.md found")
     else:
         report.minor("README.md not found")
+
+    # Badge markers for automated badge updates
+    if readme.exists():
+        readme_content = readme.read_text(encoding="utf-8", errors="replace")
+        if "<!--BADGES-START-->" in readme_content and "<!--BADGES-END-->" in readme_content:
+            report.passed("README.md has badge markers for automated updates", "README.md")
+        else:
+            report.warning("README.md missing badge markers (<!--BADGES-START--> / <!--BADGES-END-->)", "README.md")
 
 
 def validate_license(plugin_root: Path, report: ValidationReport) -> None:
@@ -1084,7 +1173,28 @@ EXPECTED_GITIGNORE_CATEGORIES: list[tuple[list[str], str, str]] = [
     ([".env", "*.env"], "Environment files (.env)", "major"),
     # Virtual environments
     ([".venv", "venv"], "Virtual environment directories", "major"),
+    # Claude Code runtime directories
+    ([".claude"], "Claude Code cache directory (.claude/)", "minor"),
+    (["llm_externalizer_output"], "LLM Externalizer output directory", "warning"),
+    ([".tldr"], "TLDR cache directory (.tldr/)", "warning"),
 ]
+
+
+def _check_stale_user_settings_local(report: ValidationReport) -> None:
+    """Warn if ~/.claude/settings.local.json exists — it should not be at user level.
+
+    settings.local.json only makes sense inside a project directory
+    (<project>/.claude/settings.local.json). At ~/.claude/ it indicates a
+    leftover from buggy tooling or running Claude Code from ~/ (invalid).
+    """
+    stale = Path.home() / ".claude" / "settings.local.json"
+    if stale.exists():
+        report.warning(
+            "~/.claude/settings.local.json exists but should NOT be at user level. "
+            "This file only makes sense inside project dirs (<project>/.claude/settings.local.json). "
+            "Run /cpv-doctor --fix to delete it, or remove it manually.",
+            "~/.claude/settings.local.json",
+        )
 
 
 def validate_gitignore(plugin_root: Path, report: ValidationReport) -> None:
@@ -1262,6 +1372,9 @@ def print_results(report: ValidationReport, verbose: bool = False) -> None:
     else:
         print(f"{colors['MINOR']}! MINOR issues found - may affect UX{colors['RESET']}")
 
+    # Machine-readable summary for CI/CD parsing
+    print(f"SUMMARY: CRITICAL={counts['CRITICAL']} MAJOR={counts['MAJOR']} MINOR={counts['MINOR']} NIT={counts['NIT']} WARNING={counts['WARNING']}")
+
     print()
 
 
@@ -1353,6 +1466,65 @@ def validate_md_content_references(plugin_root: Path, report: ValidationReport) 
         validate_md_urls(md_file, plugin_root, report, url_cache=url_cache)
 
 
+def validate_pipeline_readiness(plugin_root: Path, report: ValidationReport) -> None:
+    """Check that the plugin has CI/CD pipeline infrastructure."""
+    # Pre-push hook
+    hook_paths = [
+        plugin_root / ".githooks" / "pre-push",
+        plugin_root / "git-hooks" / "pre-push",
+    ]
+    if any(p.exists() for p in hook_paths):
+        report.passed("Pre-push hook found")
+    else:
+        report.minor("No pre-push hook found (.githooks/pre-push or git-hooks/pre-push) — recommended for quality gates")
+
+    # Publish script
+    if (plugin_root / "scripts" / "publish.py").exists():
+        report.passed("scripts/publish.py found")
+    else:
+        report.warning("No scripts/publish.py found — recommended for release automation")
+
+    # Changelog config
+    if (plugin_root / "cliff.toml").exists():
+        report.passed("cliff.toml found (git-cliff changelog)")
+    else:
+        report.warning("No cliff.toml found — recommended for automated changelog generation")
+
+    # GitHub workflows
+    workflows_dir = plugin_root / ".github" / "workflows"
+    if workflows_dir.is_dir() and list(workflows_dir.glob("*.yml")):
+        report.passed("GitHub workflows found")
+    else:
+        report.minor("No .github/workflows/*.yml found — recommended for CI/CD automation")
+
+    # Marketplace notification workflow
+    if workflows_dir.is_dir():
+        notify_names = ["notify-marketplace.yml", "notify.yml", "marketplace-notify.yml"]
+        if any((workflows_dir / n).exists() for n in notify_names):
+            report.passed("Marketplace notification workflow found")
+        else:
+            report.warning("No notify-marketplace.yml workflow — plugin updates won't auto-notify marketplaces")
+
+
+def validate_workflow_best_practices(plugin_root: Path, report: ValidationReport) -> None:
+    """Check GitHub workflow files for common anti-patterns."""
+    workflows_dir = plugin_root / ".github" / "workflows"
+    if not workflows_dir.is_dir():
+        return
+    for wf in workflows_dir.glob("*.yml"):
+        try:
+            content = wf.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        rel = str(wf.relative_to(plugin_root))
+        # Check for uv pip install --system (should use uvx)
+        if "uv pip install --system" in content:
+            report.nit(f"{rel}: uses 'uv pip install --system' — prefer 'uvx' for reproducible installs", rel)
+        # Check for unpinned actions/checkout
+        if "actions/checkout@" not in content and "actions/checkout" in content:
+            report.nit(f"{rel}: uses 'actions/checkout' without version pin — pin to '@v4' or similar", rel)
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -1379,9 +1551,17 @@ def main() -> int:
         help="Skip platform-specific checks (e.g., --skip-platform-checks windows). Valid platforms: windows, macos, linux. Use without args to skip all.",
     )
     parser.add_argument("--strict", action="store_true", help="Strict mode — NIT issues also block validation")
+    parser.add_argument("--no-color", action="store_true", help="Disable ANSI color codes in output")
     parser.add_argument("--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout")
     parser.add_argument("path", nargs="?", help="Plugin root path (default: parent of scripts/)")
     args = parser.parse_args()
+
+    # Disable ANSI colors when --no-color is passed or stdout is not a TTY
+    if args.no_color or not (hasattr(sys.stdout, "isatty") and sys.stdout.isatty()):
+        import cpv_validation_common
+
+        for key in list(cpv_validation_common.COLORS.keys()):
+            cpv_validation_common.COLORS[key] = ""
 
     # Determine plugin root — always resolve to absolute path so relative_to() works
     if args.path:
@@ -1435,8 +1615,12 @@ def main() -> int:
     validate_no_local_paths(plugin_root, report)
     validate_gitignore(plugin_root, report)
     validate_cross_platform(plugin_root, report)
+    # Check for stale ~/.claude/settings.local.json — should not exist at user level
+    _check_stale_user_settings_local(report)
     validate_md_content_references(plugin_root, report)
     validate_workflow_inline_python(plugin_root, report)
+    validate_pipeline_readiness(plugin_root, report)
+    validate_workflow_best_practices(plugin_root, report)
 
     # Output
     if args.json:

@@ -475,6 +475,12 @@ ALLOWED_DOC_PATH_PREFIXES = {
     "/run/",  # Runtime data
 }
 
+# System binary paths — expected for tool detection, not portability issues
+_SYSTEM_BINARY_PREFIXES = ("/usr/bin/", "/usr/local/bin/", "/opt/homebrew/bin/", "/bin/", "/sbin/", "/usr/sbin/")
+
+# Directories typically gitignored — backtick path checker skips these (runtime artifacts)
+_GITIGNORED_DIR_PATTERNS = ("_dev/", "llm_externalizer_output/", "megalinter-reports/", ".venv/", "node_modules/", "dist/", "build/", "__pycache__/", ".pytest_cache/", ".ruff_cache/")
+
 # Files that should never be in a plugin
 DANGEROUS_FILES = {
     ".env",
@@ -1983,7 +1989,12 @@ def scan_file_for_absolute_paths(
 
             line_num = content[: match.start()].count("\n") + 1
             issues_found += 1
-            # Use MINOR for system paths in scripts (may be intentional), MAJOR for home paths
+            # System binary paths are expected for tool detection — downgrade to INFO
+            if desc == "system absolute path" and any(matched_text.startswith(p) for p in _SYSTEM_BINARY_PREFIXES):
+                report.info(f"System binary path: '{matched_text[:60]}' (OK for tool detection)", rel_path)
+                issues_found -= 1  # Don't count this as an issue
+                continue
+            # Use MINOR for other system paths in scripts, MAJOR for home paths
             severity = "minor" if desc == "system absolute path" and not is_doc_file else "major"
             getattr(report, severity)(
                 f"Absolute path found: '{matched_text[:60]}...' - use relative path, ${{CLAUDE_PLUGIN_ROOT}}, or ${{CLAUDE_PROJECT_DIR}}",
@@ -2433,8 +2444,8 @@ def validate_md_file_paths(
         # Paths starting with ~ (user home dir references in docs)
         if path.startswith("~"):
             return True
-        # Generic example paths used in documentation (other-file, subfolder/file, etc.)
-        if re.match(r"^\.\./(other|example|some)", path) or re.match(r"^(subfolder|subdir|folder|other)/", path):
+        # Generic example paths used in documentation (other-file, subfolder/file, docs_dev/, etc.)
+        if re.match(r"^\.\./(other|example|some)", path) or re.match(r"^(subfolder|subdir|folder|other|docs_dev|scripts_dev|tests_dev)/", path):
             return True
         # Example filenames commonly used in documentation (foo, bar, run, test, etc.)
         basename = path.rsplit("/", 1)[-1].split(".")[0] if "/" in path else ""
@@ -2442,7 +2453,7 @@ def validate_md_file_paths(
             return True
         # Paths referencing common config files that may not exist in this plugin
         # but are referenced as documentation examples
-        if re.match(r"^\.(vscode|docker|github|claude)/", path) or re.match(r"^\./(vscode|docker|github|claude)/", path):
+        if re.match(r"^\.?/?\.(vscode|docker|github|claude)/", path) or re.match(r"^\./(vscode|docker|github|claude)/", path):
             return True
         return False
 
@@ -2500,8 +2511,33 @@ def validate_md_file_paths(
             continue
         checked_paths.add(raw_path)
 
-        # Strip leading ./
-        clean_path = raw_path.lstrip("./")
+        # Skip paths that contain spaces — likely error messages, not actual paths
+        if " " in raw_path:
+            continue
+        # Skip absolute system paths used as examples in docs (e.g., /usr/local/bin/script.sh)
+        if raw_path.startswith("/"):
+            continue
+
+        # Strip leading ./ properly (remove only the prefix "./" not individual chars)
+        clean_path = raw_path
+        while clean_path.startswith("./"):
+            clean_path = clean_path[2:]
+
+        # Skip paths under gitignored directories (runtime artifacts, dev folders)
+        if any(clean_path.startswith(p) or f"/{p}" in clean_path for p in _GITIGNORED_DIR_PATTERNS):
+            continue
+
+        # Well-known plugin structure paths — standard paths every plugin doc references
+        well_known_plugin_paths = {
+            ".claude-plugin/plugin.json",
+            ".claude-plugin/marketplace.json",
+            "hooks/hooks.json",
+            ".mcp.json",
+            ".lsp.json",
+            "settings.json",
+        }
+        if raw_path in well_known_plugin_paths or clean_path in well_known_plugin_paths:
+            continue
 
         # Determine if this path looks like it references a file inside the plugin
         # (starts with a known plugin directory like scripts/, commands/, agents/,
@@ -2516,7 +2552,9 @@ def validate_md_file_paths(
             "rules/",
             "templates/",
             "docs/",
+            "docs_dev/",
             ".claude-plugin/",
+            "claude-plugin/",
         )
         is_plugin_internal = clean_path.startswith(plugin_internal_prefixes)
 
@@ -2528,21 +2566,18 @@ def validate_md_file_paths(
                 f"Backtick path OK: `{raw_path}` ({rel_md})",
                 rel_md,
             )
-        elif is_plugin_internal and not is_reference_doc:
-            # Path clearly references a plugin directory and this is NOT a
-            # reference/fix guide — it's a real broken reference
+        elif is_reference_doc:
+            # Reference/command docs describe the USER's plugin structure, not this plugin —
+            # unresolved paths are expected and not a problem
+            continue
+        elif is_plugin_internal:
+            # Path clearly references a plugin directory in a non-reference doc — real broken reference
             report.minor(
                 f"Broken backtick path: `{raw_path}` in {rel_md} — file not found in plugin",
                 rel_md,
             )
-        elif is_plugin_internal and is_reference_doc:
-            # Reference docs describe the USER's plugin structure, not this plugin
-            report.warning(
-                f"Backtick path in reference doc: `{raw_path}` in {rel_md} — not found (may describe target plugin)",
-                rel_md,
-            )
         else:
-            # External or ambiguous path — flag as warning (non-blocking)
+            # External or ambiguous path in non-reference doc — flag as warning (non-blocking)
             report.warning(
                 f"Possible broken backtick path: `{raw_path}` in {rel_md}",
                 rel_md,

@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import configparser
 import json
-
 import re
 import subprocess
 import sys
@@ -2095,8 +2094,8 @@ Examples:
     early_error = None
     if not marketplace_path.exists():
         early_error = f"Error: {marketplace_path} does not exist"
-    elif marketplace_path.is_dir() and not (marketplace_path / "marketplace.json").exists():
-        early_error = f"Error: No marketplace.json found at {marketplace_path}. Expected a marketplace directory with marketplace.json."
+    elif marketplace_path.is_dir() and not (marketplace_path / "marketplace.json").exists() and not (marketplace_path / ".claude-plugin" / "marketplace.json").exists():
+        early_error = f"Error: No marketplace.json found at {marketplace_path}. Expected marketplace.json at root or in .claude-plugin/"
     elif marketplace_path.is_file() and marketplace_path.name != "marketplace.json":
         early_error = f"Error: {marketplace_path} is not a marketplace.json file"
 
