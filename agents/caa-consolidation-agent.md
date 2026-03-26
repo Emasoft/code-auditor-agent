@@ -23,10 +23,9 @@ maxTurns: 20
 > **Fallback consolidation method.** When the `llm-externalizer` MCP is available, the orchestrator
 > should prefer using `mcp__plugin_llm-externalizer_llm-externalizer__chat` with multiple `input_files_paths` (the report
 > files), `instructions` containing the consolidation instructions, `system` set to a relevant
-> persona (e.g. "Senior code auditor specializing in compliance review"), `temperature: 0.3`,
-> and `ensemble: false` (consolidation is a straightforward merge — single model saves tokens).
-> Note: 120s timeout per call (MCP spec limit) — for large reports, set `max_tokens` to avoid
-> truncation. This agent is the fallback for when the externalizer is unavailable or when
+> persona (e.g. "Senior code auditor specializing in compliance review"), and `temperature: 0.3`.
+> Note: 115s timeout per call (MCP spec limit), auto-retries up to 3 times on truncated
+> responses. This agent is the fallback for when the externalizer is unavailable or when
 > consolidation is too complex (e.g., >5 reports requiring hierarchical merge).
 
 You are a report consolidation agent. You receive multiple audit, verification, and gap-fill reports

@@ -92,9 +92,8 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 - **Do NOT merge review reports** before sending to the externalizer. Process each review agent's report individually against its own file list. Merging loses the file-to-agent mapping and overwhelms the external LLM with too much context.
 - **ALWAYS include project context** in `instructions`. The external LLM has ZERO knowledge of your project. Always say: what the project is, what language/framework, what this file does, and any relevant interfaces/types.
 - **One report at a time.** Read the dispatch ledger, pick one entry, read its report, extract per-file issues.
-- **120s timeout per call** (MCP spec limit). Large files may truncate — set `max_tokens` appropriately or split large files into separate calls.
+- **115s timeout per call** (MCP spec limit). Auto-retries up to 3 times on truncated responses. For very large files, split into separate calls or use `max_payload_kb` to control batch size.
 - **Use `scan_secrets: true`** on analysis calls to prevent sending API keys, tokens, or passwords to the external LLM.
-- **Use `ensemble: true`** (default) for fix analysis — two-model diagnosis catches more issues. Use `ensemble: false` only for simple lookups or summaries to save tokens.
 
 **Fix dispatch algorithm:**
 
