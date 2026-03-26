@@ -60,7 +60,7 @@ def extract_version_from_plugin_json(plugin_root: Path) -> VersionLocation | Non
         return None
 
     try:
-        with open(plugin_json_path, "r", encoding="utf-8") as f:
+        with open(plugin_json_path, encoding="utf-8") as f:
             data = json.load(f)
 
         version = data.get("version")
