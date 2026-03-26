@@ -21,6 +21,22 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+# Exclude CPV-synced scripts (upstream code, overwritten on publish — do not lint locally)
+extend-exclude = [
+    "scripts/validate_*.py",
+    "scripts/manage_*.py",
+    "scripts/standardize_*.py",
+    "scripts/generate_*.py",
+    "scripts/cpv_*.py",
+    "scripts/lint_files.py",
+    "scripts/smart_exec.py",
+    "scripts/gitignore_filter.py",
+    "scripts/setup_git_hooks.py",
+    "scripts/setup_plugin_pipeline.py",
+    "scripts/setup_marketplace_automation.py",
+    "scripts/update_marketplace_metadata.py",
+    "scripts/claude-plugin-install.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
