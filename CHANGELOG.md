@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.2] - 2026-03-26
+
+### Changes
+- fix: replace uv pip install --system with uv tool install in security workflow (6e8592a)
+- chore: sync CPV scripts (bump_version, check_version_consistency, claude-plugin-install) (a945c3f)
+- fix: resolve lint failures from CPV-synced scripts (bf6516a)
+- chore: sync CPV validator scripts (new management + standardize scripts) (cd3f083)
+- docs: sync with llm-externalizer MCP updates (243b014)
+- chore: gitignore .rechecker/ (auto-managed by rechecker plugin, overwrites tracked files) (140ca73)
+- chore: update rechecker progress state (5193637)
+- chore: track all rechecker state files (4709302)
+- chore: add yamllint config, disable shellcheck on third-party rechecker script (7f5ef05)
+- chore: add .rechecker dir, update .gitignore with TLDR artifacts (39357c9)
+- chore: track Serena project files (3207283)
+
 ## [3.2.1] - 2026-03-18
 
 ### Changes
