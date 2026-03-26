@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.3] - 2026-03-26
+
+### Changes
+- feat: rewrite publish.py with phased architecture and atomic push (1a4c9d9)
+
 ## [3.2.2] - 2026-03-26
 
 ### Changes
