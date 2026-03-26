@@ -60,6 +60,12 @@ logs/
 # Rechecker plugin (auto-managed runtime state, overwrites tracked files)
 .rechecker/
 
+# Serena local config (per-machine settings, not for version control)
+.serena/project.local.yml
+
+# LLM Externalizer output (generated reports from external LLM calls)
+llm_externalizer_output/
+
 # TLDR artifacts
 .tldrignore
 .tldr_session_*

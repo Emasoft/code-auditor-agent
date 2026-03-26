@@ -206,10 +206,9 @@ Run a comprehensive 10-phase codebase audit with optional automatic fix applicat
 
 | Script | Purpose |
 |--------|---------|
+| `publish.py` | Unified 4-phase publish pipeline (pre-flight, validate, audit, push) with atomic rollback |
 | `bump_version.py` | Semantic version bumping across `plugin.json` and `pyproject.toml` |
 | `check_version_consistency.py` | Verifies version strings match across all config files |
-| `sync_cpv_scripts.py` | Syncs CPV validation scripts from upstream GitHub repo |
-| `prepare_release.py` | Automates release preparation with version bump and changelog |
 | `setup_git_hooks.py` | Installs pre-commit and pre-push hooks from git-hooks/ |
 | `setup_plugin_pipeline.py` | Configures plugin CI/CD pipeline and validates structure |
 | `setup_marketplace_automation.py` | Sets up marketplace notification workflow and metadata |
@@ -366,12 +365,12 @@ Four GitHub Actions workflows are configured:
 Always use the unified publish pipeline (never push directly):
 
 ```bash
-uv run python scripts/publish.py --patch   # 3.1.28 -> 3.1.29
-uv run python scripts/publish.py --minor   # 3.1.28 -> 3.2.0
-uv run python scripts/publish.py --major   # 3.1.28 -> 4.0.0
+uv run python scripts/publish.py --patch   # e.g. 3.2.3 -> 3.2.4
+uv run python scripts/publish.py --minor   # e.g. 3.2.3 -> 3.3.0
+uv run python scripts/publish.py --major   # e.g. 3.2.3 -> 4.0.0
 ```
 
-The pipeline runs 12 steps: clean check, CPV sync, lint, validate (strict), version consistency, bump, README badges, SKILL.md frontmatter, CHANGELOG, commit, tag, push. The pre-push hook enforces that all pushes go through this pipeline.
+The pipeline runs 4 phases: pre-flight checks (connectivity, clean tree, remote version), validate (lint, strict validation, version consistency), audit (gitignore, stale files, YAML lint), then mutate+push (bump, README, CHANGELOG, commit, tag, atomic push with rollback on failure). The pre-push hook enforces that all pushes go through this pipeline.
 
 ### Validating
 

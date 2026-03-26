@@ -116,8 +116,8 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 4. **Fallback (no externalizer):** For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
 5. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved. Wait for all fixing agents to complete and save their partial reports.
 6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
-7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions.
-8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause.
+7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
+8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
 9. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
 10. Write fix summary and test results reports.
 11. **Linting step (Docker required).** Check if Docker is available: `command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1`. If Docker is NOT available, skip linting with a note: "Docker not available -- MegaLinter step skipped." and proceed to commit.

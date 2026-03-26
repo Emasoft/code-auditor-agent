@@ -7,7 +7,7 @@ version: 3.2.3
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, code-audit, claim-verification, quality-gate]
-allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Agent, WebFetch"
+allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 
 # PR Review
