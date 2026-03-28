@@ -287,19 +287,7 @@ def main() -> int:
     cprint("")
 
     python_cmd = find_python_command()
-
-    # --- Sync CPV validator scripts from upstream ---
-    cprint(f"{BLUE}Syncing CPV validator scripts...{NC}")
-    sync_script = repo_root / "scripts" / "sync_cpv_scripts.py"
-    if sync_script.is_file():
-        sync_exit = run_script(python_cmd, sync_script, cwd=repo_root)
-        if sync_exit != 0:
-            cprint(f"{YELLOW}CPV sync had errors (non-blocking){NC}")
-        else:
-            cprint(f"{GREEN}CPV validators synced.{NC}")
-    else:
-        cprint(f"{YELLOW}sync_cpv_scripts.py not found — skipping sync{NC}")
-    cprint("")
+    CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"
 
     # --- Lint ---
     cprint(f"{BLUE}Running file linting...{NC}")
@@ -320,9 +308,25 @@ def main() -> int:
     cprint(f"{GREEN}Linting passed.{NC}")
     cprint("")
 
-    # --- Validation ---
-    validate_script = repo_root / "scripts" / "validate_plugin.py"
-    validation_exit = run_script(python_cmd, validate_script, [".", "--verbose", "--strict"], cwd=repo_root)
+    # --- Validation via uvx remote execution (no local CPV scripts) ---
+    import shutil
+    if not shutil.which("uvx"):
+        cprint(f"{RED}  BLOCKED: uvx not found — install uv{NC}")
+        return 1
+
+    try:
+        validation_result = subprocess.run(
+            [
+                "uvx", "--from", CPV_REPO, "--with", "pyyaml",
+                "cpv-validate", str(repo_root), "--verbose", "--strict",
+            ],
+            cwd=str(repo_root),
+            timeout=180,
+        )
+        validation_exit = validation_result.returncode
+    except subprocess.TimeoutExpired:
+        cprint(f"{RED}  BLOCKED: CPV validation timed out (180s){NC}")
+        return 1
 
     cprint("")
     cprint(f"{BLUE}----------------------------------------{NC}")

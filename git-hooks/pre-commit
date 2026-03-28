@@ -84,28 +84,7 @@ def find_python_command() -> list[str]:
     return ["python3"]
 
 
-def _run_cpv_sync(repo_root: Path) -> None:
-    """Sync CPV scripts from upstream. Graceful: failures print a warning and do not block."""
-    sync_script = repo_root / "scripts" / "sync_cpv_scripts.py"
-    if not sync_script.exists():
-        return
-    python_cmd = find_python_command()
-    try:
-        result = subprocess.run(
-            [*python_cmd, str(sync_script)],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode != 0:
-            print(f"{YELLOW}WARNING: CPV sync returned exit code {result.returncode}{NC}")
-            if result.stderr.strip():
-                print(f"{YELLOW}  {result.stderr.strip()}{NC}")
-    except subprocess.TimeoutExpired:
-        print(f"{YELLOW}WARNING: CPV sync timed out (30s) — continuing without sync{NC}")
-    except FileNotFoundError:
-        print(f"{YELLOW}WARNING: Could not run CPV sync (python/uv not found on PATH) — continuing{NC}")
+CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"
 
 
 def main() -> int:
@@ -115,9 +94,6 @@ def main() -> int:
     except subprocess.CalledProcessError:
         print(f"{RED}ERROR: Failed to determine git repository root. Are you in a git repo?{NC}")
         return 1
-
-    # Sync CPV scripts from upstream (non-blocking: failure does not prevent commit)
-    _run_cpv_sync(repo_root)
 
     print(f"{BLUE}========================================{NC}")
     print(f"{BLUE}  Pre-commit Plugin Validation{NC}")
@@ -145,21 +121,22 @@ def main() -> int:
     print(f"{BLUE}Running plugin validation...{NC}")
     print()
 
-    # Run the plugin validator from the repo root
-    validate_script = repo_root / "scripts" / "validate_plugin.py"
-    if not validate_script.exists():
-        print(f"{YELLOW}WARNING: Validation script not found at {validate_script}. Skipping validation.{NC}")
+    # Run the plugin validator via uvx remote execution (no local CPV scripts needed)
+    if not shutil.which("uvx"):
+        print(f"{YELLOW}WARNING: uvx not found. Skipping validation.{NC}")
         return 0
 
-    python_cmd = find_python_command()
     try:
         validation_result = subprocess.run(
-            [*python_cmd, "scripts/validate_plugin.py", "."],
+            [
+                "uvx", "--from", CPV_REPO, "--with", "pyyaml",
+                "cpv-validate", str(repo_root),
+            ],
             cwd=str(repo_root),
-            timeout=120,
+            timeout=180,
         )
     except subprocess.TimeoutExpired:
-        print(f"{RED}ERROR: Validation timed out after 120 seconds. Blocking commit.{NC}")
+        print(f"{RED}ERROR: Validation timed out after 180 seconds. Blocking commit.{NC}")
         return 1
     validation_exit_code = validation_result.returncode
 

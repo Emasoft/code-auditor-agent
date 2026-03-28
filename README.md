@@ -376,13 +376,15 @@ The pipeline runs 4 phases: pre-flight checks (connectivity, clean tree, remote 
 
 ### Validating
 
-Run the full validation suite:
+Run the full validation suite via CPV remote execution (no local scripts needed):
 
 ```bash
-uv run python scripts/validate_plugin.py . --verbose --strict
+uvx --from git+https://github.com/Emasoft/claude-plugins-validation --with pyyaml cpv-validate . --verbose --strict
 ```
 
-Claude Code also validates frontmatter (skills, agents, commands) and hook configs via `claude plugin validate`.
+Or create a shell alias: `alias cpv='uvx --from git+https://github.com/Emasoft/claude-plugins-validation --with pyyaml'` then `cpv cpv-validate . --strict`.
+
+Claude Code also validates frontmatter via `claude plugin validate`.
 
 ### CI
 

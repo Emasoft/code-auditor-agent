@@ -917,16 +917,16 @@ def phase1_validate(
             f"  {YELLOW}~ lint_files.py not found (skipped){NC}",
         )
 
-    # 1.2 Validate plugin (strict)
-    print(f"\n  {BLUE}[1.2]{NC} Validate plugin (strict)...")
-    validate_script = root / "scripts" / "validate_plugin.py"
-    if validate_script.exists():
+    # 1.2 Validate plugin (strict) via uvx remote execution
+    print(f"\n  {BLUE}[1.2]{NC} Validate plugin (strict via CPV remote)...")
+    CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"
+    if shutil.which("uvx"):
         r = _run_quiet(
             [
-                "uv", "run", "python", str(validate_script),
-                ".", "--strict",
+                "uvx", "--from", CPV_REPO, "--with", "pyyaml",
+                "cpv-validate", str(root), "--strict",
             ],
-            cwd=root, timeout=120,
+            cwd=root, timeout=180,
         )
         if r.returncode != 0:
             sev_map = {
@@ -952,9 +952,11 @@ def phase1_validate(
             print(f"  {GREEN}ok Plugin validation passed (strict){NC}")
     else:
         print(
-            f"  {YELLOW}~ validate_plugin.py not found "
-            f"(skipped){NC}",
+            f"  {RED}x uvx not found — install uv: "
+            f"curl -LsSf https://astral.sh/uv/install.sh | sh{NC}",
+            file=sys.stderr,
         )
+        errors += 1
 
     # 1.3 Version consistency
     print(f"\n  {BLUE}[1.3]{NC} Version consistency...")
