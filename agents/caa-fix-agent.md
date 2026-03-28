@@ -58,11 +58,15 @@ Other agents in the pipeline handle what you cannot see. Focus on what you do be
 ## INPUT FORMAT
 
 You will receive:
-1. `TODO_FILE` — Path to the TODO file containing fix instructions
+1. `TODO_FILE` — Path to the TODO file containing fix instructions for YOUR group only
 2. `ASSIGNED_TODOS` — List of TODO IDs to apply (e.g., "TODO-AMS1, TODO-AMS2, TODO-AMS3")
-3. `FILES` — List of file paths to modify (max 4 files)
+3. `FILES` — List of file paths to modify (max 4 files). Read ONLY these files — never scan the codebase
 4. `CHECKPOINT_PATH` — Path for checkpoint file (for crash recovery). When `${CLAUDE_PLUGIN_DATA}` is available, the orchestrator sets this inside that directory so checkpoints survive context compactions and plugin updates.
 5. `REPORT_PATH` — Where to write the fix report
+6. `FIX_GUIDANCE` (optional) — Path to externalizer's per-group analysis report, if available
+7. `LINT_REPORT` (optional) — Path to per-group lint report (`caa-lint-group-{GROUP_ID}.md`)
+8. `SECURITY_REPORT` (optional) — Path to per-group security findings (`caa-security-group-{GROUP_ID}.md`)
+9. `REVIEW_REPORT` (optional) — Path to per-group holistic review findings (`caa-review-group-{GROUP_ID}.md`)
 
 ## FIX PROTOCOL
 

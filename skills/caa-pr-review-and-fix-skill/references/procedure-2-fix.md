@@ -110,7 +110,7 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 
 ### Fix Steps
 
-1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{N}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
+1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{GROUP_ID}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
 3. **Per-group fix dispatch:** For each group:
    a. If externalizer available: call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the group's source files ONLY) and `instructions` (project context + the group's issues). Returns per-group fix guidance.
    b. Spawn one `caa-fix-agent` per group with: the group's files, its issues, and the externalizer guidance (if available). The agent reads ONLY its assigned files — no codebase scanning.
@@ -122,8 +122,8 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
 9. Write fix summary and test results reports.
 10. **Per-group linting step.** For each file group from step 1, run linting on ONLY that group's files:
-    a. **Preferred (no Docker):** Run `ruff check` (Python), `tsc --noEmit` (TypeScript), `shellcheck` (shell), or `tldr diagnostics` on the group's file list. Write lint results to `{REPORT_DIR}/caa-lint-group-{N}.md`.
-    b. **Docker available:** Run `universal_pr_linter.py` with `--files` flag targeting only the group's files. Write results to `{REPORT_DIR}/caa-lint-group-{N}.md`.
+    a. **Preferred (no Docker):** Run `ruff check` (Python), `tsc --noEmit` (TypeScript), `shellcheck` (shell), or `tldr diagnostics` on the group's file list. Write lint results to `{REPORT_DIR}/caa-lint-group-{GROUP_ID}.md`.
+    b. **Docker available:** Run `universal_pr_linter.py` with `--files` flag targeting only the group's files. Write results to `{REPORT_DIR}/caa-lint-group-{GROUP_ID}.md`.
     c. Each lint report is passed ONLY to the fix agent responsible for that group — never to other agents or the orchestrator.
 11. If any group has lint errors, spawn its fix agent with the lint report path. Up to 5 groups in parallel. After fixes, re-lint that group only.
 12. Repeat per-group lint→fix cycles up to 3 times. Escalate to user if 3 attempts fail.
@@ -168,7 +168,7 @@ Task(
     ```
     ## Self-Verification
 
-    - [ ] I read ONLY my group's issue list (caa-fix-group-{N}.md) and identified ALL issues assigned to me
+    - [ ] I read ONLY my group's issue list (caa-fix-group-{GROUP_ID}.md) and identified ALL issues assigned to me
     - [ ] For each issue, I read the FULL file and understood the problem BEFORE attempting a fix
     - [ ] I made the MINIMAL fix required (no over-engineering, no unnecessary refactoring)
     - [ ] I did NOT change code unrelated to the assigned issues
@@ -251,13 +251,13 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
 
 If the check fails, log: `"[SKIP] MegaLinter step -- Docker not available."` and proceed to commit.
 
-**Per-group lint strategy:** Each file group is linted independently. Results are written to per-group files (`caa-lint-group-{N}.md`), one per group. Each fix agent receives ONLY its group's lint report path — never the full codebase lint output.
+**Per-group lint strategy:** Each file group is linted independently. Results are written to per-group files (`caa-lint-group-{GROUP_ID}.md`), one per group. Each fix agent receives ONLY its group's lint report path — never the full codebase lint output.
 
 **Preferred (no Docker):** Use native linters on the group's files directly:
-- Python: `ruff check file1.py file2.py > caa-lint-group-{N}.md`
-- TypeScript: `tsc --noEmit file1.ts file2.ts 2> caa-lint-group-{N}.md`
-- Shell: `shellcheck file1.sh file2.sh > caa-lint-group-{N}.md`
-- Any language: `tldr diagnostics file1 file2 > caa-lint-group-{N}.md`
+- Python: `ruff check file1.py file2.py > caa-lint-group-{GROUP_ID}.md`
+- TypeScript: `tsc --noEmit file1.ts file2.ts 2> caa-lint-group-{GROUP_ID}.md`
+- Shell: `shellcheck file1.sh file2.sh > caa-lint-group-{GROUP_ID}.md`
+- Any language: `tldr diagnostics file1 file2 > caa-lint-group-{GROUP_ID}.md`
 
 **Docker fallback:** `${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py` uses MegaLinter inside Docker. Run with `--plugin-mode` (read-only, APPLY_FIXES=none).
 

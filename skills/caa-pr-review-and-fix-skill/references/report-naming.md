@@ -27,9 +27,11 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 | Fix checkpoint (per-domain) | `docs_dev/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
 | Fix summary (per-domain) | `docs_dev/caa-fixes-done-P{N}-{domain}.md` |
 | Test outcome | `docs_dev/caa-tests-outcome-P{N}.md` |
-| Lint outcome | `docs_dev/caa-lint-outcome-P{N}.md` |
-| Lint summary (JSON) | `docs_dev/megalinter-P{N}/lint-summary.json` |
-| Lint fixes | `docs_dev/caa-lint-fixes-P{N}.md` |
+| Per-group fix issues | `docs_dev/caa-fix-group-{GROUP_ID}.md` |
+| Per-group lint | `docs_dev/caa-lint-group-{GROUP_ID}.md` |
+| Per-group security | `docs_dev/caa-security-group-{GROUP_ID}.md` |
+| Per-group review | `docs_dev/caa-review-group-{GROUP_ID}.md` |
+| Lint outcome (joined) | `docs_dev/caa-lint-outcome-P{N}.md` |
 | Recovery log | `docs_dev/caa-recovery-log-P{N}.md` |
 | Final clean report | `docs_dev/caa-pr-review-and-fix-FINAL-{timestamp}.md` |
 | Escalation (if max reached) | `docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md` |

@@ -103,6 +103,11 @@ Most pipeline reports use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md` (ag
 | Fix verify | `caa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` |
 | Manifest | `caa-manifest-R{RUN_ID}.json` |
 | Fix dispatch ledger | `caa-fix-dispatch-P{N}-R{RUN_ID}.json` |
+| Per-group file list | `caa-group-{GROUP_ID}.txt` |
+| Per-group security | `caa-security-group-{GROUP_ID}.md` |
+| Per-group review | `caa-review-group-{GROUP_ID}.md` |
+| Per-group lint | `caa-lint-group-{GROUP_ID}.md` |
+| Per-group fix issues | `caa-fix-group-{GROUP_ID}.md` |
 | Final | `caa-audit-FINAL-{timestamp}.md` |
 
 ## Finding IDs
