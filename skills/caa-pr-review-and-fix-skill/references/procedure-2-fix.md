@@ -111,10 +111,12 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 ### Fix Steps
 
 1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
-2. Build the list of issues to fix, grouped by domain. Extract the checklist from the merged report.
-3. **Check LLM Externalizer availability** via `mcp__plugin_llm-externalizer_llm-externalizer__discover`. If available, use the LLM Externalizer Analysis Protocol above to diagnose issues cheaply, then apply fixes with Read+Edit or caa-fix-agent. Skip to step 6 after fixes are applied.
-4. **Fallback (no externalizer):** For each domain, select the best available agent type (see Agent Selection above). Spawn one fixing agent per domain in parallel. If a domain has more than 5 files to fix, split into groups of max 5 files and spawn separate agents. Group files involved in the same issue together.
-5. Give each agent its domain-specific subset of the checklist from the merged report. The agent must track which issues it resolved. Wait for all fixing agents to complete and save their partial reports.
+2. **Group files by domain using a script** (not agent reasoning). Extract the checklist from the merged report. Use Bash/Python to group issues by file path → domain → batch of max 5 files. Write per-group issue lists to `{REPORT_DIR}/caa-fix-group-{N}.md`. This grouping prevents agents from reading files outside their scope.
+3. **Per-group fix dispatch:** For each group:
+   a. If externalizer available: call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the group's source files ONLY) and `instructions` (project context + the group's issues). Returns per-group fix guidance.
+   b. Spawn one `caa-fix-agent` per group with: the group's files, its issues, and the externalizer guidance (if available). The agent reads ONLY its assigned files — no codebase scanning.
+   c. Up to 5 groups in parallel. Each group's files are non-overlapping (guaranteed by the grouping script).
+4. Wait for all fixing agents to complete and save their partial reports.
 6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
 7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
 8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.

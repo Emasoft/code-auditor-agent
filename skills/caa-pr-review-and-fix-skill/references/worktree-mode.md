@@ -6,7 +6,9 @@
 - [Prerequisites for Worktree Mode](#prerequisites-for-worktree-mode)
 - [When NOT to Use Worktrees](#when-not-to-use-worktrees)
 
-When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: "worktree"` in the Agent tool. This is useful for large PRs with many domains where concurrent agents might otherwise see each other's in-progress changes.
+**DISCOURAGED — explicit opt-in only.** Default mode uses Phase 0 file grouping to assign non-overlapping file sets to each agent, preventing conflicts without worktrees. Worktrees lose tool intelligence and often cause merge conflicts.
+
+When `USE_WORKTREES=true` is explicitly passed, agents run in isolated git worktrees via `isolation: "worktree"` in the Agent tool. Only use when concurrent agents MUST modify overlapping files (rare with proper grouping).
 
 ## How It Works
 
