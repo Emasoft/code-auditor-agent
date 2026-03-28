@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.7] - 2026-03-28
+
+### Changes
+- fix: update TOC anchor for renamed worktree heading (f127648)
+- chore: update uv.lock (386e170)
+- feat: per-group dispatch architecture, discourage worktrees (7d014ab)
+
 ## [3.2.6] - 2026-03-28
 
 ### Changes
