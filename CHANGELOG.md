@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.8] - 2026-03-28
+
+### Changes
+- chore: update uv.lock and README badges (bf960bf)
+- fix: verification findings + add TLDR tool guidance to agents (b65da46)
+
 ## [3.2.7] - 2026-03-28
 
 ### Changes
