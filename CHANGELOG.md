@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.11] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (d416dd4)
+- fix: unify GROUP_ID naming, add per-group files to report tables (d464f67)
+
 ## [3.2.10] - 2026-03-28
 
 ### Changes

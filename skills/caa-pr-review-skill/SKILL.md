@@ -3,7 +3,7 @@ name: caa-pr-review-skill
 description: >
   Trigger with "review the PR", "check the PR", "audit the PR", "pre-merge review".
   Use when reviewing PRs, auditing code, or running pre-merge quality gates.
-version: 3.2.10
+version: 3.2.11
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, code-audit, claim-verification, quality-gate]
