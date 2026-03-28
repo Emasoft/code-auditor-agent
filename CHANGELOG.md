@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.13] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (7bafddd)
+- feat: use GROUP markers for single-call multi-group externalizer dispatch (0889172)
+
 ## [3.2.12] - 2026-03-28
 
 ### Changes
