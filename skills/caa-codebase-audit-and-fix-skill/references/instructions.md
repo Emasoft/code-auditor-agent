@@ -34,7 +34,11 @@ Follow these steps to run the audit pipeline:
    Route config/metadata to code-correctness, prompt `.md` to security-review, CI/CD to both.
 
 4. Run Phase 1: **Per-group analysis using GROUP markers.** Build a single `input_files_paths` array with `---GROUP:id---` / `---/GROUP:id---` markers wrapping each group's files. This sends ALL groups in ONE externalizer call — the server processes each group in COMPLETE ISOLATION and returns one separate report per group: `[group:id] /path/to/report.md`.
-   a. **Preferred (externalizer available):** Call `mcp__plugin_llm-externalizer_llm-externalizer__check_against_specs` with `spec_file_path` (REFERENCE_STANDARD) and `input_files_paths` built as: `["---GROUP:G1---", "/path/file1.py", "/path/file2.py", "---/GROUP:G1---", "---GROUP:G2---", "/path/file3.ts", "---/GROUP:G2---", ...]`. Each group produces its own violation report that maps directly to the fix agent assignment. Auto-batched if total exceeds context window.
+   a. **Preferred (externalizer available):** Call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` using `---GROUP:id---` markers wrapping each group's files, and `instructions` containing THREE analysis perspectives:
+      1. **Code correctness:** type safety, logic bugs, API contract mismatches, resource leaks, error handling gaps
+      2. **Code functionality:** does the code do what it claims? are edge cases handled? do return values match expectations?
+      3. **Adversarial review:** what would a hostile reviewer exploit? injection vectors, unsafe inputs, race conditions, privilege escalation, secrets exposure
+      Each group produces its own separate report (`[group:id] /path/to/report.md`) that maps directly to the fix agent assignment.
    b. **Fallback (no externalizer):** Spawn `caa-domain-auditor-agent` for each group (concurrency 20).
    c. **Key principle:** The grouping from Phase 0 is reused in ALL downstream phases — consolidation, TODO generation, and fix dispatch. Each downstream step receives only the `[group:id]` report path for its group.
 5. Run Phase 2: spawn `caa-verification-agent` to cross-check all Phase 1 reports (concurrency 10)
