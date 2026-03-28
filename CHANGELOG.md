@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.12] - 2026-03-28
+
+### Changes
+- chore: update validate_hook.py from CPV sync (0ee5555)
+- feat: switch to CPV uvx remote execution, remove local script sync (e04c1cd)
+
 ## [3.2.11] - 2026-03-28
 
 ### Changes
