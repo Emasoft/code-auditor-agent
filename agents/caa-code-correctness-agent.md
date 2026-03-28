@@ -27,7 +27,7 @@ test coverage.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`, `context`) when available for symbol-level code exploration and structured file search. These are far more token-efficient than manual grep for initial discovery. Fall back to Grep/Glob/Read if MCP tools are not available.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`, `context`) when available for symbol-level code exploration. Use `tldr structure` for quick file orientation before deep reading, and `tldr search` to find code patterns. These are far more token-efficient than manual grep. Fall back to Grep/Glob/Read if MCP tools are not available.
 
 **Model selection:** NEVER use Haiku for code analysis, review, or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 

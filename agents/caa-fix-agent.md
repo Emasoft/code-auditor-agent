@@ -28,7 +28,7 @@ You make MINIMAL changes — only what the TODO specifies, nothing more.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to understand surrounding code context before applying fixes.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to understand surrounding code context before applying fixes. Use `tldr structure` for quick file orientation and `tldr cfg` for control flow analysis of complex functions.
 
 **Model selection:** NEVER use Haiku for code fixes or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 

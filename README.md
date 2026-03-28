@@ -85,9 +85,11 @@ Add the marketplace to your project's `.claude/settings.json` so team members ge
 - **11 specialized agents** across two pipelines (PR review + codebase audit)
 - **3 skills** with progressive disclosure, reference documentation, and explicit `allowed-tools` declarations
 - **Tool safety enforcement** via `disallowedTools` frontmatter — all 10 read-only agents are blocked from using Edit/NotebookEdit, preventing accidental source code modification
-- **LLM Externalizer integration** — offloads consolidation, TODO generation, fix analysis, and spec-compliance checking to cheaper external LLMs when available (115s timeout, auto-retry on truncation)
-- **Worktree isolation** — optional `USE_WORKTREES=true` for concurrent agent swarms in isolated git worktrees
+- **Per-group dispatch** — Phase 0 Python script groups files into non-overlapping batches; each downstream step (externalizer, agents, fix agents) reuses the same grouping. Fix agents receive ONLY their assigned files — zero redundant reads
+- **LLM Externalizer integration** — offloads consolidation, TODO generation, fix analysis, and spec-compliance checking (`check_against_specs`) to cheaper external LLMs when available (115s timeout, auto-retry on truncation)
+- **Worktree isolation** — optional `USE_WORKTREES=true` for concurrent agent swarms (discouraged: default per-group dispatch already prevents conflicts without worktree overhead)
 - **Persistent plugin data** — uses `${CLAUDE_PLUGIN_DATA}` for audit state (Fix Dispatch Ledger, agent checkpoints) that survives plugin updates and context compactions
+- **Code intelligence tools** — agents use Serena MCP (`find_symbol`, `find_referencing_symbols`), Grepika (`search`, `refs`, `outline`), and TLDR (`structure`, `search`) when available for semantic code navigation instead of raw file reading
 
 ### Plugin Environment Variables
 

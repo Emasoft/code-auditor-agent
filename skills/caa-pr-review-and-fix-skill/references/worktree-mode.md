@@ -50,3 +50,4 @@ This means agents in worktrees fall back to raw file reading (Read, Grep, Glob) 
 - When disk space is limited
 - When agents don't modify code (review-only mode with `caa-pr-review-skill`)
 - When agents need heavy code intelligence (prefer non-worktree mode with serialized execution)
+- When the git repo has uncommitted changes (worktree creation requires a clean state)

@@ -28,7 +28,7 @@ systematically verify each claim against the actual source code.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`, `context`) when available to LOCATE functions and symbols referenced in PR claims. These are far more token-efficient than manual grep for tracing claim targets. Fall back to Grep/Glob/Read if MCP tools are not available.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`, `context`) when available to LOCATE functions and symbols referenced in PR claims. Use `tldr impact` to trace callers of a function, and `tldr imports` to verify import chains. These are far more token-efficient than manual grep. Fall back to Grep/Glob/Read if unavailable.
 
 **Model selection:** NEVER use Haiku for code analysis, review, or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 

@@ -117,12 +117,12 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
    b. Spawn one `caa-fix-agent` per group with: the group's files, its issues, and the externalizer guidance (if available). The agent reads ONLY its assigned files — no codebase scanning.
    c. Up to 5 groups in parallel. Each group's files are non-overlapping (guaranteed by the grouping script).
 4. Wait for all fixing agents to complete and save their partial reports.
-6. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
-7. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
-8. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
-9. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
-10. Write fix summary and test results reports.
-11. **Linting step (Docker required).** Check if Docker is available: `command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1`. If Docker is NOT available, skip linting with a note: "Docker not available -- MegaLinter step skipped." and proceed to commit.
+5. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
+6. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
+7. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
+8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
+9. Write fix summary and test results reports.
+10. **Linting step (Docker required).** Check if Docker is available: `command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1`. If Docker is NOT available, skip linting with a note: "Docker not available -- MegaLinter step skipped." and proceed to commit.
 12. If Docker IS available, run the MegaLinter linter script (see "Linting Step" section below). Parse the `lint-summary.json` output.
 13. If the linter reports errors (`has_errors: true` in the summary JSON), spawn fix agents to address the lint errors (one agent per domain, reading the MegaLinter logs for specifics). After fixes, re-run the linter.
 14. Repeat lint -> fix cycles until the linter exits with 0 errors, or 3 consecutive lint-fix attempts fail (escalate to user if so).

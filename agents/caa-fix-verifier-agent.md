@@ -24,7 +24,7 @@ standard and the original TODO that prompted the fix.
 
 ## TOOL GUIDANCE
 
-**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to understand surrounding code context when verifying fixes.
+**Code navigation:** Use Serena MCP tools (`find_symbol`, `find_referencing_symbols`) and Grepika MCP tools (`search`, `refs`, `outline`) when available to understand surrounding code context when verifying fixes. Use `tldr diagnostics` to type-check fixed files and `tldr change-impact` to find tests affected by the changes.
 
 **Model selection:** NEVER use Haiku for verification or any task requiring judgment. Use Opus or Sonnet only. Haiku may only be used for trivial file operations (moving files, formatting).
 
