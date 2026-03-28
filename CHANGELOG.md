@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.10] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (c4fc172)
+- feat: per-group linting and per-group output for holistic agents (d61ff22)
+
 ## [3.2.9] - 2026-03-28
 
 ### Changes
