@@ -250,8 +250,8 @@ Task(
     OUTPUT_PATH: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P1-{timestamp}.md
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
 
-    Read the intermediate merged report.
-    Deduplicate findings semantically (see agent instructions).
+    The intermediate merged report is at {ABSOLUTE_REPORT_DIR}/caa-pr-review-P1-intermediate-{timestamp}.md.
+    Read ONLY that file. Deduplicate findings semantically (see agent instructions).
     Produce the final report at OUTPUT_PATH with accurate counts and verdict.
 
     REPORTING RULES:
@@ -266,4 +266,4 @@ Task(
 
 ## Phase 6: Present Results
 
-Read the **final deduplicated report** (NOT the intermediate) and present a summary using the format in [review-complete.md](review-complete.md).
+Present the verdict to the user using the dedup agent's return line (which contains the verdict and finding count). Do NOT read the full final report into context. If the user requests details, THEN read specific sections on demand. Use the format in [review-complete.md](review-complete.md).

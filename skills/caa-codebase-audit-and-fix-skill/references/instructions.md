@@ -47,7 +47,7 @@ Follow these steps to run the audit pipeline:
    b. **Externalizer fix guidance (preferred):** For each group, call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the group's source files), `instructions` (project context + the group's TODO items), and `scan_secrets: true`. The externalizer returns per-file fix guidance. Up to 5 groups in parallel.
    c. **Spawn one fix agent per group:** Each `caa-fix-agent` receives ONLY: its group's `TODO_FILE`, `ASSIGNED_TODOS`, `FILES` (3-4 files), `CHECKPOINT_PATH`, `REPORT_PATH`, and the externalizer's fix guidance report (if available). The agent reads ONLY its assigned files — no codebase scanning, no redundant reads.
    d. On bad fixes, revert via `git checkout` on affected files. Update ledger `fix_status` after each group. The ledger survives context compactions — on crash/restart, resume from the first `pending` entry.
-11. Run Phase 8: run the merge script to produce an intermediate report, then spawn `caa-dedup-agent` to produce the final deduplicated report. Rename the dedup output to `caa-audit-FINAL-{timestamp}.md`
+11. Run Phase 8: run `scripts/caa-merge-audit-reports.py` to join all per-group reports into `caa-audit-FINAL-{timestamp}.md`. The orchestrator does NOT read the final report — the script outputs a summary line with finding counts and the file path. Present the summary to the user. If the user requests details, THEN read specific sections on demand.
 
 ## Parameters
 
@@ -82,7 +82,7 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 | 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `caa-fix-verifier-agent` | 20 |
 | 8 | Final report: compile stats, link artifacts | orchestrator | -- |
 
-**Gap-fill queue consumption:** Before running Phase 3, read all Phase 2 verification reports. Extract files listed under POTENTIALLY_MISSED sections. These files MUST be added to the Phase 3 re-audit file list along with any gap-fill files identified during Phase 0 inventory.
+**Gap-fill queue consumption:** Before running Phase 3, use a Python script (or `grep -l POTENTIALLY_MISSED {REPORT_DIR}/caa-verify-*.md`) to extract missed file paths from Phase 2 reports WITHOUT reading them into agent context. The script outputs a flat list of missed files. These MUST be added to the Phase 3 re-audit file list along with any gap-fill files identified during Phase 0 inventory.
 
 If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until all PASS or `PASS_NUMBER > MAX_FIX_PASSES`.
 

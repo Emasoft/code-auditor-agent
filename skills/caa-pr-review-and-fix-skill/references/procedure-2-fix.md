@@ -110,14 +110,13 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 
 ### Fix Steps
 
-1. Read the merged review report from PROCEDURE 1: `docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`
-2. **Group files by domain using a script** (not agent reasoning). Extract the checklist from the merged report. Use Bash/Python to group issues by file path → domain → batch of max 5 files. Write per-group issue lists to `{REPORT_DIR}/caa-fix-group-{N}.md`. This grouping prevents agents from reading files outside their scope.
+1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{N}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
 3. **Per-group fix dispatch:** For each group:
    a. If externalizer available: call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` with `input_files_paths` (the group's source files ONLY) and `instructions` (project context + the group's issues). Returns per-group fix guidance.
    b. Spawn one `caa-fix-agent` per group with: the group's files, its issues, and the externalizer guidance (if available). The agent reads ONLY its assigned files — no codebase scanning.
    c. Up to 5 groups in parallel. Each group's files are non-overlapping (guaranteed by the grouping script).
 4. Wait for all fixing agents to complete and save their partial reports.
-5. Read all fix reports (from externalizer or agents) and cross-check against the full checklist from the merged review report. Verify every entry has been addressed.
+5. **Join fix reports via script** — use `scripts/caa-merge-reports.py` to concatenate all per-group fix reports into a single fix summary. The script outputs a pass/fail count and the merged report path. The orchestrator does NOT read individual fix reports into context — only the script's summary line (e.g., "8/8 groups fixed, 0 failed. Report: docs_dev/caa-fixes-merged-P1.md").
 6. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
 7. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
 8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
@@ -167,7 +166,7 @@ Task(
     ```
     ## Self-Verification
 
-    - [ ] I read the merged review report and identified ALL issues assigned to my domain
+    - [ ] I read ONLY my group's issue list (caa-fix-group-{N}.md) and identified ALL issues assigned to me
     - [ ] For each issue, I read the FULL file and understood the problem BEFORE attempting a fix
     - [ ] I made the MINIMAL fix required (no over-engineering, no unnecessary refactoring)
     - [ ] I did NOT change code unrelated to the assigned issues
