@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.16] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (8500847)
+- feat: add /delta-audit as separate command from /audit-codebase (10e59eb)
+
 ## [3.2.15] - 2026-03-28
 
 ### Changes
