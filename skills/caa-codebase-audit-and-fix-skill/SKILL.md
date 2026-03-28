@@ -1,7 +1,7 @@
 ---
 name: caa-codebase-audit-and-fix-skill
 description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit'. Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes."
-version: 3.2.14
+version: 3.2.15
 author: Emasoft
 license: MIT
 tags: [codebase-audit, compliance, todo-generation, iterative-fix]

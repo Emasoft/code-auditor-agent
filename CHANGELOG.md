@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.15] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (8445b30)
+- fix: enforce full codebase audit as default, never skip files (470e862)
+
 ## [3.2.14] - 2026-03-28
 
 ### Changes
