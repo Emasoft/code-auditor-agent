@@ -120,6 +120,8 @@ All agents end with: `REPORTING RULES: Write details to report file. Return ONLY
 
 ## Fix Agent Worktree Merge-Back (USE_WORKTREES only)
 
+**WARNING: Tool intelligence loss.** Worktrees only contain git-tracked files. Gitignored tool indexes (`.tldr/`, `.serena/cache/`, `.claude/`) are NOT copied. Agents in worktrees lose semantic code navigation and must fall back to raw file reading. Token usage increases significantly. For discovery/verification phases (P1-P3), prefer non-worktree mode with serialized execution. Worktree isolation is most beneficial for Phase 6 fix agents that modify only 3-4 targeted files per invocation.
+
 When `USE_WORKTREES=true` and `FIX_ENABLED=true`, Phase 6 fix agents each work in isolated worktrees on separate branches. After ALL Phase 6 agents complete:
 
 1. Merge each agent's branch back to the current branch sequentially (in domain assignment order)

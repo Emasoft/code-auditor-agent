@@ -29,8 +29,22 @@ When `USE_WORKTREES=true`, agents run in isolated git worktrees via `isolation: 
 - Sufficient disk space for N worktree copies (one per concurrent agent)
 - The `REPORT_DIR` must be an absolute path accessible from all worktrees
 
+## Tool Intelligence Loss in Worktrees
+
+**WARNING:** Worktrees only contain git-tracked files. Gitignored tool indexes are NOT copied:
+
+- `.tldr/` — TLDR code indexes (gitignored). Agents must rebuild or read files raw.
+- `.serena/cache/` — Serena symbol cache (gitignored). Agents lose cached code intelligence.
+- `.claude/` — Claude Code project config (gitignored). Not available in worktrees.
+- `llm_externalizer_output/` — LLM output cache (gitignored). Not shared across worktrees.
+
+This means agents in worktrees fall back to raw file reading (Read, Grep, Glob) instead of semantic code navigation (Serena `find_symbol`, TLDR `structure`). Token usage increases significantly for large codebases.
+
+**Mitigation:** The `.serena/project.yml` IS tracked and will be available in worktrees, so Serena can re-index on first use. TLDR will need to re-index from scratch. For the fix-agent (which modifies only 3-4 files per invocation), the token overhead is acceptable since it reads targeted files, not the whole codebase.
+
 ## When NOT to Use Worktrees
 
 - Small PRs with 1-3 domains (overhead outweighs benefit)
 - When disk space is limited
 - When agents don't modify code (review-only mode with `caa-pr-review-skill`)
+- When agents need heavy code intelligence (prefer non-worktree mode with serialized execution)
