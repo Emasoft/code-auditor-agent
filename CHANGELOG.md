@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.9] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (0744ded)
+- fix: eliminate report reading from orchestrator context (8d55c90)
+
 ## [3.2.8] - 2026-03-28
 
 ### Changes
