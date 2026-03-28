@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.5] - 2026-03-28
+
+### Changes
+- chore: sync CPV validation scripts (360d679)
+- feat: add effort and isolation frontmatter to agents (e9a25f6)
+
 ## [3.2.4] - 2026-03-26
 
 ### Changes
