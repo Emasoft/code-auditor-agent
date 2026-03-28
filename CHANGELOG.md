@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.14] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (f077c46)
+- fix: replace check_against_specs with 3-perspective code_task analysis (8b68d2c)
+
 ## [3.2.13] - 2026-03-28
 
 ### Changes
