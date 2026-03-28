@@ -7,7 +7,7 @@
 - [Report Naming](#report-naming)
 - [Finding IDs](#finding-ids)
 - [Spawning Patterns](#spawning-patterns)
-- [Fix Agent Worktree Merge-Back](#fix-agent-worktree-merge-back-use_worktrees-only)
+- [Fix Agent Worktree Merge-Back](#fix-agent-worktree-merge-back-use_worktrees-only--discouraged)
 - [Loop Termination](#loop-termination)
 
 ## Phase Steps
