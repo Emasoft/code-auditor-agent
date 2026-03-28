@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.6] - 2026-03-28
+
+### Changes
+- chore: update uv.lock (84eb1e4)
+- fix: remove declarative worktree isolation, add tool loss warnings (cdeba4e)
+
 ## [3.2.5] - 2026-03-28
 
 ### Changes
