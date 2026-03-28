@@ -7,6 +7,7 @@ description: >
   Born from a real incident where "fromLabel/toLabel population via registry lookup" was
   claimed in the PR description but never implemented in convertAMPToMessage().
 model: opus
+effort: high
 maxTurns: 30
 disallowedTools:
   - Edit
