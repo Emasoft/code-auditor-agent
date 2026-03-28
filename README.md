@@ -188,7 +188,8 @@ Run a comprehensive 10-phase codebase audit with optional automatic fix applicat
 
 | Command | Trigger | Purpose |
 |---------|---------|---------|
-| `caa-audit-codebase-cmd` | `/audit-codebase` | Launch codebase audit with configurable scope, standard, and fix mode |
+| `caa-audit-codebase-cmd` | `/audit-codebase` | Full codebase audit — every file, no exceptions. Configurable scope, standard, and fix mode |
+| `caa-delta-audit-cmd` | `/delta-audit` | Incremental audit of changed files since a git ref. NOT a substitute for full audit |
 
 ---
 
