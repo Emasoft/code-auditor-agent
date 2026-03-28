@@ -144,7 +144,9 @@ Provide an overall assessment. Be honest and direct.
 
 ## OUTPUT FORMAT
 
-Write your findings to `REPORT_PATH` in this exact format:
+**Per-group output (for fix dispatch):** In addition to the main report, write per-group finding files to `{REPORT_DIR}/caa-review-group-{GROUP_ID}.md` — one file per file group from the Fix Dispatch Ledger. Each per-group file contains ONLY the findings for files in that group. This enables fix agents to receive ONLY their group's findings without reading the full holistic report. If `GROUPS` is not provided in the prompt, write a single report to `REPORT_PATH`.
+
+Write your main findings to `REPORT_PATH` in this exact format:
 
 ```markdown
 # Skeptical Review Report

@@ -121,11 +121,13 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 7. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
 8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
 9. Write fix summary and test results reports.
-10. **Linting step (Docker required).** Check if Docker is available: `command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1`. If Docker is NOT available, skip linting with a note: "Docker not available -- MegaLinter step skipped." and proceed to commit.
-12. If Docker IS available, run the MegaLinter linter script (see "Linting Step" section below). Parse the `lint-summary.json` output.
-13. If the linter reports errors (`has_errors: true` in the summary JSON), spawn fix agents to address the lint errors (one agent per domain, reading the MegaLinter logs for specifics). After fixes, re-run the linter.
-14. Repeat lint -> fix cycles until the linter exits with 0 errors, or 3 consecutive lint-fix attempts fail (escalate to user if so).
-15. Write lint results report.
+10. **Per-group linting step.** For each file group from step 1, run linting on ONLY that group's files:
+    a. **Preferred (no Docker):** Run `ruff check` (Python), `tsc --noEmit` (TypeScript), `shellcheck` (shell), or `tldr diagnostics` on the group's file list. Write lint results to `{REPORT_DIR}/caa-lint-group-{N}.md`.
+    b. **Docker available:** Run `universal_pr_linter.py` with `--files` flag targeting only the group's files. Write results to `{REPORT_DIR}/caa-lint-group-{N}.md`.
+    c. Each lint report is passed ONLY to the fix agent responsible for that group — never to other agents or the orchestrator.
+11. If any group has lint errors, spawn its fix agent with the lint report path. Up to 5 groups in parallel. After fixes, re-lint that group only.
+12. Repeat per-group lint→fix cycles up to 3 times. Escalate to user if 3 attempts fail.
+13. Write per-group lint summary. Join all per-group lint results via script into `caa-lint-outcome-P{N}.md` — orchestrator receives only the joined file path, not the content.
 
 **Spawning pattern for fix agents:**
 
@@ -249,11 +251,15 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
 
 If the check fails, log: `"[SKIP] MegaLinter step -- Docker not available."` and proceed to commit.
 
-**Linter script location:** `${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py`
+**Per-group lint strategy:** Each file group is linted independently. Results are written to per-group files (`caa-lint-group-{N}.md`), one per group. Each fix agent receives ONLY its group's lint report path — never the full codebase lint output.
 
-The script uses MegaLinter inside Docker to lint the entire codebase. It runs in `--plugin-mode`
-which lints the working directory directly (no temp copy) with APPLY_FIXES=none (read-only --
-MegaLinter never modifies your files).
+**Preferred (no Docker):** Use native linters on the group's files directly:
+- Python: `ruff check file1.py file2.py > caa-lint-group-{N}.md`
+- TypeScript: `tsc --noEmit file1.ts file2.ts 2> caa-lint-group-{N}.md`
+- Shell: `shellcheck file1.sh file2.sh > caa-lint-group-{N}.md`
+- Any language: `tldr diagnostics file1 file2 > caa-lint-group-{N}.md`
+
+**Docker fallback:** `${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py` uses MegaLinter inside Docker. Run with `--plugin-mode` (read-only, APPLY_FIXES=none).
 
 **Spawning pattern for lint agent:**
 

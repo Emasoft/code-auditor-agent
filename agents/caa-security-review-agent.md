@@ -272,7 +272,9 @@ These are heavier tools — run only if available and if the audit scope warrant
 
 ## OUTPUT FORMAT
 
-Write your findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.md` (omit `-R{RUN_ID}` if RUN_ID was not provided):
+**Per-group output (for fix dispatch):** In addition to the main report, write per-group finding files to `{REPORT_DIR}/caa-security-group-{GROUP_ID}.md` — one per file group from the Fix Dispatch Ledger. Each per-group file contains ONLY findings for files in that group. This enables fix agents to receive ONLY their group's security findings. If `GROUPS` is not provided, write a single report.
+
+Write your main findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.md` (omit `-R{RUN_ID}` if RUN_ID was not provided):
 
 ```markdown
 # Security Review Report
