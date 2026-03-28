@@ -24,12 +24,16 @@ Follow these steps to run the audit pipeline:
    e. Write the **Fix Dispatch Ledger** to `{REPORT_DIR}/caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json` — maps GROUP_ID → file list, so every downstream step (externalizer, agents, fix agents) uses the SAME grouping.
    f. Write per-group file lists to `{REPORT_DIR}/caa-group-{GROUP_ID}.txt` (one absolute path per line) for direct passing to the externalizer's `input_files_paths`.
 
-   If zero files found, STOP with error. **File type coverage** MUST include ALL text files:
+   If zero files found, STOP with error. **FULL CODEBASE means EVERY file — no exceptions, no delta mode, no prioritization.** File type coverage MUST include:
    - Source: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.java`, `.rb`, `.sh`, `.bash`
    - Config: `.yaml`, `.yml`, `.toml`, `.json`, `.xml`, `.ini`, `.cfg`
-   - Prompts: `.md` in `agents/`, `skills/`, `commands/`
-   - CI/CD: `.github/workflows/*.yml`, `Dockerfile`
-   - Metadata: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`
+   - Plugin definitions: `.md` in `agents/`, `skills/`, `commands/`, `rules/`
+   - Plugin config: `.claude-plugin/plugin.json`, `.mcp.json`, `.lsp.json`, `hooks/hooks.json`, `settings.json`
+   - CI/CD: `.github/workflows/*.yml`, `Dockerfile`, `.dockerignore`
+   - Metadata: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `uv.lock`
+   - Documentation: `README.md`, `CHANGELOG.md`, `CLAUDE.md`, `.claude/rules/*.md`
+
+   **NEVER skip files** based on recency, git history, or previous audit results. A "codebase audit" audits the ENTIRE codebase as it exists NOW. Delta mode (auditing only changes since last audit) is a separate, explicitly requested operation — never the default.
 
    Route config/metadata to code-correctness, prompt `.md` to security-review, CI/CD to both.
 

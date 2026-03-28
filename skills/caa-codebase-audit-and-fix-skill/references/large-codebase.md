@@ -1,28 +1,37 @@
 # Large Codebase Strategy (1000+ files)
 
 ## Table of Contents
-- [Tier 1 - Automated Triage](#tier-1--automated-triage-no-agents)
-- [Tier 2 - Selective Audit](#tier-2--selective-audit-agents)
-- [Tier 3 - Full Coverage](#tier-3--full-coverage-optional)
+- [Full Coverage (Default)](#full-coverage-default)
+- [Automated Triage for Prioritization](#automated-triage-for-prioritization)
+- [Checkpoint and Resume](#checkpoint-and-resume)
 
-## Tier 1 — Automated Triage (no agents)
+## Full Coverage (Default)
 
-- Run linter/type-checker (e.g., `ruff check`, `tsc --noEmit`, `tldr diagnostics .`) to identify files with existing issues
-- Use `git log --since="6 months ago" --name-only` to identify recently changed files
-- Prioritize: files with lint errors > recently changed files > high-complexity files > remainder
-- Typically reduces audit scope to 10-30% of codebase
+**Every file is audited. No files are skipped.** For large codebases, the challenge is managing concurrency and context — not reducing scope.
 
-## Tier 2 — Selective Audit (agents)
+Phase 0 groups ALL files into batches of 3-4. The externalizer processes all groups via GROUP markers in a single call. Fix agents receive only their group's reports. This scales to any codebase size without skipping files.
 
-- Audit only Tier 1 priority files
-- Batch into groups of 3-4 files, max 20 concurrent agents per round
-- Track progress in `{REPORT_DIR}/caa-audit-checkpoint.json`:
-  ```json
-  {"completed_batches": [0,1,2], "current_batch": 3, "total_batches": 67, "scope_files": 200}
-  ```
-- If context compaction occurs, resume from checkpoint
+For codebases with 1000+ files:
+- Phase 0 produces ~250-350 groups
+- Externalizer auto-batches groups that exceed context window
+- Agent concurrency capped at 20 per round
+- Checkpoint file tracks progress for resume after interruption
 
-## Tier 3 — Full Coverage (optional)
+## Automated Triage for Prioritization
 
-- After Tier 2 fixes are applied, audit remaining files in batches
-- Use checkpoint file to track progress across sessions
+Triage determines PROCESSING ORDER, not scope. All files are audited — triage just decides which groups go first:
+
+1. Run linter/type-checker (`ruff check`, `tsc --noEmit`, `tldr diagnostics .`) to identify files with existing issues
+2. Tag groups: files with lint errors → HIGH priority, others → NORMAL priority
+3. Process HIGH priority groups first in Phase 1, then NORMAL groups
+4. This gets actionable findings early without skipping any files
+
+## Checkpoint and Resume
+
+Track progress in `{REPORT_DIR}/caa-audit-checkpoint.json`:
+
+```json
+{"completed_groups": [0,1,2], "current_group": 3, "total_groups": 267, "scope_files": 1000}
+```
+
+If context compaction or crash occurs, resume from checkpoint. The Fix Dispatch Ledger + checkpoint together ensure no group is processed twice and no group is missed.
