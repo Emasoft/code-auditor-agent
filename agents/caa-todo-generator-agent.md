@@ -8,12 +8,6 @@ model: sonnet
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Convert consolidated violation reports into structured, actionable TODO files
-  - Assign priorities based on severity and create dependency chains between TODOs
-  - Group violations by file and category for efficient batch fixing
-  - Provide exact file:line references and minimal change instructions per TODO item
-  - Add harmonization notes for RECORD_KEEPING items (what to preserve vs what to add)
 maxTurns: 20
 ---
 

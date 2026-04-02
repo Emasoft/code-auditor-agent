@@ -21,7 +21,7 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-# Exclude CPV-synced scripts (upstream code, overwritten on publish — do not lint locally)
+# Exclude CPV-upstream scripts (from claude-plugins-validation — do not lint locally)
 extend-exclude = [
     "scripts/validate_*.py",
     "scripts/manage_*.py",

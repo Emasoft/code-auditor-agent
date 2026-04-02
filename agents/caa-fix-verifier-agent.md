@@ -5,14 +5,10 @@ description: >
   Checks each fixed file against the reference standard and the original TODO that prompted
   the fix. Reports PASS or FAIL with specific remaining issues.
 model: opus
+effort: high
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Re-audit fixed files to confirm changes match TODO specifications exactly
-  - Detect regressions — new violations introduced by the fix itself
-  - Audit fixed code against a reference standard for remaining unfixed violations
-  - Provide evidence-based PASS/FAIL verdicts with specific remaining issues listed
 maxTurns: 25
 ---
 

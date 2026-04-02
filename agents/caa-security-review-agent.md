@@ -13,18 +13,6 @@ maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Deep analysis of injection vectors (SQL, command, XSS, LDAP, template, header)
-  - Attack surface mapping — identify all entry points (APIs, CLI args, env vars, file inputs)
-  - Secrets detection via trufflehog (700+ credential detectors) and manual review
-  - Python SAST via bandit (hardcoded passwords, shell injection, unsafe deserialization)
-  - Dependency CVE scanning via osv-scanner, pip-audit, npm audit, gh api advisories
-  - Comprehensive scanning via trivy (vulns + secrets + misconfigs) and semgrep (SAST)
-  - Authentication and authorization flow analysis
-  - Cryptographic misuse detection (weak algorithms, improper key management)
-  - Path traversal and file access control analysis
-  - Race condition and TOCTOU vulnerability detection
-  - Simulate attacker perspective and identify exploitable chains
 ---
 
 # CAA Security Review Agent

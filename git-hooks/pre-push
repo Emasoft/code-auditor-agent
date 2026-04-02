@@ -2,13 +2,13 @@
 """Pre-push hook for code-auditor-agent.
 
 Performs full validation before allowing push:
-1. Detect changed plugin files
-2. Enforce version bump (local version must be > remote version)
-3. Sync CPV validator scripts from upstream (non-blocking)
+1. Gate: reject pushes not initiated by publish.py (CAA_PUBLISH_PIPELINE env var)
+2. Detect changed plugin files
+3. Enforce version bump (local version must be > remote version)
 4. Lint all files
-5. Validate plugin (--strict)
+5. Validate plugin via CPV remote execution (--strict)
 
-Exit codes from validate_plugin.py:
+Exit codes from cpv-validate:
   0 - All checks passed
   1 - CRITICAL issues found (blocks push)
   2 - MAJOR issues found (blocks push)
@@ -20,6 +20,7 @@ Strict mode (default): ALL non-zero exit codes block push.
 import fnmatch
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -309,7 +310,6 @@ def main() -> int:
     cprint("")
 
     # --- Validation via uvx remote execution (no local CPV scripts) ---
-    import shutil
     if not shutil.which("uvx"):
         cprint(f"{RED}  BLOCKED: uvx not found — install uv{NC}")
         return 1

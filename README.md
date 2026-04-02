@@ -32,7 +32,7 @@ Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Cod
 
 ## Installation
 
-**Requirements:** Claude Code v2.1.76 or later.
+**Requirements:** Claude Code v2.1.85 or later.
 
 Install from the `emasoft-plugins` marketplace:
 
@@ -98,6 +98,7 @@ Add the marketplace to your project's `.claude/settings.json` so team members ge
 | `${CLAUDE_PLUGIN_ROOT}` | Absolute path to plugin installation directory. Used to reference bundled scripts and configs. Changes on plugin update. |
 | `${CLAUDE_PLUGIN_DATA}` | Persistent directory for plugin state (`~/.claude/plugins/data/code-auditor-agent/`). Survives plugin updates. Used for Fix Dispatch Ledger, agent checkpoints. Deleted on uninstall unless `--keep-data` is passed. |
 | `${CLAUDE_SKILL_DIR}` | Absolute path to the current skill's directory. Used in SKILL.md to reference `references/` subdirectories. |
+| `CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE` | Set to `1` to keep marketplace metadata when plugin install fails (useful for offline scenarios). Added in Claude Code v2.1.90. |
 
 ---
 
@@ -224,7 +225,7 @@ Run a comprehensive 10-phase codebase audit with optional automatic fix applicat
 
 | Hook | Purpose |
 |------|---------|
-| `pre-commit` | Runs CPV script sync and plugin validation before each commit |
+| `pre-commit` | Runs plugin validation via CPV remote execution before each commit |
 | `pre-push` | Runs full plugin validation before pushing to remote |
 
 Install hooks with `uv run python scripts/setup_git_hooks.py`.

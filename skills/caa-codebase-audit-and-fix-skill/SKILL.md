@@ -5,6 +5,7 @@ version: 3.2.16
 author: Emasoft
 license: MIT
 tags: [codebase-audit, compliance, todo-generation, iterative-fix]
+effort: high
 allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(python:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 

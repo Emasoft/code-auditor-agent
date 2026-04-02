@@ -6,15 +6,10 @@ description: >
   violations such as hardcoded API calls, hardcoded governance rules, direct dependency coupling,
   and other compliance issues. HARD LIMIT: never processes more than 4 files per invocation.
 model: opus
+effort: high
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Audit source files line-by-line against a reference standard document for compliance violations
-  - Detect hardcoded API URLs, direct API calls that bypass required abstraction layers
-  - Identify hardcoded governance rules that should use runtime discovery
-  - Distinguish RECORD_KEEPING (internal tracking, metadata) from real violations
-  - Provide precise file:line:evidence for every finding with violation category classification
 maxTurns: 30
 ---
 

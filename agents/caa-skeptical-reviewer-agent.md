@@ -11,13 +11,6 @@ maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Read the entire PR diff holistically, not per-file
-  - Identify UX concerns and surprising behavior changes
-  - Detect breaking API changes with no migration path
-  - Cross-reference version strings, config values, and type definitions across files
-  - Evaluate design judgment, naming conventions, and code clarity
-  - Provide actionable verdict (APPROVE / APPROVE WITH NITS / REQUEST CHANGES / REJECT)
 ---
 
 # CAA Skeptical Reviewer Agent

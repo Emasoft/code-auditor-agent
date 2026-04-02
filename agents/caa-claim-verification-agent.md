@@ -12,12 +12,6 @@ maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Extract structured claims from PR descriptions and commit messages
-  - Verify each claim against actual source code by reading full functions
-  - Trace data flow to confirm fields are populated, assigned, and returned
-  - Cross-file consistency checks (version strings, type fields vs implementations)
-  - Detect scaffolded-but-not-wired features, incomplete renames, dead type fields
 ---
 
 # CAA Claim Verification Agent

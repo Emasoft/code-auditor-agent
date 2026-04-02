@@ -7,6 +7,7 @@ version: 3.2.16
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, code-audit, claim-verification, quality-gate]
+effort: high
 allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 

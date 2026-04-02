@@ -28,7 +28,7 @@ agents: correctness swarm, claim verification, skeptical review, security review
 | **Connection errors** | Task tool hangs then returns timeout or network error |
 | **Timeout** | Agent does not return within deadline (correctness/claims/skeptical/security agents: 10 min, fix agents: 15 min, test runner: 20 min, consolidation/domain-auditor/verification/todo-generator/fix-verifier agents: 3 min) |
 | **Lost during compaction** | Orchestrator's context was summarized; agent task ID no longer in memory and no result was ever received |
-| **Broken reference** | TaskOutput returns "agent not found" or "invalid task ID" |
+| **Broken reference** | TaskGet returns error or "agent not found" |
 | **ID collision** | Two agents wrote to overlapping filenames (prevented by UUID filenames -- verify if suspected) |
 | **Version collision** | Agent used stale plugin/agent definition cached from a prior session; writes wrong format or wrong pass prefix |
 
@@ -51,7 +51,7 @@ An agent is **LOST** if ANY of these are true:
 - Task tool returned an error, empty string, or exception
 - Agent returned a result but its expected output file does not exist
 - Agent returned but its output file is incomplete (see Step 2)
-- Agent's task ID cannot be resolved (TaskOutput returns error)
+- Agent's task ID cannot be resolved (TaskGet returns error)
 - Agent has been running longer than its deadline without returning
 - Context compaction occurred and the agent's task ID is no longer in the orchestrator's working memory
 

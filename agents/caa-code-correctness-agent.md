@@ -11,12 +11,6 @@ maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit
-capabilities:
-  - Read every file in a domain completely and audit for type safety, logic, and security
-  - Check API contracts (function signatures, caller/callee consistency)
-  - Detect race conditions, resource leaks, missing error handling
-  - Identify shell script quoting issues (SC2086), variable expansion bugs
-  - Verify new code paths have corresponding tests
 ---
 
 # CAA Code Correctness Agent
