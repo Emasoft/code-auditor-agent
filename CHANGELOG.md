@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.17] - 2026-04-02
+
+### Changes
+- fix: update plugin for Claude Code v2.1.85-v2.1.90 changes (32ed723)
+
 ## [3.2.16] - 2026-03-28
 
 ### Changes
