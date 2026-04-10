@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.18] - 2026-04-10
+
+### Changes
+- fix: make yamllint mandatory in phase 2.4 (3674425)
+- fix: update CPV invocation to use cpv-remote-validate wrapper (d8944fd)
+- feat: harden publish.py — mandatory checks, zero skip paths (f0d0be1)
+
 ## [3.2.17] - 2026-04-02
 
 ### Changes
