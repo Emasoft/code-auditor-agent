@@ -542,8 +542,10 @@ def generate_unreleased_changelog(
 ) -> str:
     """Render the unreleased changelog body for `version` via git-cliff.
 
-    Returns the rendered body (for use as GitHub release notes) or an
-    empty string if there are no commits since the last tag. Raises
+    Called BEFORE the release commit exists (phase 3.5). Uses
+    --unreleased with --tag to generate the entry as if the commit
+    were already there. Returns the rendered body or an empty
+    string if there are no commits since the last tag. Raises
     RuntimeError if git-cliff fails.
     """
     tag = f"v{version}" if not version.startswith("v") else version
@@ -564,6 +566,33 @@ def generate_unreleased_changelog(
         raise RuntimeError(
             f"git-cliff failed (exit {result.returncode}): "
             f"{result.stderr.strip()}",
+        )
+    return result.stdout.strip()
+
+
+def generate_current_release_changelog(plugin_root: Path) -> str:
+    """Render the changelog body for the LATEST (most recent) tag.
+
+    Called AFTER the tag is created (phase 5). Uses --current to
+    get the body for the newly-tagged release. Returns the rendered
+    body or an empty string if git-cliff returns nothing. Raises
+    RuntimeError if git-cliff fails.
+    """
+    result = subprocess.run(
+        [
+            "git-cliff",
+            "--config", str(plugin_root / "cliff.toml"),
+            "--current",
+            "--strip", "header",
+        ],
+        cwd=plugin_root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"git-cliff --current failed "
+            f"(exit {result.returncode}): {result.stderr.strip()}",
         )
     return result.stdout.strip()
 
@@ -1548,10 +1577,13 @@ def phase5_github_release(root: Path, version: str) -> bool:
         )
         return True
 
-    # 5.2 Generate release body from git-cliff (unreleased section only)
+    # 5.2 Generate release body from git-cliff (current tag)
+    # We use --current here, not --unreleased, because phase 4 just
+    # pushed the release commit+tag to origin. From git-cliff's
+    # perspective those commits are no longer unreleased.
     print(f"\n  {BLUE}[5.2]{NC} Generating release notes via git-cliff...")
     try:
-        body = generate_unreleased_changelog(root, version)
+        body = generate_current_release_changelog(root)
     except RuntimeError as exc:
         print(
             f"  {RED}x git-cliff failed: {exc}{NC}",
