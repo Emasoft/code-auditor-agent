@@ -1,4 +1,9 @@
-name: Release
+name: Release Validation
+
+# Safety net: validates tag pushes and produces a validation report
+# artifact. The actual GitHub release is created by scripts/publish.py
+# via `gh release create` before the tag ever reaches origin — this
+# workflow just double-checks that what was published is still valid.
 
 on:
   push:
@@ -9,11 +14,9 @@ permissions:
   contents: read
 
 jobs:
-  release:
+  validate-tag:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -26,22 +29,26 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --no-install-project --extra dev
+        run: uv sync --group dev
 
       - name: Lint all source files
         run: uv run python scripts/lint_files.py .
 
-      - name: Validate plugin
+      - name: Run test suite
+        run: uv run pytest tests/ -v
+
+      - name: Validate plugin (CPV remote execution, strict)
         run: |
           set +e
-          uv run python scripts/validate_plugin.py . 2>&1 | tee validation-report.txt
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation \
+              --with pyyaml \
+              cpv-remote-validate plugin . --verbose --strict \
+              2>&1 | tee validation-report.txt
           exit_code=${PIPESTATUS[0]}
           set -e
-          if [ "$exit_code" -eq 1 ] || [ "$exit_code" -eq 2 ]; then
+          if [ "$exit_code" -ne 0 ]; then
+            echo "::error::Plugin validation failed (exit $exit_code)"
             exit $exit_code
-          fi
-          if [ "$exit_code" -ge 3 ]; then
-            echo "::warning::Plugin validation found issues (exit code $exit_code). See validation-report.txt."
           fi
 
       - name: Validation step summary
@@ -54,25 +61,10 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Generate changelog
-        id: changelog
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1)
-          if [ -z "$PREV_TAG" ]; then
-            LOG=$(git log --max-count=50 --pretty=format:"- %s (%h)" HEAD)
-          else
-            LOG=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
-          fi
-          # Write changelog to a file to avoid YAML injection via commit messages
-          {
-            echo "## Changes"
-            echo ""
-            echo "$LOG"
-          } > "${{ runner.temp }}/release-body.md"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          body_path: ${{ runner.temp }}/release-body.md
-          files: validation-report.txt
+          name: validation-report
+          path: validation-report.txt
+          retention-days: 30

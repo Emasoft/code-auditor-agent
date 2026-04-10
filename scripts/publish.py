@@ -34,7 +34,6 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 # -- ANSI colors ---------------------------------------------------------------
@@ -522,7 +521,7 @@ def update_readme_version_text(
     return True
 
 
-# -- CHANGELOG -----------------------------------------------------------------
+# -- CHANGELOG (via git-cliff) -------------------------------------------------
 
 
 def get_previous_tag(cwd: Path) -> str | None:
@@ -538,98 +537,94 @@ def get_previous_tag(cwd: Path) -> str | None:
     return result.stdout.strip().splitlines()[0]
 
 
-def get_git_log_since_tag(prev_tag: str | None, cwd: Path) -> str:
-    """Get formatted git log entries since the previous tag."""
-    if prev_tag:
-        cmd = [
-            "git", "log", "--pretty=format:- %s (%h)",
-            f"{prev_tag}..HEAD",
-        ]
-    else:
-        cmd = ["git", "log", "--pretty=format:- %s (%h)"]
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-    return result.stdout.strip() if result.returncode == 0 else ""
+def generate_unreleased_changelog(
+    plugin_root: Path, version: str,
+) -> str:
+    """Render the unreleased changelog body for `version` via git-cliff.
+
+    Returns the rendered body (for use as GitHub release notes) or an
+    empty string if there are no commits since the last tag. Raises
+    RuntimeError if git-cliff fails.
+    """
+    tag = f"v{version}" if not version.startswith("v") else version
+    # --strip header: body only (no "# Changelog" preamble)
+    result = subprocess.run(
+        [
+            "git-cliff",
+            "--config", str(plugin_root / "cliff.toml"),
+            "--unreleased",
+            "--tag", tag,
+            "--strip", "header",
+        ],
+        cwd=plugin_root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"git-cliff failed (exit {result.returncode}): "
+            f"{result.stderr.strip()}",
+        )
+    return result.stdout.strip()
 
 
 def prepend_changelog_entry(
     plugin_root: Path, version: str, dry_run: bool,
 ) -> bool:
-    """Prepend a new changelog entry generated from git log."""
+    """Regenerate CHANGELOG.md via git-cliff with the new version.
+
+    git-cliff reads cliff.toml and produces the full changelog based
+    on git history and tags. This function writes the output to
+    CHANGELOG.md, overwriting the existing file (git-cliff rebuilds
+    the whole file from tags, so content is stable).
+    """
     changelog = plugin_root / "CHANGELOG.md"
+    tag = f"v{version}" if not version.startswith("v") else version
 
-    prev_tag = get_previous_tag(plugin_root)
-    log_entries = get_git_log_since_tag(prev_tag, plugin_root)
-    if not log_entries:
-        log_entries = "- No changes recorded"
-
-    today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
-    new_entry = (
-        f"## [{version}] - {today}\n\n### Changes\n{log_entries}\n"
-    )
-
-    if not changelog.exists():
-        preamble = (
-            "# Changelog\n\nAll notable changes to this project "
-            "will be documented in this file.\n\n"
+    if dry_run:
+        # Preview the unreleased body only, no file write
+        try:
+            body = generate_unreleased_changelog(plugin_root, version)
+        except RuntimeError as exc:
+            print(f"  {RED}x git-cliff failed: {exc}{NC}", file=sys.stderr)
+            return False
+        print(
+            f"  [DRY-RUN] Would regenerate CHANGELOG.md "
+            f"for {tag} via git-cliff",
         )
-        if dry_run:
-            print(
-                f"  [DRY-RUN] Would create CHANGELOG.md "
-                f"with entry for {version}",
-            )
+        if body:
+            print(f"  {BLUE}Preview of new entry:{NC}")
+            for line in body.splitlines()[:20]:
+                print(f"    {line}")
+            if len(body.splitlines()) > 20:
+                remaining = len(body.splitlines()) - 20
+                print(f"    ... and {remaining} more lines")
         else:
-            changelog.write_text(
-                f"{preamble}{new_entry}\n", encoding="utf-8",
-            )
             print(
-                f"  {GREEN}Created CHANGELOG.md with entry "
-                f"for {version}{NC}",
+                f"  {YELLOW}(no unreleased commits — empty entry){NC}",
             )
         return True
 
-    content = changelog.read_text(encoding="utf-8")
-    lines_list = content.splitlines(keepends=True)
-
-    # Find insertion point: before first '## [' line
-    insert_idx = None
-    for i, line in enumerate(lines_list):
-        if line.strip().startswith("## ["):
-            insert_idx = i
-            break
-
-    if insert_idx is not None:
-        raw_parts = new_entry.split("\n")
-        if raw_parts and raw_parts[-1] == "":
-            raw_parts = raw_parts[:-1]
-        entry_lines = [el + "\n" for el in raw_parts]
-        new_lines = (
-            lines_list[:insert_idx]
-            + entry_lines
-            + ["\n"]
-            + lines_list[insert_idx:]
-        )
-    else:
-        new_lines = [content.rstrip("\n"), "\n\n", new_entry, "\n"]
-
-    if dry_run:
+    # Full rebuild: git-cliff --bump/--tag produces complete CHANGELOG
+    result = subprocess.run(
+        [
+            "git-cliff",
+            "--config", str(plugin_root / "cliff.toml"),
+            "--tag", tag,
+            "-o", str(changelog),
+        ],
+        cwd=plugin_root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
         print(
-            f"  [DRY-RUN] Would prepend changelog entry for {version}",
+            f"  {RED}x git-cliff failed: "
+            f"{result.stderr.strip()}{NC}",
+            file=sys.stderr,
         )
-    else:
-        changelog.write_text("".join(new_lines), encoding="utf-8")
-        print(f"  {GREEN}Prepended changelog entry for {version}{NC}")
-
-    if prev_tag:
-        print(f"  Commits since {prev_tag}:")
-    else:
-        print("  All commits (no previous tag found):")
-    # Indent log entries for display
-    for entry_line in log_entries.splitlines()[:10]:
-        print(f"    {entry_line}")
-    if len(log_entries.splitlines()) > 10:
-        remaining = len(log_entries.splitlines()) - 10
-        print(f"    ... and {remaining} more")
-
+        return False
+    print(f"  {GREEN}Regenerated CHANGELOG.md for {tag}{NC}")
     return True
 
 
@@ -825,6 +820,57 @@ def phase0_preflight(root: Path) -> bool:
 
     # 0.7 No detached HEAD (already handled in 0.6, kept as explicit
     #     check for the spec)
+
+    # 0.7 Required CLI tools
+    print(f"\n  {BLUE}[0.7]{NC} Required CLI tools...")
+    missing_tools: list[str] = []
+    for tool, install_hint in (
+        ("git-cliff", "brew install git-cliff OR cargo install git-cliff"),
+        ("gh", "brew install gh"),
+        ("uvx", "curl -LsSf https://astral.sh/uv/install.sh | sh"),
+        ("uv", "curl -LsSf https://astral.sh/uv/install.sh | sh"),
+    ):
+        if not shutil.which(tool):
+            missing_tools.append(f"{tool} — install via: {install_hint}")
+    if missing_tools:
+        print(
+            f"  {RED}x Missing required tools:{NC}",
+            file=sys.stderr,
+        )
+        for hint in missing_tools:
+            print(f"    {hint}", file=sys.stderr)
+        errors += 1
+    else:
+        print(
+            f"  {GREEN}ok git-cliff, gh, uv, uvx available{NC}",
+        )
+
+    # 0.7b gh CLI authentication
+    print(f"\n  {BLUE}[0.7b]{NC} GitHub CLI authentication...")
+    if shutil.which("gh"):
+        r = _run_quiet(["gh", "auth", "status"], cwd=root, timeout=10)
+        if r.returncode != 0:
+            print(
+                f"  {RED}x gh CLI not authenticated. "
+                f"Run: gh auth login{NC}",
+                file=sys.stderr,
+            )
+            errors += 1
+        else:
+            print(f"  {GREEN}ok gh authenticated{NC}")
+
+    # 0.7c cliff.toml present
+    print(f"\n  {BLUE}[0.7c]{NC} cliff.toml present...")
+    cliff_toml = root / "cliff.toml"
+    if not cliff_toml.is_file():
+        print(
+            f"  {RED}x cliff.toml not found. "
+            f"Run: git-cliff --init{NC}",
+            file=sys.stderr,
+        )
+        errors += 1
+    else:
+        print(f"  {GREEN}ok cliff.toml found{NC}")
 
     # 0.8 Disk space check
     print(f"\n  {BLUE}[0.8]{NC} Disk space...")
@@ -1453,15 +1499,108 @@ def phase4_push(root: Path, version: str) -> bool:
     return True
 
 
+def phase5_github_release(root: Path, version: str) -> bool:
+    """Phase 5: Publish GitHub release via `gh release create`.
+
+    Uses git-cliff to generate the release body from unreleased
+    commits for this tag. Requires `gh` CLI authenticated (checked
+    in phase 0.7b).
+
+    Returns True on success, False on failure. Phase 4 is the point
+    of no return: if phase 5 fails, the tag and branch are already
+    pushed — the caller should not rollback, just report the failure
+    so the user can retry `gh release create` manually.
+    """
+    tag = f"v{version}"
+    print(f"\n{BOLD}{BLUE}Phase 5: GitHub Release{NC}")
+    print(f"{BLUE}{'=' * 50}{NC}")
+
+    # 5.1 Check if release already exists (idempotent)
+    print(f"\n  {BLUE}[5.1]{NC} Checking for existing release...")
+    r = _run_quiet(
+        ["gh", "release", "view", tag, "--json", "tagName"],
+        cwd=root, timeout=15,
+    )
+    if r.returncode == 0:
+        print(
+            f"  {YELLOW}~ Release {tag} already exists. "
+            f"Skipping creation.{NC}",
+        )
+        return True
+
+    # 5.2 Generate release body from git-cliff (unreleased section only)
+    print(f"\n  {BLUE}[5.2]{NC} Generating release notes via git-cliff...")
+    try:
+        body = generate_unreleased_changelog(root, version)
+    except RuntimeError as exc:
+        print(
+            f"  {RED}x git-cliff failed: {exc}{NC}",
+            file=sys.stderr,
+        )
+        print(
+            f"  {YELLOW}Tag {tag} is pushed. Create the release "
+            f"manually with: gh release create {tag}{NC}",
+            file=sys.stderr,
+        )
+        return False
+
+    if not body:
+        body = f"Release {tag}"
+        print(
+            f"  {YELLOW}~ Empty changelog. Using minimal release body.{NC}",
+        )
+    else:
+        print(f"  {GREEN}ok Release notes generated{NC}")
+
+    # 5.3 Create the release via gh CLI
+    print(f"\n  {BLUE}[5.3]{NC} Creating GitHub release {tag}...")
+    r = subprocess.run(
+        [
+            "gh", "release", "create", tag,
+            "--title", f"Release {tag}",
+            "--notes", body,
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    if r.returncode != 0:
+        print(
+            f"  {RED}x gh release create failed "
+            f"(exit {r.returncode}){NC}",
+            file=sys.stderr,
+        )
+        if r.stderr.strip():
+            for line in r.stderr.strip().splitlines():
+                print(f"    {line}", file=sys.stderr)
+        print(
+            f"  {YELLOW}Tag {tag} is pushed but release creation "
+            f"failed. Retry with: "
+            f"gh release create {tag} --title 'Release {tag}'{NC}",
+            file=sys.stderr,
+        )
+        return False
+
+    # Print the release URL if gh returned it
+    if r.stdout.strip():
+        for line in r.stdout.strip().splitlines():
+            print(f"    {line}")
+
+    print(
+        f"\n{GREEN}Phase 5 passed: GitHub release {tag} published{NC}",
+    )
+    return True
+
+
 # -- Main pipeline -------------------------------------------------------------
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Phased publish pipeline: "
-            "preflight -> validate -> audit -> "
-            "mutate -> push"
+            "Phased publish pipeline: preflight -> validate -> "
+            "audit -> mutate -> push -> github-release"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
@@ -1535,6 +1674,24 @@ errors before anything is committed or pushed.
 
     # -- Phase 4: Push --
     if not phase4_push(root, new_version):
+        return 1
+
+    # -- Phase 5: GitHub Release --
+    # Point of no return: phase 4 already pushed to origin. If phase
+    # 5 fails, we return a non-zero exit code but the tag is live;
+    # the user must retry `gh release create` manually.
+    if not phase5_github_release(root, new_version):
+        tag = f"v{new_version}"
+        print(
+            f"\n{YELLOW}{'=' * 60}{NC}",
+            file=sys.stderr,
+        )
+        print(
+            f"{YELLOW}  Partial success: {tag} pushed but "
+            f"GitHub release not created.{NC}",
+            file=sys.stderr,
+        )
+        print(f"{YELLOW}{'=' * 60}{NC}", file=sys.stderr)
         return 1
 
     tag = f"v{new_version}"
