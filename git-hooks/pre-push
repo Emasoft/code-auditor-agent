@@ -8,7 +8,7 @@ Performs full validation before allowing push:
 4. Lint all files
 5. Validate plugin via CPV remote execution (--strict)
 
-Exit codes from cpv-validate:
+Exit codes from cpv-remote-validate:
   0 - All checks passed
   1 - CRITICAL issues found (blocks push)
   2 - MAJOR issues found (blocks push)
@@ -318,7 +318,8 @@ def main() -> int:
         validation_result = subprocess.run(
             [
                 "uvx", "--from", CPV_REPO, "--with", "pyyaml",
-                "cpv-validate", str(repo_root), "--verbose", "--strict",
+                "cpv-remote-validate", "plugin", str(repo_root),
+                "--verbose", "--strict",
             ],
             cwd=str(repo_root),
             timeout=180,

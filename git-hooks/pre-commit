@@ -130,7 +130,7 @@ def main() -> int:
         validation_result = subprocess.run(
             [
                 "uvx", "--from", CPV_REPO, "--with", "pyyaml",
-                "cpv-validate", str(repo_root),
+                "cpv-remote-validate", "plugin", str(repo_root),
             ],
             cwd=str(repo_root),
             timeout=180,
