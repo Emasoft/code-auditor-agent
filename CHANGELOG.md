@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.20] - 2026-04-10
+
+### Bug Fixes
+
+- Phase5 uses --current instead of --unreleased for release notes (1f2b903)
+
+### Chores
+
+- Update uv.lock to v3.2.19 (00d5b4d)
+
 ## [3.2.19] - 2026-04-10
 
 ### Features
