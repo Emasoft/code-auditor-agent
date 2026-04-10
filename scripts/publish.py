@@ -8,12 +8,17 @@ Architecture:
   Phase 3: Auto-fix + Bump + Commit + Tag (mutations)
   Phase 4: Push        (atomic branch+tag, rollback on failure)
 
+STRICT MODE: All checks are MANDATORY and CANNOT be skipped.
+Linting, testing, plugin validation, and version consistency MUST
+all pass with 0 errors. There are NO skip flags. If a prerequisite
+tool (uvx, pytest, lint_files.py, tests/) is missing, the pipeline
+FAILS. This is by design to guarantee no broken code reaches origin.
+
 Usage:
   uv run python scripts/publish.py --patch             # bump patch and publish
   uv run python scripts/publish.py --minor             # bump minor and publish
   uv run python scripts/publish.py --major             # bump major and publish
-  uv run python scripts/publish.py --patch --dry-run   # preview only
-  uv run python scripts/publish.py --patch --skip-tests # skip pytest
+  uv run python scripts/publish.py --patch --dry-run   # preview only (still runs all checks)
 
 Exit codes:
     0 - Success
@@ -852,51 +857,78 @@ def phase0_preflight(root: Path) -> bool:
     return True
 
 
-def phase1_validate(
-    root: Path, *, skip_tests: bool = False,
-) -> bool:
+def phase1_validate(root: Path) -> bool:
     """Phase 1: Validate (read-only, no local file mutations).
 
-    Runs lint, plugin validation, version consistency, and optional tests.
-    Returns True if all checks pass, False otherwise.
+    STRICT MODE: Runs tests, lint, plugin validation, and version
+    consistency. ALL checks are MANDATORY. Missing prerequisites
+    (tests/, lint_files.py, uvx, pytest) cause the phase to FAIL.
+    Returns True only if every check passes with 0 errors.
     """
-    print(f"\n{BOLD}{BLUE}Phase 1: Validation{NC}")
+    print(f"\n{BOLD}{BLUE}Phase 1: Validation (strict mode){NC}")
     print(f"{BLUE}{'=' * 50}{NC}")
     errors = 0
 
-    # 1.0 Tests (optional)
+    # 1.0 Tests (MANDATORY — cannot be skipped)
+    print(f"\n  {BLUE}[1.0]{NC} Running tests (mandatory)...")
     tests_dir = root / "tests"
-    if not skip_tests and tests_dir.is_dir():
-        print(f"\n  {BLUE}[1.0]{NC} Running tests...")
-        r = _run_quiet(
-            [
-                "uv", "run", "pytest", "tests/",
-                "-x", "-q", "--tb=short",
-            ],
-            cwd=root, timeout=300,
+    if not tests_dir.is_dir():
+        print(
+            f"  {RED}x tests/ directory not found. "
+            f"Create tests/ with at least one test "
+            f"before publishing.{NC}",
+            file=sys.stderr,
         )
-        if r.returncode != 0:
-            print(f"  {RED}x Tests failed:{NC}", file=sys.stderr)
-            if r.stdout.strip():
-                # Show last 20 lines of test output
-                for line in r.stdout.strip().splitlines()[-20:]:
-                    print(f"    {line}")
-            if r.stderr.strip():
-                for line in r.stderr.strip().splitlines()[-10:]:
-                    print(f"    {line}", file=sys.stderr)
+        errors += 1
+    else:
+        # Require at least one test file
+        test_files = list(tests_dir.rglob("test_*.py")) + list(
+            tests_dir.rglob("*_test.py"),
+        )
+        if not test_files:
+            print(
+                f"  {RED}x tests/ contains no test_*.py or "
+                f"*_test.py files. Add tests before publishing.{NC}",
+                file=sys.stderr,
+            )
             errors += 1
         else:
-            print(f"  {GREEN}ok Tests passed{NC}")
-    else:
-        reason = (
-            "--skip-tests" if skip_tests else "no tests/ directory"
-        )
-        print(f"\n  {YELLOW}[1.0] Tests skipped ({reason}){NC}")
+            r = _run_quiet(
+                [
+                    "uv", "run", "pytest", "tests/",
+                    "-x", "-q", "--tb=short",
+                ],
+                cwd=root, timeout=300,
+            )
+            if r.returncode != 0:
+                print(
+                    f"  {RED}x Tests failed:{NC}",
+                    file=sys.stderr,
+                )
+                if r.stdout.strip():
+                    for line in r.stdout.strip().splitlines()[-20:]:
+                        print(f"    {line}")
+                if r.stderr.strip():
+                    for line in r.stderr.strip().splitlines()[-10:]:
+                        print(f"    {line}", file=sys.stderr)
+                errors += 1
+            else:
+                print(
+                    f"  {GREEN}ok Tests passed "
+                    f"({len(test_files)} test file(s)){NC}",
+                )
 
-    # 1.1 Lint
-    print(f"\n  {BLUE}[1.1]{NC} Lint files...")
+    # 1.1 Lint (MANDATORY — cannot be skipped)
+    print(f"\n  {BLUE}[1.1]{NC} Lint files (mandatory)...")
     lint_script = root / "scripts" / "lint_files.py"
-    if lint_script.exists():
+    if not lint_script.exists():
+        print(
+            f"  {RED}x scripts/lint_files.py not found. "
+            f"Restore it before publishing.{NC}",
+            file=sys.stderr,
+        )
+        errors += 1
+    else:
         r = _run_quiet(
             ["uv", "run", "python", str(lint_script), str(root)],
             cwd=root, timeout=120,
@@ -912,10 +944,6 @@ def phase1_validate(
             errors += 1
         else:
             print(f"  {GREEN}ok Linting passed{NC}")
-    else:
-        print(
-            f"  {YELLOW}~ lint_files.py not found (skipped){NC}",
-        )
 
     # 1.2 Validate plugin (strict) via uvx remote execution
     print(f"\n  {BLUE}[1.2]{NC} Validate plugin (strict via CPV remote)...")
@@ -1435,8 +1463,11 @@ Examples:
   %(prog)s --patch              # 1.0.0 -> 1.0.1, commit, push
   %(prog)s --minor              # 1.0.0 -> 1.1.0, commit, push
   %(prog)s --major              # 1.0.0 -> 2.0.0, commit, push
-  %(prog)s --patch --dry-run    # preview only, no changes
-  %(prog)s --patch --skip-tests # skip pytest step
+  %(prog)s --patch --dry-run    # preview (still runs ALL checks)
+
+STRICT MODE: tests, lint, validation, and version consistency are
+MANDATORY. There are NO skip flags. All checks must pass with 0
+errors before anything is committed or pushed.
         """,
     )
     bump_group = parser.add_mutually_exclusive_group(required=True)
@@ -1452,12 +1483,10 @@ Examples:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Preview without making changes",
-    )
-    parser.add_argument(
-        "--skip-tests",
-        action="store_true",
-        help="Skip pytest step",
+        help=(
+            "Preview without committing/pushing. "
+            "ALL checks still run in strict mode."
+        ),
     )
     args = parser.parse_args()
 
@@ -1477,8 +1506,8 @@ Examples:
     if not phase0_preflight(root):
         return 1
 
-    # -- Phase 1: Validate (read-only) --
-    if not phase1_validate(root, skip_tests=args.skip_tests):
+    # -- Phase 1: Validate (read-only, strict) --
+    if not phase1_validate(root):
         return 1
 
     # -- Phase 2: Audit (read-only) --
