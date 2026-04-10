@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.19] - 2026-04-10
+
+### Features
+
+- Integrate git-cliff and GitHub release creation into publish.py (4a9783d)
+
+### Bug Fixes
+
+- Cliff.toml clean output, prepend-only changelog, remove release.yml (cbddf09)
+
 ## [3.2.18] - 2026-04-10
 
 ### Changes
