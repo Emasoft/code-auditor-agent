@@ -1117,28 +1117,35 @@ def phase2_audit(root: Path) -> bool:
     else:
         print(f"  {GREEN}ok All shebanged scripts are +x{NC}")
 
-    # 2.4 YAML lint on tracked files
-    print(f"\n  {BLUE}[2.4]{NC} YAML lint...")
-    # Find tracked .yml/.yaml files
+    # 2.4 YAML lint on tracked files (MANDATORY — cannot be skipped)
+    print(f"\n  {BLUE}[2.4]{NC} YAML lint (mandatory)...")
     r = _run_quiet(
         ["git", "ls-files", "*.yml", "*.yaml"], cwd=root,
     )
     yaml_files = [
         f for f in r.stdout.strip().splitlines() if f.strip()
     ]
-    if yaml_files:
-        # Check if yamllint is available
+    if not yaml_files:
+        print(f"  {GREEN}ok No tracked YAML files to lint{NC}")
+    else:
         yamllint_check = _run_quiet(
             ["uv", "run", "python", "-m", "yamllint", "--version"],
             cwd=root,
         )
-        if yamllint_check.returncode == 0:
+        if yamllint_check.returncode != 0:
+            print(
+                f"  {RED}x yamllint not installed in venv. "
+                f"Add yamllint to dev dependencies and run "
+                f"`uv sync --group dev`.{NC}",
+                file=sys.stderr,
+            )
+            errors += 1
+        else:
             yaml_cmd = [
                 "uv", "run", "python", "-m", "yamllint",
                 "-d", "relaxed", "--format", "parsable",
             ] + yaml_files
             yr = _run_quiet(yaml_cmd, cwd=root, timeout=60)
-            # Parse for [error] lines
             yaml_errors = [
                 line
                 for line in yr.stdout.strip().splitlines()
@@ -1158,14 +1165,10 @@ def phase2_audit(root: Path) -> bool:
                     )
                 errors += 1
             else:
-                print(f"  {GREEN}ok YAML files clean{NC}")
-        else:
-            print(
-                f"  {YELLOW}~ yamllint not available "
-                f"(skipped){NC}",
-            )
-    else:
-        print(f"  {YELLOW}~ No tracked YAML files found{NC}")
+                print(
+                    f"  {GREEN}ok YAML files clean "
+                    f"({len(yaml_files)} file(s)){NC}",
+                )
 
     # 2.5 Serena/rechecker pollution
     print(f"\n  {BLUE}[2.5]{NC} Tool directory pollution...")
