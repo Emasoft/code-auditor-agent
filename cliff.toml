@@ -10,23 +10,25 @@ All notable changes to this project will be documented in this file.
 
 """
 
-# Per-release body template (Tera)
+# Per-release body template (Tera).
+# Whitespace control: {%- %} strips leading whitespace, {% -%} strips
+# trailing. We produce exactly one blank line between sections so the
+# output satisfies markdownlint MD012 (no multiple blank lines).
 body = """
-{% if version %}\
+{% if version -%}
 ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
-{% else %}\
+{% else -%}
 ## [unreleased]
-{% endif %}\
+{% endif -%}
 {% for group, commits in commits | group_by(attribute="group") %}
-
 ### {{ group | striptags | trim }}
-{% for commit in commits %}
-- {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-    {% if commit.breaking %}[**breaking**] {% endif %}\
-    {{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})\
-{% endfor %}
-{% endfor %}
 
+{% for commit in commits -%}
+- {% if commit.scope %}*({{ commit.scope }})* {% endif -%}
+{% if commit.breaking %}[**breaking**] {% endif -%}
+{{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor -%}
+{% endfor %}
 """
 
 # No footer
