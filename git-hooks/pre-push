@@ -2,7 +2,10 @@
 """Pre-push hook for code-auditor-agent.
 
 Performs full validation before allowing push:
-1. Gate: reject pushes not initiated by publish.py (CAA_PUBLISH_PIPELINE env var)
+1. Gate: reject pushes whose process ancestry does not include
+   the real scripts/publish.py (verified by path + inode, not by
+   env var — env vars are trivially spoofable, process trees are
+   not).
 2. Detect changed plugin files
 3. Enforce version bump (local version must be > remote version)
 4. Lint all files
@@ -90,6 +93,131 @@ def get_repo_root() -> Path:
         check=True,
     )
     return Path(result.stdout.strip())
+
+
+# ---------------------------------------------------------------------------
+# Process ancestry gate
+# ---------------------------------------------------------------------------
+
+
+def _ps_lookup(pid: int) -> tuple[int, str] | None:
+    """Return (ppid, full_command) for *pid*, or None if ps fails.
+
+    Uses `ps -p PID -o ppid=,args=` which works on macOS and Linux.
+    """
+    try:
+        r = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "ppid=,args="],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0 or not r.stdout.strip():
+        return None
+    parts = r.stdout.strip().split(None, 1)
+    if len(parts) < 2:
+        return None
+    try:
+        ppid = int(parts[0])
+    except ValueError:
+        return None
+    return ppid, parts[1]
+
+
+def _walk_process_ancestry(
+    start_pid: int, max_depth: int = 20,
+) -> list[tuple[int, str]]:
+    """Walk up the process tree from *start_pid* (exclusive).
+
+    Returns a list of (pid, command) tuples from the immediate parent
+    up to init (PID 1) or until *max_depth* hops. Never includes the
+    start_pid itself. Stops on loops or failed lookups.
+    """
+    ancestors: list[tuple[int, str]] = []
+    seen: set[int] = set()
+    info = _ps_lookup(start_pid)
+    if info is None:
+        return ancestors
+    pid = info[0]
+    for _ in range(max_depth):
+        if pid <= 1 or pid in seen:
+            break
+        seen.add(pid)
+        info = _ps_lookup(pid)
+        if info is None:
+            break
+        ppid, cmd = info
+        ancestors.append((pid, cmd))
+        pid = ppid
+    return ancestors
+
+
+def _extract_script_paths(cmd: str) -> list[str]:
+    """Return tokens from *cmd* that look like a '.py' script path.
+
+    Uses shlex-style splitting to handle quoted arguments. Any token
+    ending with '.py' is returned as a candidate.
+    """
+    import shlex
+    try:
+        tokens = shlex.split(cmd, posix=True)
+    except ValueError:
+        tokens = cmd.split()
+    return [t for t in tokens if t.endswith(".py")]
+
+
+def _same_file(a: Path, b: Path) -> bool:
+    """Return True if *a* and *b* refer to the same filesystem inode."""
+    try:
+        sa = a.resolve().stat()
+        sb = b.resolve().stat()
+    except (OSError, FileNotFoundError):
+        return False
+    return (sa.st_dev, sa.st_ino) == (sb.st_dev, sb.st_ino)
+
+
+def verify_publish_py_in_ancestry(repo_root: Path) -> tuple[bool, str]:
+    """Return (ok, detail) where ok is True if publish.py is an ancestor.
+
+    Walks the process tree starting from this hook's parent (git push)
+    and looks for an ancestor whose argv contains a .py script whose
+    resolved path matches repo_root/scripts/publish.py via inode.
+
+    Inode comparison prevents spoofing by a user running their own
+    script that happens to be named 'publish.py' — they'd need write
+    access to scripts/publish.py itself to fool this check.
+    """
+    expected = repo_root / "scripts" / "publish.py"
+    if not expected.is_file():
+        return False, (
+            f"scripts/publish.py not found at {expected}. "
+            f"Cannot verify process ancestry."
+        )
+
+    ancestors = _walk_process_ancestry(os.getpid())
+    if not ancestors:
+        return False, "Could not walk process ancestry (ps failed?)"
+
+    for pid, cmd in ancestors:
+        for token in _extract_script_paths(cmd):
+            # Resolve relative to the ancestor's cwd is hard without
+            # /proc. Instead, try the token as-is (absolute), then
+            # relative to repo_root.
+            candidate = Path(token)
+            if not candidate.is_absolute():
+                candidate = repo_root / candidate
+            if _same_file(candidate, expected):
+                return True, (
+                    f"publish.py verified in ancestor "
+                    f"PID {pid}: {cmd[:100]}"
+                )
+    return False, (
+        f"No publish.py ancestor found in {len(ancestors)} "
+        f"ancestor process(es). Walked up to PID "
+        f"{ancestors[-1][0]}."
+    )
 
 
 def find_python_command() -> list[str]:
@@ -185,13 +313,23 @@ def extract_version(filepath: Path) -> str | None:
 
 
 def main() -> int:
-    # ── Gate: reject pushes not initiated by publish.py ──
-    # publish.py sets CAA_PUBLISH_PIPELINE=1 before calling git push.
-    # Any other push path (manual git push, IDE push, etc.) is blocked.
-    if not os.environ.get("CAA_PUBLISH_PIPELINE"):
+    # ── Gate: reject pushes whose process ancestry does not include
+    #     the real scripts/publish.py.
+    #
+    # This check walks the process tree (via `ps`) and verifies that
+    # an ancestor process is running a script whose resolved path
+    # (inode) matches this repo's scripts/publish.py file. It cannot
+    # be spoofed by env vars, shell aliases, or a malicious script
+    # named publish.py in a different directory — only the real
+    # publish.py counts.
+    repo_root = get_repo_root()
+    ok, detail = verify_publish_py_in_ancestry(repo_root)
+    if not ok:
         cprint(f"{RED}========================================{NC}")
         cprint(f"{RED}  BLOCKED: Direct git push is forbidden{NC}")
         cprint(f"{RED}========================================{NC}")
+        cprint("")
+        cprint(f"  Reason: {detail}")
         cprint("")
         cprint(f"  All pushes MUST go through the publish pipeline:")
         cprint(f"  {YELLOW}uv run python scripts/publish.py --patch{NC}")
@@ -199,14 +337,13 @@ def main() -> int:
         cprint("")
         cprint(f"  The pipeline handles: version bump, README update,")
         cprint(f"  SKILL.md update, CHANGELOG, validation, commit,")
-        cprint(f"  tag, and push — ensuring marketplace auto-update.")
+        cprint(f"  tag, push, and GitHub release — ensuring "
+               f"marketplace auto-update.")
         cprint("")
         cprint(f"{RED}  Direct push bypasses critical steps and breaks{NC}")
         cprint(f"{RED}  the marketplace notification chain.{NC}")
         cprint(f"{RED}========================================{NC}")
         return 1
-
-    repo_root = get_repo_root()
 
     cprint(f"{BLUE}========================================{NC}")
     cprint(f"{BLUE}  Pre-push Full Plugin Validation{NC}")

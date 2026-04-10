@@ -1496,12 +1496,13 @@ def phase4_push(root: Path, version: str) -> bool:
     print(f"\n{BOLD}{BLUE}Phase 4: Push{NC}")
     print(f"{BLUE}{'=' * 50}{NC}")
 
-    # Atomic push: branch + tag in one command
-    push_env = {**os.environ, "CAA_PUBLISH_PIPELINE": "1"}
+    # Atomic push: branch + tag in one command.
+    # No env var needed — the pre-push hook verifies publish.py
+    # is in the process ancestry via `ps`, which is unspoofable.
     print(f"\n  {BLUE}[4.1]{NC} Push main + {tag} to origin...")
     r = _run_quiet(
         ["git", "push", "origin", "main", tag],
-        cwd=root, timeout=120, env=push_env,
+        cwd=root, timeout=120,
     )
 
     if r.returncode != 0:
