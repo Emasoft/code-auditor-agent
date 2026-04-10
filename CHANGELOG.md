@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.21] - 2026-04-10
+
+### Features
+
+- Pre-push gate uses process ancestry, not env var (74daa13)
+
 ## [3.2.20] - 2026-04-10
 
 ### Bug Fixes
