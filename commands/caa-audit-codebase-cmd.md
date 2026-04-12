@@ -32,9 +32,9 @@ parameters:
     description: Path to file with custom grep patterns (one per line)
     required: false
   - name: report-dir
-    description: "Directory for reports (default: docs_dev/)"
+    description: "Directory for reports (default: reports_dev/code-auditor/)"
     required: false
-    default: "docs_dev/"
+    default: "reports_dev/code-auditor/"
   - name: max-fix-passes
     description: "Maximum fix-verify iterations (default 5)"
     required: false
@@ -73,5 +73,5 @@ This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 
 ## Reports
 
-All reports written to `--report-dir` (default: docs_dev/).
+All reports written to `--report-dir` (default: reports_dev/code-auditor/).
 See the `caa-codebase-audit-and-fix-skill` skill for report naming conventions.

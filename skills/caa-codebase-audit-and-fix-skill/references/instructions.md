@@ -15,7 +15,13 @@
 Follow these steps to run the audit pipeline:
 
 1. Set `SCOPE_PATH` to the directory to audit and `REFERENCE_STANDARD` to the compliance doc path. Verify `REFERENCE_STANDARD` file exists and is non-empty before proceeding. If not, STOP with error: 'REFERENCE_STANDARD not found or empty at {path}.'
-2. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`
+2. Resolve `REPORT_DIR` (default: `reports_dev/code-auditor`) and create it BEFORE any agent spawns so concurrent agents never race on `mkdir`:
+   ```bash
+   REPORT_DIR="${REPORT_DIR:-reports_dev/code-auditor}"
+   mkdir -p "$REPORT_DIR"
+   ABSOLUTE_REPORT_DIR="$(cd "$REPORT_DIR" && pwd)"
+   ```
+   Pass `ABSOLUTE_REPORT_DIR` to every agent prompt. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`.
 3. Run Phase 0: **Automated file grouping via Python script.** Use `scripts/caa-collect-context.py` (or Bash) to:
    a. Inventory all text files in SCOPE_PATH (source, config, CI/CD, metadata, prompt definitions).
    b. Classify files by domain (language, directory, dependency cluster).
@@ -65,7 +71,7 @@ Follow these steps to run the audit pipeline:
 | `REFERENCE_STANDARD` | Y | path | -- | Path to compliance doc |
 | `VIOLATION_TYPES` | N | comma-separated string | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
 | `AUDIT_PATTERNS` | N | list | auto-derived from VIOLATION_TYPES | Grep triage patterns (e.g. `localhost`, `http://`, `curl`, `fetch`, `hardcoded`, `direct.*import`) |
-| `REPORT_DIR` | N | path | `docs_dev/` | Output directory |
+| `REPORT_DIR` | N | path | `reports_dev/code-auditor/` | Output directory |
 | `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
 | `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |
 | `MAX_FIX_PASSES` | N | int | `5` | Max fix-verify loops |
@@ -73,7 +79,7 @@ Follow these steps to run the audit pipeline:
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
-**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger and agent checkpoints there so they survive context compactions and plugin updates. Fall back to `docs_dev/` if the variable is not set.
+**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger and agent checkpoints there so they survive context compactions and plugin updates. Fall back to `reports_dev/code-auditor/` if the variable is not set.
 
 ## Pipeline
 

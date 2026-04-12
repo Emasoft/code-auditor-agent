@@ -43,7 +43,7 @@ Requires: Python 3.12+, `uv`, Git repo. Uses `${CLAUDE_PLUGIN_ROOT}` for scripts
 
 ## Output
 
-Produces a consolidated audit report in `docs_dev/` with per-domain findings, a TODO list, and a final summary. See [output format](references/output-format.md).
+Produces a consolidated audit report in `reports_dev/code-auditor/` with per-domain findings, a TODO list, and a final summary. See [output format](references/output-format.md).
 
 ## Error Handling
 
@@ -53,7 +53,7 @@ On agent failure, retry with checkpoint recovery. See [error handling](reference
 
 ```
 Input: /audit-codebase with SCOPE_PATH=src/, FIX_ENABLED=false
-Output: Audit report in docs_dev/ with per-domain findings and TODO list
+Output: Audit report in reports_dev/code-auditor/ with per-domain findings and TODO list
 ```
 
 ```
@@ -68,7 +68,7 @@ Copy this checklist and track your progress:
 - [ ] All files in SCOPE_PATH audited (0 missed)
 - [ ] Security scan (P4b) completed
 - [ ] TODO list generated and saved
-- [ ] Final report compiled in docs_dev/
+- [ ] Final report compiled in reports_dev/code-auditor/
 
 ## Resources
 

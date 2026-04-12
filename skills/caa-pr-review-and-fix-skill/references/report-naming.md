@@ -17,24 +17,24 @@ and **agent-prefixed finding IDs** to prevent ID collisions between parallel age
 
 | Report | Filename |
 |--------|----------|
-| Correctness (per-domain) | `docs_dev/caa-correctness-P{N}-R{RUN_ID}-{uuid}.md` |
-| Claim verification | `docs_dev/caa-claims-P{N}-R{RUN_ID}-{uuid}.md` |
-| Security review | `docs_dev/caa-security-P{N}-R{RUN_ID}-{uuid}.md` |
-| Skeptical review | `docs_dev/caa-review-P{N}-R{RUN_ID}-{uuid}.md` |
-| Agent manifest | `docs_dev/caa-agents-P{N}-R{RUN_ID}.json` |
-| Merged intermediate | `docs_dev/caa-pr-review-P{N}-intermediate-{timestamp}.md` |
-| Final dedup report | `docs_dev/caa-pr-review-P{N}-{timestamp}.md` |
-| Fix checkpoint (per-domain) | `docs_dev/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
-| Fix summary (per-domain) | `docs_dev/caa-fixes-done-P{N}-{domain}.md` |
-| Test outcome | `docs_dev/caa-tests-outcome-P{N}.md` |
-| Per-group fix issues | `docs_dev/caa-fix-group-{GROUP_ID}.md` |
-| Per-group lint | `docs_dev/caa-lint-group-{GROUP_ID}.md` |
-| Per-group security | `docs_dev/caa-security-group-{GROUP_ID}.md` |
-| Per-group review | `docs_dev/caa-review-group-{GROUP_ID}.md` |
-| Lint outcome (joined) | `docs_dev/caa-lint-outcome-P{N}.md` |
-| Recovery log | `docs_dev/caa-recovery-log-P{N}.md` |
-| Final clean report | `docs_dev/caa-pr-review-and-fix-FINAL-{timestamp}.md` |
-| Escalation (if max reached) | `docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md` |
+| Correctness (per-domain) | `reports_dev/code-auditor/caa-correctness-P{N}-R{RUN_ID}-{uuid}.md` |
+| Claim verification | `reports_dev/code-auditor/caa-claims-P{N}-R{RUN_ID}-{uuid}.md` |
+| Security review | `reports_dev/code-auditor/caa-security-P{N}-R{RUN_ID}-{uuid}.md` |
+| Skeptical review | `reports_dev/code-auditor/caa-review-P{N}-R{RUN_ID}-{uuid}.md` |
+| Agent manifest | `reports_dev/code-auditor/caa-agents-P{N}-R{RUN_ID}.json` |
+| Merged intermediate | `reports_dev/code-auditor/caa-pr-review-P{N}-intermediate-{timestamp}.md` |
+| Final dedup report | `reports_dev/code-auditor/caa-pr-review-P{N}-{timestamp}.md` |
+| Fix checkpoint (per-domain) | `reports_dev/code-auditor/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` |
+| Fix summary (per-domain) | `reports_dev/code-auditor/caa-fixes-done-P{N}-{domain}.md` |
+| Test outcome | `reports_dev/code-auditor/caa-tests-outcome-P{N}.md` |
+| Per-group fix issues | `reports_dev/code-auditor/caa-fix-group-{GROUP_ID}.md` |
+| Per-group lint | `reports_dev/code-auditor/caa-lint-group-{GROUP_ID}.md` |
+| Per-group security | `reports_dev/code-auditor/caa-security-group-{GROUP_ID}.md` |
+| Per-group review | `reports_dev/code-auditor/caa-review-group-{GROUP_ID}.md` |
+| Lint outcome (joined) | `reports_dev/code-auditor/caa-lint-outcome-P{N}.md` |
+| Recovery log | `reports_dev/code-auditor/caa-recovery-log-P{N}.md` |
+| Final clean report | `reports_dev/code-auditor/caa-pr-review-and-fix-FINAL-{timestamp}.md` |
+| Escalation (if max reached) | `reports_dev/code-auditor/caa-pr-review-and-fix-escalation-{timestamp}.md` |
 
 ## UUID Filename Generation
 
@@ -42,7 +42,7 @@ Each agent generates a UUID at startup and uses it in its output filename:
 
 ```bash
 UUID=$(python3 -c "import uuid; print(uuid.uuid4())")
-REPORT_PATH="docs_dev/caa-correctness-P${PASS}-R${RUN_ID}-${UUID}.md"
+REPORT_PATH="reports_dev/code-auditor/caa-correctness-P${PASS}-R${RUN_ID}-${UUID}.md"
 ```
 
 The combination of RUN_ID + UUID provides two levels of isolation:

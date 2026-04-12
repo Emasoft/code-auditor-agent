@@ -23,6 +23,12 @@
 claimed-but-not-implemented features, security vulnerabilities, cross-file inconsistencies,
 and UX concerns. Phases 2, 3, and 4 are what make this pipeline catch 100% of issues.
 
+**Phase 4 (security review) is MANDATORY and NON-OVERRIDEABLE.** There is no flag, parameter,
+diff-size threshold, or user preference that can skip it. The orchestrator must never short-
+circuit it when the diff "looks small" and never accept a verdict without a completed security
+report. If the security agent fails, apply the recovery protocol and re-spawn — do not proceed
+to Phase 5 without a successful security report.
+
 ## Rule 2: Phase Order Matters
 
 Phase 1 (parallel) -> Phase 2 (sequential) -> Phase 3 and Phase 4 (run in parallel with each other, both sequential internally).

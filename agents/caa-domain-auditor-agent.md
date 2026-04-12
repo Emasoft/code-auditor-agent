@@ -182,7 +182,7 @@ user: |
   FILES: plugins/chief-of-staff/src/lifecycle.ts, plugins/chief-of-staff/src/approval-transfer.ts, plugins/chief-of-staff/src/comms-recovery.ts
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   VIOLATION_TYPES: HARDCODED_API, HARDCODED_GOVERNANCE, DIRECT_DEPENDENCY
-  REPORT_PATH: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md
+  REPORT_PATH: reports_dev/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md
   PASS: P1
   RUN_ID: 3a
   FINDING_ID_AGENT_SUFFIX: A3
@@ -191,7 +191,7 @@ user: |
   Write findings to the report path.
 assistant: |
   Reads all FILES completely against REFERENCE_STANDARD. Checks for hardcoded APIs, governance rules, direct dependencies.
-  Returns: "[DONE] audit-AMCOS-decoupling-P1 - 2 violations (1 must-fix, 0 record-keeping). Report: docs_dev/caa-audit-P1-R3a-a3b4c5d6.md"
+  Returns: "[DONE] audit-AMCOS-decoupling-P1 - 2 violations (1 must-fix, 0 record-keeping). Report: reports_dev/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md"
 </example>
 
 <example>
@@ -201,7 +201,7 @@ user: |
   FILES: plugins/assistant-manager/agents/task-delegator.md, plugins/assistant-manager/agents/memory-indexer.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   VIOLATION_TYPES: HARDCODED_API, HARDCODED_GOVERNANCE, MISSING_ABSTRACTION
-  REPORT_PATH: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md
+  REPORT_PATH: reports_dev/code-auditor/caa-audit-P2-R7f-e9f8a7b6.md
   PASS: P2
   RUN_ID: 7f
   FINDING_ID_AGENT_SUFFIX: B7
@@ -210,7 +210,7 @@ user: |
   Write findings to the report path.
 assistant: |
   Reads all FILES completely against REFERENCE_STANDARD. Checks for hardcoded APIs, governance rules, direct dependencies.
-  Returns: "[DONE] audit-plugin-compliance-P2 - 1 violation (1 must-fix, 1 record-keeping). Report: docs_dev/caa-audit-P2-R7f-e9f8a7b6.md"
+  Returns: "[DONE] audit-plugin-compliance-P2 - 1 violation (1 must-fix, 1 record-keeping). Report: reports_dev/code-auditor/caa-audit-P2-R7f-e9f8a7b6.md"
 </example>
 
 ## REPORTING RULES

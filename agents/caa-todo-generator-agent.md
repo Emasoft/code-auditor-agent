@@ -192,30 +192,30 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
 <example>
 Context: Orchestrator spawns this agent to generate TODOs from a consolidated AMCOS report.
 user: |
-  CONSOLIDATED_REPORT: docs_dev/caa-consolidated-AMCOS.md
+  CONSOLIDATED_REPORT: reports_dev/code-auditor/caa-consolidated-AMCOS.md
   SCOPE_NAME: AMCOS Plugin
   TODO_PREFIX: AMCOS
   DEPENDENCY_PREFIX: {"AMS": "AI Maestro Server"}
-  OUTPUT_PATH: docs_dev/TODO-AMCOS-changes.md
+  OUTPUT_PATH: reports_dev/code-auditor/TODO-AMCOS-changes.md
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
   Reads consolidated report. Converts violations to actionable TODOs with dependency ordering and priority classification.
-  Returns: "[DONE] todo-gen-AMCOS - 14 TODOs (P1:2, P2:8, P3:4). Report: docs_dev/TODO-AMCOS-changes.md"
+  Returns: "[DONE] todo-gen-AMCOS - 14 TODOs (P1:2, P2:8, P3:4). Report: reports_dev/code-auditor/TODO-AMCOS-changes.md"
 </example>
 
 <example>
 Context: Orchestrator spawns this agent to generate TODOs from a server-side consolidated report.
 user: |
-  CONSOLIDATED_REPORT: docs_dev/caa-consolidated-aimaestro.md
+  CONSOLIDATED_REPORT: reports_dev/code-auditor/caa-consolidated-aimaestro.md
   SCOPE_NAME: AI Maestro Server
   TODO_PREFIX: AMS
-  OUTPUT_PATH: docs_dev/TODO-aimaestro-server-changes.md
+  OUTPUT_PATH: reports_dev/code-auditor/TODO-aimaestro-server-changes.md
 
   Convert the consolidated violation report into actionable TODOs.
 assistant: |
   Reads consolidated report. Converts violations to actionable TODOs with dependency ordering and priority classification.
-  Returns: "[DONE] todo-gen-AMS - 9 TODOs (P1:1, P2:6, P3:2). Report: docs_dev/TODO-aimaestro-server-changes.md"
+  Returns: "[DONE] todo-gen-AMS - 9 TODOs (P1:1, P2:6, P3:2). Report: reports_dev/code-auditor/TODO-aimaestro-server-changes.md"
 </example>
 
 ## REPORTING RULES

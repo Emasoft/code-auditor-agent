@@ -24,7 +24,7 @@
 ### Security Findings:
 1. [SC-P1-001] {title} — {file:line} (Severity: {HIGH/MEDIUM/LOW})
 
-### Full report: docs_dev/caa-pr-review-P1-{timestamp}.md
+### Full report: reports_dev/code-auditor/caa-pr-review-P1-{timestamp}.md
 ```
 
 ## Field Descriptions

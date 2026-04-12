@@ -15,11 +15,11 @@ allowed-tools: "Read, Write, Edit, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:
 
 ## Overview
 
-Iterative review-and-fix: six-phase review (P1) then fix+test+commit (P2), repeating up to 25 passes.
+Iterative review-and-fix: six-phase review (P1, Phase 4 security scan is MANDATORY) then fix+test+commit (P2), repeating up to 25 passes.
 
 ## Prerequisites
 
-`gh` authenticated, PR on GitHub, `docs_dev/` exists, `${CLAUDE_PLUGIN_ROOT}` set, `scripts/caa-merge-reports.py`
+`gh` authenticated, PR on GitHub, `reports_dev/code-auditor/` exists, `${CLAUDE_PLUGIN_ROOT}` set, `scripts/caa-merge-reports.py`
 
 ## Instructions
 
@@ -50,7 +50,7 @@ Iterative review-and-fix: six-phase review (P1) then fix+test+commit (P2), repea
 Copy this checklist and track your progress:
 
 - [ ] All passes completed, zero issues
-- [ ] Final report in docs_dev/
+- [ ] Final report in reports_dev/code-auditor/
 
 ## Examples
 

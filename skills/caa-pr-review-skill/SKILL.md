@@ -15,18 +15,18 @@ allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Ag
 
 ## Overview
 
-Six-phase PR review: correctness swarm, claim verification, skeptical + security (parallel), merge + dedup.
+Six-phase PR review. Phase 4 security scan is **MANDATORY** (never skip): correctness swarm, claim verification, skeptical review, security review (parallel with skeptical), merge + dedup.
 
 ## Prerequisites
 
-- `gh` CLI authenticated, PR on GitHub, `docs_dev/` exists, `${CLAUDE_PLUGIN_ROOT}` set
+- `gh` CLI authenticated, PR on GitHub, `reports_dev/code-auditor/` exists, `${CLAUDE_PLUGIN_ROOT}` set
 
 ## Instructions
 
 1. Gather PR number, description, changed files grouped by domain
 2. Spawn one `caa-code-correctness-agent` per domain in parallel
 3. Spawn `caa-claim-verification-agent` (after step 2 completes)
-4. Spawn `caa-skeptical-reviewer-agent` AND `caa-security-review-agent` in parallel
+4. Spawn `caa-skeptical-reviewer-agent` AND `caa-security-review-agent` in parallel (security is MANDATORY — never skip)
 5. Run merge: `uv run ${MERGE_SCRIPT} --quiet ${REPORT_DIR} 1`, then spawn `caa-dedup-agent`
 6. Present verdict per review-complete.md
 
@@ -34,7 +34,7 @@ If MUST-FIX issues exist, do NOT push until resolved and pipeline re-run.
 
 ## Output
 
-Final merged report in `docs_dev/` with verdict (PASS/CONDITIONAL/FAIL), per-finding severity, MUST-FIX/SHOULD-FIX/NIT counts. Details:
+Final merged report in `reports_dev/code-auditor/` with verdict (PASS/CONDITIONAL/FAIL), per-finding severity, MUST-FIX/SHOULD-FIX/NIT counts. Details:
 
 - [Output Format](references/output-format.md):
   - Report Files, Final Report Contents
@@ -50,13 +50,10 @@ Agent failures: re-spawn with new UUID. Merge errors: check report paths. Detail
 
 ```
 Input: "review PR 206"
-Output: 6-phase pipeline → merged verdict (3 MUST-FIX, 2 SHOULD-FIX, 5 NIT)
+Output: 6-phase pipeline → verdict (3 MUST-FIX, 2 SHOULD-FIX, 5 NIT)
 ```
 
-```
-Input: "just verify the claims in PR 206"
-Output: Single caa-claim-verification-agent report
-```
+All invocations run all six phases including the mandatory security scan. Partial runs not supported — see critical-rules.md Rule 1.
 
 ## Checklist
 

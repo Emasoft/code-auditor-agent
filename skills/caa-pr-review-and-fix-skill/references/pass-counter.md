@@ -36,5 +36,5 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES:
     STOP -- write escalation report and present to user:
     "Maximum pass limit (25) reached. {N} issues remain unresolved.
-     Manual intervention required. See: docs_dev/caa-pr-review-and-fix-escalation-{timestamp}.md"
+     Manual intervention required. See: reports_dev/code-auditor/caa-pr-review-and-fix-escalation-{timestamp}.md"
 ```

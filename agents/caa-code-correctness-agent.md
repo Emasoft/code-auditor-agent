@@ -171,13 +171,13 @@ Context: Orchestrator spawns this agent to audit messaging domain files.
 user: |
   DOMAIN: messaging
   FILES: lib/messageQueue.ts, app/api/messages/route.ts
-  REPORT_PATH: docs_dev/caa-correctness-messaging.md
+  REPORT_PATH: reports_dev/code-auditor/caa-correctness-messaging.md
 
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
 assistant: |
   Reads all FILES completely. Audits for type safety, null handling, return types, API contracts, error handling, security.
-  Returns: "[DONE] correctness-messaging - 2 issues (1 must-fix). Report: docs_dev/caa-correctness-messaging.md"
+  Returns: "[DONE] correctness-messaging - 2 issues (1 must-fix). Report: reports_dev/code-auditor/caa-correctness-messaging.md"
 </example>
 
 <example>
@@ -185,13 +185,13 @@ Context: Orchestrator spawns this agent to audit shell scripts domain.
 user: |
   DOMAIN: shell-scripts
   FILES: scripts/bump-version.sh, install-messaging.sh
-  REPORT_PATH: docs_dev/caa-correctness-shell-scripts.md
+  REPORT_PATH: reports_dev/code-auditor/caa-correctness-shell-scripts.md
 
   Audit these files for code correctness. Read every file completely.
   Write findings to the report path.
 assistant: |
   Reads all FILES completely. Audits for quoting (SC2086), set -e, variable initialization, temp file cleanup, atomic writes, error paths.
-  Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: docs_dev/caa-correctness-shell-scripts.md"
+  Returns: "[DONE] correctness-shell-scripts - 1 issue (0 must-fix). Report: reports_dev/code-auditor/caa-correctness-shell-scripts.md"
 </example>
 
 ### Config/Metadata File Checks

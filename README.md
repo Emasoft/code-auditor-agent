@@ -327,7 +327,7 @@ Phase 8:  Final merged report
 
 Report filenames follow a pipeline-specific pattern. Codebase audit reports use `caa-{type}-P{N}-R{RUN_ID}-{UUID}.md`. PR review reports use a shorter pattern (see table below); `R{RUN_ID}` is included only in multi-pass runs via `caa-pr-review-and-fix-skill`.
 
-Reports are written to `docs_dev/`.
+Reports are written to `reports_dev/code-auditor/` (created automatically if missing). The directory is gitignored via the `*_dev/` pattern. Override with `--report-dir` on `/audit-codebase` or `/delta-audit`.
 
 ### PR Review Reports
 

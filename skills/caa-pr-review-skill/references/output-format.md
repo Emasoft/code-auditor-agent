@@ -8,12 +8,12 @@
 ## Report Files
 
 The pipeline produces:
-- Per-domain correctness reports: `docs_dev/caa-correctness-P1-{uuid}.md` (deleted after merge verification)
-- Claim verification report: `docs_dev/caa-claims-P1-{uuid}.md` (deleted after merge verification)
-- Skeptical review report: `docs_dev/caa-review-P1-{uuid}.md` (deleted after merge verification)
-- Security review report: `docs_dev/caa-security-P1-{uuid}.md` (deleted after merge verification)
-- Intermediate merged report: `docs_dev/caa-pr-review-P1-intermediate-{timestamp}.md`
-- Final deduplicated report: `docs_dev/caa-pr-review-P1-{timestamp}.md`
+- Per-domain correctness reports: `reports_dev/code-auditor/caa-correctness-P1-{uuid}.md` (deleted after merge verification)
+- Claim verification report: `reports_dev/code-auditor/caa-claims-P1-{uuid}.md` (deleted after merge verification)
+- Skeptical review report: `reports_dev/code-auditor/caa-review-P1-{uuid}.md` (deleted after merge verification)
+- Security review report: `reports_dev/code-auditor/caa-security-P1-{uuid}.md` (deleted after merge verification)
+- Intermediate merged report: `reports_dev/code-auditor/caa-pr-review-P1-intermediate-{timestamp}.md`
+- Final deduplicated report: `reports_dev/code-auditor/caa-pr-review-P1-{timestamp}.md`
 
 ## Final Report Contents
 

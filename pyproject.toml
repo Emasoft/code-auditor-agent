@@ -54,7 +54,7 @@ python_version = "3.12"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
-exclude = ["scripts_dev/", "docs_dev/", "builds_dev/"]
+exclude = ["scripts_dev/", "docs_dev/", "builds_dev/", "reports_dev/"]
 
 [tool.pyright]
 pythonVersion = "3.12"

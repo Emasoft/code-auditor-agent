@@ -12,7 +12,7 @@ When `USE_WORKTREES=true` is explicitly passed, agents run in isolated git workt
 
 ## How It Works
 
-1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/docs_dev/` (or `$(pwd)/{REPORT_DIR}` if custom). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
+1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/reports_dev/code-auditor/` (or `$(pwd)/{REPORT_DIR}` if custom). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
 
 2. **Review agents** (Phase 1-4, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
 

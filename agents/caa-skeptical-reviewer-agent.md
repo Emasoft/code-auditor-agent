@@ -254,15 +254,15 @@ Context: Orchestrator spawns this agent after Phase 2 for holistic review.
 user: |
   PR_NUMBER: 206
   PR_DESCRIPTION: "AIM-222: Comprehensive codebase audit fixes"
-  DIFF: saved at docs_dev/pr-diff.txt
-  CORRECTNESS_REPORTS: docs_dev/caa-correctness-*.md
-  CLAIMS_REPORT: docs_dev/caa-claims.md
-  REPORT_PATH: docs_dev/caa-review.md
+  DIFF: saved at reports_dev/code-auditor/pr-diff.txt
+  CORRECTNESS_REPORTS: reports_dev/code-auditor/caa-correctness-*.md
+  CLAIMS_REPORT: reports_dev/code-auditor/caa-claims.md
+  REPORT_PATH: reports_dev/code-auditor/caa-review.md
 
   Review this PR as an external maintainer. Write findings to the report path.
 assistant: |
   Reads entire PR diff as hostile reviewer. Checks UX, breaking changes, cross-file consistency, design judgment.
-  Returns: "[DONE] review - 3 findings (1 must-fix), verdict: REQUEST CHANGES. Report: docs_dev/caa-review.md"
+  Returns: "[DONE] review - 3 findings (1 must-fix), verdict: REQUEST CHANGES. Report: reports_dev/code-auditor/caa-review.md"
 </example>
 
 <example>
@@ -270,13 +270,13 @@ Context: Orchestrator spawns this agent for a small, clean PR.
 user: |
   PR_NUMBER: 210
   PR_DESCRIPTION: "Fix typo in README"
-  DIFF: saved at docs_dev/pr-diff.txt
-  REPORT_PATH: docs_dev/caa-review.md
+  DIFF: saved at reports_dev/code-auditor/pr-diff.txt
+  REPORT_PATH: reports_dev/code-auditor/caa-review.md
 
   Review this PR as an external maintainer. Write findings to the report path.
 assistant: |
   Reads entire PR diff as hostile reviewer. Checks UX, breaking changes, cross-file consistency, design judgment.
-  Returns: "[DONE] review - 0 findings (0 must-fix), verdict: APPROVE. Report: docs_dev/caa-review.md"
+  Returns: "[DONE] review - 0 findings (0 must-fix), verdict: APPROVE. Report: reports_dev/code-auditor/caa-review.md"
 </example>
 
 ## Special Cases

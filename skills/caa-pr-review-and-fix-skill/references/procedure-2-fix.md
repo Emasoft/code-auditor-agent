@@ -65,7 +65,7 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
     {
       "domain": "server",
       "agent": "caa-code-correctness-agent",
-      "report": "docs_dev/caa-pr-review-P1-abc123.md",
+      "report": "reports_dev/code-auditor/caa-pr-review-P1-abc123.md",
       "files": ["src/server.ts", "src/routes.ts", "src/middleware.ts"],
       "agent_status": "completed",
       "fix_status": "pending",
@@ -78,9 +78,9 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
 
 **fix_status lifecycle:** `pending` → `in_progress` → `done` | `failed` | `skipped` (no findings in report)
 
-**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger there so it survives context compactions and plugin updates. Fall back to `docs_dev/` if the variable is not set.
+**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger there so it survives context compactions and plugin updates. Fall back to `reports_dev/code-auditor/` if the variable is not set.
 
-**Crash recovery:** On restart, read the ledger from disk (check `${CLAUDE_PLUGIN_DATA}` first, then `docs_dev/`). Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `git checkout` on the affected files). Resume from the first `pending` entry.
+**Crash recovery:** On restart, read the ledger from disk (check `${CLAUDE_PLUGIN_DATA}` first, then `reports_dev/code-auditor/`). Skip entries with `fix_status: "done"` or `"skipped"`. Retry entries with `fix_status: "in_progress"` or `"failed"` (revert files first via `git checkout` on the affected files). Resume from the first `pending` entry.
 
 ### LLM Externalizer Analysis Protocol (When Available)
 
@@ -110,11 +110,11 @@ The `llm-externalizer` MCP has **read-only analysis tools only** — write tools
 
 ### Fix Steps
 
-1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{GROUP_ID}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
+1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`reports_dev/code-auditor/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{GROUP_ID}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
 2. **Per-group fix guidance via externalizer (single call):** Build `input_files_paths` with `---GROUP:id---` markers wrapping each group's source files. Call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` ONCE with `instructions` (project context + all groups' issues from the per-group files), `scan_secrets: true`. The externalizer processes each group in COMPLETE ISOLATION and returns separate `[group:id] /path/to/report.md` per group. Skip this step if externalizer is unavailable.
 3. **Spawn one fix agent per group:** Each `caa-fix-agent` receives: its group's files, its issue list (`caa-fix-group-{GROUP_ID}.md`), and the externalizer's `[group:id]` report path (if available). The agent reads ONLY its assigned files — no codebase scanning. Groups are non-overlapping (guaranteed by the grouping script).
 4. Wait for all fixing agents to complete and save their partial reports.
-5. **Join fix reports via script** — use `scripts/caa-merge-reports.py` to concatenate all per-group fix reports into a single fix summary. The script outputs a pass/fail count and the merged report path. The orchestrator does NOT read individual fix reports into context — only the script's summary line (e.g., "8/8 groups fixed, 0 failed. Report: docs_dev/caa-fixes-merged-P1.md").
+5. **Join fix reports via script** — use `scripts/caa-merge-reports.py` to concatenate all per-group fix reports into a single fix summary. The script outputs a pass/fail count and the merged report path. The orchestrator does NOT read individual fix reports into context — only the script's summary line (e.g., "8/8 groups fixed, 0 failed. Report: reports_dev/code-auditor/caa-fixes-merged-P1.md").
 6. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
 7. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
 8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
@@ -137,8 +137,8 @@ Task(
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
-    REVIEW_REPORT: docs_dev/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md
-    CHECKPOINT_FILE: docs_dev/caa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
+    REVIEW_REPORT: reports_dev/code-auditor/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md
+    CHECKPOINT_FILE: reports_dev/code-auditor/caa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
 
     Fix these specific issues from the review report:
     {checklist_subset_for_this_domain}
@@ -308,7 +308,7 @@ Task(
 **If lint errors exist (exit code non-zero):**
 
 Spawn fix agents to address lint issues. Each lint fix agent receives the MegaLinter logs
-for its domain's linters. The log files are at `docs_dev/megalinter-P{N}/linters_logs/ERROR-{LINTER}.log`.
+for its domain's linters. The log files are at `reports_dev/code-auditor/megalinter-P{N}/linters_logs/ERROR-{LINTER}.log`.
 
 ```
 Task(
@@ -385,11 +385,11 @@ This creates a rollback point and ensures subsequent passes see a clean diff.
 
 ## Procedure 2 Output
 
-- Per-domain fix summaries: `docs_dev/caa-fixes-done-P{N}-{domain}.md`
-- Test outcome: `docs_dev/caa-tests-outcome-P{N}.md`
-- Lint outcome: `docs_dev/caa-lint-outcome-P{N}.md` (if Docker available)
-- Lint summary JSON: `docs_dev/megalinter-P{N}/lint-summary.json` (if Docker available)
-- Lint fixes: `docs_dev/caa-lint-fixes-P{N}.md` (if lint errors were fixed)
+- Per-domain fix summaries: `reports_dev/code-auditor/caa-fixes-done-P{N}-{domain}.md`
+- Test outcome: `reports_dev/code-auditor/caa-tests-outcome-P{N}.md`
+- Lint outcome: `reports_dev/code-auditor/caa-lint-outcome-P{N}.md` (if Docker available)
+- Lint summary JSON: `reports_dev/code-auditor/megalinter-P{N}/lint-summary.json` (if Docker available)
+- Lint fixes: `reports_dev/code-auditor/caa-lint-fixes-P{N}.md` (if lint errors were fixed)
 
 ---
 

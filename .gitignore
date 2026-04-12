@@ -49,6 +49,7 @@ tests_dev/
 downloads_dev/
 libs_dev/
 builds_dev/
+reports_dev/
 
 # Logs
 *.log

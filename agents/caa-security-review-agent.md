@@ -353,7 +353,7 @@ user: |
   PASS: 1
   RUN_ID: a1b2c3d4
   FINDING_ID_PREFIX: SC-P1
-  REPORT_DIR: docs_dev
+  REPORT_DIR: reports_dev/code-auditor
 
   Audit these files for security vulnerabilities. Read every file completely.
   Generate a UUID for your output file.
@@ -370,7 +370,7 @@ user: |
   PASS: 1
   RUN_ID: e5f6g7h8
   FINDING_ID_PREFIX: SC-P1
-  REPORT_DIR: docs_dev
+  REPORT_DIR: reports_dev/code-auditor
 
   Audit these files for security vulnerabilities.
 assistant: |

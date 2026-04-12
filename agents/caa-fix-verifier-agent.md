@@ -188,15 +188,15 @@ Context: Orchestrator spawns this agent to verify fixes applied to server files.
 user: |
   FIXED_FILES: services/governance-service.ts, lib/agent-registry.ts
   ORIGINAL_TODOS: TODO-AMS1, TODO-AMS2, TODO-AMS3
-  FIX_REPORT: docs_dev/caa-fixes-done-P1-AMS-batch1.md
-  REFERENCE_STANDARD: docs_dev/governance-rules-summary-for-plugin-audit.md
-  REPORT_PATH: docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md
-  TODO_FILE: docs_dev/caa-todos-P1-AMS.md
+  FIX_REPORT: reports_dev/code-auditor/caa-fixes-done-P1-AMS-batch1.md
+  REFERENCE_STANDARD: reports_dev/code-auditor/governance-rules-summary-for-plugin-audit.md
+  REPORT_PATH: reports_dev/code-auditor/caa-fixverify-P1-R3a-a1b2c3d4.md
+  TODO_FILE: reports_dev/code-auditor/caa-todos-P1-AMS.md
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
   Reads each fixed file. Checks fix against TODO spec and reference standard. Verifies no regressions introduced.
-  Returns: "[DONE] fix-verify - 3 PASS, 0 FAIL, 0 remaining issues. Report: docs_dev/caa-fixverify-P1-R3a-a1b2c3d4.md"
+  Returns: "[DONE] fix-verify - 3 PASS, 0 FAIL, 0 remaining issues. Report: reports_dev/code-auditor/caa-fixverify-P1-R3a-a1b2c3d4.md"
 </example>
 
 <example>
@@ -204,15 +204,15 @@ Context: Orchestrator spawns this agent to verify fixes but one TODO was incorre
 user: |
   FIXED_FILES: plugins/amp-messaging/scripts/amp-send.sh
   ORIGINAL_TODOS: TODO-AMCOS5, TODO-AMCOS7
-  FIX_REPORT: docs_dev/caa-fixes-done-P1-AMCOS-batch2.md
-  REFERENCE_STANDARD: docs_dev/governance-rules-summary-for-plugin-audit.md
-  REPORT_PATH: docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md
-  TODO_FILE: docs_dev/caa-todos-P1-AMCOS.md
+  FIX_REPORT: reports_dev/code-auditor/caa-fixes-done-P1-AMCOS-batch2.md
+  REFERENCE_STANDARD: reports_dev/code-auditor/governance-rules-summary-for-plugin-audit.md
+  REPORT_PATH: reports_dev/code-auditor/caa-fixverify-P1-R3a-e5f6a7b8.md
+  TODO_FILE: reports_dev/code-auditor/caa-todos-P1-AMCOS.md
 
   Verify the fixes were applied correctly and check for regressions.
 assistant: |
   Reads each fixed file. Checks fix against TODO spec and reference standard. Verifies no regressions introduced.
-  Returns: "[DONE] fix-verify - 1 PASS, 1 FAIL, 1 remaining issues. Report: docs_dev/caa-fixverify-P1-R3a-e5f6a7b8.md"
+  Returns: "[DONE] fix-verify - 1 PASS, 1 FAIL, 1 remaining issues. Report: reports_dev/code-auditor/caa-fixverify-P1-R3a-e5f6a7b8.md"
 </example>
 
 ## REPORTING RULES
