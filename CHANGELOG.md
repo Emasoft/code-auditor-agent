@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.23] - 2026-04-12
+
+### Features
+
+- Reports_dev/code-auditor path, mandatory security, prompt injection defense (61686a5)
+
 ## [3.2.22] - 2026-04-12
 
 ### Features
