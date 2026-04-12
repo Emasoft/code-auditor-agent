@@ -32,7 +32,7 @@ Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Cod
 
 ## Installation
 
-**Requirements:** Claude Code v2.1.85 or later.
+**Requirements:** Claude Code v2.1.94 or later.
 
 Install from the `emasoft-plugins` marketplace:
 
@@ -93,12 +93,27 @@ Add the marketplace to your project's `.claude/settings.json` so team members ge
 
 ### Plugin Environment Variables
 
+These variables are referenced inside the plugin (skills, agents, hooks):
+
 | Variable | Purpose |
 |----------|---------|
 | `${CLAUDE_PLUGIN_ROOT}` | Absolute path to plugin installation directory. Used to reference bundled scripts and configs. Changes on plugin update. |
 | `${CLAUDE_PLUGIN_DATA}` | Persistent directory for plugin state (`~/.claude/plugins/data/code-auditor-agent/`). Survives plugin updates. Used for Fix Dispatch Ledger, agent checkpoints. Deleted on uninstall unless `--keep-data` is passed. |
 | `${CLAUDE_SKILL_DIR}` | Absolute path to the current skill's directory. Used in SKILL.md to reference `references/` subdirectories. |
-| `CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE` | Set to `1` to keep marketplace metadata when plugin install fails (useful for offline scenarios). Added in Claude Code v2.1.90. |
+| `${CLAUDE_SESSION_ID}` | Current Claude Code session ID. Useful for session-scoped report filenames. |
+
+### Recommended Claude Code Environment Variables
+
+These Claude Code env vars are useful when running this plugin (set them in your shell or `~/.claude/settings.json`):
+
+| Variable | Recommended | Why |
+|----------|-------------|-----|
+| `CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE` | `1` | Keep marketplace cache when offline (added v2.1.90). |
+| `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` | `1` | Strip Anthropic and cloud credentials from subprocess env (added v2.1.98). Recommended when fix-agent runs build/test commands. |
+| `CLAUDE_CODE_CERT_STORE` | `system` (default) or `bundled` | TLS CA store. Default trusts OS CA bundle. Set to `bundled` for hermetic environments (added v2.1.101). |
+| `CLAUDE_CODE_SCRIPT_CAPS` | `{"publish.py": 5}` | Cap how many times a script can be invoked per session (added v2.1.98). |
+| `CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS` | `0` | Keep built-in git workflow instructions. The plugin's fix-agent and publish.py rely on them. |
+| `OTEL_LOG_TOOL_DETAILS` | `1` | Include `tool_parameters` in OpenTelemetry traces (added v2.1.85, default off). Useful for auditing external scans. |
 
 ---
 

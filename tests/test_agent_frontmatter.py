@@ -1,8 +1,13 @@
 """Validate every agent definition file conforms to the plugin spec.
 
-The Claude Code plugin spec defines these valid agent frontmatter fields:
-  name, description, model, disallowedTools, effort, isolation,
-  maxTurns, background, memory, permissionMode, initialPrompt
+Per https://code.claude.com/docs/en/plugins-reference.md, plugin
+agents support EXACTLY these frontmatter fields:
+  name, description, model, effort, maxTurns, tools, disallowedTools,
+  skills, memory, background, isolation
+
+Plugin agents do NOT support `hooks`, `mcpServers`, or
+`permissionMode` (security restriction). They also do not support
+`color` or `initialPrompt` per the plugin-specific reference.
 
 Any unknown field in an agent's YAML frontmatter is a violation.
 """
@@ -15,28 +20,27 @@ from typing import Any
 import pytest
 import yaml
 
-# Valid frontmatter fields per Claude Code plugin spec
+# Valid frontmatter fields for PLUGIN agents per
+# https://code.claude.com/docs/en/plugins-reference.md
 VALID_AGENT_FIELDS = {
     "name",
     "description",
     "model",
+    "tools",
     "disallowedTools",
     "effort",
-    "isolation",
     "maxTurns",
-    "background",
+    "skills",
     "memory",
-    "permissionMode",
-    "initialPrompt",
+    "background",
+    "isolation",
 }
 
 # Valid values for specific fields
 VALID_MODELS = {"opus", "sonnet", "haiku"}
-VALID_EFFORT = {"low", "medium", "high"}
-VALID_ISOLATION = {"worktree"}
-VALID_PERMISSION_MODES = {
-    "default", "acceptEdits", "plan", "bypassPermissions",
-}
+VALID_EFFORT = {"low", "medium", "high", "max"}
+VALID_ISOLATION = {"worktree"}  # Only "worktree" is valid for plugin agents
+VALID_MEMORY_SCOPES = {"user", "project", "local"}
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any] | None, str]:
@@ -188,3 +192,75 @@ def test_read_only_agents_disallow_edit(
         assert "NotebookEdit" in disallowed, (
             f"{agent_file.name}: must disallow NotebookEdit"
         )
+
+
+# Fields that are NOT allowed for plugin-shipped agents per
+# https://code.claude.com/docs/en/plugins-reference.md
+FORBIDDEN_PLUGIN_AGENT_FIELDS = {
+    "hooks",          # Security restriction for plugin agents
+    "mcpServers",     # Security restriction for plugin agents
+    "permissionMode", # Security restriction for plugin agents
+    "color",          # Not in plugin agent spec
+    "initialPrompt",  # Not in plugin agent spec
+}
+
+
+def test_agents_do_not_use_forbidden_plugin_fields(
+    agent_files: list[Path],
+) -> None:
+    """Plugin agents must not use hooks/mcpServers/permissionMode."""
+    violations: list[str] = []
+    for agent_file in agent_files:
+        fm, _ = _split_frontmatter(agent_file.read_text(encoding="utf-8"))
+        assert fm is not None
+        forbidden = set(fm.keys()) & FORBIDDEN_PLUGIN_AGENT_FIELDS
+        if forbidden:
+            violations.append(
+                f"{agent_file.name}: forbidden fields {sorted(forbidden)}",
+            )
+    assert not violations, (
+        "Plugin agents cannot use these fields:\n  "
+        + "\n  ".join(violations)
+    )
+
+
+def test_agent_isolation_value_is_valid(
+    agent_files: list[Path],
+) -> None:
+    """isolation must be 'worktree' if present (only valid value)."""
+    for agent_file in agent_files:
+        fm, _ = _split_frontmatter(agent_file.read_text(encoding="utf-8"))
+        assert fm is not None
+        if "isolation" in fm:
+            assert fm["isolation"] in VALID_ISOLATION, (
+                f"{agent_file.name}: isolation must be 'worktree', "
+                f"got {fm['isolation']!r}"
+            )
+
+
+def test_agent_memory_scope_is_valid(
+    agent_files: list[Path],
+) -> None:
+    """memory must be one of: user, project, local."""
+    for agent_file in agent_files:
+        fm, _ = _split_frontmatter(agent_file.read_text(encoding="utf-8"))
+        assert fm is not None
+        if "memory" in fm:
+            assert fm["memory"] in VALID_MEMORY_SCOPES, (
+                f"{agent_file.name}: memory must be one of "
+                f"{sorted(VALID_MEMORY_SCOPES)}, got {fm['memory']!r}"
+            )
+
+
+def test_agent_background_is_bool(
+    agent_files: list[Path],
+) -> None:
+    """background must be a boolean if present."""
+    for agent_file in agent_files:
+        fm, _ = _split_frontmatter(agent_file.read_text(encoding="utf-8"))
+        assert fm is not None
+        if "background" in fm:
+            assert isinstance(fm["background"], bool), (
+                f"{agent_file.name}: background must be bool, "
+                f"got {type(fm['background']).__name__}"
+            )
