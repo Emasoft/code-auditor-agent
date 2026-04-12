@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.22] - 2026-04-12
+
+### Features
+
+- Align with Claude Code v2.1.92-v2.1.101 spec (69ad576)
+
 ## [3.2.21] - 2026-04-10
 
 ### Features
