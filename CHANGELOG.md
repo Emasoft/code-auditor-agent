@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.24] - 2026-04-12
+
+### Bug Fixes
+
+- Harden concurrency, trust boundaries, and input validation (5e29b7b)
+
 ## [3.2.23] - 2026-04-12
 
 ### Features
