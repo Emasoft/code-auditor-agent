@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.0] - 2026-04-20
+
+### Features
+
+- Relocate agent reports to ./reports/, add worktree-safe root resolver (e86c8f3)
+
 ## [3.2.24] - 2026-04-12
 
 ### Bug Fixes
