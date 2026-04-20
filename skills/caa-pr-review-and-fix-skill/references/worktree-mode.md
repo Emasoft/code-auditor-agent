@@ -12,7 +12,16 @@ When `USE_WORKTREES=true` is explicitly passed, agents run in isolated git workt
 
 ## How It Works
 
-1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/reports_dev/code-auditor/` (or `$(pwd)/{REPORT_DIR}` if custom). All agents write reports to this absolute path so reports are accessible from the main worktree after agent completion.
+1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR` against the **MAIN project root** — NEVER the worktree. `$(pwd)` inside a worktree resolves to the worktree path; use `CLAUDE_PROJECT_DIR` (Claude Code env var set to the originally-opened project) or `git rev-parse --git-common-dir | dirname` as fallback:
+   ```bash
+   if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+     PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+   else
+     PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+   fi
+   ABSOLUTE_REPORT_DIR="${PROJECT_ROOT}/reports/code-auditor"
+   ```
+   All agents write reports to this absolute path so reports survive worktree cleanup, stay in one place per run, and honor the "reports always live in the main project's `./reports/`" rule.
 
 2. **Review agents** (Phase 1-4, dedup): Each gets a clean, isolated snapshot of the repo. They read code from their worktree but write reports to the main `REPORT_DIR`. Since they make no code changes, worktrees are auto-cleaned after completion.
 

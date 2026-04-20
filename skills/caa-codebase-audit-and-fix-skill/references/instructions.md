@@ -33,12 +33,29 @@ Follow these steps to run the audit pipeline:
    ABSOLUTE_SCOPE_PATH="$(cd "${SCOPE_PATH}" && pwd)"
    ABSOLUTE_REFERENCE_STANDARD="$(cd "$(dirname "${REFERENCE_STANDARD}")" && pwd)/$(basename "${REFERENCE_STANDARD}")"
    ```
-2. Resolve `REPORT_DIR` (default: `reports_dev/code-auditor`) and create it BEFORE any agent spawns so concurrent agents never race on `mkdir`:
+2. Resolve `REPORT_DIR` rooted at the **main project directory** (default: `<project-root>/reports/code-auditor`) and create it BEFORE any agent spawns so concurrent agents never race on `mkdir`.
+
+   **Worktree-safe root resolution (MANDATORY):** Agents may run inside a `git worktree` (see `USE_WORKTREES`). Inside a worktree, `$(pwd)` is the worktree path, NOT the main project. Reports MUST land in the MAIN project's `reports/code-auditor/` directory so that a single run's artifacts stay in one place, survive worktree cleanup, and match the user's global rule that "agents always save their report in ./reports/ in the root project — even if running inside a separate worktree".
+
    ```bash
-   REPORT_DIR="${REPORT_DIR:-reports_dev/code-auditor}"
+   # Prefer CLAUDE_PROJECT_DIR (Claude Code env var: absolute path to the
+   # originally-opened project directory — unchanged across worktrees).
+   # Fall back to the git common-dir trick for non-Claude contexts:
+   #   git rev-parse --git-common-dir returns the SHARED .git path.
+   #   In a worktree this points to the main repo's .git, so dirname
+   #   yields the main project root.
+   if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+     PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+   else
+     PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+   fi
+   REPORT_DIR="${REPORT_DIR:-${PROJECT_ROOT}/reports/code-auditor}"
    mkdir -p "$REPORT_DIR"
    ABSOLUTE_REPORT_DIR="$(cd "$REPORT_DIR" && pwd)"
    ```
+
+   **Gitignore invariant:** The `reports/` folder at `${PROJECT_ROOT}/reports/` MUST be gitignored. The plugin's own `.gitignore` lists both `reports/` and `reports_dev/`. When you install the plugin in a user project, the orchestrator's first action in Step 2 is to verify `reports/` is gitignored there too — if not, stop with an error telling the user to add `reports/` to their `.gitignore` before any agent runs. Reports often contain private data; committing them is a leak.
+
    Pass `ABSOLUTE_REPORT_DIR` to every agent prompt. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`.
 3. Run Phase 0: **Automated file grouping via Python script.** Use `scripts/caa-collect-context.py` (or Bash) to:
    a. Inventory all text files in SCOPE_PATH (source, config, CI/CD, metadata, prompt definitions).
@@ -144,7 +161,7 @@ Follow these steps to run the audit pipeline:
 | `REFERENCE_STANDARD` | Y | path | -- | Path to compliance doc |
 | `VIOLATION_TYPES` | N | comma-separated string | `HARDCODED_API,HARDCODED_GOVERNANCE,DIRECT_DEPENDENCY,HARDCODED_PATH,MISSING_ABSTRACTION` | Violation labels |
 | `AUDIT_PATTERNS` | N | list | auto-derived from VIOLATION_TYPES | Grep triage patterns (e.g. `localhost`, `http://`, `curl`, `fetch`, `hardcoded`, `direct.*import`) |
-| `REPORT_DIR` | N | path | `reports_dev/code-auditor/` | Output directory |
+| `REPORT_DIR` | N | path | `reports/code-auditor/` | Output directory |
 | `FIX_ENABLED` | N | bool | `false` | Run fix phases 6-7 |
 | `TODO_ONLY` | N | bool | `false` | Stop after phase 5 |
 | `MAX_FIX_PASSES` | N | int | `5` | Max fix-verify loops |
@@ -152,7 +169,7 @@ Follow these steps to run the audit pipeline:
 
 Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`.
 
-**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger and agent checkpoints there so they survive context compactions and plugin updates. Fall back to `reports_dev/code-auditor/` if the variable is not set.
+**Persistent state:** When `${CLAUDE_PLUGIN_DATA}` is available, write the Fix Dispatch Ledger and agent checkpoints there so they survive context compactions and plugin updates. Fall back to `reports/code-auditor/` if the variable is not set.
 
 ## Pipeline
 

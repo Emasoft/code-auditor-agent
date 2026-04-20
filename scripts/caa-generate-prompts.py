@@ -8,7 +8,7 @@ Usage:
     caa-generate-prompts.py --target <dir> --phase <phase> [options]
 
 Examples:
-    caa-generate-prompts.py --target src/ --phase audit --output reports_dev/code-auditor/prompts/ --max-files 3
+    caa-generate-prompts.py --target src/ --phase audit --output reports/code-auditor/prompts/ --max-files 3
     caa-generate-prompts.py --target . --phase review --standard reference.md --quiet
 """
 
@@ -364,8 +364,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("reports_dev/code-auditor/prompts"),
-        help="Directory to write generated prompt .md files (default: reports_dev/code-auditor/prompts/).",
+        default=Path("reports/code-auditor/prompts"),
+        help="Directory to write generated prompt .md files (default: reports/code-auditor/prompts/).",
     )
     parser.add_argument(
         "--max-files",

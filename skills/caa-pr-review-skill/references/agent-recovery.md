@@ -75,7 +75,7 @@ Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or o
 
 ```bash
 # Identify the lost agent's output file by its UUID
-LOST_FILE="reports_dev/code-auditor/caa-correctness-P1-a1b2c3d4.md"
+LOST_FILE="reports/code-auditor/caa-correctness-P1-a1b2c3d4.md"
 
 # Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
 # Then delete the partial file
@@ -117,7 +117,7 @@ Create a NEW agent with a NEW UUID for the exact same task:
 ## Step 5: Record the Failure
 
 Append an entry to the recovery log (either in the merged report or
-a separate `reports_dev/code-auditor/caa-recovery-log-P{N}.md` file):
+a separate `reports/code-auditor/caa-recovery-log-P{N}.md` file):
 
 ```markdown
 ### Agent Recovery Log
@@ -134,7 +134,7 @@ a separate `reports_dev/code-auditor/caa-recovery-log-P{N}.md` file):
 
 The orchestrator's context was summarized and one or more agent task IDs were lost.
 
-1. List ALL `caa-*-P{N}-*.md` files in `reports_dev/code-auditor/` for the current pass number
+1. List ALL `caa-*-P{N}-*.md` files in `reports/code-auditor/` for the current pass number
 2. Build the expected agent roster: which domains should have correctness reports? Was claims run? Was skeptical run? Was dedup run?
 3. For each expected report that is missing: check if a complete file exists under a different-than-expected UUID (the agent may have written it but the ID was lost)
 4. For each truly missing report: re-spawn from scratch (Step 4)

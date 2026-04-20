@@ -198,33 +198,33 @@ These lessons come from real consolidation failures. Internalize them:
 <example>
 Context: Orchestrator spawns this agent to consolidate 3 AMCOS audit reports.
 user: |
-  INPUT_REPORTS: reports_dev/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md, reports_dev/code-auditor/caa-audit-P1-R3a-f1e2d3c4.md, reports_dev/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md
+  INPUT_REPORTS: reports/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md, reports/code-auditor/caa-audit-P1-R3a-f1e2d3c4.md, reports/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_NAME: AMCOS
-  OUTPUT_PATH: reports_dev/code-auditor/caa-consolidated-AMCOS.md
+  OUTPUT_PATH: reports/code-auditor/caa-consolidated-AMCOS.md
 
   Merge these reports into a consolidated domain report.
   De-duplicate findings, harmonize severities, separate RECORD_KEEPING.
   Write consolidated report to the output path.
 assistant: |
   Reads all input reports. De-duplicates by file+line+violation_type. Classifies as VIOLATION, RECORD_KEEPING, or FALSE_POSITIVE.
-  Returns: "[DONE] consolidate-AMCOS - 3 unique violations, 1 record-keeping. Report: reports_dev/code-auditor/caa-consolidated-AMCOS.md"
+  Returns: "[DONE] consolidate-AMCOS - 3 unique violations, 1 record-keeping. Report: reports/code-auditor/caa-consolidated-AMCOS.md"
 </example>
 
 <example>
 Context: Orchestrator spawns this agent to consolidate AMAMA reports including gap-fill results.
 user: |
-  INPUT_REPORTS: reports_dev/code-auditor/caa-audit-P1-R5b-b1c2d3e4.md, reports_dev/code-auditor/caa-audit-P1-R5b-a9b8c7d6.md, reports_dev/code-auditor/caa-gapfill-P1-R5b-e5f6a7b8.md
+  INPUT_REPORTS: reports/code-auditor/caa-audit-P1-R5b-b1c2d3e4.md, reports/code-auditor/caa-audit-P1-R5b-a9b8c7d6.md, reports/code-auditor/caa-gapfill-P1-R5b-e5f6a7b8.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_NAME: AMAMA
-  OUTPUT_PATH: reports_dev/code-auditor/caa-consolidated-AMAMA.md
+  OUTPUT_PATH: reports/code-auditor/caa-consolidated-AMAMA.md
 
   Merge these reports into a consolidated domain report.
   De-duplicate findings, harmonize severities, separate RECORD_KEEPING.
   Write consolidated report to the output path.
 assistant: |
   Reads all input reports. De-duplicates by file+line+violation_type. Classifies as VIOLATION, RECORD_KEEPING, or FALSE_POSITIVE.
-  Returns: "[DONE] consolidate-AMAMA - 5 unique violations, 2 record-keeping. Report: reports_dev/code-auditor/caa-consolidated-AMAMA.md"
+  Returns: "[DONE] consolidate-AMAMA - 5 unique violations, 2 record-keeping. Report: reports/code-auditor/caa-consolidated-AMAMA.md"
 </example>
 
 ## REPORTING RULES

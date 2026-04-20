@@ -184,31 +184,31 @@ These lessons come from real verification failures. Internalize them:
 <example>
 Context: Orchestrator spawns this agent to verify an AMCOS decoupling audit report.
 user: |
-  AUDIT_REPORT: reports_dev/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md
+  AUDIT_REPORT: reports/code-auditor/caa-audit-P1-R3a-a3b4c5d6.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_FILES: plugins/chief-of-staff/src/lifecycle.ts, plugins/chief-of-staff/src/approval-transfer.ts, plugins/chief-of-staff/src/comms-recovery.ts, plugins/chief-of-staff/src/session-memory.ts
-  REPORT_PATH: reports_dev/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md
+  REPORT_PATH: reports/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md
 
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
 assistant: |
   Reads audit report and cross-checks every finding against actual code. Spot-checks CLEAN files for missed violations.
-  Returns: "[DONE] verify-AMCOS-lifecycle - 1 confirmed, 1 false positive, 1 potentially missed. Report: reports_dev/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md"
+  Returns: "[DONE] verify-AMCOS-lifecycle - 1 confirmed, 1 false positive, 1 potentially missed. Report: reports/code-auditor/caa-verify-P1-R3a-d2e1f4a5.md"
 </example>
 
 <example>
 Context: Orchestrator spawns this agent to verify an AMAMA compliance audit report.
 user: |
-  AUDIT_REPORT: reports_dev/code-auditor/caa-audit-P2-R7f-e9f8a7b6.md
+  AUDIT_REPORT: reports/code-auditor/caa-audit-P2-R7f-e9f8a7b6.md
   REFERENCE_STANDARD: docs/PLUGIN-ABSTRACTION-PRINCIPLE.md
   DOMAIN_FILES: plugins/assistant-manager/agents/task-delegator.md, plugins/assistant-manager/agents/memory-indexer.md, plugins/assistant-manager/agents/planner.md
-  REPORT_PATH: reports_dev/code-auditor/caa-verify-P2-R7f-c8b7a6d5.md
+  REPORT_PATH: reports/code-auditor/caa-verify-P2-R7f-c8b7a6d5.md
 
   Verify this audit report against actual code. Check every claim.
   Write verification findings to the report path.
 assistant: |
   Reads audit report and cross-checks every finding against actual code. Spot-checks CLEAN files for missed violations.
-  Returns: "[DONE] verify-AMAMA-agents - 2 confirmed, 0 false positives, 0 potentially missed. Report: reports_dev/code-auditor/caa-verify-P2-R7f-c8b7a6d5.md"
+  Returns: "[DONE] verify-AMAMA-agents - 2 confirmed, 0 false positives, 0 potentially missed. Report: reports/code-auditor/caa-verify-P2-R7f-c8b7a6d5.md"
 </example>
 
 ## REPORTING RULES

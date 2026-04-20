@@ -15,26 +15,39 @@
 
 Six-phase review pipeline: correctness swarm, claim verification, skeptical review + security review (parallel), then merge + dedup, then present results.
 
-**Worktree mode:** When `USE_WORKTREES=true`, resolve `ABSOLUTE_REPORT_DIR = $(pwd)/reports_dev/code-auditor/` before spawning any agents. Pass this absolute path in every agent prompt. Add `isolation: "worktree"` to every Task() call.
+**Report directory root resolution (MANDATORY, worktree-safe):** Reports MUST land in the MAIN project's `reports/code-auditor/` — NEVER in a worktree copy. Inside a worktree, `$(pwd)` resolves to the worktree path; use `CLAUDE_PROJECT_DIR` (Claude Code env var — absolute path to the originally-opened project root, unchanged across worktrees) or fall back to `git rev-parse --git-common-dir` + `dirname`:
+
+```bash
+if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+  PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+else
+  PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+fi
+ABSOLUTE_REPORT_DIR="${PROJECT_ROOT}/reports/code-auditor"
+mkdir -p "${ABSOLUTE_REPORT_DIR}"
+```
+
+**Worktree mode (`USE_WORKTREES=true`):** Pass this same `ABSOLUTE_REPORT_DIR` (rooted at the main project) in every agent prompt. Add `isolation: "worktree"` to every Task() call. The worktree gives agents an isolated working copy but all reports still land in the main project's `reports/` dir.
+
+**Gitignore invariant:** Verify `reports/` is listed in `${PROJECT_ROOT}/.gitignore`. Reports often contain private PR diffs and internal discussion — committing them is a leak. If not gitignored, stop with an error telling the user to add `reports/` to their `.gitignore`.
 
 ## Pre-Pass Cleanup (MANDATORY)
 
-Before spawning ANY agents, run this cleanup to prevent stale file pollution:
+Before spawning ANY agents, run this cleanup to prevent stale file pollution. Use `${ABSOLUTE_REPORT_DIR}` resolved above so the cleanup targets the MAIN project's reports dir, not a worktree's:
 
 ```bash
-# Archive any leftover phase reports from prior interrupted runs of the SAME pass
-mkdir -p reports_dev/code-auditor/archive
-for f in reports_dev/code-auditor/caa-correctness-P${PASS_NUMBER}-*.md \
-         reports_dev/code-auditor/caa-claims-P${PASS_NUMBER}-*.md \
-         reports_dev/code-auditor/caa-review-P${PASS_NUMBER}-*.md \
-         reports_dev/code-auditor/caa-security-P${PASS_NUMBER}-*.md \
-         reports_dev/code-auditor/caa-agents-P${PASS_NUMBER}-*.json \
-         reports_dev/code-auditor/caa-checkpoint-P${PASS_NUMBER}-*.json; do
-  [ -f "$f" ] && mv "$f" reports_dev/code-auditor/archive/
+mkdir -p "${ABSOLUTE_REPORT_DIR}/archive"
+for f in "${ABSOLUTE_REPORT_DIR}"/caa-correctness-P${PASS_NUMBER}-*.md \
+         "${ABSOLUTE_REPORT_DIR}"/caa-claims-P${PASS_NUMBER}-*.md \
+         "${ABSOLUTE_REPORT_DIR}"/caa-review-P${PASS_NUMBER}-*.md \
+         "${ABSOLUTE_REPORT_DIR}"/caa-security-P${PASS_NUMBER}-*.md \
+         "${ABSOLUTE_REPORT_DIR}"/caa-agents-P${PASS_NUMBER}-*.json \
+         "${ABSOLUTE_REPORT_DIR}"/caa-checkpoint-P${PASS_NUMBER}-*.json; do
+  [ -f "$f" ] && mv "$f" "${ABSOLUTE_REPORT_DIR}/archive/"
 done
 # Also archive any stale intermediate reports for this pass
-for f in reports_dev/code-auditor/caa-pr-review-P${PASS_NUMBER}-intermediate-*.md; do
-  [ -f "$f" ] && mv "$f" reports_dev/code-auditor/archive/
+for f in "${ABSOLUTE_REPORT_DIR}"/caa-pr-review-P${PASS_NUMBER}-intermediate-*.md; do
+  [ -f "$f" ] && mv "$f" "${ABSOLUTE_REPORT_DIR}/archive/"
 done
 ```
 
@@ -45,7 +58,7 @@ This ensures a clean slate. Files are archived (not deleted) for audit purposes.
 After determining domains and generating RUN_ID, write an agent manifest file:
 
 ```
-reports_dev/code-auditor/caa-agents-P{N}-R{RUN_ID}.json
+reports/code-auditor/caa-agents-P{N}-R{RUN_ID}.json
 ```
 
 ```json
@@ -336,7 +349,7 @@ After all 4 phases complete, run the **two-stage merge pipeline**:
 uv run ${CLAUDE_PLUGIN_ROOT}/scripts/caa-merge-reports.py --quiet ${REPORT_DIR} ${PASS_NUMBER} ${RUN_ID}
 ```
 
-This produces an intermediate report at `reports_dev/code-auditor/caa-pr-review-P{N}-intermediate-{timestamp}.md`.
+This produces an intermediate report at `reports/code-auditor/caa-pr-review-P{N}-intermediate-{timestamp}.md`.
 The merge script:
 - When RUN_ID is provided, only collects files matching `caa-*-P{N}-R{RUN_ID}-*.md`
 - When RUN_ID is omitted, collects all `caa-*-P{N}-*.md` files (legacy mode)
@@ -375,7 +388,7 @@ Task(
 ```
 
 Wait for the dedup agent to complete. The dedup agent produces:
-- Final report: `reports_dev/code-auditor/caa-pr-review-P{N}-{timestamp}.md`
+- Final report: `reports/code-auditor/caa-pr-review-P{N}-{timestamp}.md`
 - Verdict: REQUEST CHANGES / APPROVE WITH NITS / APPROVE
 - Deduplication log showing which findings were merged and why
 
@@ -397,7 +410,7 @@ Present the verdict to the user using the dedup agent's return line (which conta
 ### Should-Fix:
 1. [SF-001] {title} (Original: CC-P{N}-A1-005)
 
-### Full report: reports_dev/code-auditor/caa-pr-review-P{N}-{timestamp}.md
+### Full report: reports/code-auditor/caa-pr-review-P{N}-{timestamp}.md
 ```
 
 ---

@@ -18,15 +18,28 @@ This protocol is also used by `caa-pr-review-and-fix-skill` via `references/proc
 
 ## Prerequisites
 
-Before starting:
+Before starting — resolve the report directory against the **main project root** (not the worktree, if any) and create it BEFORE any agent spawns:
 
 ```bash
-# Create the report directory if it doesn't exist. -p is idempotent and
-# safe to call even if the directory already exists. Must run BEFORE any
-# agent spawns so concurrent agents never race on mkdir.
-mkdir -p reports_dev/code-auditor
-ABSOLUTE_REPORT_DIR="$(pwd)/reports_dev/code-auditor"
+# Prefer CLAUDE_PROJECT_DIR (Claude Code env var: absolute path to the
+# originally-opened project directory — unchanged across worktrees).
+# Fall back to the git common-dir trick for non-Claude contexts:
+#   git rev-parse --git-common-dir returns the SHARED .git path.
+#   In a worktree this points to the main repo's .git, so dirname yields
+#   the main project root.
+if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+  PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+else
+  PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+fi
+
+# -p is idempotent and safe to call even if the directory already exists.
+# Must run BEFORE any agent spawns so concurrent agents never race on mkdir.
+mkdir -p "${PROJECT_ROOT}/reports/code-auditor"
+ABSOLUTE_REPORT_DIR="${PROJECT_ROOT}/reports/code-auditor"
 ```
+
+**Gitignore invariant:** Verify `reports/` is gitignored at `${PROJECT_ROOT}/.gitignore` before running. Reports often contain private PR diffs, commit history, and internal discussion — committing them is a leak. If `reports/` is not in the user's `.gitignore`, stop with an error and tell them to add it.
 
 Then gather:
 1. The PR number (or branch name)

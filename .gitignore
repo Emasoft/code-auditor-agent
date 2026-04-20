@@ -51,6 +51,12 @@ libs_dev/
 builds_dev/
 reports_dev/
 
+# Reports (private data — never committed, never pushed, always gitignored)
+# Agents always write their output here, rooted at the MAIN project dir even
+# inside worktrees. See skills/*/references/*.md for the orchestrator path
+# resolution rules.
+reports/
+
 # Logs
 *.log
 logs/

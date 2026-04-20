@@ -214,12 +214,12 @@ user: |
   PR_NUMBER: 206
   PR_DESCRIPTION: "Added fromLabel/toLabel population via registry lookup in convertAMPToMessage()"
   COMMIT_MESSAGES: "fix: populate display labels from agent registry"
-  REPORT_PATH: reports_dev/code-auditor/caa-claims.md
+  REPORT_PATH: reports/code-auditor/caa-claims.md
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
   Extracts all claims from PR description. Reads code files to verify each claim against actual implementation.
-  Returns: "[DONE] claims-messagequeue - 5 claims verified, 1 gaps found. Report: reports_dev/code-auditor/caa-claims.md"
+  Returns: "[DONE] claims-messagequeue - 5 claims verified, 1 gaps found. Report: reports/code-auditor/caa-claims.md"
 </example>
 
 <example>
@@ -228,12 +228,12 @@ user: |
   PR_NUMBER: 210
   PR_DESCRIPTION: "Bumped version to 0.22.5 across all files"
   COMMIT_MESSAGES: "chore: bump version to 0.22.5"
-  REPORT_PATH: reports_dev/code-auditor/caa-claims.md
+  REPORT_PATH: reports/code-auditor/caa-claims.md
 
   Extract every factual claim, verify against actual code. Write findings to the report path.
 assistant: |
   Extracts all claims from PR description. Reads code files to verify each claim against actual implementation.
-  Returns: "[DONE] claims-versioning - 3 claims verified, 1 gaps found. Report: reports_dev/code-auditor/caa-claims.md"
+  Returns: "[DONE] claims-versioning - 3 claims verified, 1 gaps found. Report: reports/code-auditor/caa-claims.md"
 </example>
 
 ## Special Cases

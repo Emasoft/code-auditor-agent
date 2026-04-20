@@ -202,31 +202,31 @@ crash recovery works at the individual TODO level.
 <example>
 Context: Orchestrator spawns this agent to apply 3 TODOs to server files.
 user: |
-  TODO_FILE: reports_dev/code-auditor/TODO-aimaestro-server-changes.md
+  TODO_FILE: reports/code-auditor/TODO-aimaestro-server-changes.md
   ASSIGNED_TODOS: TODO-AMS1, TODO-AMS2, TODO-AMS3
   FILES: services/governance-service.ts, lib/agent-registry.ts
-  CHECKPOINT_PATH: reports_dev/code-auditor/caa-checkpoint-P1-AMS-batch1.json
-  REPORT_PATH: reports_dev/code-auditor/caa-fixes-done-P1-AMS-batch1.md
+  CHECKPOINT_PATH: reports/code-auditor/caa-checkpoint-P1-AMS-batch1.json
+  REPORT_PATH: reports/code-auditor/caa-fixes-done-P1-AMS-batch1.md
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
   Reads TODO file. Applies fixes one by one with backup/restore for syntax errors. Re-reads each file after fixing.
-  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 skipped. Report: reports_dev/code-auditor/caa-fixes-done-P1-AMS-batch1.md"
+  Returns: "[DONE] fix-AMS-batch1 - 3/3 TODOs applied, 0 skipped. Report: reports/code-auditor/caa-fixes-done-P1-AMS-batch1.md"
 </example>
 
 <example>
 Context: Orchestrator spawns this agent to apply TODOs but one has a context mismatch.
 user: |
-  TODO_FILE: reports_dev/code-auditor/TODO-AMCOS-changes.md
+  TODO_FILE: reports/code-auditor/TODO-AMCOS-changes.md
   ASSIGNED_TODOS: TODO-AMCOS5, TODO-AMCOS6, TODO-AMCOS7
   FILES: plugins/amp-messaging/scripts/amp-send.sh, plugins/amp-messaging/scripts/amp-inbox.sh
-  CHECKPOINT_PATH: reports_dev/code-auditor/caa-checkpoint-P1-AMCOS-batch2.json
-  REPORT_PATH: reports_dev/code-auditor/caa-fixes-done-P1-AMCOS-batch2.md
+  CHECKPOINT_PATH: reports/code-auditor/caa-checkpoint-P1-AMCOS-batch2.json
+  REPORT_PATH: reports/code-auditor/caa-fixes-done-P1-AMCOS-batch2.md
 
   Apply the assigned TODOs to the source files. Make minimal changes only.
 assistant: |
   Reads TODO file. Applies fixes one by one with backup/restore for syntax errors. Re-reads each file after fixing.
-  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 skipped. Report: reports_dev/code-auditor/caa-fixes-done-P1-AMCOS-batch2.md"
+  Returns: "[DONE] fix-AMCOS-batch2 - 2/3 TODOs applied, 1 skipped. Report: reports/code-auditor/caa-fixes-done-P1-AMCOS-batch2.md"
 </example>
 
 ## REPORTING RULES

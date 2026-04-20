@@ -19,7 +19,7 @@ Six-phase PR review. Phase 4 security scan is **MANDATORY** (never skip): correc
 
 ## Prerequisites
 
-- `gh` CLI authenticated, PR on GitHub, `reports_dev/code-auditor/` exists, `${CLAUDE_PLUGIN_ROOT}` set
+- `gh` CLI authenticated, PR on GitHub, `reports/code-auditor/` exists, `${CLAUDE_PLUGIN_ROOT}` set
 
 ## Instructions
 
@@ -34,7 +34,7 @@ If MUST-FIX issues exist, do NOT push until resolved and pipeline re-run.
 
 ## Output
 
-Final merged report in `reports_dev/code-auditor/` with verdict (PASS/CONDITIONAL/FAIL), per-finding severity, MUST-FIX/SHOULD-FIX/NIT counts. Details:
+Final merged report in `reports/code-auditor/` with verdict (PASS/CONDITIONAL/FAIL), per-finding severity, MUST-FIX/SHOULD-FIX/NIT counts. Details:
 
 - [Output Format](references/output-format.md):
   - Report Files, Final Report Contents
