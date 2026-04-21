@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.0] - 2026-04-21
+
+### Features
+
+- Apply canonical $MAIN_ROOT/reports/<component>/<ts±tz>-<slug>.<ext> (c4eb9d6)
+
 ## [3.3.0] - 2026-04-20
 
 ### Features
