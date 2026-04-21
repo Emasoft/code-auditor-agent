@@ -61,9 +61,8 @@ STANDARD_FILES: list[tuple[str, bool, str]] = [
     (".mega-linter.yml", False, "Mega-Linter configuration"),
     ("scripts/publish.py", False, "Publish pipeline script"),
     ("git-hooks/pre-push", False, "Pre-push quality gate hook"),
-    (".github/workflows/ci.yml", False, "CI workflow"),
+    (".github/workflows/ci.yml", False, "CI workflow (consolidated: lint + validate + test)"),
     (".github/workflows/release.yml", False, "Release workflow"),
-    (".github/workflows/validate.yml", False, "Plugin validation workflow"),
     (".github/workflows/notify-marketplace.yml", False, "Marketplace notification workflow"),
 ]
 
@@ -89,7 +88,6 @@ README_BADGE_PATTERNS: list[tuple[str, str]] = [
     ("CI badge", "actions/workflows/ci.yml/badge.svg"),
     ("Version badge", "img.shields.io/badge/version-"),
     ("License badge", "img.shields.io/badge/license-"),
-    ("Validation badge", "actions/workflows/validate.yml/badge.svg"),
 ]
 
 # Standard component directories
@@ -238,6 +236,266 @@ def audit_python_version(plugin_path: Path) -> list[AuditItem]:
 
 
 # =============================================================================
+# DRIFT DETECTION (TRDD-79638eb6)
+# =============================================================================
+
+
+# Mapping of pyproject-declared distribution names to the module name they
+# install as when the two differ. Extend this as you encounter more drift
+# between "pip install foo" and "import foo_bar".
+_DIST_TO_MODULE: dict[str, str] = {
+    "pyyaml": "yaml",
+    "python-dateutil": "dateutil",
+    "beautifulsoup4": "bs4",
+    "pillow": "PIL",
+    "msgpack-python": "msgpack",
+    "protobuf": "google.protobuf",
+    "grpcio": "grpc",
+    "opencv-python": "cv2",
+    "opencv-python-headless": "cv2",
+    "scikit-learn": "sklearn",
+    "scikit-image": "skimage",
+    "python-jose": "jose",
+    "pyjwt": "jwt",
+    "pymongo": "pymongo",
+    "psycopg2-binary": "psycopg2",
+    "mysql-connector-python": "mysql.connector",
+    "azure-storage-blob": "azure.storage.blob",
+    "google-cloud-storage": "google.cloud.storage",
+}
+
+# Dependencies that are runtime tools (used via subprocess) and should not
+# trigger "unused" warnings just because they don't appear as Python imports.
+_RUNTIME_TOOLS: set[str] = {
+    "ruff",
+    "mypy",
+    "pyright",
+    "pytest",
+    "coverage",
+    "pre-commit",
+    "tox",
+    "nox",
+    "black",
+    "isort",
+    "bandit",
+    "safety",
+    "uv",
+    "hatch",
+    "twine",
+    "build",
+    "setuptools",
+    "wheel",
+    "pip",
+}
+
+
+def _parse_pyproject_dependencies(pyproject_path: Path) -> list[str]:
+    """Extract dependency distribution names from pyproject.toml.
+
+    Parses the `[project].dependencies` array of PEP-621 and returns the
+    bare distribution names (e.g. "requests" from "requests>=2.30,<3"). Also
+    scans `[project.optional-dependencies]` groups so plugins that use extras
+    for dev/test deps still get drift-checked.
+
+    Uses tomllib when available (Python 3.11+), falls back to a very simple
+    line-scan otherwise so this stays self-contained.
+    """
+    try:
+        import tomllib  # type: ignore
+    except ImportError:
+        tomllib = None  # type: ignore
+
+    try:
+        raw = pyproject_path.read_bytes()
+    except OSError:
+        return []
+
+    names: list[str] = []
+
+    if tomllib is not None:
+        try:
+            data = tomllib.loads(raw.decode("utf-8", errors="replace"))
+        except Exception:
+            data = {}
+        project = data.get("project", {}) if isinstance(data, dict) else {}
+        if isinstance(project, dict):
+            deps = project.get("dependencies", [])
+            if isinstance(deps, list):
+                for item in deps:
+                    if isinstance(item, str):
+                        names.append(_extract_dist_name(item))
+            opt = project.get("optional-dependencies", {})
+            if isinstance(opt, dict):
+                for group_deps in opt.values():
+                    if isinstance(group_deps, list):
+                        for item in group_deps:
+                            if isinstance(item, str):
+                                names.append(_extract_dist_name(item))
+    else:
+        # Naive fallback — scan lines inside `dependencies = [ ... ]`.
+        in_deps = False
+        text = raw.decode("utf-8", errors="replace")
+        for line in text.splitlines():
+            s = line.strip()
+            if s.startswith("dependencies") and "=" in s and "[" in s:
+                in_deps = True
+                continue
+            if in_deps:
+                if s.startswith("]"):
+                    in_deps = False
+                    continue
+                # Lines like:  "requests>=2.30",
+                if s.startswith('"') or s.startswith("'"):
+                    stripped = s.strip().strip(",").strip("\"'")
+                    if stripped:
+                        names.append(_extract_dist_name(stripped))
+
+    # Dedupe while preserving order
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in names:
+        if n and n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out
+
+
+def _extract_dist_name(requirement: str) -> str:
+    """Extract the bare distribution name from a PEP-508 requirement string.
+
+    Strips version specifiers, extras, markers, and whitespace.
+    Examples:
+        "requests>=2.30"           -> "requests"
+        "Flask[async] >= 2.0"      -> "Flask"
+        "numpy (>=1.24); python_version>='3.10'" -> "numpy"
+    """
+    import re as _re
+
+    # Strip environment markers (anything after ';')
+    req = requirement.split(";", 1)[0]
+    # Strip extras like [async]
+    req = _re.sub(r"\[.*?\]", "", req)
+    # Split on version specifiers and whitespace
+    m = _re.match(r"\s*([A-Za-z0-9_.\-]+)", req)
+    if not m:
+        return ""
+    return m.group(1).strip()
+
+
+def _dist_to_import_candidates(dist_name: str) -> list[str]:
+    """Return plausible module import names for a given distribution name.
+
+    We check both the raw lowercased name and a normalized version because
+    pyproject allows 'Flask' but code writes 'import flask'. PEP-503 normalizes
+    separators to '-'; modules normalize them to '_'.
+    """
+    lower = dist_name.lower()
+    candidates: set[str] = {lower}
+    # Known mapping (e.g. pyyaml -> yaml)
+    if lower in _DIST_TO_MODULE:
+        candidates.add(_DIST_TO_MODULE[lower])
+    # Dashes are not legal in Python module names — convert to underscore
+    if "-" in lower:
+        candidates.add(lower.replace("-", "_"))
+    # Dots are fine (namespace packages) — keep as-is
+    return sorted(candidates)
+
+
+def _scan_python_imports(plugin_path: Path, directories: tuple[str, ...] = ("scripts", "hooks")) -> set[str]:
+    """Return the set of top-level module names imported from any *.py file
+    in the given subdirectories of plugin_path.
+
+    This is a pure text scan — not an AST walk — so we catch both
+    `import foo` and `from foo.bar import baz`. That's enough for drift
+    detection; false positives from inline strings are harmless.
+    """
+    import re as _re
+
+    found: set[str] = set()
+    import_re = _re.compile(
+        r"^\s*(?:from\s+([A-Za-z_][\w\.]*)|import\s+([A-Za-z_][\w\.]*(?:\s*,\s*[A-Za-z_][\w\.]*)*))", _re.MULTILINE
+    )
+
+    for subdir in directories:
+        d = plugin_path / subdir
+        if not d.is_dir():
+            continue
+        for py in d.rglob("*.py"):
+            try:
+                content = py.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for match in import_re.finditer(content):
+                from_mod = match.group(1)
+                import_mod = match.group(2)
+                if from_mod:
+                    found.add(from_mod.split(".")[0].lower())
+                if import_mod:
+                    # Handle `import foo, bar` — split on commas
+                    for name in import_mod.split(","):
+                        top = name.strip().split(".")[0].strip()
+                        if top:
+                            found.add(top.lower())
+    return found
+
+
+def audit_drift(plugin_path: Path) -> list[AuditItem]:
+    """Cross-check pyproject.toml dependencies against actual imports.
+
+    Flags as WARN any dependency declared in pyproject.toml `[project]` but
+    never imported from `scripts/` or `hooks/`. Runtime tools (ruff, mypy,
+    pytest, etc.) are exempt because they're invoked as subprocesses, not
+    imported.
+
+    Returns a list of AuditItem entries. Emits one PASS summary when all
+    deps are referenced, or one WARN per unused dep.
+    """
+    items: list[AuditItem] = []
+    pyproject_path = plugin_path / "pyproject.toml"
+    if not pyproject_path.is_file():
+        # Silent — not every plugin has a pyproject.toml
+        return items
+
+    declared = _parse_pyproject_dependencies(pyproject_path)
+    if not declared:
+        return items
+
+    imports = _scan_python_imports(plugin_path, ("scripts", "hooks"))
+    unused: list[str] = []
+    for dist in declared:
+        if not dist:
+            continue
+        lower = dist.lower()
+        if lower in _RUNTIME_TOOLS:
+            # Runtime tool — skip import-based drift check
+            continue
+        candidates = _dist_to_import_candidates(dist)
+        if not any(c in imports for c in candidates):
+            unused.append(dist)
+
+    if unused:
+        for dep in unused:
+            items.append(
+                AuditItem(
+                    "drift",
+                    f"dep:{dep}",
+                    "WARN",
+                    f"Declared dependency '{dep}' not imported in scripts/ or hooks/ — candidate for removal",
+                )
+            )
+    else:
+        items.append(
+            AuditItem(
+                "drift",
+                "pyproject.toml deps",
+                "PASS",
+                f"All {len(declared)} declared dependencies are referenced",
+            )
+        )
+    return items
+
+
+# =============================================================================
 # RUN FULL AUDIT
 # =============================================================================
 
@@ -251,6 +509,7 @@ def run_audit(plugin_path: Path) -> list[AuditItem]:
     results.extend(audit_readme_badges(plugin_path))
     results.extend(audit_pyproject(plugin_path))
     results.extend(audit_python_version(plugin_path))
+    results.extend(audit_drift(plugin_path))
     return results
 
 
@@ -276,6 +535,7 @@ def print_audit_report(results: list[AuditItem], plugin_path: Path) -> None:
         "badges": "README Badges",
         "pyproject": "pyproject.toml Sections",
         "python": "Python Version",
+        "drift": "Project Drift (deps vs imports)",
     }
 
     total_pass = 0
@@ -308,7 +568,9 @@ def print_audit_report(results: list[AuditItem], plugin_path: Path) -> None:
     if total_issues == 0:
         print(f"  {GREEN}{BOLD}All {total} checks passed.{NC}\n")
     else:
-        print(f"  {BOLD}Result:{NC} {GREEN}{total_pass} passed{NC}, {YELLOW}{total_issues} issues{NC} / {total} checks\n")
+        print(
+            f"  {BOLD}Result:{NC} {GREEN}{total_pass} passed{NC}, {YELLOW}{total_issues} issues{NC} / {total} checks\n"
+        )
 
 
 def save_report_to_file(results: list[AuditItem], plugin_path: Path, report_path: Path) -> None:
@@ -420,7 +682,6 @@ _FILE_TO_GENERATOR: dict[str, str] = {
     "git-hooks/pre-push": "gen_pre_push_hook",
     ".github/workflows/ci.yml": "gen_ci_yml",
     ".github/workflows/release.yml": "gen_release_yml",
-    ".github/workflows/validate.yml": "gen_validate_yml",
     ".github/workflows/notify-marketplace.yml": "gen_notify_marketplace_yml",
 }
 
@@ -431,7 +692,9 @@ _EXECUTABLE_FILES: set[str] = {
 }
 
 
-def fix_missing_files(plugin_path: Path, results: list[AuditItem], dry_run: bool = False, marketplace: str | None = None) -> list[str]:
+def fix_missing_files(
+    plugin_path: Path, results: list[AuditItem], dry_run: bool = False, marketplace: str | None = None
+) -> list[str]:
     """Generate missing standard files using templates from generate_plugin_repo.
 
     Only creates files that do not already exist. Never overwrites existing files.
@@ -486,8 +749,10 @@ def fix_missing_files(plugin_path: Path, results: list[AuditItem], dry_run: bool
         is_executable = rel_path in _EXECUTABLE_FILES
 
         if dry_run:
-            print(f"  {BLUE}[dry-run]{NC} Would create {file_path} ({len(content)} bytes)"
-                  f"{' [exec]' if is_executable else ''}")
+            print(
+                f"  {BLUE}[dry-run]{NC} Would create {file_path} ({len(content)} bytes)"
+                f"{' [exec]' if is_executable else ''}"
+            )
             created.append(str(file_path))
             continue
 
@@ -573,7 +838,11 @@ Examples:
     parser.add_argument("--fix", action="store_true", help="Generate missing standard files from templates")
     parser.add_argument("--dry-run", action="store_true", help="Show what --fix would do without writing files")
     parser.add_argument("--report", type=Path, default=None, help="Save audit report to this file path")
-    parser.add_argument("--marketplace", type=str, help="Marketplace owner/repo for notify-marketplace.yml (e.g., Emasoft/emasoft-plugins)")
+    parser.add_argument(
+        "--marketplace",
+        type=str,
+        help="Marketplace owner/repo for notify-marketplace.yml (e.g., Emasoft/emasoft-plugins)",
+    )
     parser.add_argument("--validate", action="store_true", help="Also run validate_plugin.py for full validation")
 
     args = parser.parse_args()

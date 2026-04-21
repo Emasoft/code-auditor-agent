@@ -88,6 +88,6 @@ Copy this checklist and track your progress:
 - [Monorepo & Workspaces](references/monorepo.md)
   - Workspace detection and audit strategy
 - [Large Codebase Strategy](references/large-codebase.md)
-  - Tier 1 - Automated Triage, Tier 2 - Selective Audit, Tier 3 - Full Coverage
+  - Full Coverage (Default), Automated Triage for Prioritization, Checkpoint and Resume
 - [Delta Audit Mode](references/delta-audit.md)
-  - Delta Audit Workflow
+  - When to Use Delta Mode, Delta Audit Workflow

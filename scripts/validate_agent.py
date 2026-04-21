@@ -30,6 +30,7 @@ from typing import Any
 
 import yaml
 from cpv_validation_common import (
+    BUILTIN_AGENT_TYPES,
     COLORS,
     MAX_BODY_WORDS,
     MAX_DESCRIPTION_LENGTH,
@@ -37,13 +38,17 @@ from cpv_validation_common import (
     SECRET_PATTERNS,
     USER_PATH_PATTERNS,
     VALID_CONTEXT_VALUES,
+    VALID_EFFORT_VALUES,
     VALID_MODELS,
+    VALID_PERMISSION_MODES,
     VALID_TOOLS,
     ValidationReport,
     check_utf8_encoding,
+    is_plugin_shipped_agent,
     is_valid_model,
     save_report_and_print_summary,
     validate_component_name,
+    validate_plugin_shipped_restrictions,
 )
 
 # Known frontmatter fields per official docs (agent-specific)
@@ -60,7 +65,7 @@ KNOWN_FRONTMATTER_FIELDS = {
     "skills",
     "hooks",
     "color",
-    "capabilities",
+    "capabilities",  # [legacy — emits WARNING] not in current sub-agents spec (v2.1.98)
     "effort",
     "maxTurns",
     "mcpServers",
@@ -68,25 +73,48 @@ KNOWN_FRONTMATTER_FIELDS = {
     "background",
     "isolation",
     "initialPrompt",  # v2.1.83 — auto-submit prompt when agent starts
-    # Claude Code-specific fields (legacy/extended)
-    "context",
-    "agent",
-    "user-invocable",
-    "system-prompt",
+    # Claude Code-specific fields (legacy/extended — all emit WARNING when present)
+    "context",  # [legacy — emits WARNING] not in current sub-agents spec (v2.1.98)
+    "agent",  # [legacy — emits WARNING] not in current sub-agents spec (v2.1.98)
+    "user-invocable",  # [legacy — emits WARNING] not in current sub-agents spec (v2.1.98)
+    "system-prompt",  # [legacy — emits WARNING] not in current sub-agents spec (v2.1.98)
 }
 
-# Valid values for the 'permissionMode' field
-VALID_PERMISSION_MODES = {
-    "default",  # Standard permission checking with prompts
-    "auto",  # Auto-approve all tool calls (v2.1.84)
-    "acceptEdits",  # Auto-accept file edits
-    "dontAsk",  # Auto-deny permission prompts (explicitly allowed tools still work)
-    "bypassPermissions",  # Skip all permission checks (use with caution!)
-    "plan",  # Plan mode (read-only exploration)
-}
+# GAP-79 (v2.22.3): Plugin-shipped agent allowed frontmatter fields. Per
+# plugins-reference.md:70 the set of fields accepted for PLUGIN-shipped
+# agents is intentionally narrower than the full project/user agent
+# superset. Keys present on a plugin-shipped agent but OUTSIDE this set
+# trigger a MINOR so authors notice CPV-legacy / non-plugin drift.
+# ``hooks``/``mcpServers``/``permissionMode`` already produce MAJORs via
+# ``PLUGIN_SHIPPED_AGENT_FORBIDDEN_FIELDS`` — we do NOT double-count them
+# here.
+PLUGIN_SHIPPED_AGENT_ALLOWED_FIELDS: frozenset[str] = frozenset(
+    {
+        "name",
+        "description",
+        "tools",
+        "model",
+        "effort",
+        "system-prompt",
+        "context",
+        "memory",
+        "isolation",
+        "initialPrompt",
+        "agent",
+    }
+)
 
-# Built-in agent types per official docs — custom agent names are also valid
-VALID_AGENT_VALUES = {"Explore", "Plan", "general-purpose"}
+# Valid values for the 'permissionMode' field. Aliased to the canonical
+# ``VALID_PERMISSION_MODES`` in ``cpv_validation_common`` so agent frontmatter
+# and settings ``permissions.defaultMode`` share the same enumeration
+# (permission-modes.md L17-22).
+# (Imported at module-level for the agent validator's type hints.)
+
+# Built-in agent types per official docs — custom agent names are also valid.
+# Aliased to the shared ``BUILTIN_AGENT_TYPES`` in ``cpv_validation_common`` to
+# keep one source of truth (updated in v2.22.0 with ``statusline-setup`` and
+# ``Claude Code Guide`` per sub-agents.md L29-74).
+VALID_AGENT_VALUES = BUILTIN_AGENT_TYPES
 
 # Valid values for the 'memory' field (persistent memory scope)
 VALID_MEMORY_SCOPES = {"user", "project", "local"}
@@ -106,6 +134,11 @@ PLACEHOLDER_PATTERNS = [
     re.compile(r"\[.*INSERT.*\]", re.IGNORECASE),
     re.compile(r"\[.*FILL.*\]", re.IGNORECASE),
 ]
+
+# PLUGIN_SHIPPED_AGENT_FORBIDDEN_FIELDS, is_plugin_shipped_agent, and
+# validate_plugin_shipped_restrictions now live in cpv_validation_common so
+# that validate_plugin.py and validate_agent.py call a single implementation
+# with identical messages.
 
 
 @dataclass
@@ -164,6 +197,17 @@ def validate_frontmatter_exists(content: str, report: AgentValidationReport, fil
         return None
 
     if frontmatter is None:
+        return None
+
+    # Frontmatter MUST be a mapping (dict). yaml.safe_load can return any
+    # valid YAML type (scalar, list, str, etc.); treating those as frontmatter
+    # and calling .keys() on them would crash with AttributeError. Reject
+    # non-dict frontmatter as malformed.
+    if not isinstance(frontmatter, dict):
+        report.critical(
+            f"Frontmatter must be a YAML mapping, got {type(frontmatter).__name__}",
+            filename,
+        )
         return None
 
     report.passed("Valid YAML frontmatter", filename)
@@ -258,6 +302,55 @@ def validate_description_field(frontmatter: dict[str, Any], filename: str, repor
     report.passed("'description' field valid", filename)
 
 
+def _parse_tool_reference(raw: str) -> tuple[str, list[str] | None, str | None]:
+    """Parse a tool reference string into (base_name, spawnable_subagents, error).
+
+    Supports the v2.1.63+ grammar ``Agent(worker, researcher)`` (and the legacy
+    alias ``Task(...)``) from sub-agents.md L296-318, where the parenthesized
+    list is an allowlist of spawnable subagent types. Non-Agent/Task tools
+    with parentheses (e.g. ``Bash(git *)``) pass through unchanged so the
+    caller's existing Bash/MCP logic still sees them.
+
+    Returns:
+        (base_tool_name, spawnable_subagents, error)
+        - base_tool_name: always the leading identifier (e.g. "Agent", "Bash")
+        - spawnable_subagents: list of agent names when ``raw`` is
+          ``Agent(...)``/``Task(...)``; ``None`` otherwise. An empty list means
+          ``Agent()`` with an explicit empty allowlist.
+        - error: non-None only when the reference is malformed (e.g.
+          unbalanced parens). ``spawnable_subagents`` is ``None`` on error.
+    """
+    stripped = raw.strip()
+    # Bare identifier like "Agent" or "Read" — no parens, no spawnable list.
+    if "(" not in stripped:
+        return stripped, None, None
+
+    # Find the base name (identifier before the first '(').
+    open_idx = stripped.index("(")
+    base = stripped[:open_idx].strip()
+
+    # Unbalanced / missing closing paren.
+    if not stripped.endswith(")"):
+        if base in ("Agent", "Task"):
+            return base, None, "unbalanced parens"
+        # For non-Agent/Task tools, let downstream validators surface their own
+        # error (they've handled ``Bash(...)`` patterns historically).
+        return base, None, None
+
+    # Only Agent/Task use the spawnable-subagent list grammar.
+    if base not in ("Agent", "Task"):
+        return base, None, None
+
+    inner = stripped[open_idx + 1 : -1]
+    # Empty parens == explicit empty allowlist (distinct from bare "Agent").
+    if not inner.strip():
+        return base, [], None
+
+    # Comma-separated, whitespace-tolerant, trailing-comma OK.
+    names = [n.strip() for n in inner.split(",") if n.strip()]
+    return base, names, None
+
+
 def validate_tools_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
     """Validate the 'tools' frontmatter field."""
     if "tools" not in frontmatter:
@@ -285,16 +378,62 @@ def validate_tools_field(frontmatter: dict[str, Any], filename: str, report: Age
     # Validate each tool name
     invalid_tools = []
     for tool in tool_list:
-        # Handle tool with pattern like "Bash(git *)"
-        base_tool = tool.split("(")[0].strip()
+        base_tool, spawnables, error = _parse_tool_reference(tool)
+        if error is not None:
+            # Malformed Agent()/Task() grammar — surface as MAJOR and skip
+            # further per-tool checks for this entry.
+            report.major(
+                f"malformed tool reference '{tool}': {error}",
+                filename,
+            )
+            continue
         if base_tool not in VALID_TOOLS and not base_tool.startswith("mcp__"):
             invalid_tools.append(tool)
+            continue
+        # Only Agent()/Task() carry a spawnable-subagent allowlist. Bare
+        # "Agent"/"Task" (spawnables is None) is still accepted as-is.
+        if spawnables is not None:
+            if not spawnables:
+                report.info(
+                    f"'{tool}' declares an explicit empty allowlist; this agent may spawn no subagents",
+                    filename,
+                )
+            else:
+                for name in spawnables:
+                    if name not in BUILTIN_AGENT_TYPES:
+                        report.minor(
+                            f"'{tool}' references unknown spawnable agent '{name}' "
+                            "(may be a custom plugin-shipped agent we cannot verify)",
+                            filename,
+                        )
 
     if invalid_tools:
         report.info(
             f"Unknown tools (may be custom): {', '.join(invalid_tools)}",
             filename,
         )
+
+    # Deprecation warnings for renamed/soft-deprecated tools
+    # (kept in VALID_TOOLS — these are still accepted as aliases).
+    for tool in tool_list:
+        base_tool, _, error = _parse_tool_reference(tool)
+        if error is not None:
+            continue
+        if base_tool == "TaskOutput":
+            report.warning(
+                "Tool 'TaskOutput' is deprecated — prefer Read on the task's output file path",
+                filename,
+            )
+        elif base_tool == "Task":
+            report.warning(
+                "Tool 'Task' was renamed to 'Agent' in v2.1.63; 'Task' still works as an alias",
+                filename,
+            )
+        elif base_tool in ("TodoRead", "Notebook", "MultiEdit"):
+            report.warning(
+                f"Tool '{base_tool}' is not in the current tools-reference spec. Verify existence before shipping.",
+                filename,
+            )
 
     report.passed(f"'tools' field valid: {len(tool_list)} tool(s)", filename)
 
@@ -322,8 +461,27 @@ def validate_model_field(frontmatter: dict[str, Any], filename: str, report: Age
     report.passed(f"'model' field valid: {model}", filename)
 
 
+AGENT_NAMED_COLORS: frozenset[str] = frozenset({
+    "red",
+    "blue",
+    "green",
+    "yellow",
+    "purple",
+    "orange",
+    "pink",
+    "cyan",
+})
+
+
 def validate_color_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
-    """Validate the 'color' frontmatter field."""
+    """Validate the 'color' frontmatter field.
+
+    Per sub-agents.md L247 the spec accepts exactly 8 named colors
+    (red, blue, green, yellow, purple, orange, pink, cyan). CPV also
+    accepts hex ``#RRGGBB`` values as a legacy/CPV-extension shape so
+    existing agents keep validating, but emits a NIT when hex is used
+    nudging authors toward the canonical named values.
+    """
     if "color" not in frontmatter:
         return
 
@@ -333,22 +491,37 @@ def validate_color_field(frontmatter: dict[str, Any], filename: str, report: Age
         report.major(f"'color' must be a string, got {type(color).__name__}", filename)
         return
 
-    # Hex color pattern
+    if color in AGENT_NAMED_COLORS:
+        report.passed(f"'color' field valid (named): {color}", filename)
+        return
+
     hex_pattern = re.compile(r"^#[0-9A-Fa-f]{6}$")
-    if not hex_pattern.match(color):
-        report.major(
-            f"'color' must be hex format (#RRGGBB): {color}",
+    if hex_pattern.match(color):
+        report.nit(
+            f"'color' uses legacy hex format ({color}); prefer a named color "
+            f"from {sorted(AGENT_NAMED_COLORS)} per sub-agents.md L247",
             filename,
         )
         return
 
-    report.passed(f"'color' field valid: {color}", filename)
+    report.major(
+        f"'color' must be one of {sorted(AGENT_NAMED_COLORS)} "
+        f"or hex (#RRGGBB), got {color!r}",
+        filename,
+    )
 
 
 def validate_capabilities_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
     """Validate the 'capabilities' frontmatter field."""
     if "capabilities" not in frontmatter:
         return
+
+    # Legacy/extended field — not in the current sub-agents spec.
+    report.warning(
+        "Field 'capabilities' is not in the current sub-agents spec (v2.1.98). "
+        "It may be legacy/extended. Verify it still works with your installed Claude Code version.",
+        filename,
+    )
 
     caps = frontmatter["capabilities"]
 
@@ -379,6 +552,13 @@ def validate_context_field(frontmatter: dict[str, Any], filename: str, report: A
         # context is optional - missing is fine
         return
 
+    # Legacy/extended field — not in the current sub-agents spec.
+    report.warning(
+        "Field 'context' is not in the current sub-agents spec (v2.1.98). "
+        "It may be legacy/extended. Verify it still works with your installed Claude Code version.",
+        filename,
+    )
+
     context = frontmatter["context"]
 
     if not isinstance(context, str):
@@ -406,6 +586,13 @@ def validate_agent_field(frontmatter: dict[str, Any], filename: str, report: Age
         # agent field is optional
         return
 
+    # Legacy/extended field — not in the current sub-agents spec.
+    report.warning(
+        "Field 'agent' is not in the current sub-agents spec (v2.1.98). "
+        "It may be legacy/extended. Verify it still works with your installed Claude Code version.",
+        filename,
+    )
+
     agent = frontmatter["agent"]
 
     if not isinstance(agent, str):
@@ -429,6 +616,13 @@ def validate_user_invocable_field(frontmatter: dict[str, Any], filename: str, re
     if "user-invocable" not in frontmatter:
         # user-invocable is optional
         return
+
+    # Legacy/extended field — not in the current sub-agents spec.
+    report.warning(
+        "Field 'user-invocable' is not in the current sub-agents spec (v2.1.98). "
+        "It may be legacy/extended. Verify it still works with your installed Claude Code version.",
+        filename,
+    )
 
     value = frontmatter["user-invocable"]
 
@@ -454,6 +648,13 @@ def validate_system_prompt_field(frontmatter: dict[str, Any], filename: str, rep
     if "system-prompt" not in frontmatter:
         # system-prompt is optional
         return
+
+    # Legacy/extended field — not in the current sub-agents spec.
+    report.warning(
+        "Field 'system-prompt' is not in the current sub-agents spec (v2.1.98). "
+        "It may be legacy/extended. Verify it still works with your installed Claude Code version.",
+        filename,
+    )
 
     prompt = frontmatter["system-prompt"]
 
@@ -571,7 +772,11 @@ def validate_memory_field(frontmatter: dict[str, Any], filename: str, report: Ag
 
 
 def validate_isolation_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
-    """Validate the 'isolation' frontmatter field."""
+    """Validate the 'isolation' frontmatter field.
+
+    Per plugins-reference.md:70, ``"worktree"`` is the only documented value.
+    Anything else (including an empty string) is rejected as MAJOR.
+    """
     if "isolation" not in frontmatter:
         return
 
@@ -579,9 +784,16 @@ def validate_isolation_field(frontmatter: dict[str, Any], filename: str, report:
     isolation_val = frontmatter["isolation"]
     if not isinstance(isolation_val, str):
         report.major(f"'isolation' must be a string, got {type(isolation_val).__name__}", rel_path)
+    elif not isolation_val.strip():
+        report.major(
+            "'isolation' field cannot be empty. "
+            "'worktree' is the only valid value per plugins-reference.md:70.",
+            rel_path,
+        )
     elif isolation_val not in VALID_ISOLATION_VALUES:
         report.major(
-            f"Invalid 'isolation' value: '{isolation_val}'. Must be one of: {sorted(VALID_ISOLATION_VALUES)}",
+            f"Invalid 'isolation' value: '{isolation_val}'. "
+            "'worktree' is the only valid value per plugins-reference.md:70.",
             rel_path,
         )
     else:
@@ -615,20 +827,55 @@ def validate_background_field(frontmatter: dict[str, Any], filename: str, report
 
 
 def validate_effort_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
-    """Validate the 'effort' frontmatter field (v2.1.78)."""
+    """Validate the 'effort' frontmatter field (v2.1.78+).
+
+    Accepted values per sub-agents.md L244 + cli-reference.md --effort:
+      low | medium | high | xhigh | max
+
+    - ``xhigh`` was added in v2.1.111 for Opus 4.7 only — any non-Opus model
+      with ``xhigh`` fails at runtime, so we mirror the same strict check
+      applied to ``max``.
+    - ``max`` remains supported (Opus 4.6 legacy) for backward compatibility.
+    """
     if "effort" not in frontmatter:
         return
 
     rel_path = filename
     effort_val = frontmatter["effort"]
-    valid_effort_values = {"low", "medium", "high"}
-    if isinstance(effort_val, str):
-        if effort_val.lower() not in valid_effort_values:
-            report.major(f"Invalid 'effort' value: '{effort_val}'. Must be one of: {sorted(valid_effort_values)}", rel_path)
-        else:
-            report.passed(f"Valid effort: {effort_val}", rel_path)
-    else:
+    if not isinstance(effort_val, str):
         report.major(f"'effort' must be a string, got {type(effort_val).__name__}", rel_path)
+        return
+    if not effort_val.strip():
+        report.major("'effort' field cannot be empty", rel_path)
+        return
+
+    if effort_val.lower() not in VALID_EFFORT_VALUES:
+        report.major(
+            f"Invalid 'effort' value: '{effort_val}'. Must be one of: {sorted(VALID_EFFORT_VALUES)}",
+            rel_path,
+        )
+        return
+
+    report.passed(f"Valid effort: {effort_val}", rel_path)
+
+    # "max" and "xhigh" effort require an Opus model.
+    # "xhigh" is Opus 4.7 only; "max" is Opus 4.6 legacy. Both fail on non-Opus.
+    if effort_val.lower() in {"max", "xhigh"}:
+        model = frontmatter.get("model", "")
+        model_str = str(model).lower() if model else ""
+        if model_str and "opus" not in model_str:
+            report.major(
+                f"effort: {effort_val} requires an Opus model, but model is '{model}'. "
+                "Use effort: high for non-Opus models, or set model: opus.",
+                rel_path,
+            )
+        elif not model_str:
+            report.warning(
+                f"effort: {effort_val} only works with Opus models. No 'model' field set — "
+                "this agent will fail if the session uses a non-Opus model. "
+                "Consider adding 'model: opus' or using effort: high.",
+                rel_path,
+            )
 
 
 def validate_disallowed_tools_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
@@ -659,10 +906,17 @@ def validate_disallowed_tools_field(frontmatter: dict[str, Any], filename: str, 
         report.minor("'disallowedTools' field is empty - consider removing", filename)
         return
 
-    # Validate each tool name
+    # Validate each tool name. Reuse the shared Agent()/Task() grammar parser
+    # so "Agent(worker, researcher)" entries don't get flagged as unknown.
     invalid_tools = []
     for tool in tool_list:
-        base_tool = tool.split("(")[0].strip()
+        base_tool, _, error = _parse_tool_reference(tool)
+        if error is not None:
+            report.major(
+                f"malformed tool reference '{tool}' in disallowedTools: {error}",
+                filename,
+            )
+            continue
         if base_tool not in VALID_TOOLS and not base_tool.startswith("mcp__"):
             invalid_tools.append(tool)
 
@@ -675,14 +929,67 @@ def validate_disallowed_tools_field(frontmatter: dict[str, Any], filename: str, 
     report.passed(f"'disallowedTools' field valid: {len(tool_list)} tool(s)", filename)
 
 
+def validate_initial_prompt_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
+    """Validate the 'initialPrompt' frontmatter field.
+
+    Auto-submitted as the first user turn when this agent runs as the main
+    session agent (via --agent or the agent setting). Skills and commands
+    are processed. Prepended to any user-provided prompt.
+    """
+    if "initialPrompt" not in frontmatter:
+        return
+
+    val = frontmatter["initialPrompt"]
+    if not isinstance(val, str):
+        report.major(f"'initialPrompt' must be a string, got {type(val).__name__}", filename)
+        return
+    if not val.strip():
+        report.minor("'initialPrompt' is empty — if present, should contain a prompt", filename)
+        return
+    report.passed(f"'initialPrompt' field valid ({len(val)} chars)", filename)
+
+
+def validate_mcp_servers_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
+    """Validate the 'mcpServers' frontmatter field.
+
+    Each entry is either:
+    - A string referencing an already-configured server by name
+    - An inline definition: {server_name: {type: "stdio", command: "...", args: [...]}}
+    """
+    if "mcpServers" not in frontmatter:
+        return
+
+    val = frontmatter["mcpServers"]
+    if not isinstance(val, list):
+        report.major(f"'mcpServers' must be a list, got {type(val).__name__}", filename)
+        return
+
+    for i, entry in enumerate(val):
+        if isinstance(entry, str):
+            if not entry.strip():
+                report.minor(f"'mcpServers[{i}]' is an empty string — must be a server name", filename)
+        elif isinstance(entry, dict):
+            # Inline definition: {name: {type, command, ...}}
+            for name, config in entry.items():
+                if not isinstance(config, dict):
+                    report.major(f"'mcpServers[{i}].{name}' must be an object, got {type(config).__name__}", filename)
+                elif "command" not in config and "url" not in config:
+                    report.minor(f"'mcpServers[{i}].{name}' has no 'command' or 'url' field", filename)
+        else:
+            report.major(f"'mcpServers[{i}]' must be a string or object, got {type(entry).__name__}", filename)
+
+    report.passed(f"'mcpServers' field valid: {len(val)} server(s)", filename)
+
+
 def validate_hooks_field(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
     """Validate the 'hooks' frontmatter field.
 
-    Hooks scoped to this subagent. Valid event types for agents:
-    - PreToolUse: Before the subagent uses a tool (supports matcher)
-    - PostToolUse: After the subagent uses a tool (supports matcher)
-    - Stop: When the subagent finishes (no matcher)
+    Hooks scoped to this subagent. Per hooks.md L422 (v2.1.109): "All hook
+    events are supported" in agent frontmatter. CPV therefore accepts every
+    event name from VALID_HOOK_EVENTS (all 26 + legacy Setup).
     """
+    from cpv_validation_common import VALID_HOOK_EVENTS
+
     if "hooks" not in frontmatter:
         # hooks is optional
         return
@@ -693,12 +1000,11 @@ def validate_hooks_field(frontmatter: dict[str, Any], filename: str, report: Age
         report.major(f"'hooks' must be an object, got {type(hooks).__name__}", filename)
         return
 
-    valid_agent_hook_events = {"PreToolUse", "PostToolUse", "Stop"}
-
     for event_name, event_config in hooks.items():
-        if event_name not in valid_agent_hook_events:
+        if event_name not in VALID_HOOK_EVENTS:
             report.major(
-                f"Invalid hook event for agent: '{event_name}'. Valid events: {sorted(valid_agent_hook_events)}",
+                f"Invalid hook event for agent: '{event_name}'. "
+                f"Valid events: {sorted(VALID_HOOK_EVENTS)}",
                 filename,
             )
             continue
@@ -752,13 +1058,60 @@ def validate_hooks_field(frontmatter: dict[str, Any], filename: str, report: Age
                     continue
 
                 hook_type = hook["type"]
-                if hook_type not in {"command", "prompt"}:
+                # Per hooks.md L278-283 the 4 valid hook types are
+                # {command, http, prompt, agent}. Agent-scoped hooks accept
+                # the same set.
+                if hook_type not in {"command", "http", "prompt", "agent"}:
                     report.major(
-                        f"Invalid hook type '{hook_type}' in '{event_name}[{i}].hooks[{j}]'. Valid types: command, prompt",
+                        f"Invalid hook type '{hook_type}' in '{event_name}[{i}].hooks[{j}]'. "
+                        "Valid types: command, http, prompt, agent",
                         filename,
                     )
 
     report.passed("'hooks' field structure valid", filename)
+
+
+def validate_plugin_shipped_allowed_fields(
+    frontmatter: dict[str, Any],
+    filename: str,
+    report: AgentValidationReport,
+    is_plugin_shipped: bool,
+) -> None:
+    """GAP-79 (v2.22.3): Enforce the narrower plugin-shipped agent field list.
+
+    Per plugins-reference.md:70, plugin-shipped agents accept exactly these 11
+    fields: ``name, description, tools, model, effort, system-prompt, context,
+    memory, isolation, initialPrompt, agent``. Fields OUTSIDE this set (but
+    inside the broader KNOWN_FRONTMATTER_FIELDS superset accepted for
+    project/user agents) emit a MINOR so authors notice the drift.
+
+    ``hooks``/``mcpServers``/``permissionMode`` are NOT double-reported here:
+    those already trigger MAJORs via PLUGIN_SHIPPED_AGENT_FORBIDDEN_FIELDS
+    (security restriction, stricter level). Truly-unknown keys are handled
+    by ``validate_frontmatter_exists`` upstream (WARNING).
+    """
+    if not is_plugin_shipped:
+        return
+
+    from cpv_validation_common import PLUGIN_SHIPPED_AGENT_FORBIDDEN_FIELDS
+
+    forbidden = set(PLUGIN_SHIPPED_AGENT_FORBIDDEN_FIELDS)
+    for key in frontmatter:
+        if key in PLUGIN_SHIPPED_AGENT_ALLOWED_FIELDS:
+            continue
+        if key in forbidden:
+            # Covered by validate_plugin_shipped_restrictions (MAJOR) — no double hit.
+            continue
+        if key not in KNOWN_FRONTMATTER_FIELDS:
+            # Unknown to the agent spec entirely — upstream WARNING already fires.
+            continue
+        report.minor(
+            f"Field '{key}' is not in the plugin-shipped agent allowed set "
+            f"({sorted(PLUGIN_SHIPPED_AGENT_ALLOWED_FIELDS)}) — plugins-reference.md:70. "
+            "It may be a CPV-legacy / non-plugin agent field and could be ignored "
+            "by plugin-shipped agent runtimes.",
+            filename,
+        )
 
 
 def validate_task_tool_prohibition(frontmatter: dict[str, Any], filename: str, report: AgentValidationReport) -> None:
@@ -932,7 +1285,11 @@ def validate_security(content: str, filename: str, report: AgentValidationReport
 
     # Check for ${CLAUDE_PLUGIN_ROOT} or ${CLAUDE_PLUGIN_DATA} usage (good practice)
     if "/scripts/" in content or "\\scripts\\" in content:
-        if "${CLAUDE_PLUGIN_ROOT}" not in content and "$CLAUDE_PLUGIN_ROOT" not in content and "${CLAUDE_PLUGIN_DATA}" not in content:
+        if (
+            "${CLAUDE_PLUGIN_ROOT}" not in content
+            and "$CLAUDE_PLUGIN_ROOT" not in content
+            and "${CLAUDE_PLUGIN_DATA}" not in content
+        ):
             report.info(
                 "Consider using ${CLAUDE_PLUGIN_ROOT} or ${CLAUDE_PLUGIN_DATA} for plugin-relative paths",
                 filename,
@@ -998,6 +1355,8 @@ def validate_agent(agent_path: Path) -> AgentValidationReport:
         validate_permission_mode_field(frontmatter, filename, report)
         validate_disallowed_tools_field(frontmatter, filename, report)
         validate_hooks_field(frontmatter, filename, report)
+        validate_initial_prompt_field(frontmatter, filename, report)
+        validate_mcp_servers_field(frontmatter, filename, report)
 
         # Validate new official fields
         validate_memory_field(frontmatter, filename, report)
@@ -1008,6 +1367,15 @@ def validate_agent(agent_path: Path) -> AgentValidationReport:
 
         # Cross-field validations
         validate_task_tool_prohibition(frontmatter, filename, report)
+
+        # Plugin-shipped agent field restrictions
+        # (hooks, mcpServers, permissionMode are forbidden when shipped in a plugin)
+        # Detect whether this agent file is inside a plugin directory.
+        plugin_shipped = is_plugin_shipped_agent(agent_path)
+        validate_plugin_shipped_restrictions(frontmatter, filename, report, plugin_shipped)
+        # GAP-79 (v2.22.3): plugin-shipped agents only accept 11 fields per
+        # plugins-reference.md:70 — flag any CPV-legacy / non-plugin fields.
+        validate_plugin_shipped_allowed_fields(frontmatter, filename, report, plugin_shipped)
 
     # Validate body content
     validate_body_content(content, filename, report)
@@ -1037,7 +1405,10 @@ def validate_agents_directory(agents_dir: Path) -> list[AgentValidationReport]:
         report.critical(f"Not a directory: {agents_dir}")
         return [report]
 
-    agent_files = list(agents_dir.glob("*.md"))
+    # Case-insensitive .md match — Path.glob is case-sensitive on POSIX, so
+    # files named Agent.MD / foo.Md would be silently skipped on Linux/macOS
+    # even though Claude Code treats them as valid agent files.
+    agent_files = [p for p in agents_dir.iterdir() if p.is_file() and p.suffix.lower() == ".md"]
 
     if not agent_files:
         report = AgentValidationReport(agent_path=str(agents_dir))
@@ -1139,7 +1510,9 @@ def main() -> int:
         help="Show all results including passed checks",
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
-    parser.add_argument("--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout")
+    parser.add_argument(
+        "--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout"
+    )
     parser.add_argument("--strict", action="store_true", help="Strict mode — NIT issues also block validation")
     args = parser.parse_args()
 
@@ -1149,11 +1522,14 @@ def main() -> int:
         print(f"Error: {path} does not exist", file=sys.stderr)
         return 1
 
-    # Verify content type — must be .md file or directory containing .md files
-    if path.is_file() and path.suffix != ".md":
+    # Verify content type — must be .md file or directory containing .md files.
+    # Use case-insensitive suffix check to stay consistent with validate_agent()
+    # (which compares suffix.lower()) and to handle case-sensitive filesystems
+    # where .MD / .Md are legal filenames.
+    if path.is_file() and path.suffix.lower() != ".md":
         print(f"Error: {path} is not a Markdown (.md) agent file", file=sys.stderr)
         return 1
-    if path.is_dir() and not list(path.glob("*.md")):
+    if path.is_dir() and not any(p.suffix.lower() == ".md" for p in path.iterdir() if p.is_file()):
         print(f"Error: No agent definition files (.md) found in {path}", file=sys.stderr)
         return 1
 
@@ -1181,7 +1557,9 @@ def main() -> int:
                             "info": sum(1 for x in r.results if x.level == "INFO"),
                             "passed": sum(1 for x in r.results if x.level == "PASSED"),
                         },
-                        "results": [{"level": x.level, "message": x.message, "file": x.file, "line": x.line} for x in r.results],
+                        "results": [
+                            {"level": x.level, "message": x.message, "file": x.file, "line": x.line} for x in r.results
+                        ],
                     }
                     for r in reports
                 ],

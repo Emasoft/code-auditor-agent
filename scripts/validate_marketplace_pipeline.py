@@ -269,11 +269,11 @@ class PipelineValidationReport:
         """Return appropriate exit code based on score."""
         score = self.total_score
         if score >= 90:
-            return EXIT_OK       # A grade — pipeline healthy
+            return EXIT_OK  # A grade — pipeline healthy
         elif score >= 70:
-            return EXIT_MINOR    # B or C grade — minor gaps
+            return EXIT_MINOR  # B or C grade — minor gaps
         elif score >= 60:
-            return EXIT_MAJOR    # D grade — manual updates required
+            return EXIT_MAJOR  # D grade — manual updates required
         else:
             return EXIT_CRITICAL  # F grade — pipeline broken
 
@@ -618,7 +618,10 @@ def validate_marketplace_structure(
             3.0,
         )
 
-    return marketplace_data if marketplace_data else None
+    if not marketplace_data:
+        return None
+    assert isinstance(marketplace_data, dict)
+    return marketplace_data
 
 
 # =============================================================================
@@ -1512,10 +1515,14 @@ Exit Codes:
         return EXIT_MINOR
 
     # Verify content type — marketplace directory must contain marketplace.json
-    if not (marketplace_path / "marketplace.json").exists():
+    # Check both canonical locations (root and .claude-plugin/)
+    if not (marketplace_path / "marketplace.json").exists() and not (
+        marketplace_path / ".claude-plugin" / "marketplace.json"
+    ).exists():
         print(
             f"Error: No marketplace.json found at {marketplace_path}\n"
-            f"Expected a marketplace directory with marketplace.json.",
+            f"Expected a marketplace directory with marketplace.json "
+            f"(either at root or under .claude-plugin/).",
             file=sys.stderr,
         )
         return EXIT_MINOR

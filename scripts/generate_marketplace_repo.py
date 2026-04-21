@@ -167,6 +167,112 @@ After uninstalling, restart Claude Code for changes to take effect.
 """
 
 
+def _readme_local(
+    name: str,
+    description: str,
+    plugins: list[dict],
+) -> str:
+    """Generate a LOCAL-only README without badges or GitHub install hints.
+
+    Local marketplaces are never pushed to GitHub, so every command is wired
+    to an absolute filesystem path. The reader should be able to copy-paste
+    the `claude plugin marketplace add` line directly.
+    """
+    # Build the plugin table rows. Plugin entries in local marketplaces use
+    # relative-path `source` strings (e.g. "./plugins/foo"), so there is no
+    # repo URL to link to — show the plain name instead.
+    rows = []
+    for p in plugins:
+        pname = p["name"]
+        source = p.get("source", "")
+        if isinstance(source, dict):
+            src_display = source.get("repo") or source.get("path") or "(unknown)"
+        else:
+            src_display = str(source)
+        desc = p.get("description", "")
+        install_cmd = f"`claude plugin install {pname}@{name}`"
+        rows.append(f"| {pname} | {desc} | `{src_display}` | {install_cmd} |")
+
+    plugin_table = "\n".join(rows) if rows else "| (no plugins yet) | | | |"
+
+    return f"""# {name} (local marketplace)
+
+{description}
+
+> This is a **local-only** Claude Code marketplace. It lives entirely on
+> your filesystem — no GitHub repo, no CI, no workflows.
+
+## Plugins
+
+| Plugin | Description | Source | Install |
+|--------|-------------|--------|---------|
+{plugin_table}
+
+## Adding this marketplace to Claude Code
+
+```bash
+claude plugin marketplace add /absolute/path/to/this/directory
+```
+
+Replace `/absolute/path/to/this/directory` with the real absolute path to
+this marketplace folder (the directory that contains `.claude-plugin/`).
+
+Restart Claude Code after adding the marketplace for it to take effect.
+
+## Adding plugins
+
+Local marketplaces support two plugin source formats:
+
+1. **Relative filesystem path** (recommended for local dev):
+   ```json
+   {{ "source": "./plugins/my-plugin" }}
+   ```
+   The path is resolved relative to the marketplace root.
+
+2. **GitHub source** (mixed local+github marketplaces):
+   ```json
+   {{ "source": {{ "source": "github", "repo": "owner/repo" }} }}
+   ```
+
+You can also use the dev-link mode to symlink a plugin source directory
+into `~/.claude/plugins/marketplaces/{name}/plugins/<plugin>/` so edits in
+the source tree take effect without reinstalling:
+
+```bash
+uv run manage_plugin.py --dev-link /path/to/plugin-source {name}
+```
+
+## Installing Plugins
+
+```bash
+# List available plugins
+claude plugin search @{name}
+
+# Install a specific plugin
+claude plugin install <plugin-name>@{name}
+```
+
+## Uninstall
+
+```bash
+# Remove a single plugin
+claude plugin uninstall <plugin-name>@{name}
+
+# Remove the marketplace itself
+claude plugin marketplace remove /absolute/path/to/this/directory
+```
+
+After uninstalling, restart Claude Code for changes to take effect.
+
+## Notes
+
+- No `.github/workflows/` — this marketplace has no CI.
+- No badges — nothing to badge when there is no remote.
+- The `.githooks/pre-push` validator still runs if you decide to `git init`
+  this folder; it accepts both GitHub-style and local-path plugin sources.
+"""
+
+
 def _gitignore() -> str:
     """Generate the .gitignore file."""
     return """# OS
@@ -227,7 +333,23 @@ llm_externalizer_output/
 
 
 def _validate_workflow() -> str:
-    """Generate .github/workflows/validate.yml for marketplace CI."""
+    """Generate .github/workflows/validate.yml for marketplace CI.
+
+    Runs the official CPV marketplace validator via `uvx cpv-remote-validate
+    marketplace . --strict`, fetched live from GitHub. Supports BOTH layouts:
+
+    - Layout A (hub-and-spoke): `cpv-remote-validate marketplace . --strict`
+      is sufficient — it validates marketplace.json plus the pipeline wiring.
+    - Layout B (nested plugins under `plugins/<name>/`): after the marketplace
+      pass, iterates over every subdirectory of `plugins/` and runs
+      `cpv-remote-validate plugin <subdir> --strict` against each one, so a
+      broken nested plugin blocks the marketplace CI the same way it blocks
+      the per-plugin CI.
+
+    Both invocations use the same github+uvx pattern used by every other
+    CPV template (see scripts/generate_plugin_repo.py ci.yml / release.yml /
+    validate.yml), so the rules and the CPV version stay in sync.
+    """
     return """name: Marketplace Validation
 
 on:
@@ -238,76 +360,100 @@ on:
 
 jobs:
   validate:
+    name: Validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        run: uv python install 3.12
 
-      - name: Validate marketplace structure
+      - name: Validate marketplace (remote CPV, --strict)
+        # Fetches the current CPV marketplace validator from GitHub. Blocks
+        # on CRITICAL(1)/MAJOR(2)/MINOR(3)/NIT(4); WARNING(5+) is advisory.
+        # Works for BOTH Layout A and Layout B marketplaces.
         run: |
-          echo "=== Validating Marketplace Structure ==="
-
-          # Check marketplace.json exists and is valid JSON
-          if [ -f ".claude-plugin/marketplace.json" ]; then
-            echo "OK marketplace.json exists"
-            python -c "import json; json.load(open('.claude-plugin/marketplace.json'))" && echo "OK marketplace.json is valid JSON"
+          set +e
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation \\
+              --with pyyaml \\
+              cpv-remote-validate marketplace . --strict
+          exit_code=$?
+          set -e
+          if [ $exit_code -eq 0 ]; then
+            echo "Marketplace validation passed"
+          elif [ $exit_code -ge 5 ]; then
+            echo "Only WARNING findings (exit $exit_code) — advisory, not blocking"
           else
-            echo "FAIL marketplace.json not found"
+            echo "::error::Marketplace validation failed with exit $exit_code (CRITICAL/MAJOR/MINOR/NIT)"
+            exit $exit_code
+          fi
+
+      - name: Detect Layout B (nested plugins)
+        id: layout
+        run: |
+          if [ -d "plugins" ] && find plugins -mindepth 2 -maxdepth 2 -name plugin.json -path '*/.claude-plugin/plugin.json' -print -quit | grep -q .; then
+            echo "is_layout_b=true" >> $GITHUB_OUTPUT
+            echo "Layout B detected — plugins nested under plugins/"
+          else
+            echo "is_layout_b=false" >> $GITHUB_OUTPUT
+            echo "Layout A (or no nested plugins) — skipping per-plugin validation"
+          fi
+
+      - name: Validate each nested plugin (Layout B, remote CPV, --strict)
+        # For Layout B marketplaces every subdirectory under plugins/ must
+        # pass the full plugin validator — broken nested plugins block the
+        # marketplace CI the same way they block a per-plugin CI.
+        if: steps.layout.outputs.is_layout_b == 'true'
+        run: |
+          set -e
+          failed=0
+          for plugin_dir in plugins/*/; do
+            plugin_dir=${plugin_dir%/}
+            [ -d "$plugin_dir" ] || continue
+            [ -f "$plugin_dir/.claude-plugin/plugin.json" ] || continue
+            echo ""
+            echo "=== Validating $plugin_dir ==="
+            set +e
+            uvx --from git+https://github.com/Emasoft/claude-plugins-validation \\
+                --with pyyaml \\
+                cpv-remote-validate plugin "$plugin_dir" --strict
+            rc=$?
+            set -e
+            if [ $rc -eq 0 ]; then
+              echo "$plugin_dir: passed"
+            elif [ $rc -ge 5 ]; then
+              echo "$plugin_dir: WARNING only (advisory)"
+            else
+              echo "::error::$plugin_dir failed validation (exit $rc)"
+              failed=$((failed + 1))
+            fi
+          done
+          if [ $failed -gt 0 ]; then
+            echo "::error::$failed nested plugin(s) failed validation"
             exit 1
           fi
 
-          # Validate all plugin entries have required fields and valid sources.
-          #
-          # IMPORTANT: This is inline Python inside a YAML double-quoted shell string.
-          # Shell quoting rules apply -- the shell strips inner double quotes before
-          # Python sees the code. Therefore:
-          #   - NEVER use dict["key"] inside f-strings (shell eats the quotes)
-          #   - ALWAYS extract dict values into local variables first
-          #   - Use only single quotes inside f-strings
-          python3 -c "
-          import json, sys
-          with open('.claude-plugin/marketplace.json') as f:
-              data = json.load(f)
-          if not data.get('name'):
-              print('FAIL: missing marketplace name')
-              sys.exit(1)
-          plugins = data.get('plugins', [])
-          for p in plugins:
-              name = p.get('name', '?')
-              if not p.get('name'):
-                  print(f'FAIL: plugin entry missing name')
-                  sys.exit(1)
-              source = p.get('source')
-              if not source:
-                  print(f'FAIL: plugin {name} missing source')
-                  sys.exit(1)
-              if isinstance(source, dict):
-                  src_type = source.get('source')
-                  repo = source.get('repo', '')
-                  if src_type == 'github' and repo:
-                      print(f'OK {name}: GitHub source -> {repo}')
-                  else:
-                      print(f'FAIL: plugin {name} invalid source object (needs source+repo)')
-                      sys.exit(1)
-              else:
-                  print(f'FAIL: plugin {name} invalid source type (must be object)')
-                  sys.exit(1)
-          print(f'')
-          print(f'=== All {len(plugins)} plugin entries validated ===')
-          "
-
-      - name: Lint marketplace scripts
+      - name: Validate marketplace pipeline wiring (remote CPV)
+        # Also run the marketplace_pipeline validator to check publish.py,
+        # cliff.toml, CI workflows, tag discipline, and secrets. Advisory if
+        # the marketplace does not ship a CPV pipeline yet.
         run: |
-          echo "=== Linting marketplace scripts ==="
-          pip install ruff
-          if [ -d "scripts" ]; then
-            ruff check scripts/ --select=E,F,W --ignore=E501 || echo "WARNING Some lint warnings (non-blocking)"
+          set +e
+          uvx --from git+https://github.com/Emasoft/claude-plugins-validation \\
+              --with pyyaml \\
+              cpv-remote-validate validate_marketplace_pipeline . --strict
+          exit_code=$?
+          set -e
+          if [ $exit_code -eq 0 ]; then
+            echo "Marketplace pipeline validation passed"
+          elif [ $exit_code -ge 5 ]; then
+            echo "Only WARNING findings (advisory, not blocking)"
           else
-            echo "No scripts/ directory to lint"
+            echo "::error::Marketplace pipeline validation failed (exit $exit_code)"
+            exit $exit_code
           fi
 """
 
@@ -372,7 +518,7 @@ jobs:
               break
             fi
             echo "Push failed (attempt $attempt), pulling and retrying..."
-            git pull --rebase origin main
+            git pull --rebase origin ${{ github.event.repository.default_branch }}
           done
 
       - name: Summary
@@ -578,13 +724,66 @@ sort_commits = "oldest"
 """
 
 
-def _pre_push_hook() -> str:
-    """Generate .githooks/pre-push that validates marketplace.json."""
-    return """#!/usr/bin/env python3
-\"\"\"pre-push hook - Validates marketplace.json before push.
+def _pre_push_hook(local: bool = False) -> str:
+    """Generate .githooks/pre-push that validates marketplace.json.
+
+    When ``local=True`` the emitted hook accepts both GitHub-style sources
+    ({"source": "github", "repo": "..."}) AND local-path sources (relative
+    path strings like "./plugins/foo"). Local marketplaces would otherwise
+    fail the hub-and-spoke check at line 647-648 of the strict version.
+    """
+    if local:
+        # Local marketplaces allow both dict-form GitHub sources and relative
+        # path-string sources. A relative path means the plugin ships inside
+        # the marketplace tree (or dev-linked via manage_plugin --dev-link).
+        source_check_body = """        source = p.get("source")
+        if not source:
+            errors.append(f"Plugin '{pname}': missing source")
+        elif isinstance(source, dict):
+            src_type = source.get("source")
+            if src_type not in ("github", "git-subdir", "url", "npm"):
+                errors.append(
+                    f"Plugin '{pname}': source.source must be "
+                    f"'github'|'git-subdir'|'url'|'npm' (got {src_type!r})"
+                )
+            if src_type == "github":
+                repo = source.get("repo", "")
+                if not repo or "/" not in repo:
+                    errors.append(f"Plugin '{pname}': github source needs repo owner/repo")
+        elif isinstance(source, str):
+            # Relative path source — marketplace must ship the plugin dir.
+            if source.startswith("/") or ".." in source.split("/"):
+                errors.append(
+                    f"Plugin '{pname}': local path source must be relative and stay "
+                    f"inside the marketplace tree (no leading '/' or '..')"
+                )
+        else:
+            errors.append(
+                f"Plugin '{pname}': source must be an object or a relative path string"
+            )"""
+    else:
+        source_check_body = """        source = p.get("source")
+        if not source:
+            errors.append(f"Plugin '{pname}': missing source")
+        elif isinstance(source, dict):
+            if source.get("source") != "github":
+                errors.append(f"Plugin '{pname}': source.source must be 'github'")
+            if not source.get("repo"):
+                errors.append(f"Plugin '{pname}': source.repo is required")
+            elif "/" not in source.get("repo", ""):
+                errors.append(f"Plugin '{pname}': source.repo must be owner/repo format")
+        else:
+            errors.append(f"Plugin '{pname}': source must be an object (hub-and-spoke)")"""
+
+    mode_label = "local" if local else "hub-and-spoke"
+
+    return f"""#!/usr/bin/env python3
+\"\"\"pre-push hook - Validates marketplace.json before push ({mode_label} mode).
 
 Ensures marketplace.json is valid JSON with required fields and all plugin
-entries have proper source objects with the hub-and-spoke format.
+entries have proper source values. In local mode, relative path strings
+and GitHub-style dict sources are both accepted. In hub-and-spoke mode,
+only GitHub-style dict sources are accepted.
 
 Install:
     git config core.hooksPath .githooks
@@ -614,7 +813,7 @@ def validate_marketplace_json(repo_root: Path) -> tuple[bool, list[str]]:
         with open(mj_path, "r", encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        errors.append(f"marketplace.json is not valid JSON: {e}")
+        errors.append(f"marketplace.json is not valid JSON: {{e}}")
         return False, errors
 
     # Required top-level fields
@@ -622,7 +821,7 @@ def validate_marketplace_json(repo_root: Path) -> tuple[bool, list[str]]:
         errors.append("Missing required field: name")
     if not data.get("owner"):
         errors.append("Missing required field: owner")
-    elif not data.get("owner", {}).get("name"):
+    elif not data.get("owner", {{}}).get("name"):
         errors.append("Missing required field: owner.name")
     if "plugins" not in data:
         errors.append("Missing required field: plugins")
@@ -630,28 +829,17 @@ def validate_marketplace_json(repo_root: Path) -> tuple[bool, list[str]]:
     # Validate each plugin entry
     seen_names: set[str] = set()
     for i, p in enumerate(data.get("plugins", [])):
-        pname = p.get("name", f"(entry {i})")
+        pname = p.get("name", f"(entry {{i}})")
 
         if not p.get("name"):
-            errors.append(f"Plugin entry {i}: missing name")
+            errors.append(f"Plugin entry {{i}}: missing name")
             continue
 
         if pname in seen_names:
-            errors.append(f"Plugin '{pname}': duplicate name")
+            errors.append(f"Plugin '{{pname}}': duplicate name")
         seen_names.add(pname)
 
-        source = p.get("source")
-        if not source:
-            errors.append(f"Plugin '{pname}': missing source")
-        elif isinstance(source, dict):
-            if source.get("source") != "github":
-                errors.append(f"Plugin '{pname}': source.source must be 'github'")
-            if not source.get("repo"):
-                errors.append(f"Plugin '{pname}': source.repo is required")
-            elif "/" not in source.get("repo", ""):
-                errors.append(f"Plugin '{pname}': source.repo must be owner/repo format")
-        else:
-            errors.append(f"Plugin '{pname}': source must be an object (hub-and-spoke)")
+{source_check_body}
 
     return len(errors) == 0, errors
 
@@ -659,18 +847,18 @@ def validate_marketplace_json(repo_root: Path) -> tuple[bool, list[str]]:
 def main() -> int:
     \"\"\"Run pre-push validation.\"\"\"
     repo_root = Path(__file__).resolve().parent.parent
-    print("Running pre-push marketplace validation...")
+    print("Running pre-push marketplace validation ({mode_label} mode)...")
 
     passed, errors = validate_marketplace_json(repo_root)
 
     if passed:
-        print(f"{GREEN}Marketplace validation passed{NC}")
+        print(f"{{GREEN}}Marketplace validation passed{{NC}}")
         return 0
 
-    print(f"{RED}Marketplace validation FAILED:{NC}")
+    print(f"{{RED}}Marketplace validation FAILED:{{NC}}")
     for err in errors:
-        print(f"  - {err}")
-    print(f"\\n{RED}Push blocked. Fix the issues above.{NC}")
+        print(f"  - {{err}}")
+    print(f"\\n{{RED}}Push blocked. Fix the issues above.{{NC}}")
     return 1
 
 
@@ -759,6 +947,9 @@ def generate_marketplace_repo(
             return 1
 
     # Check target directory
+    if target_dir.exists() and not target_dir.is_dir():
+        print(f"{RED}Error:{NC} Target path exists but is not a directory: {target_dir}", file=sys.stderr)
+        return 1
     if target_dir.exists() and any(target_dir.iterdir()):
         print(f"{RED}Error:{NC} Target directory is not empty: {target_dir}", file=sys.stderr)
         return 1
@@ -825,9 +1016,14 @@ def generate_marketplace_repo(
     print("  4. git add -A && git commit -m 'feat: initial marketplace scaffold'")
     print(f"  5. gh repo create {github_owner}/{name} --public --source=. --push")
     print()
+    print("After first push to GitHub (once the CI workflow has reported):")
+    print("  # Apply the server-side ruleset that enforces CI as a required check")
+    print("  uvx --from git+https://github.com/Emasoft/claude-plugins-validation \\")
+    print(f"      cpv-setup-branch-rules {github_owner}/{name}")
+    print()
     print("To add more plugins later:")
     print("  Edit .claude-plugin/marketplace.json and add entries to the plugins array.")
-    print("  Each plugin source MUST be: {\"source\": \"github\", \"repo\": \"owner/repo\"}")
+    print('  Each plugin source MUST be: {"source": "github", "repo": "owner/repo"}')
     print("  Then push -- the update-catalog workflow will regenerate README.md.")
     return 0
 

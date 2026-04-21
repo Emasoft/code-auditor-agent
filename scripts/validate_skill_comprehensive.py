@@ -51,9 +51,12 @@ from cpv_validation_common import (
     EXIT_OK,
     SKILL_FRONTMATTER_FIELDS,
     VALID_CONTEXT_VALUES,
+    VALID_EFFORT_VALUES,
     VALID_HOOK_EVENTS,
+    VALID_PLUGIN_ENV_VARS,
     VALID_TOOLS,
     Level,
+    is_valid_plugin_env_var,
     save_report_and_print_summary,
     validate_component_name,
     validate_toc_embedding,
@@ -75,8 +78,18 @@ from cpv_validation_common import (
 Score = Literal[0, 1, 2, 3]
 
 # --- AgentSkills OpenSpec Constants ---
-MAX_SKILL_NAME_LENGTH = 70  # Aligned with MAX_NAME_LENGTH in cpv_validation_common
-MAX_DESCRIPTION_LENGTH = 1024
+MAX_SKILL_NAME_LENGTH = 64  # Aligned with MAX_NAME_LENGTH in cpv_validation_common (official spec limit)
+# Per skills.md L192-193 (Claude Code v2.1.98+): the 1,536-char cap applies to
+# ``description + when_to_use`` COMBINED, not to ``description`` alone. Earlier
+# CPV used 1024 against ``description`` only, which (a) rejected legit skills
+# whose description fit the old 1024 budget but together with when_to_use
+# exceeded the real 1536, and (b) false-positive-flagged skills whose
+# description alone was between 1025 and 1536 — both of which the current
+# Claude Code runtime accepts.
+MAX_DESCRIPTION_COMBINED_LENGTH = 1536
+# Kept as a legacy alias so existing imports/tests continue to resolve while
+# the semantics change. New call sites should reference the combined cap.
+MAX_DESCRIPTION_LENGTH = MAX_DESCRIPTION_COMBINED_LENGTH
 MAX_COMPATIBILITY_LENGTH = 500
 
 # AgentSkills OpenSpec allowed fields (strict whitelist)
@@ -95,7 +108,13 @@ CLAUDE_CODE_FIELDS = SKILL_FRONTMATTER_FIELDS
 # --- Nixtla/Enterprise Extended Fields ---
 ENTERPRISE_REQUIRED_FIELDS = {"name", "description", "allowed-tools", "version", "author", "license"}
 ENTERPRISE_OPTIONAL_FIELDS = {"model", "disable-model-invocation", "mode", "tags", "metadata"}
-DEPRECATED_FIELDS = {"when_to_use"}
+# NOTE: previously included ``when_to_use``, but per Claude Code docs
+# (skills.md in v2.1.98+) this is an officially supported supplemental
+# trigger-guidance field that concatenates with ``description`` up to a
+# 1,536-char combined cap. Flagging it as deprecated produced a false
+# positive MINOR on every skill that used it. Empty set for now; add
+# real deprecations here as they appear in future releases.
+DEPRECATED_FIELDS: set[str] = set()
 
 # Combine all known fields (includes OpenSpec, Claude Code, and Enterprise fields)
 ALL_KNOWN_FIELDS = (
@@ -104,11 +123,11 @@ ALL_KNOWN_FIELDS = (
 
 # --- Token Budget Constants ---
 MAX_SKILL_LINES = 500  # Hard limit — MAJOR if exceeded
-MAX_CHAR_COUNT_WARN = 4000  # Character warning threshold
+MAX_CHAR_COUNT_WARN = 5000  # Character warning threshold
 MAX_CHAR_COUNT_ERROR = 5000  # Character error threshold (hard limit)
 MAX_WORD_COUNT_WARN = 3500
 MAX_WORD_COUNT_ERROR = 5000
-MAX_DESCRIPTION_WARN = 200
+MAX_DESCRIPTION_WARN = 250  # CPV-internal readability heuristic — NOT a skills.md rule.
 MAX_FRONTMATTER_CHARS_WARN = 12000
 MAX_FRONTMATTER_CHARS_ERROR = 15000
 
@@ -135,6 +154,9 @@ REQUIRED_SECTIONS = [
 # --- Description Quality Patterns (Nixtla Strict Mode) ---
 RE_DESCRIPTION_USE_WHEN = re.compile(r"[Uu]se\s+when\s+", re.IGNORECASE)
 RE_DESCRIPTION_TRIGGER_WITH = re.compile(r"[Tt]rigger\s+with\s+", re.IGNORECASE)
+# Agent-facing alternatives for non-user-invocable skills
+RE_LOADED_BY = re.compile(r"[Ll]oaded\s+by\s+", re.IGNORECASE)
+RE_USED_BY = re.compile(r"[Uu]sed\s+by\s+", re.IGNORECASE)
 RE_FIRST_PERSON = re.compile(r"\b(I\s+can|I\s+will|I\s+am|I\s+help)\b", re.IGNORECASE)
 RE_SECOND_PERSON = re.compile(r"\b(You\s+can|You\s+should|You\s+will|You\s+need)\b", re.IGNORECASE)
 
@@ -142,7 +164,12 @@ RE_SECOND_PERSON = re.compile(r"\b(You\s+can|You\s+should|You\s+will|You\s+need)
 ABSOLUTE_PATH_PATTERNS = [
     (re.compile(r"/home/\w+/"), "/home/..."),
     (re.compile(r"/Users/\w+/"), "/Users/..."),
-    (re.compile(r"[A-Za-z]:\\\\Users\\\\"), "C:\\Users\\..."),
+    # Raw string `r"...\\..."` is ONE literal backslash in the regex, which in
+    # turn matches a single `\` character — i.e. a real Windows path segment
+    # like `C:\Users\alice\`. The previous `r"...\\\\..."` required a literal
+    # DOUBLE backslash (`C:\\Users\\`) and so silently missed every genuine
+    # Windows path. Do NOT "fix" this by adding more backslashes.
+    (re.compile(r"[A-Za-z]:\\Users\\"), "C:\\Users\\..."),
 ]
 
 # --- Reference Pattern ---
@@ -204,9 +231,26 @@ RE_ARGUMENTS_VAR = re.compile(r"\$ARGUMENTS(?!\[)")  # $ARGUMENTS (not followed 
 RE_ARGUMENTS_INDEX = re.compile(r"\$ARGUMENTS\[(\d+)\]")  # $ARGUMENTS[N]
 RE_SHORTHAND_ARG = re.compile(r"\$(\d+)(?!\d)")  # $N shorthand (e.g., $1, $2)
 RE_SESSION_ID_VAR = re.compile(r"\$\{CLAUDE_SESSION_ID\}")
+RE_SKILL_DIR_VAR = re.compile(r"\$\{CLAUDE_SKILL_DIR\}")
+# Valid ${} substitution variables in skills are resolved via
+# cpv_validation_common.is_valid_plugin_env_var (handles both the fixed
+# VALID_PLUGIN_ENV_VARS set and the dynamic CLAUDE_PLUGIN_OPTION_<KEY> and
+# user_config.<KEY> patterns — GAP-57).
+#
+# The character class intentionally includes lowercase letters and `.` so the
+# ``${user_config.KEY}`` dotted token (plugins-reference.md L433) is captured.
+# The captured inner name is then dispatched to ``is_valid_plugin_env_var``
+# which applies the full pattern set.
+RE_BRACED_VAR = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_.]*)\}")  # Matches ${ANY_VAR} or ${user_config.KEY}
 
-# --- Dynamic Context Injection Pattern (skills.md: `!`command``) ---
-RE_DYNAMIC_CONTEXT = re.compile(r"!\s*`[^`]+`")  # Matches `!`command``
+# --- Dynamic Context Injection Pattern (skills.md: !`command`) ---
+RE_DYNAMIC_CONTEXT = re.compile(r"!\s*`[^`]+`")  # Correct: !`command`
+
+# Broken dynamic context patterns — missing backticks
+# Matches lines like "ERRORS = !ruff check" (no backticks at all) — but NOT inside code fences
+RE_BANG_NO_BACKTICKS = re.compile(r"(?<!=\s)!\s*(?!`)([a-zA-Z][\w. /-]+)(?<!`)")
+# Matches "!`command" (missing closing backtick) or "!command`" (missing opening backtick)
+RE_BANG_ONE_BACKTICK = re.compile(r"!`[^`\n]+$|!(?!`)[^`\n]+`", re.MULTILINE)
 
 # --- Ultrathink Keyword (skills.md: enables extended thinking) ---
 RE_ULTRATHINK = re.compile(r"\bultrathink\b", re.IGNORECASE)
@@ -280,10 +324,10 @@ class ComprehensiveValidationResult(BaseValidationResult):
     """Extended validation result with category and scoring.
 
     Extends the canonical ValidationResult (which has level, message, file, line,
-    phase, fixable, fix_id) with category grouping and multi-scale scoring.
+    phase, fixable, fix_id, category, suggestion) with multi-scale scoring.
+    `category` is inherited from the base class (default "").
     """
 
-    category: str | None = None  # For grouping in reports
     score: int = 0  # 0-3 multi-scale score (0=missing, 1=inadequate, 2=adequate, 3=excellent)
 
 
@@ -333,7 +377,7 @@ class ComprehensiveSkillReport(BaseValidationReport):
             phase=phase,
             fixable=fixable,
             fix_id=fix_id,
-            category=category,
+            category=category or "",
             score=score,
         )
         self.results.append(result)
@@ -448,6 +492,35 @@ def find_skill_md(skill_dir: Path) -> Path | None:
         if path.exists():
             return path
     return None
+
+
+# GAP-53: plugins-reference.md L465 allows `"skills": ["./"]` (or `"."`) to
+# declare that the plugin ROOT is itself the skill. This is ambiguous because:
+#   (a) CPV must NOT traverse into `skills/` — the root IS the skill;
+#   (b) SKILL.md must live at the plugin root (not in ./skills/SKILL.md);
+#   (c) the skill's invocation name comes from the SKILL.md frontmatter
+#       `name` field, falling back to the plugin directory basename.
+# Callers (validate_plugin.py) should invoke this helper and, if true, emit
+# a MINOR warning that the self-reference is ambiguous AND validate the
+# plugin root as the skill directly (not under ./skills/).
+_SKILLS_SELF_POINTING_VALUES = frozenset({"./", "."})
+
+
+def is_self_pointing_skill_path(path: str) -> bool:
+    """Return True if a declared `skills: [...]` entry points to the plugin root.
+
+    Per plugins-reference.md L465, `"skills": ["./"]` (or ``"."``) means
+    "the plugin root itself is a skill — look for SKILL.md at the root".
+    CPV emits MINOR for this case because it is a legitimate-but-ambiguous
+    self-reference that confuses skill discovery; when seen, the caller must
+    validate the plugin root as the skill directory directly (not traverse
+    into ``./skills/``).
+
+    Accepts leading/trailing whitespace (stripped).
+    """
+    if not isinstance(path, str):
+        return False
+    return path.strip() in _SKILLS_SELF_POINTING_VALUES
 
 
 # =============================================================================
@@ -625,9 +698,21 @@ def validate_description_field(
     if len(desc) < 20:
         report.minor("Description is very short (< 20 chars)", "SKILL.md", category="Description Quality")
 
-    if len(desc) > MAX_DESCRIPTION_LENGTH:
+    # skills.md L192-193: the authoritative cap is on ``description +
+    # when_to_use`` COMBINED, not description alone. Claude Code truncates
+    # the combined text at 1,536 chars in the skill listing — anything above
+    # that is silently dropped and the skill's triggering intent is lost.
+    when_to_use = frontmatter.get("when_to_use") or ""
+    if not isinstance(when_to_use, str):
+        when_to_use = ""
+    combined_len = len(desc) + len(when_to_use)
+    if combined_len > MAX_DESCRIPTION_COMBINED_LENGTH:
         report.major(
-            f"Description exceeds {MAX_DESCRIPTION_LENGTH} characters ({len(desc)} chars)",
+            f"Combined length of 'description' ({len(desc)} chars) + 'when_to_use' "
+            f"({len(when_to_use)} chars) is {combined_len} chars — exceeds the "
+            f"{MAX_DESCRIPTION_COMBINED_LENGTH}-char cap. Claude Code truncates the "
+            "listing at this point, so the trailing portion of the skill's trigger "
+            "guidance is silently dropped. Tighten one or both fields.",
             "SKILL.md",
             category="Description Quality",
         )
@@ -638,23 +723,42 @@ def validate_description_field(
             category="Description Quality",
         )
 
+    # Determine if this skill is user-invocable (default True per spec)
+    is_user_invocable = frontmatter.get("user-invocable", True)
+
     # Nixtla strict mode quality checks
     if strict_mode:
-        # Must include "Use when..." phrase
-        if not RE_DESCRIPTION_USE_WHEN.search(desc):
-            report.major(
-                "Description must include 'Use when ...' phrase (Nixtla strict mode). Both 'Use when ...' AND 'Trigger with ...' are required.",
-                "SKILL.md",
-                category="Description Quality",
-            )
-
-        # Must include "Trigger with..." phrase
-        if not RE_DESCRIPTION_TRIGGER_WITH.search(desc):
-            report.minor(
-                "Description should include 'Trigger with ...' phrase (Nixtla strict mode). Both 'Use when ...' AND 'Trigger with ...' are required.",
-                "SKILL.md",
-                category="Description Quality",
-            )
+        if is_user_invocable:
+            # User-facing skill: requires "Use when..." and "Trigger with..."
+            if not RE_DESCRIPTION_USE_WHEN.search(desc):
+                report.major(
+                    "Description must include 'Use when ...' phrase (Nixtla strict mode). "
+                    "Both 'Use when ...' AND 'Trigger with ...' are required.",
+                    "SKILL.md",
+                    category="Description Quality",
+                )
+            if not RE_DESCRIPTION_TRIGGER_WITH.search(desc):
+                report.minor(
+                    "Description should include 'Trigger with ...' phrase (Nixtla strict mode). "
+                    "Both 'Use when ...' AND 'Trigger with ...' are required.",
+                    "SKILL.md",
+                    category="Description Quality",
+                )
+        else:
+            # Agent-only skill: requires "Use when..." and "Loaded by..." or "Used by..."
+            if not RE_DESCRIPTION_USE_WHEN.search(desc):
+                report.major(
+                    "Description must include 'Use when ...' phrase so agents know when to consult this skill.",
+                    "SKILL.md",
+                    category="Description Quality",
+                )
+            if not RE_LOADED_BY.search(desc) and not RE_USED_BY.search(desc):
+                report.minor(
+                    "Non-user-invocable skill should include 'Loaded by <agent-name>' or 'Used by <agent-name>' "
+                    "so it's clear which agent consumes this skill.",
+                    "SKILL.md",
+                    category="Description Quality",
+                )
 
         # No first person
         if RE_FIRST_PERSON.search(desc):
@@ -716,6 +820,14 @@ def _split_tools_string(tools: str) -> list[str]:
     token = "".join(current).strip()
     if token:
         result.append(token)
+    # If parentheses are unbalanced, the paren-aware split above silently
+    # merges tokens (unbalanced `(` keeps depth>0 forever, so subsequent
+    # commas never split). Fall back to a naive comma split so malformed
+    # input still produces the expected token count; downstream callers then
+    # flag the individual unknown tool(s). This prevents a single typo like
+    # "Bash(git:*, Read" from being reported as one mystery token.
+    if depth != 0:
+        return [t.strip() for t in tools.split(",") if t.strip()]
     return result
 
 
@@ -770,6 +882,18 @@ def validate_allowed_tools_field(
 
     # Validate individual tools
     for tool in tool_list:
+        # Guard against YAML list items that aren't strings (e.g. int, bool, None).
+        # Before this guard, `tool.split("(")` would raise AttributeError and crash
+        # the whole run for a single malformed entry like `- 42` in an allowed-tools
+        # YAML list. Report it as MAJOR and skip — we cannot classify a non-string
+        # as a tool name.
+        if not isinstance(tool, str):
+            report.major(
+                f"'allowed-tools' list item must be string, got {type(tool).__name__}: {tool!r}",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+            continue
         # Handle scoped tools like Bash(git:*)
         base_tool = tool.split("(")[0].strip()
         if base_tool and base_tool not in VALID_TOOLS and not base_tool.startswith("mcp__"):
@@ -778,24 +902,102 @@ def validate_allowed_tools_field(
                 "SKILL.md",
                 category="Frontmatter",
             )
+        # Deprecation warnings for renamed/soft-deprecated tools
+        # (kept in VALID_TOOLS — these are still accepted as aliases).
+        if base_tool == "TaskOutput":
+            report.warning(
+                "Tool 'TaskOutput' is deprecated — prefer Read on the task's output file path",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+        elif base_tool == "Task":
+            report.warning(
+                "Tool 'Task' was renamed to 'Agent' in v2.1.63; 'Task' still works as an alias",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+        elif base_tool in ("TodoRead", "Notebook", "MultiEdit"):
+            report.warning(
+                f"Tool '{base_tool}' is not in the current tools-reference spec. Verify existence before shipping.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
 
-    # Nixtla strict mode: forbid unscoped Bash
-    if strict_mode and "Bash" in tool_list:
-        report.major(
-            "Unscoped 'Bash' forbidden in strict mode - use scoped Bash(git:*) or Bash(npm:*)",
-            "SKILL.md",
-            category="Frontmatter",
-        )
+    # Nixtla strict mode: forbid unscoped Bash and Monitor.
+    # Monitor uses the same permission semantics as Bash (it runs a background
+    # command and feeds output lines to Claude), so the same restriction applies.
+    if strict_mode:
+        for unscoped_tool in ("Bash", "Monitor"):
+            if unscoped_tool in tool_list:
+                report.major(
+                    f"Unscoped '{unscoped_tool}' forbidden in strict mode - "
+                    f"use scoped {unscoped_tool}(git:*) or {unscoped_tool}(npm:*)",
+                    "SKILL.md",
+                    category="Frontmatter",
+                )
 
-    # Over-permissioning advisory — not blocking
-    if len(tool_list) > 10:
+    # Over-permissioning advisory — not blocking (v2.26.0 — smarter count).
+    #
+    # Previous behaviour (pre-v2.26.0) emitted this WARNING any time the raw
+    # tool_list length exceeded 10. That counted `Bash(git:*)`, `Bash(gh:*)`,
+    # `Bash(uv:*)` as three separate tools, which meant legitimate skills
+    # binding to multiple Bash sub-scopes tripped the advisory even with a
+    # tight total permission surface.
+    #
+    # Three changes here, each independently reducing false positives:
+    # 1. **Collapse `Bash(...)` sub-patterns to 1.** All scoped Bash
+    #    entries count as a single tool — they are sub-scopes of the same
+    #    underlying Bash permission, not independent capabilities. Same
+    #    treatment for `Monitor(...)`, which has the same semantics.
+    # 2. **Raise the threshold from 10 to 15.** With collapsed Bash counts,
+    #    15 is a comfortable budget for skills that legitimately need a
+    #    broad surface (review-and-fix skills, orchestrators).
+    # 3. **Exempt non-user-invocable skills.** A skill declared
+    #    `user-invocable: false` runs only when an agent loads it — the
+    #    agent's own tool allowlist already gates usage. The skill's
+    #    declared tools describe what it *might* use, not a direct user
+    #    permission grant, so the least-privilege pressure belongs on the
+    #    agent, not the skill.
+    effective_tool_count = _count_distinct_tool_surfaces(tool_list)
+    is_non_invocable = frontmatter.get("user-invocable") is False
+    if effective_tool_count > 15 and not is_non_invocable:
         report.warning(
-            f"Many tools permitted ({len(tool_list)}) - consider limiting",
+            f"Many tools permitted ({effective_tool_count} distinct tool "
+            f"surfaces; raw list has {len(tool_list)} entries). Consider "
+            f"limiting — fewer tools means a smaller attack surface and "
+            f"clearer skill intent. If the broad surface is intentional "
+            f"(e.g. a review-and-fix skill that needs Read/Write/Edit + "
+            f"Agent + MCPs), declaring `user-invocable: false` on the "
+            f"skill suppresses this advisory since agent-loaded skills "
+            f"inherit gating from the agent's own allowlist.",
             "SKILL.md",
             category="Frontmatter",
         )
 
     report.passed(f"'allowed-tools' field valid: {len(tool_list)} tool(s)", "SKILL.md", category="Frontmatter")
+
+
+def _count_distinct_tool_surfaces(tool_list: list[Any]) -> int:
+    """Return the count of distinct tool *surfaces* in ``tool_list``.
+
+    Scoped tools like ``Bash(git:*)`` and ``Bash(gh:*)`` belong to the same
+    underlying surface (the shell) and count as one. Same for
+    ``Monitor(...)``. All other tools count individually. Non-string
+    entries are ignored (they are already flagged as MAJOR upstream).
+    """
+    collapsible = {"Bash", "Monitor"}
+    distinct: set[str] = set()
+    for tool in tool_list:
+        if not isinstance(tool, str):
+            continue
+        base = tool.split("(")[0].strip()
+        if not base:
+            continue
+        if base in collapsible:
+            distinct.add(base)
+        else:
+            distinct.add(tool.strip())
+    return len(distinct)
 
 
 def validate_metadata_field(
@@ -816,6 +1018,10 @@ def validate_metadata_field(
         )
         return
 
+    # Known top-level fields that should NOT be under metadata:
+    # If found here, warn about misplacement instead of type-mismatch
+    top_level_fields = SKILL_FRONTMATTER_FIELDS | OPENSPEC_ALLOWED_FIELDS | ENTERPRISE_OPTIONAL_FIELDS
+
     # Validate all values are strings (OpenSpec requirement)
     for key, value in metadata.items():
         if not isinstance(key, str):
@@ -824,6 +1030,19 @@ def validate_metadata_field(
                 "SKILL.md",
                 category="Frontmatter",
             )
+            continue
+
+        # Detect known frontmatter fields misplaced under metadata:
+        if key in top_level_fields and key != "metadata":
+            report.warning(
+                f"'{key}' is a standard frontmatter field but is nested under 'metadata:'. "
+                f"Move it to the top level of the frontmatter for correct validation.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+            # Skip the generic string type check — the field has its own type rules at top level
+            continue
+
         if not isinstance(value, str):
             report.minor(
                 f"'metadata.{key}' value should be string for OpenSpec compliance, got {type(value).__name__}",
@@ -1076,6 +1295,113 @@ def validate_boolean_field(
     report.passed(f"'{field_name}' field valid: {value}", "SKILL.md", category="Frontmatter")
 
 
+def validate_effort_field(frontmatter: dict[str, Any], report: ValidationReport) -> None:
+    """Validate the 'effort' frontmatter field (v2.1.80+).
+
+    Accepted values per skills.md L192 + cli-reference.md --effort:
+      low | medium | high | xhigh | max
+
+    - ``xhigh`` was added in v2.1.111 for Opus 4.7 only — any non-Opus model
+      with ``xhigh`` fails at runtime, so we mirror the same strict check
+      applied to ``max``.
+    - ``max`` remains supported (Opus 4.6 legacy) for backward compatibility.
+    """
+    if "effort" not in frontmatter:
+        return
+
+    effort_val = frontmatter["effort"]
+    if not isinstance(effort_val, str):
+        report.major(f"'effort' must be a string, got {type(effort_val).__name__}", "SKILL.md", category="Frontmatter")
+        return
+    if not effort_val.strip():
+        report.major("'effort' field cannot be empty", "SKILL.md", category="Frontmatter")
+        return
+
+    if effort_val.lower() not in VALID_EFFORT_VALUES:
+        report.major(
+            f"Invalid 'effort' value: '{effort_val}'. Must be one of: {sorted(VALID_EFFORT_VALUES)}",
+            "SKILL.md",
+            category="Frontmatter",
+        )
+    else:
+        report.passed(f"'effort' field valid: {effort_val}", "SKILL.md", category="Frontmatter")
+
+    # "max" and "xhigh" effort require an Opus model.
+    # "xhigh" is Opus 4.7 only; "max" is Opus 4.6 legacy. Both fail on non-Opus.
+    if effort_val.lower() in {"max", "xhigh"}:
+        model = frontmatter.get("model", "")
+        model_str = str(model).lower() if model else ""
+        if model_str and "opus" not in model_str:
+            report.major(
+                f"effort: {effort_val} requires an Opus model, but model is '{model}'. "
+                "Use effort: high for non-Opus models, or set model: opus.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+        elif not model_str:
+            report.warning(
+                f"effort: {effort_val} only works with Opus models. No 'model' field set — "
+                "this skill will fail if the session uses a non-Opus model. "
+                "Consider adding 'model: opus' or using effort: high.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+
+
+def validate_shell_field(frontmatter: dict[str, Any], report: ValidationReport) -> None:
+    """Validate the 'shell' frontmatter field (v2.1.84)."""
+    if "shell" not in frontmatter:
+        return
+
+    shell_val = frontmatter["shell"]
+    if not isinstance(shell_val, str):
+        report.major(f"'shell' must be a string, got {type(shell_val).__name__}", "SKILL.md", category="Frontmatter")
+        return
+    if not shell_val.strip():
+        report.major("'shell' field cannot be empty", "SKILL.md", category="Frontmatter")
+        return
+
+    valid_shell_values = {"bash", "powershell"}
+    if shell_val.lower() not in valid_shell_values:
+        report.major(
+            f"Invalid 'shell' value: '{shell_val}'. Must be one of: {sorted(valid_shell_values)}",
+            "SKILL.md",
+            category="Frontmatter",
+        )
+    else:
+        report.passed(f"'shell' field valid: {shell_val}", "SKILL.md", category="Frontmatter")
+
+
+def validate_paths_field(frontmatter: dict[str, Any], report: ValidationReport) -> None:
+    """Validate the 'paths' frontmatter field (v2.1.84)."""
+    if "paths" not in frontmatter:
+        return
+
+    paths_val = frontmatter["paths"]
+    if paths_val is None:
+        report.major(
+            "'paths' field cannot be null — use a glob string or YAML list", "SKILL.md", category="Frontmatter"
+        )
+        return
+    # Accepts string (comma-separated) or YAML list
+    if isinstance(paths_val, str):
+        if not paths_val.strip():
+            report.major("'paths' field is empty", "SKILL.md", category="Frontmatter")
+        else:
+            report.passed(f"'paths' field valid (string): {paths_val[:60]}", "SKILL.md", category="Frontmatter")
+    elif isinstance(paths_val, list):
+        if not paths_val:
+            report.major("'paths' field is an empty list", "SKILL.md", category="Frontmatter")
+        elif not all(isinstance(p, str) for p in paths_val):
+            report.major("'paths' list must contain only strings", "SKILL.md", category="Frontmatter")
+        else:
+            report.passed(f"'paths' field valid (list of {len(paths_val)} globs)", "SKILL.md", category="Frontmatter")
+    else:
+        report.major(
+            f"'paths' must be a string or list, got {type(paths_val).__name__}", "SKILL.md", category="Frontmatter"
+        )
+
+
 def validate_field_whitelist(
     frontmatter: dict[str, Any],
     report: ValidationReport,
@@ -1157,6 +1483,11 @@ def validate_token_budget(content: str, body: str, report: ValidationReport) -> 
             "SKILL.md",
             category="Token Budget",
         )
+    # NOTE: A duplicate MINOR line-count check used to live here — it re-used
+    # the same 500-line threshold as the MAJOR check above (MAX_SKILL_LINES),
+    # so it could never add information: if you exceeded 500 lines, you already
+    # got the MAJOR; if you were under 500, the MINOR branch was unreachable.
+    # Removed to avoid double-reporting the same threshold at two severities.
 
 
 def validate_required_sections(body: str, report: ValidationReport, strict_mode: bool = False) -> None:
@@ -1380,13 +1711,81 @@ def validate_string_substitutions(body: str, report: ValidationReport) -> None:
             category="String Substitutions",
         )
 
+    # Check for ${CLAUDE_SKILL_DIR} usage
+    skill_dir_matches = RE_SKILL_DIR_VAR.findall(body)
+    if skill_dir_matches:
+        report.info(
+            f"Skill uses ${{CLAUDE_SKILL_DIR}} ({len(skill_dir_matches)} occurrence(s))",
+            "SKILL.md",
+            category="String Substitutions",
+        )
+
+    # Check for unknown ${VAR} references (v2.26.0 — no false positives).
+    #
+    # The check fires only on `${VAR}` references that appear in PROSE and
+    # name a variable that is neither a Claude Code platform env var nor a
+    # skill-local shell variable defined in one of the skill's own code
+    # blocks. Three things must be stripped or collected before the check:
+    #
+    # 1. Triple-backtick fenced blocks — stripped entirely (their content
+    #    is example code, not user-facing prose).
+    # 2. Inline backtick content — also stripped. Authors write
+    #    `` `${MERGE_SCRIPT}` `` in prose to mean "this is a shell variable,
+    #    not a platform env var", and that should not trip the check.
+    # 3. Skill-local assignments — before stripping fences, scan all code
+    #    blocks for `VAR=value`, `export VAR=...`, and `local VAR=...`
+    #    lines and collect the variable names. Those names are then
+    #    whitelisted alongside the platform env vars.
+    #
+    # Uses is_valid_plugin_env_var so the canonical env vars and the
+    # dynamic CLAUDE_PLUGIN_OPTION_<KEY> pattern are accepted.
+    fenced_blocks = re.findall(r"```[\s\S]*?```", body)
+    skill_local_vars: set[str] = set()
+    # Match: `VAR=...`, `export VAR=...`, `local VAR=...`, `declare VAR=...`
+    # Anchored to line start (possibly after whitespace). Variable must be
+    # shell-style (uppercase + underscores + digits, starting with letter/_).
+    assignment_re = re.compile(
+        r"(?m)^[ \t]*(?:export[ \t]+|local[ \t]+|declare[ \t]+[^=\n]*?[ \t])?([A-Za-z_][A-Za-z0-9_]*)=",
+    )
+    for block in fenced_blocks:
+        skill_local_vars.update(assignment_re.findall(block))
+
+    # Strip fenced blocks AND inline backticks before collecting candidate
+    # references. Inline backticks are stripped with a non-greedy pattern
+    # so each pair of backticks closes correctly.
+    body_no_fences = re.sub(r"```[\s\S]*?```", "", body)
+    body_prose_only = re.sub(r"`[^`\n]*`", "", body_no_fences)
+
+    all_braced_vars = RE_BRACED_VAR.findall(body_prose_only)
+    # De-duplicate so a single unknown var does not emit N warnings
+    for var_name in sorted(set(all_braced_vars)):
+        if is_valid_plugin_env_var(var_name):
+            continue
+        if var_name in skill_local_vars:
+            continue
+        report.warning(
+            f"Unknown variable reference: ${{{var_name}}}. "
+            f"Valid platform variables: {', '.join(f'${{{v}}}' for v in sorted(VALID_PLUGIN_ENV_VARS))} "
+            "(or any CLAUDE_PLUGIN_OPTION_<KEY>). "
+            f"If ${{{var_name}}} is a shell variable defined inside a "
+            f"code block, the check will accept it once it's assigned "
+            f"(VAR=..., export VAR=..., or local VAR=...) somewhere in "
+            f"SKILL.md. If it's documentation-only, wrap the reference "
+            f"in backticks (`${{{var_name}}}`) so the validator treats "
+            f"it as code, not prose.",
+            "SKILL.md",
+            category="String Substitutions",
+        )
+
 
 def validate_dynamic_context(body: str, report: ValidationReport) -> None:
-    """Validate dynamic context injection (skills.md: `!`command`` syntax).
+    """Validate dynamic context injection (!`command` syntax).
 
-    Detects usage of the dynamic context injection feature.
+    Detects correct usage and flags broken patterns where backticks are missing.
+    The correct syntax is !`command` — both backticks are required for Claude Code
+    to execute the command and inject its output before sending to the LLM.
     """
-    # Check for `!`command`` syntax
+    # Check for correct !`command` syntax
     dynamic_matches = RE_DYNAMIC_CONTEXT.findall(body)
     if dynamic_matches:
         report.info(
@@ -1394,6 +1793,78 @@ def validate_dynamic_context(body: str, report: ValidationReport) -> None:
             "SKILL.md",
             category="Dynamic Context",
         )
+
+    # Strip code fence blocks and inline code spans to avoid false positives
+    body_no_fences = re.sub(r"```[\s\S]*?```", "", body)  # fenced code blocks
+    body_no_fences = re.sub(r"`[^`\n]+`", "", body_no_fences)  # inline code spans
+
+    # Check for broken pattern: !command with ONE backtick (opening or closing, but not both)
+    one_backtick_matches = RE_BANG_ONE_BACKTICK.findall(body_no_fences)
+    for match in one_backtick_matches:
+        match_stripped = match.strip()
+        # Skip if inside a markdown inline code span (already backtick-wrapped)
+        if not match_stripped:
+            continue
+        report.major(
+            f"Broken dynamic context injection — missing backtick: '{match_stripped}'. "
+            "Correct syntax: !`command` (both backticks required). "
+            "Without proper backticks, the command won't execute.",
+            "SKILL.md",
+            category="Dynamic Context",
+        )
+
+    # Check for potential !command without any backticks (user may have forgotten both)
+    # Look for patterns like "= !command args" or standalone "!command args" at line start
+    # Only flag lines that look like shell commands (start with known command words)
+    shell_command_words = {
+        "bash",
+        "sh",
+        "python",
+        "python3",
+        "node",
+        "npm",
+        "npx",
+        "uv",
+        "pip",
+        "git",
+        "gh",
+        "curl",
+        "wget",
+        "cat",
+        "grep",
+        "ruff",
+        "mypy",
+        "pytest",
+        "eslint",
+        "tsc",
+        "cargo",
+        "go",
+        "make",
+        "docker",
+        "kubectl",
+    }
+    for line in body_no_fences.splitlines():
+        stripped = line.strip()
+        # Pattern: "SOMETHING = !command" or line starting with "!command"
+        bang_pos = stripped.find("!")
+        if bang_pos < 0:
+            continue
+        after_bang = stripped[bang_pos + 1 :].strip()
+        # Skip if backtick follows the bang (correct or partially correct syntax)
+        if after_bang.startswith("`"):
+            continue
+        # Skip markdown headings/lists that happen to contain !
+        if stripped.startswith(("#", "-", "*", ">")):
+            continue
+        # Check if the word after ! looks like a shell command
+        first_word = after_bang.split()[0].lower() if after_bang.split() else ""
+        if first_word in shell_command_words:
+            report.warning(
+                f"Possible missing backticks in dynamic context injection: '{stripped[:80]}'. "
+                "If this is meant to execute a command, use !`command` syntax (both backticks required).",
+                "SKILL.md",
+                category="Dynamic Context",
+            )
 
     # Check for ultrathink keyword
     ultrathink_matches = RE_ULTRATHINK.findall(body)
@@ -1965,6 +2436,20 @@ def validate_skill(
         validate_agent_field(frontmatter, report)
         validate_boolean_field(frontmatter, "user-invocable", report)
         validate_boolean_field(frontmatter, "disable-model-invocation", report)
+        # CPV-P2-m6: skills.md L414 documents `disableSkillShellExecution` as a
+        # boolean settings.json key. It is NOT a skill-frontmatter field; if a
+        # plugin puts it in SKILL.md frontmatter it is a misuse pattern. Accept
+        # it leniently as a boolean (it's still typed correctly) but nudge
+        # authors that this belongs in settings.json, not in frontmatter.
+        if "disableSkillShellExecution" in frontmatter:
+            validate_boolean_field(frontmatter, "disableSkillShellExecution", report)
+            report.minor(
+                "'disableSkillShellExecution' is a settings.json key (skills.md L414), "
+                "not a skill frontmatter field. Move it to the project or user "
+                "settings.json so Claude Code actually reads it.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
         validate_allowed_tools_field(frontmatter, report, strict_mode, strict_openspec)
         validate_metadata_field(frontmatter, report)
 
@@ -1974,6 +2459,52 @@ def validate_skill(
         validate_argument_hint_field(frontmatter, report)
         validate_model_field(frontmatter, report)
         validate_hooks_field(frontmatter, report)
+        validate_effort_field(frontmatter, report)
+        validate_shell_field(frontmatter, report)
+        validate_paths_field(frontmatter, report)
+
+        # Unreachable skill check: both disable-model-invocation and user-invocable:false
+        # means neither the user nor Claude can invoke this skill
+        dmi = frontmatter.get("disable-model-invocation", False)
+        ui = frontmatter.get("user-invocable", True)  # default is True per spec
+        if dmi is True and ui is False:
+            report.major(
+                "Skill is unreachable: 'disable-model-invocation: true' prevents Claude from loading it, "
+                "and 'user-invocable: false' hides it from the / menu. "
+                "No one can invoke this skill. Remove one of these flags.",
+                "SKILL.md",
+                category="Frontmatter",
+            )
+
+        # context:fork without actionable task content
+        if frontmatter.get("context") == "fork" and body.strip():
+            # Check if body has actionable verbs (steps, commands, instructions)
+            body_lower = body.lower()
+            action_indicators = [
+                "1.",
+                "2.",
+                "step",
+                "run ",
+                "execute",
+                "create",
+                "build",
+                "deploy",
+                "check",
+                "fix",
+                "find",
+                "analyze",
+                "generate",
+                "implement",
+            ]
+            has_actions = any(ind in body_lower for ind in action_indicators)
+            if not has_actions:
+                report.warning(
+                    "Skill has 'context: fork' but content looks like guidelines, not an actionable task. "
+                    "Forked subagents need explicit step-by-step instructions — guidelines without a task "
+                    "will cause the subagent to return without meaningful output.",
+                    "SKILL.md",
+                    category="Frontmatter",
+                )
 
     # Validate token budget
     validate_token_budget(content, body, report)
@@ -2200,7 +2731,11 @@ def main() -> int:
         print_json(report)
     elif args.report:
         save_report_and_print_summary(
-            report, Path(args.report), "Comprehensive Skill Validation", print_results, args.verbose,
+            report,
+            Path(args.report),
+            "Comprehensive Skill Validation",
+            print_results,
+            args.verbose,
             plugin_path=args.skill_path,
         )
     else:

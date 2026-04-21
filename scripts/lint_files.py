@@ -280,22 +280,9 @@ def ensure_linter_installed(language: str, repo_root: Path) -> bool:
         local_eslint = repo_root / "node_modules" / ".bin" / "eslint"
         if local_eslint.exists() or shutil.which("eslint"):
             return True
-        package_json = repo_root / "package.json"
-        if package_json.exists():
-            print(f"{YELLOW}  Installing eslint...{NC}")
-            for pkg_mgr in ["bun", "npm", "pnpm"]:
-                if shutil.which(pkg_mgr):
-                    result = subprocess.run(
-                        [pkg_mgr, "install", "eslint", "--save-dev"],
-                        cwd=repo_root,
-                        capture_output=True,
-                        text=True,
-                        timeout=120,
-                    )
-                    if result.returncode == 0:
-                        print(f"{GREEN}  ✔ eslint installed via {pkg_mgr}{NC}")
-                        return True
-        print(f"{YELLOW}  ⚠ eslint not available, skipping JS/TS linting{NC}")
+        # Read-only: never auto-install into the repo (would modify package.json / node_modules)
+        pkg_mgr = next((m for m in ["bun", "npm", "pnpm"] if shutil.which(m)), "npm")
+        print(f"{YELLOW}  ⚠ eslint not found — install with: {pkg_mgr} install eslint --save-dev{NC}")
         return False
 
     elif language == "shell":
@@ -506,7 +493,10 @@ def lint_python(repo_root: Path, files: list[Path] | None = None) -> bool:  # no
     print(f"{BLUE}    [1/2] ruff check...{NC}")
     try:
         result = subprocess.run(
-            ["ruff", "check", "--select=E,F,W", "--ignore=E501,E402", str(repo_root)],
+            # Match pyproject's select — keep I (import sorting) in parity with CI, which runs
+            # `uv run ruff check scripts/ tests/` with pyproject's full config. Skipping I here
+            # caused a v2.22.7 CI failure after the local gate passed clean (2026-04-18).
+            ["ruff", "check", "--select=E,F,W,I", "--ignore=E501,E402", str(repo_root)],
             capture_output=True,
             text=True,
             timeout=120,
@@ -529,7 +519,16 @@ def lint_python(repo_root: Path, files: list[Path] | None = None) -> bool:  # no
         print(f"{BLUE}    [2/2] mypy...{NC}")
         try:
             result = subprocess.run(
-                ["mypy", "--ignore-missing-imports", "--exclude", "scripts_dev|docs_dev|builds_dev|tests_dev", str(repo_root)], capture_output=True, text=True, timeout=180
+                [
+                    "mypy",
+                    "--ignore-missing-imports",
+                    "--exclude",
+                    "scripts_dev|docs_dev|builds_dev|tests_dev",
+                    str(repo_root),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
             if result.returncode != 0:
                 print(f"{YELLOW}    Type warnings (non-blocking):{NC}")
@@ -684,6 +683,20 @@ def lint_markdown(repo_root: Path, files: list[Path]) -> bool:
     else:
         print(f"{YELLOW}    markdownlint not available, skipping{NC}")
         return True
+
+    # If target doesn't have its own .markdownlint.json, use CPV's relaxed config.
+    # CPV's config disables strict-prose rules (MD013, MD033, MD040) that cause
+    # mechanical churn without affecting plugin correctness. See issue #8.
+    target_config = repo_root / ".markdownlint.json"
+    if not target_config.exists():
+        cpv_config = Path(__file__).resolve().parent.parent / ".markdownlint.json"
+        if cpv_config.is_file():
+            lint_cmd = lint_cmd + ["--config", str(cpv_config)]
+
+    # Respect .markdownlintignore if present
+    ignore_file = repo_root / ".markdownlintignore"
+    if ignore_file.is_file():
+        lint_cmd = lint_cmd + ["--ignore-path", str(ignore_file)]
 
     file_paths = [str(f) for f in files]
 

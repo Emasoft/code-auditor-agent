@@ -52,6 +52,7 @@ from cpv_management_common import (
 
 __all__ = [
     "find_plugin_root",
+    "MultiplePluginsFoundError",
     "read_plugin_meta",
     "do_install",
     "do_uninstall",
@@ -62,6 +63,18 @@ __all__ = [
     "_load_installed_plugins",
     "_detect_plugin_origin_refs",
 ]
+
+
+class MultiplePluginsFoundError(Exception):
+    """Raised when a directory contains more than one plugin.json (monorepo).
+
+    The user must pass --plugin-dir <path> to select which one to operate on.
+    """
+
+    def __init__(self, plugin_roots: List[Path]):
+        self.plugin_roots = plugin_roots
+        joined = "\n  ".join(str(p) for p in plugin_roots)
+        super().__init__(f"Multiple plugins found in the source directory:\n  {joined}")
 
 
 # ── Gitignore handling ────────────────────────────────────
@@ -120,11 +133,7 @@ def _gitignore_pattern_to_re(pattern: str) -> Tuple[Optional[re.Pattern], bool]:
                 j += 1
             while j < len(pattern) and pattern[j] != "]":
                 j += 1
-            parts.append(
-                pattern[i : j + 1].replace("!", "^", 1)
-                if "!" in pattern[i : j + 1]
-                else pattern[i : j + 1]
-            )
+            parts.append(pattern[i : j + 1].replace("!", "^", 1) if "!" in pattern[i : j + 1] else pattern[i : j + 1])
             i = j + 1
             continue
         else:
@@ -202,6 +211,7 @@ def _build_gitignore_matcher(plugin_dir: Path) -> Callable[[Path], bool]:
         return _is_ignored_git
 
     if not gitignore_path.exists() and not has_git:
+
         def _is_ignored_minimal(path: Path) -> bool:
             rel_str = str(path.relative_to(plugin_dir))
             return _is_git_metadata(rel_str)
@@ -237,9 +247,21 @@ def _build_gitignore_matcher(plugin_dir: Path) -> Callable[[Path], bool]:
 
 
 def _copy_plugin_from_dir(
-    source_dir: Path, dest: Path, ignore_fn: Optional[Callable[[Path], bool]] = None
+    source_dir: Path,
+    dest: Path,
+    ignore_fn: Optional[Callable[[Path], bool]] = None,
+    follow_symlinks: bool = False,
+    skipped_symlinks: Optional[List[Path]] = None,
 ):
-    """Copy a plugin directory to dest, skipping files matched by ignore_fn."""
+    """Copy a plugin directory to dest, skipping files matched by ignore_fn.
+
+    When follow_symlinks is False (default), symlinks are skipped and each
+    one is appended to skipped_symlinks (if provided) so the caller can
+    surface a warning after the copy loop. When follow_symlinks is True,
+    symlinks are resolved and their target contents are copied — this is
+    opt-in because following symlinks can escape the plugin directory and
+    pull in unintended files.
+    """
     copied_any = False
     for item in sorted(source_dir.iterdir()):
         if item.name in (".git", ".gitignore", ".gitattributes", ".gitmodules", ".gitkeep"):
@@ -247,10 +269,34 @@ def _copy_plugin_from_dir(
         if ignore_fn and ignore_fn(item):
             continue
         if item.is_symlink():
+            if not follow_symlinks:
+                if skipped_symlinks is not None:
+                    skipped_symlinks.append(item)
+                continue
+            # Follow: resolve to the real target and copy its contents. We
+            # intentionally do NOT preserve the symlink — we inline the
+            # target so downstream consumers see a self-contained tree.
+            target = item.resolve()
+            if not target.exists():
+                if skipped_symlinks is not None:
+                    skipped_symlinks.append(item)
+                continue
+            dest_item = dest / item.name
+            if target.is_dir():
+                _copy_plugin_from_dir(target, dest_item, ignore_fn, follow_symlinks, skipped_symlinks)
+                if dest_item.exists():
+                    if not copied_any:
+                        dest.mkdir(parents=True, exist_ok=True)
+                    copied_any = True
+            elif target.is_file():
+                if not copied_any:
+                    dest.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(target, dest_item)
+                copied_any = True
             continue
         dest_item = dest / item.name
         if item.is_dir():
-            _copy_plugin_from_dir(item, dest_item, ignore_fn)
+            _copy_plugin_from_dir(item, dest_item, ignore_fn, follow_symlinks, skipped_symlinks)
             if dest_item.exists():
                 if not copied_any:
                     dest.mkdir(parents=True, exist_ok=True)
@@ -264,12 +310,25 @@ def _copy_plugin_from_dir(
 
 def find_plugin_root(search_dir: Path) -> Optional[Path]:
     """Find the plugin root directory (parent of .claude-plugin/plugin.json).
-    Skips directories that also contain marketplace.json."""
+
+    Skips directories that also contain marketplace.json.
+
+    Returns the single plugin root when exactly one is found, or None when
+    none are found. When multiple plugin.json files exist under search_dir
+    (monorepo layout), raises MultiplePluginsFoundError so the caller can
+    ask the user to disambiguate via --plugin-dir — returning the first
+    match would silently ignore sibling plugins.
+    """
+    matches: List[Path] = []
     for pj in search_dir.rglob(".claude-plugin/plugin.json"):
         if (pj.parent / "marketplace.json").exists():
             continue
-        return pj.parent.parent
-    return None
+        matches.append(pj.parent.parent)
+    if not matches:
+        return None
+    if len(matches) > 1:
+        raise MultiplePluginsFoundError(sorted(matches))
+    return matches[0]
 
 
 # ── Plugin metadata ───────────────────────────────────────
@@ -280,7 +339,8 @@ def read_plugin_meta(plugin_root: Path) -> dict:
     pj = plugin_root / ".claude-plugin" / "plugin.json"
     try:
         meta = json.loads(pj.read_text(encoding="utf-8"))
-    except Exception:
+    except (json.JSONDecodeError, OSError) as e:
+        warn(f"Could not read plugin.json: {e}")
         meta = {}
     return {
         "name": meta.get("name") or plugin_root.name,
@@ -450,12 +510,52 @@ def _run_cpv_validation(plugin_root: Path, quiet: bool = False) -> Tuple[List[st
 # ── Lifecycle: Install ────────────────────────────────────
 
 
+def _resolve_plugin_root(search_dir: Path, plugin_dir: Optional[str], context_label: str) -> Path:
+    """Pick the plugin root from search_dir, respecting an explicit --plugin-dir.
+
+    - If plugin_dir is given, that path (absolute or relative to search_dir) is
+      used verbatim and must contain .claude-plugin/plugin.json.
+    - Otherwise, if search_dir itself is a plugin root, it is returned.
+    - Otherwise, find_plugin_root() scans the tree. On multiple matches, this
+      prints all candidates and exits — silently picking the first one hid
+      sibling plugins in monorepos.
+    """
+    if plugin_dir:
+        candidate = Path(plugin_dir)
+        if not candidate.is_absolute():
+            candidate = (search_dir / candidate).resolve()
+        if not (candidate / ".claude-plugin" / "plugin.json").exists():
+            err(f"--plugin-dir points to '{candidate}' but no .claude-plugin/plugin.json there.")
+            sys.exit(1)
+        return candidate
+
+    if (search_dir / ".claude-plugin" / "plugin.json").exists():
+        return search_dir
+
+    try:
+        root = find_plugin_root(search_dir)
+    except MultiplePluginsFoundError as exc:
+        err(f"Multiple plugins found in {context_label}:")
+        for p in exc.plugin_roots:
+            err(f"  - {p}")
+        err("Pass --plugin-dir <path> to choose one of the above.")
+        sys.exit(1)
+    if not root:
+        err(f"No plugin found in {context_label}.")
+        err("Expected: <dir>/.claude-plugin/plugin.json")
+        sys.exit(1)
+    return root
+
+
 def do_install(
     source_path: str,
     marketplace_name: Optional[str],
     force: bool = False,
     dry_run: bool = False,
     quiet: bool = False,
+    plugin_dir: Optional[str] = None,
+    follow_symlinks: bool = False,
+    dev_link: bool = False,
 ):
     if dry_run and not quiet:
         info("DRY RUN — no files will be modified")
@@ -472,15 +572,7 @@ def do_install(
     if is_directory:
         if not quiet:
             info(f"Installing from directory: {source}")
-        plugin_root = (
-            source
-            if (source / ".claude-plugin" / "plugin.json").exists()
-            else find_plugin_root(source)
-        )
-        if not plugin_root:
-            err("No plugin found in directory.")
-            err("Expected: <dir>/.claude-plugin/plugin.json")
-            sys.exit(1)
+        plugin_root = _resolve_plugin_root(source, plugin_dir, "directory")
         ignore_fn = _build_gitignore_matcher(plugin_root)
     else:
         if not quiet:
@@ -492,17 +584,16 @@ def do_install(
         except Exception:
             shutil.rmtree(tmp_cleanup, ignore_errors=True)
             raise
-        plugin_root = find_plugin_root(tmp)
-        if not plugin_root:
-            err("No plugin found in archive.")
-            err("Expected: <dir>/.claude-plugin/plugin.json")
+        try:
+            plugin_root = _resolve_plugin_root(tmp, plugin_dir, "archive")
+        except SystemExit:
             if not quiet:
                 print("\nArchive contents:")
                 for f in sorted(tmp.rglob("*")):
                     if f.is_file():
                         print(f"  {f.relative_to(tmp)}")
             shutil.rmtree(tmp_cleanup, ignore_errors=True)
-            sys.exit(1)
+            raise
 
     try:
         meta = read_plugin_meta(plugin_root)
@@ -613,21 +704,64 @@ def do_install(
                 print(f"\n  {CYAN}Run without --dry-run to install.{NC}")
             return
 
-        # Copy plugin to marketplace
-        if is_directory:
-            _copy_plugin_from_dir(plugin_root, dest_plugin_dir, ignore_fn)
+        # Copy plugin to marketplace (or symlink in --dev-link mode)
+        skipped_symlinks: List[Path] = []
+        if dev_link:
+            if not is_directory:
+                err("--dev-link requires a directory source, not an archive.")
+                sys.exit(1)
+            dest_plugin_dir.parent.mkdir(parents=True, exist_ok=True)
+            # Create directory symlink pointing at the live source
+            try:
+                os.symlink(plugin_root.resolve(), dest_plugin_dir, target_is_directory=True)
+            except OSError as e:
+                err(f"Failed to create dev-link symlink: {e}")
+                if os.name == "nt":
+                    err("On Windows, dev-link requires Developer Mode or admin privileges.")
+                sys.exit(1)
+            # Sentinel file — marks this as a dev-link so uninstall/update handle it specially
+            sentinel = mp_dir / "plugins" / f".cpv-devlink-{plugin_name}.json"
+            sentinel.write_text(
+                json.dumps(
+                    {
+                        "source_path": str(plugin_root.resolve()),
+                        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                        "installer_version": TOOL_VERSION,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            if not quiet:
+                ok(f"Dev-linked plugin via symlink -> {plugin_root.resolve()}")
+        elif is_directory:
+            _copy_plugin_from_dir(
+                plugin_root,
+                dest_plugin_dir,
+                ignore_fn,
+                follow_symlinks=follow_symlinks,
+                skipped_symlinks=skipped_symlinks,
+            )
             if not dest_plugin_dir.exists():
                 err("No files to install — all plugin files are gitignored.")
                 sys.exit(1)
         else:
             dest_plugin_dir.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(plugin_root, dest_plugin_dir)
-        _fix_permissions(dest_plugin_dir)
+            shutil.copytree(plugin_root, dest_plugin_dir, symlinks=not follow_symlinks)
+        if not dev_link:
+            _fix_permissions(dest_plugin_dir)
         if not quiet:
             if is_directory:
                 ok("Plugin copied to marketplace (respecting .gitignore)")
             else:
                 ok("Plugin copied to marketplace")
+            if skipped_symlinks and not follow_symlinks:
+                warn(
+                    f"Skipped {len(skipped_symlinks)} symlink(s) during copy — "
+                    "symlinks are skipped by default, pass --follow-symlinks to include them:"
+                )
+                for link in skipped_symlinks:
+                    print(f"    {YELLOW}• {link}{NC}")
 
     finally:
         if tmp_cleanup is not None:
@@ -744,14 +878,27 @@ def do_uninstall(plugin_key: str, quiet: bool = False, dry_run: bool = False):
     if not quiet:
         info(f"Uninstalling {plugin_name} from marketplace {marketplace_name}...")
 
-    if plug_dir.exists():
+    # Check for --dev-link sentinel; if present, unlink only (don't rm the live source)
+    sentinel = mp_dir / "plugins" / f".cpv-devlink-{plugin_name}.json"
+    is_devlink = sentinel.exists() or (plug_dir.exists() and plug_dir.is_symlink())
+
+    if plug_dir.exists() or plug_dir.is_symlink():
         try:
-            shutil.rmtree(plug_dir)
+            if is_devlink:
+                # Unlink the symlink only — preserve the live source tree
+                if plug_dir.is_symlink():
+                    plug_dir.unlink()
+                if sentinel.exists():
+                    sentinel.unlink()
+                if not quiet:
+                    ok("Unlinked dev-link symlink (source tree preserved)")
+            else:
+                shutil.rmtree(plug_dir)
+                if not quiet:
+                    ok("Removed plugin directory")
         except OSError as e:
             err(f"Failed to remove plugin directory: {e}")
             sys.exit(1)
-        if not quiet:
-            ok("Removed plugin directory")
     else:
         warn(f"Plugin directory not found: {plug_dir}")
 
@@ -1035,6 +1182,8 @@ def do_update(
     force: bool = False,
     dry_run: bool = False,
     quiet: bool = False,
+    plugin_dir: Optional[str] = None,
+    follow_symlinks: bool = False,
 ):
     """Update a plugin by uninstalling the old version and reinstalling from a new source."""
     source = Path(source_path)
@@ -1044,15 +1193,7 @@ def do_update(
 
     tmp_cleanup = None
     if source.is_dir():
-        plugin_root = (
-            source
-            if (source / ".claude-plugin" / "plugin.json").exists()
-            else find_plugin_root(source)
-        )
-        if not plugin_root:
-            err("No plugin found in directory.")
-            err("Expected: <dir>/.claude-plugin/plugin.json")
-            sys.exit(1)
+        plugin_root = _resolve_plugin_root(source, plugin_dir, "directory")
     else:
         tmp_cleanup = tempfile.mkdtemp()
         tmp = Path(tmp_cleanup)
@@ -1061,12 +1202,11 @@ def do_update(
         except Exception:
             shutil.rmtree(tmp_cleanup, ignore_errors=True)
             raise
-        plugin_root = find_plugin_root(tmp)
-        if not plugin_root:
-            err("No plugin found in archive.")
-            err("Expected: <dir>/.claude-plugin/plugin.json")
+        try:
+            plugin_root = _resolve_plugin_root(tmp, plugin_dir, "archive")
+        except SystemExit:
             shutil.rmtree(tmp_cleanup, ignore_errors=True)
-            sys.exit(1)
+            raise
 
     try:
         meta = read_plugin_meta(plugin_root)
@@ -1102,10 +1242,102 @@ def do_update(
         return
 
     do_uninstall(plugin_key, quiet=True)
-    do_install(source_path, marketplace_name, force=True, dry_run=False, quiet=quiet)
+    do_install(
+        source_path,
+        marketplace_name,
+        force=True,
+        dry_run=False,
+        quiet=quiet,
+        plugin_dir=plugin_dir,
+        follow_symlinks=follow_symlinks,
+    )
 
     if not quiet:
         info(f"Updated from v{old_version} -> v{meta['version']}")
+
+
+# ── Link plugin to an existing marketplace.json ────────────
+
+
+def do_link_plugin(
+    marketplace_path: str,
+    plugin_spec: str,
+    dry_run: bool = False,
+    quiet: bool = False,
+) -> None:
+    """Append a plugin entry to an existing marketplace.json.
+
+    plugin_spec forms:
+      - ./path/to/plugin  (relative local path)
+      - /abs/path         (absolute local path -> converted to relative)
+      - owner/repo        (GitHub source)
+    """
+    mkt_root = Path(marketplace_path).resolve()
+    mkt_json = mkt_root / ".claude-plugin" / "marketplace.json"
+    if not mkt_json.exists():
+        mkt_json_alt = mkt_root / "marketplace.json"
+        if mkt_json_alt.exists():
+            mkt_json = mkt_json_alt
+        else:
+            err(f"marketplace.json not found at {mkt_json}")
+            sys.exit(1)
+
+    mj = load_json_safe(mkt_json)
+    plugins_list = mj.setdefault("plugins", [])
+
+    # Resolve plugin_spec → source entry
+    entry: dict
+    if "/" in plugin_spec and not plugin_spec.startswith(("./", "/", "../")):
+        # owner/repo form
+        if plugin_spec.count("/") != 1:
+            err(f"Invalid github spec '{plugin_spec}' — expected owner/repo")
+            sys.exit(1)
+        _owner, repo_name = plugin_spec.split("/", 1)
+        entry = {
+            "name": repo_name,
+            "source": {"source": "github", "repo": plugin_spec},
+        }
+    else:
+        # Local path form
+        src = Path(plugin_spec).resolve()
+        if not src.exists():
+            err(f"Local plugin path not found: {src}")
+            sys.exit(1)
+        plug_json = src / ".claude-plugin" / "plugin.json"
+        if not plug_json.exists():
+            err(f"plugin.json not found at {plug_json}")
+            sys.exit(1)
+        pmeta = load_json_safe(plug_json)
+        pname = pmeta.get("name")
+        if not pname:
+            err(f"plugin.json at {plug_json} has no 'name' field")
+            sys.exit(1)
+        try:
+            rel = src.relative_to(mkt_root)
+            rel_str = f"./{rel}"
+        except ValueError:
+            rel_str = str(src)
+        entry = {
+            "name": pname,
+            "description": pmeta.get("description", ""),
+            "version": pmeta.get("version", ""),
+            "source": rel_str,
+        }
+
+    existing_names = {p.get("name") for p in plugins_list}
+    if entry["name"] in existing_names:
+        warn(f"Plugin '{entry['name']}' already in marketplace — replacing entry")
+        plugins_list[:] = [p for p in plugins_list if p.get("name") != entry["name"]]
+    plugins_list.append(entry)
+
+    if dry_run:
+        if not quiet:
+            info(f"DRY RUN — would append: {json.dumps(entry, indent=2)}")
+        return
+
+    save_json_safe(mkt_json, mj, dry_run=False)
+    if not quiet:
+        ok(f"Linked '{entry['name']}' into marketplace at {mkt_json}")
 
 
 # ── CLI entry point ───────────────────────────────────────
@@ -1120,17 +1352,49 @@ def main():
     parser.add_argument("--uninstall", type=str, help="Uninstall plugin (name@marketplace)")
     parser.add_argument("--update", action="store_true", help="Update instead of install")
     parser.add_argument("--enable", type=str, help="Enable plugin (name, name@marketplace, or name@owner/marketplace)")
-    parser.add_argument("--disable", type=str, help="Disable plugin (name, name@marketplace, or name@owner/marketplace)")
-    parser.add_argument("--scope", choices=["user", "local"], default="user",
-                        help="'user' (default) = ~/.claude/settings.json, 'local' = <project>/.claude/settings.local.json")
+    parser.add_argument(
+        "--disable", type=str, help="Disable plugin (name, name@marketplace, or name@owner/marketplace)"
+    )
+    parser.add_argument(
+        "--scope",
+        choices=["user", "local"],
+        default="user",
+        help="'user' (default) = ~/.claude/settings.json, 'local' = <project>/.claude/settings.local.json",
+    )
     parser.add_argument("--force", "-f", action="store_true", help="Force install despite errors")
     parser.add_argument("--dry-run", "-n", action="store_true", help="Preview without changes")
     parser.add_argument("--quiet", "-q", action="store_true", help="Minimal output")
+    parser.add_argument(
+        "--plugin-dir",
+        type=str,
+        default=None,
+        help="In a monorepo with multiple plugin.json files, pick this path (absolute or relative to source)",
+    )
+    parser.add_argument(
+        "--follow-symlinks",
+        action="store_true",
+        help="Follow symlinks and copy their target contents (default: skip symlinks with a warning)",
+    )
+    parser.add_argument(
+        "--dev-link",
+        action="store_true",
+        help="Create a symlink from the marketplace dir to the live source (dev mode, reflects edits)",
+    )
+    parser.add_argument(
+        "--link-plugin",
+        nargs=2,
+        metavar=("MARKETPLACE_PATH", "PLUGIN_SPEC"),
+        help="Append a plugin entry to an existing marketplace.json (PLUGIN_SPEC is ./path OR owner/repo)",
+    )
     parser.add_argument("--version", action="store_true", help="Show version")
     args = parser.parse_args()
 
     if args.version:
         print(f"manage_plugin.py v{TOOL_VERSION}")
+        return
+    if args.link_plugin:
+        mkt_path_arg, plug_spec = args.link_plugin
+        do_link_plugin(mkt_path_arg, plug_spec, dry_run=args.dry_run, quiet=args.quiet)
         return
     if args.uninstall:
         do_uninstall(args.uninstall, quiet=args.quiet, dry_run=args.dry_run)
@@ -1142,9 +1406,26 @@ def main():
         if not args.source:
             err("Source path required for update")
             sys.exit(1)
-        do_update(args.source, args.marketplace, force=args.force, dry_run=args.dry_run, quiet=args.quiet)
+        do_update(
+            args.source,
+            args.marketplace,
+            force=args.force,
+            dry_run=args.dry_run,
+            quiet=args.quiet,
+            plugin_dir=args.plugin_dir,
+            follow_symlinks=args.follow_symlinks,
+        )
     elif args.source:
-        do_install(args.source, args.marketplace, force=args.force, dry_run=args.dry_run, quiet=args.quiet)
+        do_install(
+            args.source,
+            args.marketplace,
+            force=args.force,
+            dry_run=args.dry_run,
+            quiet=args.quiet,
+            plugin_dir=args.plugin_dir,
+            follow_symlinks=args.follow_symlinks,
+            dev_link=args.dev_link,
+        )
     else:
         parser.print_help()
 

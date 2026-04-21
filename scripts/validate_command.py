@@ -48,8 +48,8 @@ from cpv_validation_common import (
 # Command-Specific Constants
 # =============================================================================
 
-# Maximum description length for commands (SHORTER than agents!)
-MAX_COMMAND_DESCRIPTION_LENGTH = 60
+# Maximum description length for commands (same as skills — truncated at 250 chars in listing)
+MAX_COMMAND_DESCRIPTION_LENGTH = 250
 
 # Minimum body content length (characters)
 MIN_COMMAND_BODY_CHARS = 100
@@ -345,13 +345,10 @@ def validate_model_field(frontmatter: dict[str, Any], filename: str, report: Com
         report.major(f"'model' must be a string, got {type(model).__name__}", filename)
         return
 
-    # v2.1.74+: accept short names AND full model IDs (claude-opus-4-6)
-    # Commands don't support 'inherit' — only sonnet, opus, haiku or full IDs
-    command_valid_models = {"sonnet", "opus", "haiku"}
-    model_lower = model.lower()
-    if model_lower not in command_valid_models and not is_valid_model(model):
+    # Accept all valid model aliases and full IDs (same as skills/agents)
+    if not is_valid_model(model):
         report.major(
-            f"Invalid 'model' value: {model}. Valid: {sorted(command_valid_models)} or full ID like claude-opus-4-6",
+            f"Invalid 'model' value: {model}. Valid: sonnet, opus, haiku, inherit, default, opusplan, or full ID like claude-opus-4-6",
             filename,
         )
         return
@@ -404,7 +401,10 @@ def validate_body_content(content: str, filename: str, report: CommandValidation
         report.passed(f"Command body has adequate content ({len(body_text)} chars)", filename)
 
     # Check for common command body patterns
-    has_instructions = any(keyword in body_text.lower() for keyword in ["you", "will", "should", "must", "when", "if", "task", "do", "perform", "execute"])
+    has_instructions = any(
+        keyword in body_text.lower()
+        for keyword in ["you", "will", "should", "must", "when", "if", "task", "do", "perform", "execute"]
+    )
     if not has_instructions:
         report.info(
             "Command body should contain clear instructions for Claude",
@@ -430,7 +430,11 @@ def validate_security(content: str, filename: str, report: CommandValidationRepo
 
     # Check for ${CLAUDE_PLUGIN_ROOT} or ${CLAUDE_PLUGIN_DATA} usage (good practice for plugin commands)
     if "/scripts/" in content or "\\scripts\\" in content:
-        if "${CLAUDE_PLUGIN_ROOT}" not in content and "$CLAUDE_PLUGIN_ROOT" not in content and "${CLAUDE_PLUGIN_DATA}" not in content:
+        if (
+            "${CLAUDE_PLUGIN_ROOT}" not in content
+            and "$CLAUDE_PLUGIN_ROOT" not in content
+            and "${CLAUDE_PLUGIN_DATA}" not in content
+        ):
             report.info(
                 "Consider using ${CLAUDE_PLUGIN_ROOT} or ${CLAUDE_PLUGIN_DATA} for plugin-relative paths",
                 filename,
@@ -627,7 +631,9 @@ def main() -> int:
     )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--strict", action="store_true", help="Strict mode — NIT issues also block validation")
-    parser.add_argument("--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout")
+    parser.add_argument(
+        "--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout"
+    )
     args = parser.parse_args()
 
     path = Path(args.path).resolve()
@@ -668,7 +674,9 @@ def main() -> int:
                             "info": sum(1 for x in r.results if x.level == "INFO"),
                             "passed": sum(1 for x in r.results if x.level == "PASSED"),
                         },
-                        "results": [{"level": x.level, "message": x.message, "file": x.file, "line": x.line} for x in r.results],
+                        "results": [
+                            {"level": x.level, "message": x.message, "file": x.file, "line": x.line} for x in r.results
+                        ],
                     }
                     for r in reports
                 ],

@@ -33,7 +33,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from cpv_validation_common import COLORS, VALID_PLUGIN_ENV_VARS, ValidationReport, save_report_and_print_summary
+from cpv_validation_common import (
+    COLORS,
+    VALID_PLUGIN_ENV_VARS,
+    ValidationReport,
+    is_valid_plugin_env_var,
+    save_report_and_print_summary,
+)
 
 # Known LSP server configuration fields
 KNOWN_LSP_FIELDS = {
@@ -78,10 +84,21 @@ PLUGIN_ENV_VARS = VALID_PLUGIN_ENV_VARS
 
 
 def is_absolute_path(path: str) -> bool:
-    """Check if a path appears to be an absolute path."""
-    if path.startswith("/") and not path.startswith("${"):
+    """Check if a path appears to be an absolute path.
+
+    Detects POSIX absolute paths ("/foo"), Windows drive-letter paths using
+    either separator ("C:\\foo" or "C:/foo"), Windows UNC paths ("\\\\server\\share"
+    or "//server/share"), and tilde-expansion paths ("~/foo"). Paths starting
+    with a "${VAR}" env-var reference are never considered absolute because
+    their absoluteness depends on expansion context.
+    """
+    if path.startswith("${"):
+        return False
+    if path.startswith(("/", "\\", "~")):
         return True
-    if len(path) > 2 and path[1] == ":" and path[2] == "\\":
+    # Windows drive-letter paths: "C:\foo" or "C:/foo". Detect on any platform
+    # because LSP configs may be authored on Windows and shipped cross-platform.
+    if len(path) >= 3 and path[1] == ":" and path[2] in ("\\", "/") and path[0].isalpha():
         return True
     return False
 
@@ -99,7 +116,7 @@ def validate_env_var_syntax(value: str, report: ValidationReport, context: str) 
             var_name = match.group(1)
             default = match.group(2)
 
-            if default is None and var_name not in PLUGIN_ENV_VARS:
+            if default is None and not is_valid_plugin_env_var(var_name):
                 report.info(f"Env var ${{{var_name}}} has no default value in {context}")
 
 
@@ -123,9 +140,12 @@ def validate_path_value(
     if plugin_root and "${CLAUDE_PLUGIN_ROOT}" in value:
         resolved = value.replace("${CLAUDE_PLUGIN_ROOT}", str(plugin_root))
         resolved_path = Path(resolved)
-        if "." in resolved_path.name or resolved_path.suffix:
-            if not resolved_path.exists():
-                report.info(f"Referenced file may not exist: {value}")
+        # Check existence for ANY resolved path, not only those with an extension.
+        # Extensionless executables (e.g. "pyright-langserver", "gopls") would
+        # otherwise silently skip the existence check and produce no signal
+        # when the binary is genuinely missing from the plugin.
+        if not resolved_path.exists():
+            report.info(f"Referenced file may not exist: {value}")
 
 
 def validate_lsp_server(
@@ -369,11 +389,57 @@ def validate_lsp_config(
     return report
 
 
+def _is_default_lsp_path(path: str) -> bool:
+    """True if path resolves to the auto-discovered .lsp.json default at plugin root.
+
+    Handles common authoring slip-ups: backslashes (Windows), redundant ./ segments,
+    trailing slashes. Static path equivalence only — does not follow symlinks.
+    """
+    normalized = path.replace("\\", "/")
+    parts = [p for p in normalized.split("/") if p and p != "."]
+    return parts == [".lsp.json"]
+
+
+def _extract_lsp_server_names_from_config_file(config_path: Path) -> list[str]:
+    """Read an LSP config file and return its server names.
+
+    Handles both formats:
+      - Wrapped: {"lspServers": {name: cfg, ...}} (or "languageServers"/"servers")
+      - Unwrapped: {name: cfg, ...} — the official `.lsp.json` format per docs
+
+    Returns empty list if file is missing/malformed/empty.
+    """
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    # Wrapped form first
+    for wrapper_key in ("lspServers", "languageServers", "servers"):
+        wrapped = data.get(wrapper_key)
+        if isinstance(wrapped, dict):
+            return list(wrapped.keys())
+    # Unwrapped form: top-level keys ARE server names (each value must be a dict).
+    # Skip if the file is wrapped in some other unrelated structure.
+    if all(isinstance(v, dict) for v in data.values()) and data:
+        return list(data.keys())
+    return []
+
+
 def validate_plugin_lsp(
     plugin_root: Path,
     report: ValidationReport | None = None,
 ) -> ValidationReport:
     """Validate all LSP configurations in a plugin.
+
+    Checks both .lsp.json (auto-discovered at plugin root) and inline lspServers in
+    plugin.json. Sources are loaded ADDITIVELY at runtime (verified empirically:
+    TRDD-20260418, cpv-lsp-coexist-test — 4 declarations, 1 collision → 3 LSPs loaded).
+    Per-name collisions across sources are silently DEDUPLICATED with INLINE WINNING
+    (verified: LSP_WINNER_PLUGIN_JSON_INLINE.flag was created when shared-lsp was
+    declared in both .lsp.json and plugin.json:lspServers). The losing source's
+    declaration is silently dropped — CPV emits MAJOR per duplicate name.
 
     Args:
         plugin_root: Path to the plugin root directory
@@ -384,6 +450,9 @@ def validate_plugin_lsp(
     """
     if report is None:
         report = ValidationReport()
+
+    # Track server names per source for cross-source duplicate detection.
+    sources: dict[str, list[str]] = {}
 
     # Check for common LSP config locations
     lsp_config_paths = [
@@ -398,9 +467,100 @@ def validate_plugin_lsp(
         if config_path.exists():
             found_any = True
             validate_lsp_config(config_path, plugin_root, report)
+            names = _extract_lsp_server_names_from_config_file(config_path)
+            if names:
+                rel = config_path.name
+                try:
+                    rel = str(config_path.relative_to(plugin_root))
+                except ValueError:
+                    pass
+                sources[rel] = names
+
+    # `lspServers` field in plugin.json — per docs schema accepts string|array|object.
+    # We handle all three forms for cross-source duplicate detection.
+    plugin_json = plugin_root / ".claude-plugin" / "plugin.json"
+    if plugin_json.exists():
+        try:
+            manifest = json.loads(plugin_json.read_text(encoding="utf-8"))
+            if isinstance(manifest, dict):
+                lsp_servers = manifest.get("lspServers")
+                if isinstance(lsp_servers, dict) and lsp_servers:
+                    # Inline definition: keys are server names directly
+                    found_any = True
+                    sources["plugin.json:lspServers"] = list(lsp_servers.keys())
+                elif isinstance(lsp_servers, str):
+                    # Path-string reference to external LSP config file
+                    ref_path = lsp_servers
+                    # Defensive nudge: pointing the override at the auto-discovered
+                    # default `.lsp.json` is silently accepted but redundant — analogous
+                    # to the MCP nudge (validate_mcp._is_default_mcp_path).
+                    if _is_default_lsp_path(ref_path):
+                        report.minor(
+                            f"Field 'lspServers' = '{ref_path}' resolves to the "
+                            "auto-discovered '.lsp.json' default at plugin root. This is "
+                            "redundant — the file is loaded automatically. Remove the "
+                            "'lspServers' field from plugin.json (the default file will "
+                            "still load), or point it at a NON-default path like "
+                            "'./extras/lsp.json' if you genuinely need an additional "
+                            "config file.",
+                            ".claude-plugin/plugin.json",
+                        )
+                    if ref_path.startswith("./"):
+                        external_path = plugin_root / ref_path[2:]
+                    else:
+                        external_path = plugin_root / ref_path
+                    if external_path.exists():
+                        found_any = True
+                        names = _extract_lsp_server_names_from_config_file(external_path)
+                        if names:
+                            sources[f"plugin.json:lspServers -> {ref_path}"] = names
+                elif isinstance(lsp_servers, list):
+                    # Array of path-string references
+                    for ref_path in lsp_servers:
+                        if not isinstance(ref_path, str):
+                            continue
+                        if _is_default_lsp_path(ref_path):
+                            report.minor(
+                                f"Field 'lspServers' array entry '{ref_path}' resolves to "
+                                "the auto-discovered '.lsp.json' default at plugin root. "
+                                "This is redundant — the file is loaded automatically.",
+                                ".claude-plugin/plugin.json",
+                            )
+                        if ref_path.startswith("./"):
+                            external_path = plugin_root / ref_path[2:]
+                        else:
+                            external_path = plugin_root / ref_path
+                        if external_path.exists():
+                            found_any = True
+                            names = _extract_lsp_server_names_from_config_file(external_path)
+                            if names:
+                                sources[f"plugin.json:lspServers -> {ref_path}"] = names
+        except (json.JSONDecodeError, OSError):
+            pass  # plugin.json validation handled elsewhere
 
     if not found_any:
         report.info("No LSP configuration files found")
+
+    # Cross-source duplicate detection — server names MUST be unique across ALL sources.
+    # Empirical: inline plugin.json:lspServers WINS per-name collision; the losing
+    # source is silently dropped at runtime with no warning from CC.
+    if len(sources) >= 2:
+        name_to_sources: dict[str, list[str]] = {}
+        for source_label, names in sources.items():
+            for name in names:
+                name_to_sources.setdefault(name, []).append(source_label)
+        for name, source_list in sorted(name_to_sources.items()):
+            if len(source_list) >= 2:
+                joined = " and ".join(sorted(source_list))
+                inline_wins_note = (
+                    " (when collisions occur, the inline plugin.json:lspServers entry "
+                    "WINS per empirical test; the other source is silently dropped)"
+                ) if "plugin.json:lspServers" in source_list else ""
+                report.major(
+                    f"LSP server '{name}' is declared in {joined} — server names "
+                    f"must be unique across all LSP sources{inline_wins_note}",
+                    ".claude-plugin/plugin.json",
+                )
 
     return report
 
@@ -464,7 +624,9 @@ def main() -> int:
     parser.add_argument("--verbose", "-v", action="store_true", help="Show all results")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--strict", action="store_true", help="Strict mode — NIT issues also block validation")
-    parser.add_argument("--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout")
+    parser.add_argument(
+        "--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout"
+    )
     parser.add_argument(
         "path",
         nargs="?",
@@ -527,7 +689,9 @@ def main() -> int:
         print(json.dumps(output, indent=2))
     else:
         if args.report:
-            save_report_and_print_summary(report, Path(args.report), "LSP Validation", print_results, args.verbose, plugin_path=args.path)
+            save_report_and_print_summary(
+                report, Path(args.report), "LSP Validation", print_results, args.verbose, plugin_path=args.path
+            )
         else:
             print_results(report, args.verbose)
 

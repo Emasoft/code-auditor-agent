@@ -76,7 +76,12 @@ Output: Pass 1: 8 issues fixed. Pass 2: 2 regressions. Pass 3: 0 issues → APPR
   - Canonical Pattern, Main-Root Resolution (Worktree-Safe), Timestamp Format
   - PIPELINE_TS vs Per-Agent TS, Filename Table, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
 - [Critical Rules](references/critical-rules.md):
-  - Rules 1-14: Phase ordering, UUID naming, two-stage merge, dedup verdict, fix-all, commit cadence, 25-pass limit
+  - Rule 1: Never Skip Phases, Rule 2: Phase Order Matters, Rule 3: UUID-Named Files
+  - Rule 4: Two-Stage Merge, Rule 5: Dedup Agent Determines Verdict, Rule 6: Fix All Severities
+  - Rule 7: Commit After Each Fix Pass, Rule 8: Maximum 25 Passes, Rule 9: Agent-Prefixed Finding IDs
+  - Rule 10: UUID-Based Report Filenames, Rule 11: Same Line Different Bugs
+  - Rule 12: Merge Script Verifies Before Deleting, Rule 13: Linting Is Conditional on Docker
+  - Rule 14: Lint-Fix Loop Is Separate
 - [Model Selection](references/model-selection.md):
   - Rules
 - [Worktree Mode](references/worktree-mode.md):
