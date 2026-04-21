@@ -33,41 +33,47 @@ Follow these steps to run the audit pipeline:
    ABSOLUTE_SCOPE_PATH="$(cd "${SCOPE_PATH}" && pwd)"
    ABSOLUTE_REFERENCE_STANDARD="$(cd "$(dirname "${REFERENCE_STANDARD}")" && pwd)/$(basename "${REFERENCE_STANDARD}")"
    ```
-2. Resolve `REPORT_DIR` rooted at the **main project directory** (default: `<project-root>/reports/code-auditor`) and create it BEFORE any agent spawns so concurrent agents never race on `mkdir`.
+2. Resolve `MAIN_ROOT` (the main project root) and `REPORT_DIR = $MAIN_ROOT/reports/code-auditor` BEFORE any agent spawns so concurrent agents never race on `mkdir`.
 
-   **Worktree-safe root resolution (MANDATORY):** Agents may run inside a `git worktree` (see `USE_WORKTREES`). Inside a worktree, `$(pwd)` is the worktree path, NOT the main project. Reports MUST land in the MAIN project's `reports/code-auditor/` directory so that a single run's artifacts stay in one place, survive worktree cleanup, and match the user's global rule that "agents always save their report in ./reports/ in the root project — even if running inside a separate worktree".
+   **Worktree-safe root resolution (MANDATORY):** Agents may run inside a `git worktree`. Inside a worktree, `$(pwd)` is the worktree path, NOT the main project. Reports MUST land in the MAIN project's `reports/code-auditor/` directory so a single run's artifacts stay in one place, survive worktree cleanup, and match the user's global rule that "agents always save their report in ./reports/ in the root project — even if running inside a separate worktree".
 
    ```bash
-   # Prefer CLAUDE_PROJECT_DIR (Claude Code env var: absolute path to the
+   # Primary: git worktree list — the first line is always the MAIN checkout,
+   # even when the shell is running inside a linked worktree.
+   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+     MAIN_ROOT="$(git worktree list | head -n1 | awk '{print $1}')"
+   # Fallback: CLAUDE_PROJECT_DIR (Claude Code env var: absolute path to the
    # originally-opened project directory — unchanged across worktrees).
-   # Fall back to the git common-dir trick for non-Claude contexts:
-   #   git rev-parse --git-common-dir returns the SHARED .git path.
-   #   In a worktree this points to the main repo's .git, so dirname
-   #   yields the main project root.
-   if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
-     PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+   elif [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+     MAIN_ROOT="${CLAUDE_PROJECT_DIR}"
    else
-     PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+     echo "ERROR: cannot resolve MAIN_ROOT (not a git repo, CLAUDE_PROJECT_DIR unset)" >&2; exit 1
    fi
-   REPORT_DIR="${REPORT_DIR:-${PROJECT_ROOT}/reports/code-auditor}"
+   REPORT_DIR="${REPORT_DIR:-${MAIN_ROOT}/reports/code-auditor}"
    mkdir -p "$REPORT_DIR"
    ABSOLUTE_REPORT_DIR="$(cd "$REPORT_DIR" && pwd)"
    ```
 
-   **Gitignore invariant:** The `reports/` folder at `${PROJECT_ROOT}/reports/` MUST be gitignored. The plugin's own `.gitignore` lists both `reports/` and `reports_dev/`. When you install the plugin in a user project, the orchestrator's first action in Step 2 is to verify `reports/` is gitignored there too — if not, stop with an error telling the user to add `reports/` to their `.gitignore` before any agent runs. Reports often contain private data; committing them is a leak.
+   **Gitignore invariant:** Both `$MAIN_ROOT/reports/` and `$MAIN_ROOT/reports_dev/` MUST be gitignored. If they are not, stop with an error and tell the user to add both entries to their `.gitignore` before any agent runs. Reports contain private data (PR diffs, absolute paths, internal discussion); committing them is a leak.
 
-   Pass `ABSOLUTE_REPORT_DIR` to every agent prompt. Generate a `RUN_ID` (8 lowercase hex chars: `uuid4().hex[:8]`) and set `PASS_NUMBER=1`.
+   **Pipeline timestamp + run id:** Generate these ONCE at pipeline start and thread them through every downstream command as explicit arguments (agents must never regenerate them):
+   ```bash
+   PIPELINE_TS="$(date +%Y%m%d_%H%M%S%z)"   # local time + GMT offset, compact ±HHMM
+   RUN_ID=$(python3 -c "import uuid; print(uuid.uuid4().hex[:8])")
+   PASS_NUMBER=1
+   ```
+   Pass `ABSOLUTE_REPORT_DIR`, `PIPELINE_TS`, and `RUN_ID` to every agent prompt.
 3. Run Phase 0: **Automated file grouping via Python script.** Use `scripts/caa-collect-context.py` (or Bash) to:
    a. Inventory all text files in SCOPE_PATH (source, config, CI/CD, metadata, prompt definitions).
    b. Classify files by domain (language, directory, dependency cluster).
    c. Triage with grep patterns to tag LIKELY_VIOLATION vs LIKELY_CLEAN.
    d. **Group files into fix-ready batches of 3-4** — files in the same directory or dependency chain go together. Each group gets a unique GROUP_ID.
-   e. Write the **Fix Dispatch Ledger** to `{REPORT_DIR}/caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json` using the **atomic write pattern** below — maps GROUP_ID → file list, so every downstream step (externalizer, agents, fix agents) uses the SAME grouping.
-   f. Write per-group file lists to `{REPORT_DIR}/caa-group-{GROUP_ID}.txt` (one absolute path per line) for direct passing to the externalizer's `input_files_paths`.
+   e. Write the **Fix Dispatch Ledger** to `{REPORT_DIR}/{PIPELINE_TS}-caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json` using the **atomic write pattern** below — maps GROUP_ID → file list, so every downstream step (externalizer, agents, fix agents) uses the SAME grouping. The ledger filename follows the canonical `<ts±tz>-<slug>.<ext>` rule; the orchestrator records `LEDGER` in memory and passes it as an explicit argument to every downstream agent.
+   f. Write per-group file lists to `{REPORT_DIR}/{PIPELINE_TS}-caa-group-{GROUP_ID}.txt` (one absolute path per line) for direct passing to the externalizer's `input_files_paths`.
 
    **Atomic ledger write pattern (MANDATORY):** Concurrent fix agents and verifier agents may update the ledger simultaneously. NEVER write directly to the final ledger path — always write to a temp file in the SAME directory (so `mv` is atomic on POSIX), then `mv` over the final path:
    ```bash
-   LEDGER="${REPORT_DIR}/caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json"
+   LEDGER="${REPORT_DIR}/${PIPELINE_TS}-caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json"
    # Initial create:
    TMP=$(mktemp "${LEDGER}.tmp.XXXXXX")
    python3 scripts/caa-collect-context.py --output "${TMP}" "${SCOPE_PATH}"
@@ -79,7 +85,7 @@ Follow these steps to run the audit pipeline:
      '.entries |= map(if .group_id == $gid then .fix_status = $st else . end)' \
      "${LEDGER}" > "${TMP}" && mv "${TMP}" "${LEDGER}"
    ```
-   On POSIX, `mv` within the same directory is atomic: readers either see the old ledger or the new one — never a torn write. **Direct writes to the ledger are FORBIDDEN.** All updates go through the `mktemp` → `mv` pattern.
+   On POSIX, `mv` within the same directory is atomic: readers either see the old ledger or the new one — never a torn write. **Direct writes to the ledger are FORBIDDEN.** All updates go through the `mktemp` → `mv` pattern. Every agent that updates the ledger receives the full `LEDGER` path via its prompt — agents never reconstruct the path themselves.
 
    If zero files found, STOP with error. **FULL CODEBASE means EVERY file — no exceptions, no delta mode, no prioritization.** File type coverage MUST include:
    - Source: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.java`, `.rb`, `.sh`, `.bash`
@@ -112,9 +118,11 @@ Follow these steps to run the audit pipeline:
    b. **Externalizer fix guidance (preferred):** Build `input_files_paths` with `---GROUP:id---` markers wrapping each group's source files. Call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` ONCE with `instructions` (project context + all groups' TODO items), `scan_secrets: true`. The externalizer processes each group in isolation and returns separate `[group:id] /path/to/report.md` per group — pass each report path directly to its fix agent.
    c. **Spawn one fix agent per group:** Each `caa-fix-agent` receives ONLY: its group's `TODO_FILE`, `ASSIGNED_TODOS`, `FILES` (3-4 files), `CHECKPOINT_PATH`, `REPORT_PATH`, and the externalizer's fix guidance report (if available). The agent reads ONLY its assigned files — no codebase scanning, no redundant reads.
    d. On bad fixes, revert via `git checkout` on affected files. **Update ledger `fix_status` after each group using the atomic write pattern from Phase 0** (mktemp + mv — never write directly to the ledger path). The ledger survives context compactions — on crash/restart, resume from the first `pending` entry.
-11. Run Phase 8: **Pre-merge validation barrier, then merge.** Before invoking `scripts/caa-merge-audit-reports.py`, the orchestrator MUST verify that every expected fix-verifier report exists on disk so the merge does not silently produce an incomplete final report. Use the Fix Dispatch Ledger as the source of truth — the orchestrator records each verifier's `verify_report_path` in the ledger at Phase 7 spawn time:
+11. Run Phase 8: **Pre-merge validation barrier, then merge.** Before invoking `scripts/caa-merge-audit-reports.py`, the orchestrator MUST verify that every expected fix-verifier report exists on disk so the merge does not silently produce an incomplete final report. Use the Fix Dispatch Ledger as the source of truth — the orchestrator records each verifier's `verify_report_path` (full timestamped absolute path) in the ledger at Phase 7 spawn time:
     ```bash
-    LEDGER="${REPORT_DIR}/caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json"
+    # LEDGER holds the canonical pipeline-start path:
+    #   ${REPORT_DIR}/${PIPELINE_TS}-caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json
+    # The orchestrator has this value in memory from Step 2; no re-globbing needed.
     # Read expected verify_report_path per non-skipped entry
     MISSING_GROUPS=()
     MISSING_FILES=()
@@ -151,7 +159,7 @@ Follow these steps to run the audit pipeline:
       '.entries |= map(if .group_id == $gid then .verify_report_path = $vrp else . end)' \
       "${LEDGER}" > "${TMP}" && mv "${TMP}" "${LEDGER}"
     ```
-    `caa-merge-audit-reports.py` joins all per-group reports into `caa-audit-FINAL-{timestamp}.md`. The orchestrator does NOT read the final report — the script outputs a summary line with finding counts and the file path. Present the summary to the user. If the user requests details, THEN read specific sections on demand.
+    `caa-merge-audit-reports.py` joins all per-group reports into `{TS}-caa-audit-FINAL.md`. The orchestrator does NOT read the final report — the script outputs a summary line with finding counts and the file path. Present the summary to the user. If the user requests details, THEN read specific sections on demand.
 
 ## Parameters
 
@@ -186,11 +194,12 @@ Init: `RUN_ID` = 8 lowercase hex chars (e.g. `uuid4().hex[:8]`), `PASS_NUMBER=1`
 | 7 | Fix verify (if FIX_ENABLED): verify fixes, loop to P6 if FAILs | `caa-fix-verifier-agent` | 20 |
 | 8 | Final report: compile stats, link artifacts | orchestrator | -- |
 
-**Gap-fill queue consumption:** Before running Phase 3, use a Python script (or `grep -l POTENTIALLY_MISSED {REPORT_DIR}/caa-verify-*.md`) to extract missed file paths from Phase 2 reports WITHOUT reading them into agent context. **Always write the queue to a `mktemp` file in `${REPORT_DIR}` first** so concurrent verifier writes cannot leave a half-written queue, then `mv` it into place:
+**Gap-fill queue consumption:** Before running Phase 3, use a Python script (or `grep -l POTENTIALLY_MISSED {REPORT_DIR}/*caa-verify-P{N}-*.md`) to extract missed file paths from Phase 2 reports WITHOUT reading them into agent context. **Always write the queue to a `mktemp` file in `${REPORT_DIR}` first** so concurrent verifier writes cannot leave a half-written queue, then `mv` it into place. The queue filename uses `${PIPELINE_TS}` (pipeline-start timestamp) so all agents see a single canonical path for this pass-run:
 ```bash
-GAPFILL_QUEUE="${REPORT_DIR}/caa-gapfill-queue-P${PASS_NUMBER}-R${RUN_ID}.txt"
+GAPFILL_QUEUE="${REPORT_DIR}/${PIPELINE_TS}-caa-gapfill-queue-P${PASS_NUMBER}-R${RUN_ID}.txt"
 TMP=$(mktemp "${GAPFILL_QUEUE}.tmp.XXXXXX")
-grep -l POTENTIALLY_MISSED "${REPORT_DIR}"/caa-verify-P${PASS_NUMBER}-*.md \
+# Leading * in the glob tolerates the <ts±tz>- prefix on verify reports.
+grep -l POTENTIALLY_MISSED "${REPORT_DIR}"/*caa-verify-P${PASS_NUMBER}-*.md \
   | xargs -I{} grep -h '^MISSED_FILE: ' {} \
   | sed 's/^MISSED_FILE: //' \
   | sort -u > "${TMP}"
@@ -202,27 +211,38 @@ If `TODO_ONLY=true`, stop after phase 5. If `FIX_ENABLED=true`, loop P6-P7 until
 
 ## Report Naming
 
-Most pipeline reports use `{REPORT_DIR}/caa-{type}-P{N}-R{RUN_ID}-{UUID}.md` (agent-generated UUID). Exceptions: consolidated, TODO, and final reports use simpler naming (see table).
+**Canonical form (MANDATORY for every file under `reports/code-auditor/`):**
 
-| Type | Pattern |
-|------|---------|
-| Audit | `caa-audit-P{N}-R{RUN_ID}-{UUID}.md` |
-| Verify | `caa-verify-P{N}-R{RUN_ID}-{UUID}.md` |
-| Gap-fill | `caa-gapfill-P{N}-R{RUN_ID}-{UUID}.md` |
-| Consolidated | `caa-consolidated-{domain}.md` |
-| Security | `caa-security-P{N}-R{RUN_ID}-{UUID}.md` |
-| TODO | `TODO-{scope}-changes.md` |
-| Fix done | `caa-fixes-done-P{N}-{domain}.md` |
-| Fix checkpoint | `caa-checkpoint-P{N}-{domain}.json` |
-| Fix verify | `caa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` |
-| Manifest | `caa-manifest-R{RUN_ID}.json` |
-| Fix dispatch ledger | `caa-fix-dispatch-P{N}-R{RUN_ID}.json` |
-| Per-group file list | `caa-group-{GROUP_ID}.txt` |
-| Per-group security | `caa-security-group-{GROUP_ID}.md` |
-| Per-group review | `caa-review-group-{GROUP_ID}.md` |
-| Per-group lint | `caa-lint-group-{GROUP_ID}.md` |
-| Per-group fix issues | `caa-fix-group-{GROUP_ID}.md` |
-| Final | `caa-audit-FINAL-{timestamp}.md` |
+```
+$MAIN_ROOT/reports/code-auditor/<ts±tz>-<slug>.<ext>
+```
+
+Two timestamps are used (see `caa-pr-review-and-fix-skill/references/report-naming.md` for the full rationale):
+- `<PIPELINE_TS>` — computed ONCE at pipeline start, used for all coordination files (ledger, manifest, per-group lists, gap-fill queue). The orchestrator records each path in memory and passes it to every agent as an explicit argument.
+- `<TS>` (per-agent) — fresh `$(date +%Y%m%d_%H%M%S%z)` at each agent spawn, used for every agent's output file.
+
+| Type | Pattern (relative to `$MAIN_ROOT/reports/code-auditor/`) | TS scope |
+|------|----------------------------------------------------------|----------|
+| Audit | `<TS>-caa-audit-P{N}-R{RUN_ID}-{UUID}.md` | per-agent |
+| Verify | `<TS>-caa-verify-P{N}-R{RUN_ID}-{UUID}.md` | per-agent |
+| Gap-fill | `<TS>-caa-gapfill-P{N}-R{RUN_ID}-{UUID}.md` | per-agent |
+| Consolidated | `<TS>-caa-consolidated-{domain}.md` | per-agent |
+| Security | `<TS>-caa-security-P{N}-R{RUN_ID}-{UUID}.md` | per-agent |
+| TODO | `<TS>-TODO-{scope}-changes.md` | per-agent |
+| Fix done | `<TS>-caa-fixes-done-P{N}-{domain}.md` | per-agent |
+| Fix verify | `<TS>-caa-fixverify-P{N}-R{RUN_ID}-{UUID}.md` | per-agent |
+| Per-group security | `<TS>-caa-security-group-{GROUP_ID}.md` | per-agent |
+| Per-group review | `<TS>-caa-review-group-{GROUP_ID}.md` | per-agent |
+| Per-group lint | `<TS>-caa-lint-group-{GROUP_ID}.md` | per-agent |
+| Audit intermediate | `<TS>-caa-audit-P{N}-intermediate.md` | merge-time |
+| Audit FINAL | `<TS>-caa-audit-FINAL.md` | merge-time |
+| **Fix Dispatch Ledger** | `<PIPELINE_TS>-caa-fix-dispatch-P{N}-R{RUN_ID}.json` | pipeline-start |
+| **Agent manifest** | `<PIPELINE_TS>-caa-agents-P{N}-R{RUN_ID}.json` | pipeline-start |
+| **Run manifest** | `<PIPELINE_TS>-caa-manifest-R{RUN_ID}.json` | pipeline-start |
+| **Fix checkpoint** | `<PIPELINE_TS>-caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` | pipeline-start |
+| **Per-group file list** | `<PIPELINE_TS>-caa-group-{GROUP_ID}.txt` | pipeline-start |
+| **Gap-fill queue** | `<PIPELINE_TS>-caa-gapfill-queue-P{N}-R{RUN_ID}.txt` | pipeline-start |
+| **Per-group fix issues** | `<PIPELINE_TS>-caa-fix-group-{GROUP_ID}.md` | pipeline-start |
 
 ## Finding IDs
 

@@ -73,7 +73,8 @@ Output: Pass 1: 8 issues fixed. Pass 2: 2 regressions. Pass 3: 0 issues → APPR
 - [Loop Termination](references/loop-termination.md):
   - Termination Logic, Final Report Format
 - [Report Naming](references/report-naming.md):
-  - Overview, Filename Table, UUID Filename Generation, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
+  - Canonical Pattern, Main-Root Resolution (Worktree-Safe), Timestamp Format
+  - PIPELINE_TS vs Per-Agent TS, Filename Table, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
 - [Critical Rules](references/critical-rules.md):
   - Rules 1-14: Phase ordering, UUID naming, two-stage merge, dedup verdict, fix-all, commit cadence, 25-pass limit
 - [Model Selection](references/model-selection.md):

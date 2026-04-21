@@ -75,7 +75,7 @@ Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or o
 
 ```bash
 # Identify the lost agent's output file by its UUID
-LOST_FILE="reports/code-auditor/caa-correctness-P3-a1b2c3d4.md"
+LOST_FILE="reports/code-auditor/20260421_183012+0200-caa-correctness-P3-a1b2c3d4.md"
 
 # Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
 # Then delete the partial file
@@ -128,7 +128,7 @@ Create a NEW agent with a NEW UUID for the exact same task:
 ## Step 5: Record the Failure
 
 Append an entry to the recovery log in the pass audit trail (either in the merged report or
-a separate `reports/code-auditor/caa-recovery-log-P{N}.md` file):
+a separate `reports/code-auditor/{TS}-caa-recovery-log-P{N}.md` file):
 
 ```markdown
 ### Agent Recovery Log
@@ -146,7 +146,7 @@ a separate `reports/code-auditor/caa-recovery-log-P{N}.md` file):
 
 The orchestrator's context was summarized and one or more agent task IDs were lost.
 
-1. Read the agent manifest file: `reports/code-auditor/caa-agents-P{N}-R{RUN_ID}.json`
+1. Read the agent manifest file at the path the orchestrator passed to you (the path the orchestrator recorded as `MANIFEST` at pipeline start). The canonical pattern is `reports/code-auditor/{PIPELINE_TS}-caa-agents-P{N}-R{RUN_ID}.json`. If you do not have the exact path, glob `reports/code-auditor/*-caa-agents-P{N}-R{RUN_ID}.json` — RUN_ID + PASS_NUMBER uniquely identify one file per pipeline run.
    - This file records all spawned agents, their domains, prefixes, and expected outputs
    - It survives context compaction because it's on disk
 2. For each agent in the manifest, check if its output file exists and is complete
@@ -159,7 +159,7 @@ The orchestrator's context was summarized and one or more agent task IDs were lo
    - Cross-reference with the expected domain list
 4. For each truly missing report: re-spawn from scratch (Step 4)
 5. For fix agents: check `git log` for the most recent fix commit -- if fixes were already committed, the fix agent completed successfully even though its task ID was lost
-6. For fix agents: also check checkpoint file `reports/code-auditor/caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` to see which findings were already resolved
+6. For fix agents: also check checkpoint file `reports/code-auditor/{PIPELINE_TS}-caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` to see which findings were already resolved. The orchestrator records `CHECKPOINT_PATH` at spawn time; if lost, glob `reports/code-auditor/*-caa-checkpoint-P{N}-R{RUN_ID}-{domain}.json` (one match per pass-run-domain).
 
 > **Note (Claude Code 2.1.69+):** Resuming after compaction no longer produces a preamble recap. The agent simply continues from where it left off. Recovery steps remain the same — read the manifest to restore pipeline state.
 
@@ -203,5 +203,5 @@ Copy this checklist and track your progress:
 - [ ] If file incomplete/missing: partial artifacts cleaned up
 - [ ] For fix agents: `git diff` checked and partial changes stashed if present
 - [ ] Replacement agent spawned with new UUID, same prompt and finding prefix
-- [ ] Recovery log entry written to `reports/code-auditor/caa-recovery-log-P{N}.md`
+- [ ] Recovery log entry written to `reports/code-auditor/{TS}-caa-recovery-log-P{N}.md`
 - [ ] If 3 consecutive failures: escalated to user

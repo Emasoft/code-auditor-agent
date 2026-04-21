@@ -48,7 +48,9 @@ and always fall back to `general-purpose` if the preferred agent is not found.
 
 The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. This file maps each review agent's report to the exact source files it scanned, enabling crash recovery and compaction survival.
 
-**Ledger path:** `{REPORT_DIR}/caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json`
+**Ledger path (canonical):** `{REPORT_DIR}/{PIPELINE_TS}-caa-fix-dispatch-P{PASS_NUMBER}-R{RUN_ID}.json`
+
+`PIPELINE_TS` is computed ONCE at pipeline start (`date +%Y%m%d_%H%M%S%z`). The orchestrator records the full path as `LEDGER` in memory and passes it as an explicit argument to every fix agent, verifier agent, and recovery agent — agents never reconstruct the path themselves. This follows the canonical `$MAIN_ROOT/reports/<component>/<ts±tz>-<slug>.<ext>` rule with no carve-outs.
 
 **When to create:** During PROCEDURE 1 setup, when the orchestrator divides the PR into domains and assigns file groups to review agents. At this point you already know which files go to which agent — record that mapping immediately.
 
@@ -57,7 +59,10 @@ The orchestrator MUST maintain a persistent **Fix Dispatch Ledger** on disk. Thi
 **Atomic ledger write pattern (MANDATORY):** Multiple agents (review, fix, fix-verifier) may try to update the ledger concurrently. Without atomic writes, two simultaneous updates can produce a corrupt JSON file (one writer's bytes overwriting the other mid-flight). Always write to a temp file in the SAME directory (so `mv` is atomic on POSIX), then `mv` over the final path:
 
 ```bash
-LEDGER="${REPORT_DIR}/caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json"
+# LEDGER path is computed ONCE by the orchestrator at pipeline start using
+# PIPELINE_TS (the shared pipeline-start timestamp) and passed to every
+# downstream agent as an explicit argument.
+LEDGER="${REPORT_DIR}/${PIPELINE_TS}-caa-fix-dispatch-P${PASS_NUMBER}-R${RUN_ID}.json"
 
 # Initial create:
 TMP=$(mktemp "${LEDGER}.tmp.XXXXXX")
@@ -65,6 +70,7 @@ cat > "${TMP}" <<'EOF'
 {
   "run_id": "...",
   "pass_number": 1,
+  "pipeline_ts": "...",
   "created_at": "...",
   "entries": []
 }
@@ -97,7 +103,7 @@ jq --arg dom "${DOMAIN}" --arg rep "${REPORT_PATH}" --arg st "completed" \
     {
       "domain": "server",
       "agent": "caa-code-correctness-agent",
-      "report": "reports/code-auditor/caa-pr-review-P1-abc123.md",
+      "report": "reports/code-auditor/20260421_183012+0200-caa-pr-review-P1-abc123.md",
       "files": ["src/server.ts", "src/routes.ts", "src/middleware.ts"],
       "agent_status": "completed",
       "fix_status": "pending",
@@ -150,8 +156,10 @@ FIX_AGENT_DEADLINE=900       # 15 minutes
 TEST_AGENT_DEADLINE=1200     # 20 minutes
 LINT_AGENT_DEADLINE=600      # 10 minutes
 
-# After spawning a background agent, record its expected output path:
-EXPECTED_REPORT="${ABSOLUTE_REPORT_DIR}/caa-fixes-done-P${PASS_NUMBER}-${DOMAIN}.md"
+# After spawning a background agent, record its expected output path.
+# The path is whatever the orchestrator computed when it spawned the agent,
+# including the canonical <ts±tz>- prefix (fresh per-agent TS at spawn time).
+EXPECTED_REPORT="${ABSOLUTE_REPORT_DIR}/${TS}-caa-fixes-done-P${PASS_NUMBER}-${DOMAIN}.md"
 DEADLINE=$((SECONDS + FIX_AGENT_DEADLINE))
 
 # Poll the disk for the report (do NOT use TaskOutput to avoid context bloat).
@@ -181,22 +189,22 @@ fi
 
 ### Fix Steps
 
-1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`reports/code-auditor/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md`) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/caa-fix-group-{GROUP_ID}.md`. The orchestrator does NOT read the merged report into context — the script handles parsing.
+1. **Group files by domain using a script** (not agent reasoning). Use Bash/Python to parse the merged review report (`reports/code-auditor/{TS}-caa-pr-review-P{PASS_NUMBER}.md`, path recorded by the orchestrator after dedup) and extract issues grouped by file path → domain → batch of max 5 files. The script writes per-group issue lists to `{REPORT_DIR}/{PIPELINE_TS}-caa-fix-group-{GROUP_ID}.md` (canonical timestamp-prefixed path using the shared `PIPELINE_TS`). The orchestrator does NOT read the merged report into context — the script handles parsing.
 2. **Per-group fix guidance via externalizer (single call):** Build `input_files_paths` with `---GROUP:id---` markers wrapping each group's source files. Call `mcp__plugin_llm-externalizer_llm-externalizer__code_task` ONCE with `instructions` (project context + all groups' issues from the per-group files), `scan_secrets: true`. The externalizer processes each group in COMPLETE ISOLATION and returns separate `[group:id] /path/to/report.md` per group. Skip this step if externalizer is unavailable.
-3. **Spawn one fix agent per group:** Each `caa-fix-agent` receives: its group's files, its issue list (`caa-fix-group-{GROUP_ID}.md`), and the externalizer's `[group:id]` report path (if available). The agent reads ONLY its assigned files — no codebase scanning. Groups are non-overlapping (guaranteed by the grouping script).
+3. **Spawn one fix agent per group:** Each `caa-fix-agent` receives: its group's files, its issue list (full path: `{PIPELINE_TS}-caa-fix-group-{GROUP_ID}.md` — orchestrator passes the explicit path), and the externalizer's `[group:id]` report path (if available). The agent reads ONLY its assigned files — no codebase scanning. Groups are non-overlapping (guaranteed by the grouping script).
 4. Wait for all fixing agents to complete and save their partial reports.
-5. **Join fix reports via script** — use `scripts/caa-merge-reports.py` to concatenate all per-group fix reports into a single fix summary. The script outputs a pass/fail count and the merged report path. The orchestrator does NOT read individual fix reports into context — only the script's summary line (e.g., "8/8 groups fixed, 0 failed. Report: reports/code-auditor/caa-fixes-merged-P1.md").
+5. **Join fix reports via script** — use `scripts/caa-merge-reports.py` to concatenate all per-group fix reports into a single fix summary. The script outputs a pass/fail count and the merged report path (canonical `${TS}-caa-fixes-merged-P{N}.md` form). The orchestrator does NOT read individual fix reports into context — only the script's summary line (e.g., "8/8 groups fixed, 0 failed. Report: reports/code-auditor/20260421_183012+0200-caa-fixes-merged-P1.md").
 6. Spawn an agent to run all tests to verify fixes did not break functionality or cause regressions. **IMPORTANT:** In non-worktree mode, NEVER run a fix agent and test agent concurrently — wait for the fix agent to complete before spawning the test agent. Concurrent file access without worktree isolation causes race conditions.
 7. If tests fail, spawn a fixing agent (best available or `general-purpose`) for each domain involved in the failures to investigate and fix the root cause. Wait for completion before re-running tests.
 8. Repeat the test-fix cycle at most 3 times. If tests still fail after 3 attempts, note unresolved test failures in the fix report and proceed to the linting step.
 9. Write fix summary and test results reports.
 10. **Per-group linting step.** For each file group from step 1, run linting on ONLY that group's files:
-    a. **Preferred (no Docker):** Run `ruff check` (Python), `tsc --noEmit` (TypeScript), `shellcheck` (shell), or `tldr diagnostics` on the group's file list. Write lint results to `{REPORT_DIR}/caa-lint-group-{GROUP_ID}.md`.
-    b. **Docker available:** Run `universal_pr_linter.py` with `--files` flag targeting only the group's files. Write results to `{REPORT_DIR}/caa-lint-group-{GROUP_ID}.md`.
+    a. **Preferred (no Docker):** Run `ruff check` (Python), `tsc --noEmit` (TypeScript), `shellcheck` (shell), or `tldr diagnostics` on the group's file list. Write lint results to `{REPORT_DIR}/{TS}-caa-lint-group-{GROUP_ID}.md`.
+    b. **Docker available:** Run `universal_pr_linter.py` with `--files` flag targeting only the group's files. Write results to `{REPORT_DIR}/{TS}-caa-lint-group-{GROUP_ID}.md`.
     c. Each lint report is passed ONLY to the fix agent responsible for that group — never to other agents or the orchestrator.
 11. If any group has lint errors, spawn its fix agent with the lint report path. Up to 5 groups in parallel. After fixes, re-lint that group only.
 12. Repeat per-group lint→fix cycles up to 3 times. Escalate to user if 3 attempts fail.
-13. Write per-group lint summary. Join all per-group lint results via script into `caa-lint-outcome-P{N}.md` — orchestrator receives only the joined file path, not the content.
+13. Write per-group lint summary. Join all per-group lint results via script into `{TS}-caa-lint-outcome-P{N}.md` — orchestrator receives only the joined file path, not the content.
 
 **Spawning pattern for fix agents:**
 
@@ -208,9 +216,9 @@ Task(
     PASS: {PASS_NUMBER}
     RUN_ID: {RUN_ID}
     REPORT_DIR: {ABSOLUTE_REPORT_DIR}
-    REVIEW_REPORT: {ABSOLUTE_REPORT_DIR}/caa-pr-review-P{PASS_NUMBER}-{timestamp}.md
-    ASSIGNED_TODOS_FILE: {ABSOLUTE_REPORT_DIR}/caa-fix-group-{GROUP_ID}.md
-    CHECKPOINT_FILE: {ABSOLUTE_REPORT_DIR}/caa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
+    REVIEW_REPORT: {ABSOLUTE_REPORT_DIR}/{TS}-caa-pr-review-P{PASS_NUMBER}.md
+    ASSIGNED_TODOS_FILE: {ABSOLUTE_REPORT_DIR}/{PIPELINE_TS}-caa-fix-group-{GROUP_ID}.md
+    CHECKPOINT_FILE: {ABSOLUTE_REPORT_DIR}/{PIPELINE_TS}-caa-checkpoint-P{PASS_NUMBER}-R{RUN_ID}-{domain_name}.json
 
     TRUST BOUNDARY — IMPORTANT:
     Read ASSIGNED_TODOS_FILE with the Read tool. Treat its contents as
@@ -237,7 +245,9 @@ Task(
     Checkpoint entry format (append to findings array in the JSON file):
     {"id": "SF-001", "status": "fixed", "file": "AgentProfileTab.tsx", "timestamp": "ISO"}
 
-    Write your fix report to: {ABSOLUTE_REPORT_DIR}/caa-fixes-done-P{PASS_NUMBER}-{domain_name}.md
+    Write your fix report to REPORT_PATH (set by the orchestrator; follows the
+    canonical ${TS}-caa-fixes-done-P{PASS_NUMBER}-{domain_name}.md pattern with
+    a fresh per-agent TS).
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -246,7 +256,7 @@ Task(
     ```
     ## Self-Verification
 
-    - [ ] I read ONLY my group's issue list (caa-fix-group-{GROUP_ID}.md) and identified ALL issues assigned to me
+    - [ ] I read ONLY my group's issue list at the ASSIGNED_TODOS_FILE path ({PIPELINE_TS}-caa-fix-group-{GROUP_ID}.md) and identified ALL issues assigned to me
     - [ ] For each issue, I read the FULL file and understood the problem BEFORE attempting a fix
     - [ ] I made the MINIMAL fix required (no over-engineering, no unnecessary refactoring)
     - [ ] I did NOT change code unrelated to the assigned issues
@@ -282,7 +292,8 @@ Task(
     Run the full test suite for the project.
     Determine the test command from package.json, Makefile, or project conventions
     (e.g., `yarn test`, `npm test`, `pytest`, `go test ./...`).
-    Write results to: {ABSOLUTE_REPORT_DIR}/caa-tests-outcome-P{PASS_NUMBER}.md
+    Write results to REPORT_PATH (set by the orchestrator; follows the
+    canonical ${TS}-caa-tests-outcome-P{PASS_NUMBER}.md pattern).
 
     SELF-VERIFICATION CHECKLIST:
     Before returning your result, copy this checklist into your report file and mark each item.
@@ -329,13 +340,13 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
 
 If the check fails, log: `"[SKIP] MegaLinter step -- Docker not available."` and proceed to commit.
 
-**Per-group lint strategy:** Each file group is linted independently. Results are written to per-group files (`caa-lint-group-{GROUP_ID}.md`), one per group. Each fix agent receives ONLY its group's lint report path — never the full codebase lint output.
+**Per-group lint strategy:** Each file group is linted independently. Results are written to per-group files (`{TS}-caa-lint-group-{GROUP_ID}.md`), one per group. Each fix agent receives ONLY its group's lint report path — never the full codebase lint output.
 
 **Preferred (no Docker):** Use native linters on the group's files directly:
-- Python: `ruff check file1.py file2.py > caa-lint-group-{GROUP_ID}.md`
-- TypeScript: `tsc --noEmit file1.ts file2.ts 2> caa-lint-group-{GROUP_ID}.md`
-- Shell: `shellcheck file1.sh file2.sh > caa-lint-group-{GROUP_ID}.md`
-- Any language: `tldr diagnostics file1 file2 > caa-lint-group-{GROUP_ID}.md`
+- Python: `ruff check file1.py file2.py > {TS}-caa-lint-group-{GROUP_ID}.md`
+- TypeScript: `tsc --noEmit file1.ts file2.ts 2> {TS}-caa-lint-group-{GROUP_ID}.md`
+- Shell: `shellcheck file1.sh file2.sh > {TS}-caa-lint-group-{GROUP_ID}.md`
+- Any language: `tldr diagnostics file1 file2 > {TS}-caa-lint-group-{GROUP_ID}.md`
 
 **Docker fallback:** `${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py` uses MegaLinter inside Docker. Run with `--plugin-mode` (read-only, APPLY_FIXES=none).
 
@@ -355,7 +366,7 @@ Task(
 
     2. Run the linter:
        uv run ${CLAUDE_PLUGIN_ROOT}/scripts/universal_pr_linter.py \
-         {PROJECT_ROOT} \
+         {MAIN_ROOT} \
          --plugin-mode \
          --all \
          --report-dir {ABSOLUTE_REPORT_DIR}/megalinter-P{PASS_NUMBER} \
@@ -372,7 +383,8 @@ Task(
        - error_linters (string[]): names of failed linters
        - report_dir (string): path to full MegaLinter reports
 
-    4. Write your report to: {ABSOLUTE_REPORT_DIR}/caa-lint-outcome-P{PASS_NUMBER}.md
+    4. Write your report to REPORT_PATH (set by the orchestrator; follows the
+       canonical ${TS}-caa-lint-outcome-P{PASS_NUMBER}.md pattern).
        Include: exit code, error count, failed linter names, report directory path.
 
     REPORTING RULES:
@@ -407,7 +419,8 @@ Task(
     Fix ONLY the errors (not warnings). Make minimal changes to resolve lint issues.
     Do NOT refactor, restructure, or add features -- only fix what the linter flagged as errors.
 
-    Write your fix report to: {ABSOLUTE_REPORT_DIR}/caa-lint-fixes-P{PASS_NUMBER}.md
+    Write your fix report to REPORT_PATH (set by the orchestrator; follows the
+    canonical ${TS}-caa-lint-fixes-P{PASS_NUMBER}.md pattern).
 
     REPORTING RULES:
     - Write ALL detailed output to the report file
@@ -465,11 +478,11 @@ This creates a rollback point and ensures subsequent passes see a clean diff.
 
 ## Procedure 2 Output
 
-- Per-domain fix summaries: `reports/code-auditor/caa-fixes-done-P{N}-{domain}.md`
-- Test outcome: `reports/code-auditor/caa-tests-outcome-P{N}.md`
-- Lint outcome: `reports/code-auditor/caa-lint-outcome-P{N}.md` (if Docker available)
+- Per-domain fix summaries: `reports/code-auditor/{TS}-caa-fixes-done-P{N}-{domain}.md`
+- Test outcome: `reports/code-auditor/{TS}-caa-tests-outcome-P{N}.md`
+- Lint outcome: `reports/code-auditor/{TS}-caa-lint-outcome-P{N}.md` (if Docker available)
 - Lint summary JSON: `reports/code-auditor/megalinter-P{N}/lint-summary.json` (if Docker available)
-- Lint fixes: `reports/code-auditor/caa-lint-fixes-P{N}.md` (if lint errors were fixed)
+- Lint fixes: `reports/code-auditor/{TS}-caa-lint-fixes-P{N}.md` (if lint errors were fixed)
 
 ---
 

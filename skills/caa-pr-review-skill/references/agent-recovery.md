@@ -75,7 +75,7 @@ Delete ONLY the lost agent's artifacts. NEVER touch files from other agents or o
 
 ```bash
 # Identify the lost agent's output file by its UUID
-LOST_FILE="reports/code-auditor/caa-correctness-P1-a1b2c3d4.md"
+LOST_FILE="reports/code-auditor/20260421_183012+0200-caa-correctness-P1-a1b2c3d4.md"
 
 # Verify it belongs to the lost agent (filename contains the UUID assigned to that agent)
 # Then delete the partial file
@@ -117,7 +117,7 @@ Create a NEW agent with a NEW UUID for the exact same task:
 ## Step 5: Record the Failure
 
 Append an entry to the recovery log (either in the merged report or
-a separate `reports/code-auditor/caa-recovery-log-P{N}.md` file):
+a separate `reports/code-auditor/{TS}-caa-recovery-log-P{N}.md` file):
 
 ```markdown
 ### Agent Recovery Log

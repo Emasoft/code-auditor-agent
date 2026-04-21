@@ -39,7 +39,7 @@ This command audits ONLY files changed since a previous point in git history. It
 ```
 /delta-audit --scope ./src --since v3.2.0
 /delta-audit --scope ./src --since HEAD~10 --fix
-/delta-audit --scope . --since abc123def --previous-report reports/code-auditor/caa-audit-FINAL-2026-03-15.md
+/delta-audit --scope . --since abc123def --previous-report reports/code-auditor/20260315_120000+0000-caa-audit-FINAL.md
 ```
 
 ## What Happens

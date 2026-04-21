@@ -95,37 +95,45 @@ NEW_SECTION_RE = re.compile(r"^#{1,2}\s*[0-9]|^#\s+[A-Z]")
 # ── Finding line regex (lines starting with ## to ##### then a bracket) ──────
 FINDING_LINE_RE = re.compile(r"^#{2,5}\s*\[")
 
-# ── Skip patterns for filenames ──────────────────────────────────────────────
-SKIP_PREFIXES = (
+# ── Skip tags for filenames ──────────────────────────────────────────────────
+# Names are type tags that may sit at the start of the filename (legacy layout)
+# or after the canonical <ts±tz>- prefix. Detect with substring, not startswith.
+SKIP_TAGS = (
     "caa-fixes-",
     "caa-checkpoint-",
     "caa-fixverify-",
     "caa-manifest-",
     "TODO-",
-    "caa-audit-FINAL-",
+    "caa-audit-FINAL",
 )
 
 
 def is_skipped(basename: str) -> bool:
     """Check if a filename should be skipped (not part of the merge pipeline)."""
-    for prefix in SKIP_PREFIXES:
-        if basename.startswith(prefix):
+    for tag in SKIP_TAGS:
+        if tag in basename:
             return True
     # Skip intermediate merge outputs to prevent re-merging on subsequent runs
-    if "-intermediate-" in basename:
+    if "-intermediate-" in basename or "-intermediate." in basename:
         return True
     return "-STALE" in basename
 
 
 def classify_report(basename: str) -> str:
-    """Classify a report by its type prefix."""
-    if basename.startswith("caa-audit-"):
+    """Classify a report by its type, tolerating the <ts±tz>- prefix.
+
+    Filenames follow $MAIN_ROOT/reports/code-auditor/<ts±tz>-<slug>.<ext> where
+    <slug> starts with caa-audit-, caa-verify-, caa-gapfill-, or
+    caa-consolidated-. Substring search tolerates both prefixed (canonical) and
+    unprefixed (legacy) filenames.
+    """
+    if "caa-audit-" in basename:
         return "audit"
-    elif basename.startswith("caa-verify-"):
+    elif "caa-verify-" in basename:
         return "verify"
-    elif basename.startswith("caa-gapfill-"):
+    elif "caa-gapfill-" in basename:
         return "gapfill"
-    elif basename.startswith("caa-consolidated-"):
+    elif "caa-consolidated-" in basename:
         return "consolidated"
     else:
         return "other"
@@ -166,19 +174,24 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     pass_number = args.pass_number
     run_id = args.run_id
-    timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+    # Canonical timestamp: local time + GMT offset, compact ±HHMM (no colon).
+    # Matches $MAIN_ROOT/reports/<component>/<ts±tz>-<slug>.<ext> rule.
+    timestamp = datetime.now().astimezone().strftime("%Y%m%d_%H%M%S%z")
 
-    # Build glob pattern: if run_id provided, scope to that run only
+    # Build glob pattern: if run_id provided, scope to that run only.
+    # Leading * tolerates the canonical <ts±tz>- prefix as well as unprefixed
+    # legacy filenames created by older plugin versions.
     if run_id:
-        pattern = f"caa-*-P{pass_number}-R{run_id}-*.md"
+        pattern = f"*caa-*-P{pass_number}-R{run_id}-*.md"
         if not quiet:
             print(f"{CYAN}Run ID: {run_id} (scoped merge){NC}")
     else:
-        pattern = f"caa-*-P{pass_number}-*.md"
+        pattern = f"*caa-*-P{pass_number}-*.md"
         if not quiet:
             print(f"{YELLOW}No run ID — merging ALL files for pass {pass_number} (legacy mode){NC}")
 
-    intermediate_report = output_dir / f"caa-audit-P{pass_number}-intermediate-{timestamp}.md"
+    # Canonical filename: <ts±tz>-<slug>.<ext>
+    intermediate_report = output_dir / f"{timestamp}-caa-audit-P{pass_number}-intermediate.md"
 
     # ── Validate input ───────────────────────────────────────────────────────
     if not output_dir.is_dir():

@@ -12,14 +12,16 @@ When `USE_WORKTREES=true` is explicitly passed, agents run in isolated git workt
 
 ## How It Works
 
-1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR` against the **MAIN project root** — NEVER the worktree. `$(pwd)` inside a worktree resolves to the worktree path; use `CLAUDE_PROJECT_DIR` (Claude Code env var set to the originally-opened project) or `git rev-parse --git-common-dir | dirname` as fallback:
+1. **Before spawning**, resolve `ABSOLUTE_REPORT_DIR` against the **MAIN project root** — NEVER the worktree. Use the canonical `git worktree list | head -n1` approach which always returns the MAIN checkout even when invoked from inside a linked worktree:
    ```bash
-   if [ -n "${CLAUDE_PROJECT_DIR}" ]; then
-     PROJECT_ROOT="${CLAUDE_PROJECT_DIR}"
+   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+     MAIN_ROOT="$(git worktree list | head -n1 | awk '{print $1}')"
+   elif [ -n "${CLAUDE_PROJECT_DIR}" ]; then
+     MAIN_ROOT="${CLAUDE_PROJECT_DIR}"
    else
-     PROJECT_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+     echo "ERROR: cannot resolve MAIN_ROOT" >&2; exit 1
    fi
-   ABSOLUTE_REPORT_DIR="${PROJECT_ROOT}/reports/code-auditor"
+   ABSOLUTE_REPORT_DIR="${MAIN_ROOT}/reports/code-auditor"
    ```
    All agents write reports to this absolute path so reports survive worktree cleanup, stay in one place per run, and honor the "reports always live in the main project's `./reports/`" rule.
 

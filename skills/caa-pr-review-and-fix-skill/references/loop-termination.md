@@ -15,14 +15,14 @@ PASS_NUMBER = PASS_NUMBER + 1
 if PASS_NUMBER > MAX_PASSES (25):
     STOP. Write escalation report:
     "Maximum pass limit reached. {remaining_count} issues persist after {MAX_PASSES} passes.
-     Review: reports/code-auditor/caa-pr-review-P{last_pass}-{timestamp}.md
+     Review: reports/code-auditor/{TS}-caa-pr-review-P{last_pass}.md
      Manual intervention required."
     Present to user and exit.
 
 Run PROCEDURE 1 with new PASS_NUMBER.
 
 if PROCEDURE 1 finds ZERO issues (all severities -- MUST-FIX, SHOULD-FIX, NIT):
-    Write final report: reports/code-auditor/caa-pr-review-and-fix-FINAL-{timestamp}.md
+    Write final report: reports/code-auditor/{TS}-caa-pr-review-and-fix-FINAL.md
     Present final summary to user and exit.
 else:
     Run PROCEDURE 2 with the new findings.
@@ -49,10 +49,10 @@ When the loop terminates with zero issues:
 | {N}  | 0           | --          | {passed}/{total} | {clean/skipped} |
 
 ### Reports Generated
-- Pass 1 review: reports/code-auditor/caa-pr-review-P1-{timestamp}.md
-- Pass 1 fixes: reports/code-auditor/caa-fixes-done-P1-{domain}.md
+- Pass 1 review: reports/code-auditor/{TS}-caa-pr-review-P1.md
+- Pass 1 fixes: reports/code-auditor/{TS}-caa-fixes-done-P1-{domain}.md
 - ...
-- Final clean review: reports/code-auditor/caa-pr-review-P{N}-{timestamp}.md
+- Final clean review: reports/code-auditor/{TS}-caa-pr-review-P{N}.md
 
 ### All Fixes Applied
 1. [CC-P1-001] {title} -- {file} (Pass 1)
