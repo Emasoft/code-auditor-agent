@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.1] - 2026-04-22
+
+### Bug Fixes
+
+- Apply LLM-externalizer findings + cover two missed bugs (d379ce6)
+
+### Chores
+
+- *(checkpoint)* Pre-scan-and-fix 20260421T181758+0200 (f4d4f92)
+
 ## [3.4.0] - 2026-04-21
 
 ### Features
