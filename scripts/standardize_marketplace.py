@@ -356,7 +356,8 @@ def audit_marketplace(marketplace_dir: Path, fix: bool, dry_run: bool) -> int:
 
     # -- Phase 3: Fix mode (optional) --
     fix_findings: list[Finding] = []
-    if fix and data is not None:
+    json_errors = sum(1 for f in json_findings if f.severity == SEVERITY_ERROR)
+    if fix and data is not None and json_errors == 0:
         print(f"{CYAN}[3/3] Generating missing standard files{NC}")
         fix_findings = fix_missing_files(marketplace_dir, data, dry_run)
         for f in fix_findings:
@@ -364,6 +365,9 @@ def audit_marketplace(marketplace_dir: Path, fix: bool, dry_run: bool) -> int:
         print()
     elif fix and data is None:
         print(f"{RED}[3/3] Cannot fix: marketplace.json is missing or invalid{NC}")
+        print()
+    elif fix and json_errors > 0:
+        print(f"{RED}[3/3] Cannot fix: marketplace.json has {json_errors} validation error(s) -- fix these first{NC}")
         print()
 
     # -- Summary --

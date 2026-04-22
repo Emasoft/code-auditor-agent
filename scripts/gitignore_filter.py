@@ -7,11 +7,12 @@ All validators should use this to skip gitignored files/directories.
 
 Usage:
     gi = GitignoreFilter(plugin_root)
-    for path in gi.walk_files(plugin_root, skip_dirs={"__pycache__"}):
-        # path is a Path object, gitignored files are excluded
+    for dirpath, dirnames, filenames in gi.walk(skip_dirs={"__pycache__"}):
+        # dirpath is a str, dirnames/filenames are lists of str
+        # gitignored directories and files are excluded
         ...
 
-    for path in gi.rglob(plugin_root, "*.pyc"):
+    for path in gi.rglob("*.pyc"):
         # gitignored matches excluded
         ...
 """
@@ -64,8 +65,9 @@ class GitignoreFilter:
     ):
         """Recursive directory walk using pathlib only (cross-platform).
 
-        Yields (dirpath: Path, subdirs: list[str], files: list[str]).
-        Compatible with os.walk() return signature but uses Path objects.
+        Yields (dirpath: str, subdirs: list[str], files: list[str]).
+        Compatible with os.walk() return signature and default behavior
+        (symlinks to directories are not followed).
         """
         subdirs: list[str] = []
         files: list[str] = []
@@ -76,7 +78,8 @@ class GitignoreFilter:
             return
 
         for entry in entries:
-            if entry.is_dir():
+            # Match os.walk default: do not follow symlinks to directories
+            if entry.is_dir() and not entry.is_symlink():
                 if skip_hidden and entry.name.startswith("."):
                     continue
                 if entry.name in skip_dirs:

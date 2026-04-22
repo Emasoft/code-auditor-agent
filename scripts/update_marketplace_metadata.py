@@ -34,7 +34,14 @@ def calculate_directory_checksum(dir_path: Path, exclude_patterns: list[str] | N
     Returns:
         Hex-encoded SHA-256 checksum of all file contents combined
     """
-    exclude_patterns = exclude_patterns or ["__pycache__", ".git", ".mypy_cache", ".ruff_cache", "*.pyc"]
+    exclude_patterns = exclude_patterns or [
+        "__pycache__",
+        ".git",
+        ".mypy_cache",
+        ".ruff_cache",
+        "*.pyc",
+        "marketplace.json",
+    ]
 
     sha256_hash = hashlib.sha256()
 
@@ -54,13 +61,20 @@ def calculate_directory_checksum(dir_path: Path, exclude_patterns: list[str] | N
     files = sorted(f for f in dir_path.rglob("*") if f.is_file() and not should_exclude(f))
 
     for file_path in files:
-        # Include relative path in hash for structure-awareness
+        # Include relative path in hash for structure-awareness.
+        # Use POSIX form so checksums are identical on Windows and Unix.
+        # Length-prefix the path and content so ("a", "bc") and ("ab", "c")
+        # cannot hash to the same value.
         rel_path = file_path.relative_to(dir_path)
-        sha256_hash.update(str(rel_path).encode("utf-8"))
+        path_bytes = rel_path.as_posix().encode("utf-8")
         try:
-            sha256_hash.update(file_path.read_bytes())
+            content_bytes = file_path.read_bytes()
         except OSError:
             continue  # Broken symlink, permission denied
+        sha256_hash.update(len(path_bytes).to_bytes(8, "big"))
+        sha256_hash.update(path_bytes)
+        sha256_hash.update(len(content_bytes).to_bytes(8, "big"))
+        sha256_hash.update(content_bytes)
 
     return sha256_hash.hexdigest()
 
@@ -324,11 +338,13 @@ Examples:
         # Just check if update is needed
         existing_data, error = load_marketplace_json(marketplace_path)
         if error:
+            # Parse / read error is a real error per the module docstring
+            # ("1 - Error (missing files, invalid JSON, etc.)"), so exit 1.
             if args.json:
-                print(json.dumps({"needs_update": True, "reason": error}))
+                print(json.dumps({"error": error}))
             else:
-                print(f"Update needed: {error}")
-            return 0
+                print(f"Error: {error}", file=sys.stderr)
+            return 1
 
         if existing_data is None:
             if args.json:
@@ -339,19 +355,25 @@ Examples:
 
         new_entry = create_marketplace_entry(plugin_root)
         plugins = existing_data.get("plugins", [])
+        # Match update_marketplace_json: stop at the first name match so the
+        # --check-only verdict always mirrors what the non-check branch would do.
+        name_found = False
         for plugin in plugins:
             if plugin.get("name") == new_entry["name"]:
+                name_found = True
                 if plugin.get("checksum") == new_entry["checksum"]:
                     if args.json:
                         print(json.dumps({"needs_update": False, "reason": "checksum unchanged"}))
                     else:
                         print("No update needed: checksum unchanged")
                     return 0
+                break
 
+        reason = "checksum changed" if name_found else "plugin entry missing"
         if args.json:
-            print(json.dumps({"needs_update": True, "reason": "checksum changed"}))
+            print(json.dumps({"needs_update": True, "reason": reason}))
         else:
-            print("Update needed: checksum changed")
+            print(f"Update needed: {reason}")
         return 0
 
     # Perform update

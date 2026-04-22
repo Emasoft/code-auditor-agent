@@ -36,12 +36,18 @@ jobs:
       - name: Run plugin validation
         run: |
           # Exit codes: 0=pass, 1=CRITICAL, 2=MAJOR, 3=MINOR, 4=NIT
-          # CI blocks on CRITICAL (1) and MAJOR (2) only
+          # CI blocks on CRITICAL (1) and MAJOR (2) only.
+          # Any code outside 0-4 is unexpected (missing script, segfault,
+          # SIGINT, etc.) — fail the step so environment breakage is visible.
           set +e
           uv run python scripts/validate_plugin.py . 2>&1 | tee validation-report.txt
           exit_code=${PIPESTATUS[0]}
           set -e
           if [ "$exit_code" -eq 1 ] || [ "$exit_code" -eq 2 ]; then
+            exit $exit_code
+          fi
+          if [ "$exit_code" -lt 0 ] || [ "$exit_code" -gt 4 ]; then
+            echo "::error::validate_plugin.py: unexpected exit $exit_code"
             exit $exit_code
           fi
 

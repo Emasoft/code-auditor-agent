@@ -233,10 +233,12 @@ def bunx_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
 
 def pnpm_dlx_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
     """Build argv for running a package via pnpm dlx."""
-    # pnpm dlx runs the default bin; if cmd differs, place cmd explicitly.
+    # pnpm dlx runs the package's default bin; when cmd != pkg, use the
+    # --package flag on the pnpm top-level to install <pkg> and run <cmd>.
+    # (see: https://pnpm.io/cli/dlx)
     if cmd == pkg:
         return ["pnpm", "dlx", pkg] + tool_args
-    return ["pnpm", "dlx", pkg, cmd] + tool_args
+    return ["pnpm", f"--package={pkg}", "dlx", cmd] + tool_args
 
 
 def yarn_dlx_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
@@ -295,10 +297,14 @@ def uvx_argv(pkg: str, cmd: str, tool_args: list[str], latest: bool = True) -> l
     raise RuntimeError("uvx/uv not available")
 
 
-def pipx_run_argv(pkg: str, tool_args: list[str]) -> list[str]:
+def pipx_run_argv(pkg: str, cmd: str, tool_args: list[str]) -> list[str]:
     """Build argv for running a Python package via pipx run."""
-    # pipx can't reliably pick an arbitrary bin from a package; best effort:
-    return ["pipx", "run", pkg] + tool_args
+    # pipx run <bin> installs the package whose default bin is <bin>.
+    # When cmd != pkg, use --spec to install <pkg> and run its <cmd> bin.
+    # (see: https://pipx.pypa.io/stable/docs/#pipx-run)
+    if cmd == pkg:
+        return ["pipx", "run", pkg] + tool_args
+    return ["pipx", "run", "--spec", pkg, cmd] + tool_args
 
 
 def deno_builtin_argv(subcmd: str, tool_args: list[str]) -> list[str]:
@@ -352,11 +358,15 @@ def powershell_module_argv(module: str, cmdlet: str, cmdlet_args: list[str]) -> 
     arg_str = " ".join(ps_quote(a) for a in cmdlet_args)
     ps = f"""
 $dir = Join-Path $env:TEMP ("psmods_" + [guid]::NewGuid().ToString("n"))
-Save-Module -Name {ps_quote(module)} -Path $dir -Force | Out-Null
-$psd1 = Get-ChildItem -Path (Join-Path $dir {ps_quote(module)}) -Recurse -Filter "{module}.psd1" |
-  Select-Object -First 1 -ExpandProperty FullName
-Import-Module $psd1 -Force | Out-Null
-{cmdlet} {arg_str}
+try {{
+  Save-Module -Name {ps_quote(module)} -Path $dir -Force | Out-Null
+  $psd1 = Get-ChildItem -Path (Join-Path $dir {ps_quote(module)}) -Recurse -Filter "{module}.psd1" |
+    Select-Object -First 1 -ExpandProperty FullName
+  Import-Module $psd1 -Force | Out-Null
+  {cmdlet} {arg_str}
+}} finally {{
+  if (Test-Path $dir) {{ Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue }}
+}}
 """
     return [shell, "-NoProfile", "-Command", ps.strip()]
 
@@ -397,8 +407,7 @@ def build_argv_for_executor(executor: str, spec: ToolSpec, tool_args: list[str])
             return None
         if not have("pipx"):
             return None
-        # If cmd!=pkg, we pass cmd as first arg (best-effort; uvx is better for cmd!=pkg).
-        return pipx_run_argv(pkg, [cmd] + tool_args if cmd != pkg else tool_args)
+        return pipx_run_argv(pkg, cmd, tool_args)
 
     if executor == "bunx":
         if spec.ecosystem not in ("node", "native"):

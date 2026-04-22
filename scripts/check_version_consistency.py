@@ -123,17 +123,23 @@ def extract_version_from_changelog(plugin_root: Path) -> VersionLocation | None:
     try:
         content = changelog_path.read_text(encoding="utf-8")
 
-        # Look for version patterns in headers
-        patterns = [
-            r"^##\s*\[(\d+\.\d+\.\d+)\]",  # ## [1.0.0]
-            r"^##\s*(\d+\.\d+\.\d+)",  # ## 1.0.0
-            r"^#\s*[Vv]ersion\s*(\d+\.\d+\.\d+)",  # # Version 1.0.0
-        ]
-
-        for pattern in patterns:
-            match = re.search(pattern, content, re.MULTILINE)
-            if match:
-                return VersionLocation(file_path=changelog_path, version=match.group(1), source="latest release header")
+        # Look for version patterns in headers. Combine into a single alternation
+        # so re.search returns the FIRST match by document position (latest release
+        # is at top of CHANGELOG), not by pattern-list order — otherwise a
+        # `## [X.Y.Z]` entry lower in the file would win over a newer `## X.Y.Z`
+        # entry at the top.
+        combined = re.compile(
+            r"^(?:"
+            r"##\s*\[(\d+\.\d+\.\d+)\]"  # ## [1.0.0]
+            r"|##\s*(\d+\.\d+\.\d+)"  # ## 1.0.0
+            r"|#\s*[Vv]ersion\s*(\d+\.\d+\.\d+)"  # # Version 1.0.0
+            r")",
+            re.MULTILINE,
+        )
+        match = combined.search(content)
+        if match:
+            version = next(g for g in match.groups() if g is not None)
+            return VersionLocation(file_path=changelog_path, version=version, source="latest release header")
     except Exception:
         pass
 

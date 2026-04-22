@@ -37,6 +37,10 @@ def do_remote(argv: List[str]):
     quiet = "--quiet" in argv or "-q" in argv
     argv = [a for a in argv if a not in ("--quiet", "-q")]
 
+    if not argv:
+        _remote_help()
+        sys.exit(1)
+
     subcmd = argv[0]
     rest = argv[1:]
 

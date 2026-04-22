@@ -108,11 +108,12 @@ def test_skill_description_within_cap(
 def test_skill_body_within_progressive_disclosure_cap(
     skill_files: list[Path],
 ) -> None:
-    """Full SKILL.md file must be <= 4000 chars."""
+    """SKILL.md body (post-frontmatter) must be <= 4000 chars."""
     for skill_file in skill_files:
-        size = len(skill_file.read_text(encoding="utf-8"))
+        _, body = _split_frontmatter(skill_file.read_text(encoding="utf-8"))
+        size = len(body)
         assert size <= MAX_SKILL_BODY_CHARS, (
-            f"{skill_file.parent.name}: SKILL.md is {size} chars "
+            f"{skill_file.parent.name}: SKILL.md body is {size} chars "
             f"(max {MAX_SKILL_BODY_CHARS})"
         )
 

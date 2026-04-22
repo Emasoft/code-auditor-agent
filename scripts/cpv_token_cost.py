@@ -39,16 +39,29 @@ def get_pricing(model_name: str) -> dict[str, float]:
         return DEFAULT_PRICING
     if model_name in MODEL_PRICING:
         return MODEL_PRICING[model_name]
-    # Try prefix/substring match
-    for key, pricing in MODEL_PRICING.items():
-        if key in model_name or model_name.startswith(key):
-            return pricing
-    # Fuzzy family match
+    # Fuzzy family match — run BEFORE substring loop so specific versions
+    # (4-6, 4-5, 3-5) are not shadowed by generic family prefixes like
+    # "claude-opus-4" matching "claude-opus-4.6" and returning the wrong price.
     ml = model_name.lower()
     if "opus" in ml and ("4-6" in ml or "4.6" in ml):
         return MODEL_PRICING["claude-opus-4-6"]
     if "opus" in ml and ("4-5" in ml or "4.5" in ml):
         return MODEL_PRICING["claude-opus-4-5"]
+    if "opus" in ml and ("4-1" in ml or "4.1" in ml):
+        return MODEL_PRICING["claude-opus-4-1"]
+    if "sonnet" in ml and ("4-6" in ml or "4.6" in ml):
+        return MODEL_PRICING["claude-sonnet-4-6"]
+    if "sonnet" in ml and ("4-5" in ml or "4.5" in ml):
+        return MODEL_PRICING["claude-sonnet-4-5"]
+    if "haiku" in ml and ("3-5" in ml or "3.5" in ml):
+        return MODEL_PRICING["claude-haiku-3-5"]
+    if "haiku" in ml and ("4-5" in ml or "4.5" in ml):
+        return MODEL_PRICING["claude-haiku-4-5"]
+    # Generic prefix/substring match for canonical dashed forms
+    for key, pricing in MODEL_PRICING.items():
+        if key in model_name or model_name.startswith(key):
+            return pricing
+    # Family-only fallbacks (no version in name)
     if "opus" in ml:
         return MODEL_PRICING["claude-opus-4-1"]
     if "sonnet" in ml:

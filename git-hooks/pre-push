@@ -247,28 +247,29 @@ def file_matches_plugin_patterns(filepath: str) -> bool:
 def get_changed_files(local_sha: str, remote_sha: str) -> list[str]:
     """Return the list of files changed between *remote_sha* and *local_sha*."""
     if remote_sha == ZERO_SHA:
-        # New branch -- compare against the last 10 commits or list tree
-        try:
-            result = subprocess.run(
-                ["git", "diff", "--name-only", local_sha, "HEAD~10"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            return result.stdout.strip().splitlines()
-        except subprocess.CalledProcessError:
-            result = subprocess.run(
-                ["git", "ls-tree", "-r", "--name-only", local_sha],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            return result.stdout.strip().splitlines()
+        # New branch push: the remote has nothing yet, so every file in
+        # the pushed tree is "changed" from the remote's perspective.
+        # Listing the full tree guarantees we never miss plugin changes
+        # regardless of branch depth. (An earlier implementation diffed
+        # against HEAD~10 — that silently skipped changes in commits
+        # older than the 10th ancestor.)
+        # -c core.quotepath=false: emit non-ASCII paths as UTF-8 literals
+        # instead of the default octal-escaped, leading/trailing-quote form.
+        # fnmatch in file_matches_plugin_patterns cannot match the quoted
+        # form, so non-ASCII plugin filenames would silently bypass push-time
+        # validation. Mirrors the fix already applied to pre-commit.
+        result = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "ls-tree", "-r", "--name-only", local_sha],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip().splitlines()
     else:
-        # Existing branch -- diff the range
+        # Existing branch -- diff the range (same quotepath fix as above)
         try:
             result = subprocess.run(
-                ["git", "diff", "--name-only", f"{remote_sha}..{local_sha}"],
+                ["git", "-c", "core.quotepath=false", "diff", "--name-only", f"{remote_sha}..{local_sha}"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -305,6 +306,25 @@ def extract_version(filepath: Path) -> str | None:
         return version
     except (FileNotFoundError, json.JSONDecodeError, OSError):
         return None
+
+
+def version_key(v: str) -> tuple[int, ...]:
+    """Parse a ``X.Y.Z``-style version into a comparable tuple.
+
+    Each segment contributes its leading digits (e.g. ``1.2.3-rc1`` →
+    ``(1, 2, 3)``). This matches the documented contract: the hook must
+    reject pushes whose local version is not strictly greater than the
+    remote's. String equality alone missed downgrades (e.g. 1.1.0 → 1.0.0).
+    """
+    parts = []
+    for seg in v.split("."):
+        leading = ""
+        for c in seg:
+            if not c.isdigit():
+                break
+            leading += c
+        parts.append(int(leading) if leading else 0)
+    return tuple(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -402,10 +422,14 @@ def main() -> int:
                 )
             if remote_result.returncode == 0:
                 remote_version = json.loads(remote_result.stdout).get("version")
-                if remote_version and local_version == remote_version:
+                # Contract (module docstring): local version MUST be > remote
+                # version. Raw equality check missed downgrades, so compare
+                # parsed tuples and reject anything that isn't a strict bump.
+                if remote_version and version_key(local_version) <= version_key(remote_version):
                     cprint(f"{RED}========================================{NC}")
                     cprint(f"{RED}  BLOCKED: Version not bumped!{NC}")
                     cprint(f"{RED}  Local: {local_version}  Remote: {remote_version}{NC}")
+                    cprint(f"{RED}  Local version must be > remote version.{NC}")
                     cprint(f"{RED}  Run: uv run python scripts/publish.py --patch{NC}")
                     cprint(f"{RED}========================================{NC}")
                     return 1

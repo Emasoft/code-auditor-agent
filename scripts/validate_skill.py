@@ -139,11 +139,13 @@ def validate_name_field(frontmatter: dict[str, Any], skill_dir_name: str, report
         name = skill_dir_name
     else:
         name = frontmatter["name"]
-        report.passed(f"'name' field present: {name}", "SKILL.md")
 
     if not isinstance(name, str):
         report.critical(f"'name' must be a string, got {type(name).__name__}", "SKILL.md")
         return
+
+    if "name" in frontmatter:
+        report.passed(f"'name' field present: {name}", "SKILL.md")
 
     # Uniform naming validation via shared function (includes dir-name match as MAJOR)
     validate_component_name(name, "skill", report, directory_name=skill_dir_name if "name" in frontmatter else None)
@@ -448,15 +450,27 @@ def validate_supporting_files(skill_path: Path, report: ValidationReport) -> Non
         if link_target.startswith("#"):
             continue
 
+        # Strip optional Markdown link title: `path "title"` or `path 'title'`
+        # The title is separated from the path by whitespace and wrapped in quotes.
+        link_path = re.split(r'\s+["\']', link_target, maxsplit=1)[0].strip()
+        # Strip fragment identifier (anchor) from path, e.g. `file.md#section`
+        link_path = link_path.split("#", 1)[0]
+        # Strip angle brackets if used, e.g. `<path with spaces>`
+        if link_path.startswith("<") and link_path.endswith(">"):
+            link_path = link_path[1:-1]
+
+        if not link_path:
+            continue
+
         # Check if referenced file exists
-        ref_path = skill_path / link_target
+        ref_path = skill_path / link_path
         if not ref_path.exists():
             report.major(
-                f"Referenced file not found: {link_target}",
+                f"Referenced file not found: {link_path}",
                 "SKILL.md",
             )
         else:
-            report.passed(f"Referenced file exists: {link_target}", "SKILL.md")
+            report.passed(f"Referenced file exists: {link_path}", "SKILL.md")
 
 
 def validate_skill(skill_path: Path) -> SkillValidationReport:
@@ -489,7 +503,8 @@ def validate_skill(skill_path: Path) -> SkillValidationReport:
     if frontmatter is not None:
         # Validate individual frontmatter fields
         validate_name_field(frontmatter, skill_path.name, report)
-        validate_description_field(frontmatter, content, report)
+        _, body, _ = parse_frontmatter(content)
+        validate_description_field(frontmatter, body, report)
         validate_context_field(frontmatter, report)
         validate_agent_field(frontmatter, report)
         validate_boolean_field(frontmatter, "user-invocable", report)
@@ -620,8 +635,8 @@ def main() -> int:
         print(f"Error: {skill_path} is not a directory (expected a skill directory)", file=sys.stderr)
         return 1
 
-    # Verify content type — skill directory must contain SKILL.md
-    if not (skill_path / "SKILL.md").exists() and not (skill_path / "skill.md").exists():
+    # Verify content type — skill directory must contain SKILL.md (uppercase, per spec)
+    if not (skill_path / "SKILL.md").exists():
         print(
             f"Error: No SKILL.md found in {skill_path}\nA valid skill directory must contain a SKILL.md file.",
             file=sys.stderr,

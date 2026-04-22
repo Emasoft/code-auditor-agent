@@ -332,23 +332,45 @@ def _parse_pyproject_dependencies(pyproject_path: Path) -> list[str]:
                             if isinstance(item, str):
                                 names.append(_extract_dist_name(item))
     else:
-        # Naive fallback — scan lines inside `dependencies = [ ... ]`.
+        # Naive fallback — scan lines inside `dependencies = [ ... ]` and each
+        # `<group> = [ ... ]` under `[project.optional-dependencies]`.
+        import re as _re_fb
+
         in_deps = False
+        in_opt_deps_section = False
         text = raw.decode("utf-8", errors="replace")
+        # Matches quoted items inside a [ ... ] list, allowing items on the
+        # declaration line as well as on continuation lines.
+        item_re = _re_fb.compile(r"""["']([^"']+)["']""")
         for line in text.splitlines():
             s = line.strip()
-            if s.startswith("dependencies") and "=" in s and "[" in s:
+            # Section headers
+            if s.startswith("["):
+                in_opt_deps_section = s == "[project.optional-dependencies]"
+                in_deps = False
+                continue
+            # Top-level `dependencies = [ ... ]` or any `<group> = [ ... ]`
+            # under [project.optional-dependencies].
+            if "=" in s and "[" in s and (
+                s.startswith("dependencies") or in_opt_deps_section
+            ):
                 in_deps = True
+                # Grab any items that already appear on the declaration line.
+                for item in item_re.findall(s):
+                    names.append(_extract_dist_name(item))
+                # If the closing ']' is on the same line, the block is done.
+                if "]" in s.split("[", 1)[1]:
+                    in_deps = False
                 continue
             if in_deps:
-                if s.startswith("]"):
+                if s.startswith("]") or "]" in s:
+                    # Collect any items before the ']' on this line too.
+                    for item in item_re.findall(s):
+                        names.append(_extract_dist_name(item))
                     in_deps = False
                     continue
-                # Lines like:  "requests>=2.30",
-                if s.startswith('"') or s.startswith("'"):
-                    stripped = s.strip().strip(",").strip("\"'")
-                    if stripped:
-                        names.append(_extract_dist_name(stripped))
+                for item in item_re.findall(s):
+                    names.append(_extract_dist_name(item))
 
     # Dedupe while preserving order
     seen: set[str] = set()
@@ -588,6 +610,7 @@ def save_report_to_file(results: list[AuditItem], plugin_path: Path, report_path
         "badges": "README Badges",
         "pyproject": "pyproject.toml Sections",
         "python": "Python Version",
+        "drift": "Project Drift (deps vs imports)",
     }
 
     categories: dict[str, list[AuditItem]] = {}
@@ -792,9 +815,20 @@ def fix_missing_files(
     gitignore_path = plugin_path / ".gitignore"
     if not dry_run and gitignore_path.exists():
         content = gitignore_path.read_text(encoding="utf-8")
+        # Mirror the audit_gitignore() logic: only count active (non-comment,
+        # non-blank) lines, otherwise an entry that only appears inside a
+        # comment would be considered "present" even though audit_gitignore
+        # correctly flagged it as missing.
+        active_lines = [
+            stripped
+            for line in content.splitlines()
+            for stripped in (line.strip(),)
+            if stripped and not stripped.startswith("#")
+        ]
         missing = []
         for entry in REQUIRED_GITIGNORE_ENTRIES:
-            if entry not in content:
+            found = any(entry in active or active == entry for active in active_lines)
+            if not found:
                 missing.append(entry)
         if missing:
             with open(gitignore_path, "a", encoding="utf-8") as f:
@@ -879,6 +913,9 @@ Examples:
             print(f"\n{BOLD}Post-fix audit:{NC}")
             post_results = run_audit(plugin_path)
             print_audit_report(post_results, plugin_path)
+            # Use the post-fix results for the exit code, otherwise a
+            # successful fix run still exits non-zero for CI pipelines.
+            results = post_results
 
     # Optionally run full CPV validation
     if args.validate:

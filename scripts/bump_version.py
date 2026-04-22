@@ -218,12 +218,22 @@ def update_skill_md_versions(plugin_root: Path, new_version: str) -> list[tuple[
     if not skills_dir.is_dir():
         return results
 
+    # Split content into (leading-blank, frontmatter-block, rest); only
+    # rewrite the first frontmatter block so body-level 'version:' lines
+    # cannot be mutated.
+    frontmatter_re = re.compile(r'\A(\s*)(---\r?\n.*?\r?\n---\r?\n)', re.DOTALL)
+
     for skill_md in skills_dir.rglob("SKILL.md"):
         try:
             content = skill_md.read_text(encoding="utf-8")
 
-            # Only replace version inside YAML frontmatter (between --- markers)
-            # Match 'version: X.Y.Z' at the start of a line
+            fm_match = frontmatter_re.match(content)
+            if fm_match is None:
+                continue
+            leading, frontmatter = fm_match.group(1), fm_match.group(2)
+            rest = content[fm_match.end():]
+
+            # Match 'version: X.Y.Z' at the start of a line inside the frontmatter
             pattern = r'^(version:\s*)(\d+\.\d+\.\d+)(.*)$'
 
             old_version = None
@@ -233,12 +243,12 @@ def update_skill_md_versions(plugin_root: Path, new_version: str) -> list[tuple[
                 old_version = match.group(2)
                 return f"{match.group(1)}{new_version}{match.group(3)}"
 
-            new_content, count = re.subn(pattern, replace_fm_version, content, count=1, flags=re.MULTILINE)
+            new_frontmatter, count = re.subn(pattern, replace_fm_version, frontmatter, count=1, flags=re.MULTILINE)
 
             if count > 0:
                 rel_path = skill_md.relative_to(plugin_root)
                 if old_version != new_version:
-                    skill_md.write_text(new_content, encoding="utf-8")
+                    skill_md.write_text(leading + new_frontmatter + rest, encoding="utf-8")
                 results.append((True, f"{rel_path}: {old_version} -> {new_version}"))
         except Exception as e:
             rel_path = skill_md.relative_to(plugin_root)
@@ -402,7 +412,10 @@ Examples:
         return 1
     else:
         file_count = len([r for r in all_results if "skipped" not in r[1].lower()])
-        print(f"\nSuccessfully updated {file_count} file(s)")
+        if args.dry_run:
+            print(f"\n[DRY-RUN] {file_count} file(s) would be updated (no changes written)")
+        else:
+            print(f"\nSuccessfully updated {file_count} file(s)")
         return 0
 
 

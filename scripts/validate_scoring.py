@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -32,6 +33,7 @@ from cpv_validation_common import (
     EXIT_CRITICAL,
     EXIT_MAJOR,
     EXIT_MINOR,
+    EXIT_NIT,
     EXIT_OK,
     ValidationReport,
     ValidationResult,
@@ -103,6 +105,10 @@ RATING_DESCRIPTIONS = {
 
 EXIT_PASS = EXIT_OK  # Alias for scoring module backward compat
 
+# ANSI escape sequence matcher (used to strip color codes when writing
+# the report to a file — files are not terminals).
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
+
 
 # =============================================================================
 # Data Classes
@@ -121,6 +127,7 @@ class CategoryScore:
         issues_critical: Count of critical issues in this category
         issues_major: Count of major issues in this category
         issues_minor: Count of minor issues in this category
+        issues_nit: Count of nit-level issues in this category (blocks only in --strict)
         issues_passed: Count of passed checks in this category
         rating: Rating descriptor ("Excellent", "Good", "Fair", "Poor")
         recommendations: List of improvement recommendations
@@ -133,6 +140,7 @@ class CategoryScore:
     issues_critical: int = 0
     issues_major: int = 0
     issues_minor: int = 0
+    issues_nit: int = 0
     issues_passed: int = 0
     rating: str = ""
     recommendations: list[str] = field(default_factory=list)
@@ -160,6 +168,7 @@ class CategoryScore:
                 "critical": self.issues_critical,
                 "major": self.issues_major,
                 "minor": self.issues_minor,
+                "nit": self.issues_nit,
                 "passed": self.issues_passed,
             },
             "recommendations": self.recommendations,
@@ -221,7 +230,7 @@ class QualityScoreReport:
 def calculate_category_score(
     results: list[ValidationResult],
     max_score: float = 10.0,
-) -> tuple[float, int, int, int, int]:
+) -> tuple[float, int, int, int, int, int]:
     """Calculate score for a category based on its validation results.
 
     Scoring formula:
@@ -230,18 +239,21 @@ def calculate_category_score(
     - Deduct 1.5 points for each MAJOR issue
     - Deduct 0.5 points for each MINOR issue
     - Minimum score is 0
+    NIT issues are counted but do not affect the numeric score —
+    they only block validation in --strict mode.
 
     Args:
         results: List of validation results for this category
         max_score: Maximum possible score (default 10)
 
     Returns:
-        Tuple of (score, critical_count, major_count, minor_count, passed_count)
+        Tuple of (score, critical_count, major_count, minor_count, nit_count, passed_count)
     """
     score = max_score
     critical_count = 0
     major_count = 0
     minor_count = 0
+    nit_count = 0
     passed_count = 0
 
     for result in results:
@@ -254,10 +266,12 @@ def calculate_category_score(
         elif result.level == "MINOR":
             score -= 0.5
             minor_count += 1
+        elif result.level == "NIT":
+            nit_count += 1
         elif result.level == "PASSED":
             passed_count += 1
 
-    return max(0.0, score), critical_count, major_count, minor_count, passed_count
+    return max(0.0, score), critical_count, major_count, minor_count, nit_count, passed_count
 
 
 def categorize_results(
@@ -533,7 +547,7 @@ def compute_quality_score(plugin_path: Path) -> QualityScoreReport:
     # Calculate category scores
     for category_name, results in categorized.items():
         threshold = CATEGORY_THRESHOLDS.get(category_name, 5)
-        score, critical, major, minor, passed = calculate_category_score(results)
+        score, critical, major, minor, nit, passed = calculate_category_score(results)
 
         cat_score = CategoryScore(
             name=category_name,
@@ -543,6 +557,7 @@ def compute_quality_score(plugin_path: Path) -> QualityScoreReport:
             issues_critical=critical,
             issues_major=major,
             issues_minor=minor,
+            issues_nit=nit,
             issues_passed=passed,
         )
 
@@ -785,10 +800,11 @@ Rating scale (0-10 per category):
         finally:
             sys.stdout = _original_stdout
 
-        # Write full report to file
+        # Write full report to file — strip ANSI escape codes because
+        # files are not terminals and raw escapes render as garbage in editors.
         report_path = Path(args.report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(_buf.getvalue())
+        report_path.write_text(_ANSI_ESCAPE_RE.sub("", _buf.getvalue()))
 
         # Print compact summary to stdout
         if report.status == "PASS":
@@ -808,6 +824,7 @@ Rating scale (0-10 per category):
     total_critical = sum(cat.issues_critical for cat in report.category_scores.values())
     total_major = sum(cat.issues_major for cat in report.category_scores.values())
     total_minor = sum(cat.issues_minor for cat in report.category_scores.values())
+    total_nit = sum(cat.issues_nit for cat in report.category_scores.values())
 
     if total_critical > 0:
         return EXIT_CRITICAL
@@ -815,6 +832,9 @@ Rating scale (0-10 per category):
         return EXIT_MAJOR
     elif total_minor > 0:
         return EXIT_MINOR
+    elif args.strict and total_nit > 0:
+        # --strict: NIT issues also block validation (per the flag's help text).
+        return EXIT_NIT
     else:
         return EXIT_PASS
 

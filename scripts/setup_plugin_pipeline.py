@@ -583,8 +583,18 @@ class PipelineSetup:
         self.verbose = verbose
         self.status = PipelineStatus(project_type=ProjectType.UNKNOWN, project_path=self.project_path)
 
-    def detect_project_type(self) -> ProjectType:
-        """Detect what type of project this is."""
+    def detect_project_type(self, forced_type: ProjectType | None = None) -> ProjectType:
+        """Detect what type of project this is.
+
+        If forced_type is given, skip auto-detection and use it. Submodule
+        detection still runs for MARKETPLACE so downstream fixes work.
+        """
+        if forced_type is not None:
+            self.status.project_type = forced_type
+            if forced_type == ProjectType.MARKETPLACE:
+                self._detect_submodules()
+            return self.status.project_type
+
         marketplace_json = self.project_path / ".claude-plugin" / "marketplace.json"
         plugin_json = self.project_path / ".claude-plugin" / "plugin.json"
 
@@ -607,7 +617,15 @@ class PipelineSetup:
         return self.status.project_type
 
     def _detect_submodules(self) -> None:
-        """Detect git submodules in the project."""
+        """Detect git submodules in the project.
+
+        Stores the submodule NAME (from the `[submodule "name"]` section) rather
+        than the checkout path, because git stores per-submodule metadata under
+        `.git/modules/<name>/`, not `.git/modules/<path>/`. The two coincide when
+        submodules are added without `--name`, but differ otherwise — using the
+        path would cause hook validation/installation to look at the wrong
+        directory.
+        """
         gitmodules = self.project_path / ".gitmodules"
         if not gitmodules.exists():
             return
@@ -621,15 +639,15 @@ class PipelineSetup:
                     name = section.replace("submodule ", "").strip('"')
                     path = config.get(section, "path", fallback=name)
                     if (self.project_path / path).exists():
-                        self.status.submodules.append(path)
+                        self.status.submodules.append(name)
         except (configparser.Error, OSError) as e:
             # If we can't parse .gitmodules, just skip submodule detection
             if self.verbose:
                 print(f"{YELLOW}Warning: Could not parse .gitmodules: {e}{NC}")
 
-    def validate(self) -> PipelineStatus:
+    def validate(self, forced_type: ProjectType | None = None) -> PipelineStatus:
         """Validate the current pipeline setup."""
-        self.detect_project_type()
+        self.detect_project_type(forced_type=forced_type)
 
         if self.status.project_type == ProjectType.UNKNOWN:
             self.status.issues.append(
@@ -939,17 +957,23 @@ class PipelineSetup:
                 print(f"{GREEN}✓{NC} Created .gitignore")
             fixed += 1
         else:
-            # Check if it needs additions - check for all expected patterns
+            # Append only the entries that are not already present, so repeated
+            # runs are idempotent even when .gitignore already contains some of
+            # the patterns (e.g. __pycache__/ but not docs_dev/).
             try:
                 content = gitignore.read_text(encoding="utf-8")
-                # Check for multiple markers to avoid duplicating content
-                needs_update = not all(marker in content for marker in ["__pycache__", ".mypy_cache", "docs_dev/"])
-                if needs_update:
+                missing_entries = [
+                    line
+                    for line in GITIGNORE_ADDITIONS.splitlines()
+                    if line.strip() and not line.lstrip().startswith("#") and line.strip() not in content
+                ]
+                if missing_entries:
+                    addition = "\n# Added by setup_plugin_pipeline\n" + "\n".join(missing_entries) + "\n"
                     if self.dry_run:
                         print(f"{YELLOW}Would update:{NC} .gitignore")
                     else:
                         with open(gitignore, "a", encoding="utf-8") as f:
-                            f.write("\n" + GITIGNORE_ADDITIONS)
+                            f.write(addition)
                         print(f"{GREEN}✓{NC} Updated .gitignore")
                     fixed += 1
             except (OSError, UnicodeDecodeError) as e:
@@ -1104,8 +1128,15 @@ Examples:
 
     setup = PipelineSetup(project_path, dry_run=args.dry_run, verbose=args.verbose)
 
+    # Honor --type to force project type (auto-detected otherwise)
+    forced_type: ProjectType | None = None
+    if args.type == "marketplace":
+        forced_type = ProjectType.MARKETPLACE
+    elif args.type == "plugin":
+        forced_type = ProjectType.PLUGIN
+
     # Validate
-    status = setup.validate()
+    status = setup.validate(forced_type=forced_type)
 
     # JSON output
     if args.json:
@@ -1154,7 +1185,7 @@ Examples:
 
                 # Re-validate
                 setup.status = PipelineStatus(project_type=ProjectType.UNKNOWN, project_path=project_path)
-                status = setup.validate()
+                status = setup.validate(forced_type=forced_type)
 
                 if status.is_valid and not status.issues:
                     print(f"{GREEN}Pipeline is now fully configured{NC}")

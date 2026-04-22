@@ -83,10 +83,14 @@ FINDING_ID_RE = re.compile(r"\[[A-Z]{2,4}(-P[0-9]+)?(-A[0-9A-Fa-f]+)?(-[A-Za-z][
 
 # ── Section header regexes ───────────────────────────────────────────────────
 # NOTE: #{1,4} to capture #### headers from agents using nested structures (CONTRACT-PR-001)
-MUST_FIX_RE = re.compile(r"^#{1,4}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)\s*$", re.IGNORECASE)
-SHOULD_FIX_RE = re.compile(r"^#{1,4}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)\s*$", re.IGNORECASE)
-NIT_RE = re.compile(r"^#{1,4}\s*(NIT|CONSISTENCY ISSUES|STYLE|SUGGESTION)\s*$", re.IGNORECASE)
-CLEAN_RE = re.compile(r"^#{1,4}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS)\s*$", re.IGNORECASE)
+# The \b.*$ tail lets headers carry descriptive suffixes — e.g.
+# `## MUST-FIX Issues` (caa-dedup-agent), `## FAILED CLAIMS (MUST-FIX)`
+# (caa-claim-verification-agent). A plain \s*$ anchor would silently drop
+# everything under such headers.
+MUST_FIX_RE = re.compile(r"^#{1,4}\s*(MUST.FIX|CRITICAL|FAILED CLAIMS)\b.*$", re.IGNORECASE)
+SHOULD_FIX_RE = re.compile(r"^#{1,4}\s*(SHOULD.FIX|PARTIALLY IMPLEMENTED|WARNING)\b.*$", re.IGNORECASE)
+NIT_RE = re.compile(r"^#{1,4}\s*(NIT|CONSISTENCY ISSUES|STYLE|SUGGESTION)\b.*$", re.IGNORECASE)
+CLEAN_RE = re.compile(r"^#{1,4}\s*(CLEAN|VERIFIED|COMPLIANT|NO.VIOLATIONS)\b.*$", re.IGNORECASE)
 RECORD_KEEPING_RE = re.compile(r"^#{1,4}\s*(RECORD.KEEPING)", re.IGNORECASE)
 # New top-level section that resets the current section
 # Only single-hash (#) for [A-Z] branch to avoid matching sub-headers like ## Evidence
@@ -199,8 +203,10 @@ def main() -> None:
         sys.exit(2)
 
     # ── Find all audit reports for this pass ─────────────────────────────────
-    # Also find consolidated reports which lack -P{N}- in their filename (#5)
-    consolidated_pattern = "caa-consolidated-*.md"
+    # Also find consolidated reports which lack -P{N}- in their filename (#5).
+    # Leading * tolerates the canonical <ts±tz>- prefix on consolidated filenames
+    # (e.g. 20260421_120000+0200-caa-consolidated-AMCOS.md).
+    consolidated_pattern = "*caa-consolidated-*.md"
     reports: list[Path] = []
     for entry in sorted(output_dir.iterdir()):
         if not entry.is_file():

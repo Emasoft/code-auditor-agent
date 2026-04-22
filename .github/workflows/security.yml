@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: read
 
 jobs:
   security-scan:
@@ -65,7 +66,7 @@ jobs:
       - name: Run TruffleHog (secret scanning - advisory)
         continue-on-error: true
         run: |
-          trufflehog filesystem . --json > security-results/trufflehog-report.json 2>&1 || true
+          trufflehog filesystem . --json > security-results/trufflehog-report.json 2> security-results/trufflehog-stderr.log || true
           echo "## TruffleHog Results" >> $GITHUB_STEP_SUMMARY
           if [ -s security-results/trufflehog-report.json ]; then
             echo '```json' >> $GITHUB_STEP_SUMMARY

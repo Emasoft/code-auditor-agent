@@ -472,8 +472,10 @@ def main() -> int:
         print(f"Error: {path} is not a directory", file=sys.stderr)
         return 1
 
-    # Verify content type — rules directory must contain .md rule files
-    if not list(rules_dir.glob("*.md")):
+    # Verify content type — rules directory must contain .md rule files.
+    # Use rglob to match validate_rules_directory's recursive search (line 321),
+    # so nested rule layouts like rules/python/foo.md are not rejected here.
+    if not list(rules_dir.rglob("*.md")):
         print(f"Error: No rule files (.md) found in {rules_dir}", file=sys.stderr)
         return 1
 

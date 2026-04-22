@@ -229,6 +229,8 @@ def build_prompt(
     files: list[Path],
     standard: str | None,
     output_dir: Path,
+    todo_file: str | None,
+    report_path_override: str | None,
 ) -> str:
     """Build the full markdown prompt text for one sub-group."""
     template = PHASE_TEMPLATES[phase]
@@ -246,13 +248,23 @@ def build_prompt(
     report_name = f"caa-{phase}-{domain}-{idx_str}-{timestamp}.md"
     report_path = output_dir / report_name
 
+    # Resolve phase-specific placeholders in the instruction template.
+    # The `fix` phase needs {{TODO_FILE_PATH}}; the `verify` phase needs {{REPORT_PATH}}.
+    # Both default to the computed report_path when no override is supplied so the
+    # generated prompt is never left with unpopulated literal placeholders.
+    instruction = template["instruction"]
+    todo_value = todo_file if todo_file else str(report_path)
+    report_value = report_path_override if report_path_override else str(report_path)
+    instruction = instruction.replace("{{TODO_FILE_PATH}}", todo_value)
+    instruction = instruction.replace("{{REPORT_PATH}}", report_value)
+
     # Finding ID format description
     finding_format = template["finding_format"].format(group_index=idx_str, hex="{hex}", seq="{SEQ}")
 
     prompt = f"""# {phase.capitalize()} Prompt: {domain.capitalize()} Group {idx_str}
 
 ## Task
-{template["instruction"]}
+{instruction}
 
 ## Files to Process
 {file_list}
@@ -282,6 +294,8 @@ def generate_prompts(
     max_files: int,
     standard: str | None,
     quiet: bool,
+    todo_file: str | None,
+    report_path_override: str | None,
 ) -> int:
     """Main generation logic. Returns the number of prompt files written."""
     # Scan and classify files
@@ -318,6 +332,8 @@ def generate_prompts(
                 files=group_files,
                 standard=standard,
                 output_dir=output_dir,
+                todo_file=todo_file,
+                report_path_override=report_path_override,
             )
 
             # Write prompt file
@@ -380,6 +396,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Path to reference standard document (for audit phases).",
     )
     parser.add_argument(
+        "--todo-file",
+        type=str,
+        default=None,
+        help="Path to TODO file (substituted into {{TODO_FILE_PATH}} for the 'fix' phase).",
+    )
+    parser.add_argument(
+        "--report-path",
+        type=str,
+        default=None,
+        help="Path to audit report (substituted into {{REPORT_PATH}} for the 'verify' phase).",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress verbose output, print only summary.",
@@ -416,6 +444,8 @@ def main(argv: list[str] | None = None) -> int:
         max_files=args.max_files,
         standard=standard_str,
         quiet=args.quiet,
+        todo_file=args.todo_file,
+        report_path_override=args.report_path,
     )
 
     return 0 if count > 0 else 1

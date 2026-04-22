@@ -192,6 +192,10 @@ def validate_mcp_server(
         # stdio servers require 'command'
         if "command" not in config:
             report.critical(f"Server {server_name} missing required 'command' field")
+        elif not isinstance(config["command"], str):
+            report.major(
+                f"Server {server_name} 'command' must be a string, got {type(config['command']).__name__}"
+            )
         else:
             command = config["command"]
             validate_path_value(command, report, f"{ctx}:command", plugin_root)
@@ -210,12 +214,21 @@ def validate_mcp_server(
             else:
                 report.info(f"Server {server_name} command '{command}' not found (may be resolved at runtime)")
 
-            # Security warning for package executors running remote packages
+            # Security warning for package executors running remote packages.
+            # Skip leading flags (e.g. `npx --yes pkg`, `uvx --from X pkg`) so the
+            # flag name is not misreported as the package being executed.
             package_executors = {"npx", "bunx", "uvx", "pipx", "pnpx"}
             if command in package_executors:
-                # Check args to see if it's running a non-local package
                 cmd_args = config.get("args", [])
-                pkg_name = cmd_args[0] if cmd_args and isinstance(cmd_args[0], str) else None
+                pkg_name = None
+                if isinstance(cmd_args, list):
+                    for arg in cmd_args:
+                        if not isinstance(arg, str):
+                            break
+                        if arg.startswith("-"):
+                            continue
+                        pkg_name = arg
+                        break
                 if pkg_name and not pkg_name.startswith((".", "/", "${")):
                     report.warning(
                         f"Server {server_name} uses {command} to execute remote package '{pkg_name}' — this downloads and runs code from a registry. Verify the package is trusted and consider pinning a version."
@@ -229,6 +242,10 @@ def validate_mcp_server(
         # HTTP/SSE servers require 'url'
         if "url" not in config:
             report.critical(f"Server {server_name} (type={transport}) missing 'url'")
+        elif not isinstance(config["url"], str):
+            report.major(
+                f"Server {server_name} 'url' must be a string, got {type(config['url']).__name__}"
+            )
         else:
             url = config["url"]
             validate_env_var_syntax(url, report, f"{ctx}:url")
@@ -386,6 +403,13 @@ def validate_mcp_config(
 
     if not config_path.exists():
         report.info(f"MCP config file not found: {rel_path}")
+        return report
+
+    # `Path.exists()` returns True for directories too, so we must also verify the
+    # target is a regular file before read_text — otherwise a path like `"./"` in
+    # plugin.json:mcpServers would crash with IsADirectoryError (not JSONDecodeError).
+    if not config_path.is_file():
+        report.critical(f"MCP config path is not a regular file: {rel_path}")
         return report
 
     # Parse JSON
