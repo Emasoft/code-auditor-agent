@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.2] - 2026-04-25
+
+### Chores
+
+- Align uv.lock to v3.4.1 (541ec51)
+
 ## [3.4.1] - 2026-04-22
 
 ### Bug Fixes
