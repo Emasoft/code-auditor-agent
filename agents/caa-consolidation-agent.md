@@ -9,7 +9,6 @@ model: sonnet
 disallowedTools:
   - Edit
   - NotebookEdit
-maxTurns: 20
 ---
 
 # CAA Consolidation Agent

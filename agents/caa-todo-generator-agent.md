@@ -8,7 +8,6 @@ model: sonnet
 disallowedTools:
   - Edit
   - NotebookEdit
-maxTurns: 20
 ---
 
 # CAA TODO Generator Agent

@@ -10,7 +10,6 @@ effort: high
 disallowedTools:
   - Edit
   - NotebookEdit
-maxTurns: 25
 ---
 
 # CAA Verification Agent

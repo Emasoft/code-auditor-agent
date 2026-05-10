@@ -8,7 +8,6 @@ description: >
   claimed in the PR description but never implemented in convertAMPToMessage().
 model: opus
 effort: high
-maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit

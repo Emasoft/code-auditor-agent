@@ -9,7 +9,6 @@ description: >
   security as one checklist item among many.
 model: opus
 effort: high
-maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit

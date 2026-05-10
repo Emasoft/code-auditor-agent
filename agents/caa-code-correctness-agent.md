@@ -7,7 +7,6 @@ description: >
   bugs but structurally blind to cross-file inconsistencies and PR-level claim mismatches.
 model: opus
 effort: high
-maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit

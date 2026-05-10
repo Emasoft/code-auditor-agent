@@ -38,20 +38,20 @@ jobs:
       - name: Run Bandit (static analysis)
         continue-on-error: true
         run: |
-          mkdir -p security-results
-          bandit -r scripts/ -ll -f json -o security-results/bandit-report.json || true
+          mkdir -p "$RUNNER_TEMP/security-results"
+          bandit -r scripts/ -ll -f json -o "$RUNNER_TEMP/security-results/bandit-report.json" || true
           echo "## Bandit Results" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat security-results/bandit-report.json >> $GITHUB_STEP_SUMMARY
+          cat "$RUNNER_TEMP/security-results/bandit-report.json" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Run pip-audit (dependency vulnerabilities)
         continue-on-error: true
         run: |
-          pip-audit --requirement <(uv pip compile pyproject.toml --quiet) --format json --output security-results/pip-audit-report.json
+          pip-audit --requirement <(uv pip compile pyproject.toml --quiet) --format json --output "$RUNNER_TEMP/security-results/pip-audit-report.json"
           echo "## pip-audit Results" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat security-results/pip-audit-report.json >> $GITHUB_STEP_SUMMARY
+          cat "$RUNNER_TEMP/security-results/pip-audit-report.json" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Install TruffleHog
@@ -66,11 +66,11 @@ jobs:
       - name: Run TruffleHog (secret scanning - advisory)
         continue-on-error: true
         run: |
-          trufflehog filesystem . --json > security-results/trufflehog-report.json 2> security-results/trufflehog-stderr.log || true
+          trufflehog filesystem . --json > "$RUNNER_TEMP/security-results/trufflehog-report.json" 2> "$RUNNER_TEMP/security-results/trufflehog-stderr.log" || true
           echo "## TruffleHog Results" >> $GITHUB_STEP_SUMMARY
-          if [ -s security-results/trufflehog-report.json ]; then
+          if [ -s "$RUNNER_TEMP/security-results/trufflehog-report.json" ]; then
             echo '```json' >> $GITHUB_STEP_SUMMARY
-            head -100 security-results/trufflehog-report.json >> $GITHUB_STEP_SUMMARY
+            head -100 "$RUNNER_TEMP/security-results/trufflehog-report.json" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "No secrets detected." >> $GITHUB_STEP_SUMMARY
@@ -91,5 +91,5 @@ jobs:
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: security-scan-results
-          path: security-results/
+          path: ${{ runner.temp }}/security-results/
           retention-days: 30

@@ -10,7 +10,6 @@ effort: high
 disallowedTools:
   - Edit
   - NotebookEdit
-maxTurns: 30
 ---
 
 # CAA Domain Auditor Agent

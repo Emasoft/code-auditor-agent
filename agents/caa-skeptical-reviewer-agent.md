@@ -7,7 +7,6 @@ description: >
   This is the telescope that sees what the microscope (correctness swarm) misses.
 model: opus
 effort: high
-maxTurns: 30
 disallowedTools:
   - Edit
   - NotebookEdit

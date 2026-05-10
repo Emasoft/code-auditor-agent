@@ -6,7 +6,6 @@ description: >
   Produces final report with accurate counts and verdict.
 model: opus
 effort: high
-maxTurns: 25
 disallowedTools:
   - Edit
   - NotebookEdit
