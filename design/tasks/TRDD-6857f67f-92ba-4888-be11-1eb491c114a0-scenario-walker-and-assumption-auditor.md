@@ -71,67 +71,91 @@ Scenarios are NEVER authored by the user. The split is:
   paths an end user / API consumer / attacker would take, and flags every
   divergence between intended behaviour and actual behaviour.
 
-#### 3.1.a caa-scenario-generator-skill
+#### 3.1.a caa-scenario-generator-skill — **domain-agnostic by design**
 
-**Role:** Auto-discover scenarios from the codebase surface. No human
-authorship required — the user just picks "extended review" and this
-skill produces the scenario list.
+**Role:** Auto-discover scenarios from ANY codebase. The codebase can be
+a web service, a CLI tool, a firmware image for an MCU, a Linux kernel
+module, an FPGA Verilog design, an iOS app, a browser extension, a
+Terraform module, a database engine, a compiler, a game — anything for
+any platform. The skill has no built-in assumption about software type;
+type is detected first, then a per-type discoverer is dispatched.
 
-**Surfaces it scans** (deterministic, no LLM judgment):
+The skill has three deterministic stages: **detect → discover → emit**.
 
-| Surface | Source | Scenario shape |
-|---|---|---|
-| HTTP API endpoints | route registrations (FastAPI/Express/Flask/Koa/etc.), OpenAPI spec, grep for `@app.route`, `app.get/post/...`, `Router`, `Mux.HandleFunc` | 1 happy-path + 1 adversarial-input + 1 partial-failure scenario per endpoint |
-| CLI commands | argparse/click/cobra/yargs entry points | 1 happy-path + 1 invalid-args + 1 missing-deps scenario per command |
-| UI routes / screens | React Router / Next.js pages / Vue Router / etc. | 1 happy-path + 1 auth-required + 1 error-state scenario per route |
-| Event listeners | message queue subscribers, websocket handlers, file watchers | 1 happy-path + 1 malformed-event + 1 duplicate-event scenario per listener |
-| Webhooks / callbacks | route prefixes like `/webhook`, `/callback`, third-party SDK init calls | 1 happy-path + 1 replay-attack + 1 signature-invalid scenario |
-| Background jobs / crons | celery/cron/bull/sidekiq | 1 happy-path + 1 mid-job-crash + 1 concurrent-fire scenario |
-| Auth flows | login/logout/refresh routes, OAuth callbacks, session middleware | 1 happy-path + 1 token-expired-mid-request + 1 permission-revoked-mid-session scenario |
-| State-mutating writes | `INSERT`/`UPDATE`/`DELETE`, file writes, external API POSTs | 1 happy-path + 1 mid-write-failure + 1 idempotency-retry scenario per write site |
-| Trust boundaries | input deserialization, file uploads, header parsing | 1 oversize-input + 1 encoded-injection + 1 unicode-edge-case scenario per boundary |
+**Stage 1 — Detect software type(s).** Reads build files and key
+fingerprints to classify the codebase into one or more of ~40 software
+types. A single codebase can be multiple types simultaneously (e.g. a
+monorepo with a web backend + mobile app + shared library). See §3.1.c
+for the full detection registry.
 
-**How it discovers** (no LLM, pure mechanical):
+**Stage 2 — Discover entry points.** For each detected type, dispatch
+to its dedicated discoverer. Each discoverer is a small Python module
+that knows how to find that type's entry points (HTTP route registrations
+for web services; argparse/click/cobra invocations for CLIs; ISR vector
+tables and `attach_interrupt(...)` calls for firmware; `module_init`
+macros and `file_operations` structs for Linux kernel modules; top-level
+`module` declarations and constraint-file pin maps for FPGA designs;
+syscall tables for kernels; `chrome.runtime.onMessage.addListener` for
+browser extensions; etc.). See §3.1.e for the discoverer registry.
 
-1. Run `tldr arch <path>` to detect entry layer (handlers/controllers/CLIs).
-2. Run `tldr structure <path> --lang <auto>` to enumerate functions.
-3. Grep + AST queries via Serena for routing registrations,
-   handler decorators, CLI entry points, etc. (one rule set per language/framework).
-4. Parse OpenAPI/AsyncAPI specs if present, parse `package.json` scripts, parse `pyproject.toml` `[project.scripts]`, parse `Cargo.toml` `[[bin]]`.
-5. Cross-reference with docs (`README.md`, `docs/`, `CHANGELOG.md`) to enrich each
-   surface with the **intended behaviour** (used by the walker for divergence detection). Doc parsing is grep + heading extraction, not LLM.
-6. Emit a normalised scenarios.json file under
-   `<main-repo>/reports/caa-scenario-generator/<ts>-scenarios.json`.
+**Stage 3 — Emit scenarios.** For every discovered entry point, look up
+which scenario families apply (per §3.1.d table) and emit one scenario
+per (entry-point × applicable-family) pair. The output schema is
+**universal** — same shape whether the entry point is an HTTP route,
+an ISR vector, a syscall, or a hardware register. See §3.1.b for the
+schema.
 
-**Output schema** (each scenario):
+**How it discovers** (no LLM at any step):
 
-```json
-{
-  "id": "SCEN-0042",
-  "title": "POST /orders rejects oversize body",
-  "family": "adversarial-input",
-  "entry_point": {"file": "src/api/orders.py", "line": 17, "symbol": "create_order"},
-  "intended_behaviour": "Return 413 with error body; do not invoke the handler logic.",
-  "intended_behaviour_source": "docs/api.md:121 + OpenAPI 4xx response",
-  "user_role": "anonymous client",
-  "input": {"method": "POST", "path": "/orders", "body_size_bytes": 10485761},
-  "expected_path": ["middleware/size_limit", "middleware/auth", "<reject>"],
-  "feedback_expected": "user sees 413 + Retry-After hint"
-}
-```
+1. **Type detection.** Walk the repo root + 2 levels deep looking for
+   build-file fingerprints (Cargo.toml, package.json, pyproject.toml,
+   CMakeLists.txt, platformio.ini, west.yml, Kbuild/Kconfig, *.xcodeproj,
+   AndroidManifest.xml, *.uproject, manifest.json, Dockerfile, *.tf,
+   etc.). Secondary signals (linker scripts, ISR vector files,
+   module_init macros, `_start` symbols) disambiguate.
+2. **Per-type discoverer dispatch.** Run the matching discoverer(s)
+   from `scripts/scenario_generator/discoverers/`.
+3. **Surface enrichment.** Cross-reference each discovered entry point
+   with docs and specs to capture intended behaviour:
+   - For web: OpenAPI specs, README API tables, doc comments.
+   - For CLI: `--help` text, man pages, README usage sections.
+   - For firmware: datasheets/AN docs in repo, header comments
+     describing register behaviour.
+   - For kernel modules: `Documentation/`, `MAINTAINERS`,
+     `man-pages` references in code comments.
+   - For FPGA: timing constraints, port descriptions in module headers.
+   - Fallback for any type: nearby comments + README headings.
+4. **Family expansion.** For each entry point, look up applicable
+   scenario families (§3.1.d) and emit one normalized scenario per
+   (entry × family) pair.
+5. **Write outputs.** Emit `scenarios.json` (machine) and
+   `scenarios.md` (human) to
+   `<main-repo>/reports/caa-scenario-generator/<ts>-...`.
 
 **Inputs:**
 - Codebase path (whole-codebase mode) or PR diff (delta mode — discover
   scenarios for changed surfaces only)
-- Auto-detected language(s)
+- Auto-detected language(s) and type(s)
 
-**Output:** One `scenarios.json` per run; ALSO a human-readable
-`scenarios.md` listing every generated scenario for traceability.
+**Output:** One `scenarios.json` per run; one human-readable
+`scenarios.md` for traceability; one `detected-types.json` recording
+which types were detected and why (debug aid).
 
 **This is a SKILL, not an agent** — runs in the main turn, uses Bash +
 Read + Grep + (optional) Serena/Grepika MCP. No `Edit` / `Write` to source.
-Deterministic enough that two runs on the same codebase produce
-byte-identical `scenarios.json`.
+**Deterministic.** Two runs on the same codebase MUST produce
+byte-identical `scenarios.json` and `detected-types.json`. The fixture
+tests in §6 lock this.
+
+**Fallback for unknown software.** If no specific type matches (very
+obscure framework, custom build system, research code), the discoverer
+falls back to "unknown-software mode": find `main()` / module-level
+side effects / exported public symbols / top-level test files, and
+emit generic scenarios using the universal scenario families
+(happy_path + adversarial_input + partial_failure + concurrent_state +
+resource_limits). Better than nothing; worse than per-type. The user
+gets a clear note in `detected-types.json` saying which type wasn't
+recognized and how to extend the registry.
 
 #### 3.1.b caa-scenario-walker-agent
 
@@ -196,6 +220,246 @@ walk mid-scenario and silently miss findings. The user must be sure
 "no finding" means "the agent reached the end of every scenario", not
 "the agent ran out of turns at scenario 42 of 200".
 **Disallowed tools:** Edit, NotebookEdit, Write to source code paths.
+
+#### 3.1.c Software-type detection registry
+
+The skill ships a built-in registry. Each row is one software type; the
+"Fingerprint" column is the primary signal (a file that exists or a
+unique pattern in a build file), "Disambiguator" handles the cases where
+the primary signal is ambiguous. Multiple types may apply to one repo.
+
+| Type | Primary fingerprint | Disambiguator |
+|---|---|---|
+| web_service_python | `pyproject.toml`/`requirements.txt` lists `fastapi`/`flask`/`django`/`starlette`/`sanic`/`aiohttp`/`bottle` | n/a |
+| web_service_node | `package.json` deps include `express`/`koa`/`fastify`/`hapi`/`@nestjs/*`/`next`/`hono`/`elysia` | n/a |
+| web_service_go | `go.mod` requires `gin`/`echo`/`chi`/`fiber`/`gorilla/mux`; or `net/http` + `http.HandleFunc` patterns | n/a |
+| web_service_rust | `Cargo.toml` deps include `actix-web`/`axum`/`rocket`/`warp`/`hyper`/`poem`/`salvo` | n/a |
+| web_service_ruby | `Gemfile` lists `rails`/`sinatra`/`hanami`/`roda` | n/a |
+| web_service_php | `composer.json` lists `symfony/*`/`laravel/*`/`slim/slim` | n/a |
+| web_service_java_kotlin | `pom.xml`/`build.gradle(.kts)` lists `spring-boot-starter-web`/`spring-webflux`/`micronaut-http`/`quarkus`/`jersey`/`vertx-web` | n/a |
+| web_service_dotnet | `*.csproj` references `Microsoft.AspNetCore.*` | n/a |
+| cli_python | `[project.scripts]` in `pyproject.toml` OR `entry_points={"console_scripts": ...}` in `setup.py` | not also a web framework |
+| cli_node | `package.json` has `bin:` field | not also a web framework |
+| cli_rust | `Cargo.toml` `[[bin]]` section | not also `[lib]` only |
+| cli_go | Go file with `func main()` + uses `flag`/`spf13/cobra`/`urfave/cli` | not in a web context |
+| cli_csharp | `*.csproj` with `<OutputType>Exe</OutputType>` and no AspNetCore | n/a |
+| library_python | `pyproject.toml` lacks `[project.scripts]` AND lacks web framework | `__init__.py` with `__all__` |
+| library_node | `package.json` with `main:`/`exports:` and no `bin:` | n/a |
+| library_rust | `Cargo.toml` `[lib]` only, no `[[bin]]` | n/a |
+| mobile_android | `AndroidManifest.xml` present | `build.gradle` with `applicationId` (app) vs `library` plugin (Android lib) |
+| mobile_ios | `*.xcodeproj` or `*.xcworkspace` + `Info.plist` | `@UIApplicationMain`/`@main` AppDelegate vs SwiftPM library |
+| mobile_flutter | `pubspec.yaml` with `flutter:` key | n/a |
+| mobile_reactnative | `package.json` lists `react-native` + `app.json` exists | n/a |
+| mobile_kotlin_multiplatform | `build.gradle.kts` applies `kotlin-multiplatform` plugin | n/a |
+| firmware_arduino | `*.ino` file OR `arduino-cli.yaml`/`platformio.ini` with arduino framework | `setup()` + `loop()` |
+| firmware_platformio | `platformio.ini` | per-board section |
+| firmware_zephyr | `west.yml` + `prj.conf` | `SYS_INIT` macros |
+| firmware_espidf | `sdkconfig` + `idf_component.yml` | `app_main()` |
+| firmware_stm32 | `STM32*.ld` linker script + `system_stm32*.c` + `*_hal_*.c` | NVIC / HAL macros |
+| firmware_nordic_sdk | `Kconfig.zephyr` lacking but `nrf*` SDK headers present | n/a |
+| firmware_baremetal | Linker script with hardcoded section addresses + `startup_*.s` + no kernel patterns | `_start` / `Reset_Handler` |
+| rtos_freertos | `FreeRTOSConfig.h` present OR `<freertos/*>` includes | `xTaskCreate`, `vTaskStartScheduler` |
+| rtos_zephyr | (covered by firmware_zephyr; many Zephyr apps ARE RTOS apps) | n/a |
+| rtos_threadx | `<tx_api.h>` includes | `tx_thread_create` |
+| rtos_chibios | `<ch.h>` or `chconf.h` | n/a |
+| linux_kernel_module | `Kbuild`/`Makefile` with `obj-m :=` + `MODULE_LICENSE` macro + `<linux/module.h>` | `module_init`, `module_exit` |
+| linux_kernel_tree | `MAINTAINERS` + `Kconfig` at root + `arch/<arch>/` + `kernel/` + `Documentation/` | n/a |
+| windows_kernel_driver | `*.inf`/`*.inx` + `WdfDriverEntry`/`DriverEntry` | KMDF/WDM macros |
+| bsd_kernel | `sys/kern/` + `sys/dev/` | `MOD_LOAD`, `DEVMETHOD` |
+| macos_kernel_ext | `*.kext`/`Info.plist` + `IOService` includes | n/a |
+| os_baremetal | Linker script + boot sector + no kernel module patterns + missing pthread/syscall | hand-rolled scheduler in source |
+| fpga_verilog | `*.v`/`*.sv` + `*.xdc`/`*.lpf`/`*.sdc` constraint files | `module <top> (...)` top-level |
+| fpga_vhdl | `*.vhd`/`*.vhdl` + constraint files | `entity <top> is` |
+| asic_design | (similar to FPGA but with SDC + DEF/LEF + ATPG configs) | n/a |
+| driver_linux_userspace | libusb/hidapi/spidev consumer + udev rules | n/a |
+| browser_ext_chrome | `manifest.json` with `manifest_version: 3` + `background:`/`content_scripts:` | `chrome.runtime.*` calls |
+| browser_ext_firefox | `manifest.json` with `browser_specific_settings.gecko` | `browser.runtime.*` |
+| browser_ext_safari | `*.safariextz`/Safari App Ext Xcode project | n/a |
+| game_unity | `Assets/` + `ProjectSettings/` + `*.unityproj`/`*.csproj` for Unity | `MonoBehaviour` subclasses |
+| game_unreal | `*.uproject` + `Source/` | `AActor` / `UCLASS` macros |
+| game_godot | `project.godot` + `*.tscn`/`*.gd`/`*.cs` | n/a |
+| compiler_parser | grammar files (`*.lex`/`*.y`/`*.tree-sitter`/`*.pest`/`*.g4`) | `parse_*` / `tokenize_*` functions |
+| iac_terraform | `*.tf` + `terraform.tfvars` | `resource "..." "..."` blocks |
+| iac_pulumi | `Pulumi.yaml` + `Pulumi.<stack>.yaml` | n/a |
+| iac_helm | `Chart.yaml` + `templates/` | n/a |
+| iac_ansible | `playbook.yml` + `roles/`+`tasks/`+`vars/` | `- hosts:` keys |
+| iac_cloudformation | `*.template` JSON/YAML with `AWSTemplateFormatVersion` | n/a |
+| iac_kustomize | `kustomization.yaml` | n/a |
+| iac_docker_compose | `docker-compose.yml`/`compose.yaml` | n/a |
+| iac_k8s_operator | `kubebuilder.yaml` + `controllers/` | `Reconcile()` method |
+| data_pipeline_airflow | `dags/` + `airflow.cfg` | `DAG(...)` constructors |
+| data_pipeline_dbt | `dbt_project.yml` + `models/` | `{{ ref(...) }}` |
+| data_pipeline_prefect | `prefect.yaml` + `@flow` decorators | n/a |
+| data_pipeline_dagster | `dagster.yaml` + `@asset` decorators | n/a |
+| ml_training | deps include `torch`/`tensorflow`/`jax`/`transformers`/`scikit-learn`/`lightning` + training loops | `nn.Module`, `train_step` |
+| crypto_library | deps include `aes`/`rsa`/`ed25519`/`hkdf`/`x25519` + side-channel-aware helpers | constant-time comparison helpers |
+| network_protocol_impl | source implements wire-level parser/encoder (HTTP/QUIC/TLS/DNS/MQTT/CoAP/Modbus/CAN) at packet level | magic numbers, packet header structs |
+| database_engine | source implements WAL, B-tree/LSM, page cache, MVCC | `wal_append`, `page_alloc`, `commit_record` |
+| distributed_system | source implements Raft/Paxos/CRDT/gossip | `appendEntries`, `requestVote`, `proposeValue` |
+| game_engine | non-game-specific rendering/physics/asset-loading library | shader compile, scene graph |
+| desktop_qt | `*.pro`/`CMakeLists.txt` with `find_package(Qt6)` | `QApplication`, `QMainWindow` |
+| desktop_gtk | dep on `gtk4`/`gtk3` | `gtk_init`, `gtk_application_new` |
+| desktop_electron | `package.json` lists `electron` | `BrowserWindow`, `app.on('ready')` |
+| desktop_tauri | `tauri.conf.json` + `src-tauri/` | `#[tauri::command]` |
+| desktop_flutter | `pubspec.yaml` with `flutter:` + desktop target enabled | n/a |
+| webgl_three | `package.json` lists `three`/`@react-three/fiber` | `Scene`, `WebGLRenderer` |
+| websocket_server | source uses `ws`/`socket.io`/`gorilla/websocket`/`tokio-tungstenite` | `onmessage` handlers |
+| message_queue_consumer | `kafka`/`rabbitmq`/`redis`/`sqs`/`nats` client lib | `consume(...)`, subscription registration |
+| unknown_software | none of the above match | fallback discoverer (see §3.1.a) |
+
+Each row is also enumerated in `references/01-software-type-detection.md`
+inside the skill, with a concrete example fingerprint for each.
+
+The skill MUST be designed so new types can be added without modifying
+existing discoverers — each discoverer lives in its own
+`scripts/scenario_generator/discoverers/<type>.py` file, registered by
+filename. Adding a new type = adding a file. This keeps the type
+registry open-ended for future contributions (FPGA partial reconfig,
+quantum hardware controllers, RISC-V vector extensions, anything we
+haven't thought of yet).
+
+#### 3.1.d Universal scenario schema
+
+The output of the skill is one `scenarios.json` file with this schema,
+**identical regardless of detected software type**:
+
+```json
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "2026-05-10T22:30:00+0200",
+  "codebase": {
+    "root": "/path/to/repo",
+    "detected_types": [
+      {"type": "linux_kernel_module", "confidence": 0.95,
+       "evidence": ["Kbuild has obj-m += myhw.o",
+                    "MODULE_LICENSE in src/myhw_main.c:12"]}
+    ],
+    "detected_languages": ["c"]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0042",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "ioctl receives bad userspace pointer",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "drivers/myhw/myhw_ioctl.c",
+        "line": 42,
+        "symbol": "myhw_ioctl",
+        "metadata": {"cmd": "MYHW_GET_STATUS"}
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "syscall_with_bad_pointer",
+        "value": {"arg_pointer": "0xDEADBEEF", "size": 1024}
+      },
+      "intended_behaviour": "copy_to_user MUST check the pointer; if bad, return -EFAULT without leaking kernel state.",
+      "intended_behaviour_source": [
+        "Documentation/security/self-protection.rst",
+        "man-page: ioctl(2)"
+      ],
+      "expected_path_summary": ["access_ok()", "copy_to_user()", "<EFAULT return>"],
+      "invariants_to_check": [
+        "access_ok_called_before_copy",
+        "no_kernel_data_leaked_on_failure"
+      ],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "TOCTOU_between_access_ok_and_copy"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}
+```
+
+Key universal fields:
+
+- **`entry_point.kind`** — one of: `http_route`, `cli_command`,
+  `library_export`, `ipc_handler`, `isr_vector`, `gpio_interrupt`,
+  `syscall_handler`, `ioctl_handler`, `module_init`, `module_exit`,
+  `rtos_task`, `rtos_isr`, `event_listener`, `webhook`, `cron_job`,
+  `mq_consumer`, `ws_message_handler`, `ui_route`, `ui_event_handler`,
+  `os_lifecycle_event`, `permission_request`, `boot_path`, `reset_path`,
+  `power_event`, `dma_transfer`, `hw_register_write`, `hw_register_read`,
+  `protocol_packet_handler`, `parser_input`, `db_query_handler`,
+  `migration_apply`, `migration_rollback`, `terraform_resource`,
+  `helm_template`, `dag_task`, `controller_reconcile`, `main_function`,
+  `unknown_entry`.
+- **`actor_role`** — one of: `anonymous_client`, `authenticated_user`,
+  `admin`, `attacker_external`, `attacker_internal`,
+  `attacker_compromised_session`, `peer_service`, `userspace_caller`,
+  `userspace_attacker`, `hardware_interrupt`, `hardware_dma_engine`,
+  `os_scheduler`, `os_signal`, `power_event_source`,
+  `network_peer_malicious`, `network_peer_benign`, `bootloader`,
+  `watchdog`, `brownout_detector`, `test_runner`, `ci_system`,
+  `developer_local`, `unknown_actor`.
+- **`stimulus.kind`** — type-specific but the SHAPE is universal:
+  `{kind, value}` where `value` is JSON. The walker reads `kind` to
+  understand what role-aware reasoning to apply.
+- **`failure_modes_to_test`** — opaque to the schema; the walker
+  interprets them against the scenario family's playbook.
+
+The walker is type-blind. Type knowledge lived in the skill at scenario
+generation time, then was crystallized into the universal schema. The
+walker just executes scenarios per the schema.
+
+#### 3.1.e Scenario family registry (applies-to map)
+
+The skill ships a built-in registry of scenario families. Each family
+declares the set of software types it applies to. The expansion step in
+§3.1.a stage 3 reads this registry to know which families to instantiate
+per entry point. Families and their applicability:
+
+| Family | Applies to types |
+|---|---|
+| happy_path | ALL types |
+| adversarial_input | web_*, cli_*, library_*, firmware_*, driver_*, kernel_*, compiler_parser, network_protocol_impl, database_engine, browser_ext_*, ml_training, data_pipeline_* |
+| partial_failure | ALL types that perform I/O (i.e. most) — explicit exclusion list: fpga_*, asic_design, crypto_library (pure-compute subset) |
+| concurrent_state | web_*, kernel_*, driver_*, firmware_* (multi-task), rtos_*, distributed_system, database_engine, ml_training, message_queue_consumer, websocket_server, game_*, desktop_*, mobile_* (background work) |
+| auth_state_transition | web_*, mobile_*, browser_ext_*, kernel_* (capability/cred subsystems), desktop_* (login flows), iac_k8s_operator (RBAC) |
+| resource_limits | ALL types |
+| interrupt_atomicity | firmware_*, rtos_*, kernel_*, driver_*, os_baremetal |
+| userspace_pointer_validation | kernel_*, driver_linux_*, windows_kernel_driver, bsd_kernel, macos_kernel_ext |
+| dma_race | firmware_*, driver_*, rtos_*, kernel_* (with DMA-capable peripherals) |
+| boot_path | firmware_*, os_baremetal, kernel_*, rtos_* |
+| suspend_resume | firmware_*, mobile_*, driver_*, kernel_*, desktop_* |
+| hardware_failure | firmware_*, driver_*, rtos_*, kernel_*, fpga_* |
+| protocol_replay | web_*, network_protocol_impl, firmware_* (with comms), crypto_library, browser_ext_*, ws_*, mq_consumer |
+| downgrade_attack | crypto_library, network_protocol_impl, web_* (TLS termination), browser_ext_*, mobile_* (cert pinning) |
+| persistence_corruption | ALL that write state — explicit list per-type in references |
+| ipc_message_malformed | os_*, browser_ext_*, mobile_*, distributed_system, desktop_* (IPC), kernel_* (netlink/dbus) |
+| upgrade_migration | ALL types with versioned state |
+| user_input_event | mobile_*, desktop_*, game_*, browser_ext_*, webgl_three |
+| scheduler_starvation | rtos_*, os_*, kernel_*, distributed_system, data_pipeline_* |
+| backpressure | data_pipeline_*, web_*, distributed_system, network_protocol_impl, ws_server, mq_consumer |
+| clock_skew | distributed_system, crypto_library, mobile_*, web_* (token expiry), network_protocol_impl |
+| sandbox_escape | browser_ext_*, mobile_* (permissions), os_*, desktop_electron, desktop_tauri |
+| dependency_compromise | ALL types — supply-chain risk is universal |
+| signal_integrity | fpga_*, asic_design, firmware_* (high-speed interfaces) |
+| timing_constraint_violation | fpga_*, asic_design, rtos_* (deadlines), firmware_* (real-time) |
+| watchdog_misuse | firmware_*, rtos_*, kernel_* (kernel watchdog), os_baremetal |
+| power_glitch | firmware_*, os_baremetal, crypto_library (fault injection resistance) |
+| side_channel | crypto_library, firmware_* (running crypto), kernel_* (crypto subsystem) |
+| concurrency_in_parser | compiler_parser, network_protocol_impl, web_* (request parsing) |
+| memory_safety_uaf | ALL C/C++/unsafe-Rust types — firmware, kernel, driver, game_engine, desktop_qt/gtk, network_protocol_impl |
+| memory_safety_bounds | same set as memory_safety_uaf |
+| integer_overflow_in_size_calc | ALL types that do size arithmetic — kernel, driver, firmware, parser, network_protocol_impl, database_engine, crypto_library |
+| privilege_escalation | kernel_*, driver_*, browser_ext_* (extension permissions), desktop_* (suid/elevated tasks), mobile_* (intent hijack) |
+| race_in_setuid_or_setgid | kernel_*, os_baremetal, cli_* with setuid binaries |
+
+The registry lives in `scripts/scenario_generator/scenario_families.py`
+as a single dict: `FAMILY_TO_TYPES: dict[str, set[str]]`. Adding a new
+family or a new applies-to relationship is a one-line change. The skill's
+behaviour is fully driven by this registry — there is no per-family
+hardcoded logic in the discoverers.
+
+The set of `failure_modes_to_test` per family is a separate registry
+(`FAMILY_TO_FAILURE_MODES`) — also a dict — that the walker reads to
+know what divergence patterns to look for. This keeps the walker
+type-blind while letting families inject family-specific test
+expectations.
 
 ### 3.2 caa-assumption-auditor-agent (HIGH priority)
 
@@ -440,14 +704,70 @@ audit-codebase pipeline is overkill.
 1. `agents/caa-scenario-walker-agent.md` — agent definition
 2. `agents/caa-assumption-auditor-agent.md` — agent definition
 3. `skills/caa-scenario-generator-skill/SKILL.md` + `references/` — the
-   deterministic scenario discovery skill (§3.1.a)
-4. `scripts/scenario_generator/` — Python helpers the skill calls
-   (`discover_http_routes.py`, `discover_cli_commands.py`,
-   `discover_ui_routes.py`, `discover_event_listeners.py`,
-   `discover_write_sites.py`, `emit_scenarios_json.py`,
-   `emit_scenarios_md.py`) — one file per surface type, each
-   language-aware. The skill orchestrates them; the agent never invokes
-   them directly.
+   deterministic scenario discovery skill (§3.1.a). References:
+   `01-software-type-detection.md` (full §3.1.c registry with concrete
+   fingerprint examples per row), `02-scenario-schema.md` (full §3.1.d
+   schema with examples per `entry_point.kind`), `03-discoverers.md`
+   (catalog of all discoverers under `scripts/scenario_generator/discoverers/`
+   with one-line descriptions), `04-scenario-families.md` (full §3.1.e
+   applies-to map + per-family failure-mode list).
+4. `scripts/scenario_generator/` — Python engine for the skill. Layout:
+   - `detect_software_type.py` — implements §3.1.c registry. Walks the
+     repo, matches fingerprints, returns `[{type, confidence, evidence}]`.
+   - `scenario_families.py` — implements §3.1.e registry as two dicts:
+     `FAMILY_TO_TYPES` (which types each family applies to) and
+     `FAMILY_TO_FAILURE_MODES` (what divergence patterns to test per
+     family). Both are pure data.
+   - `emit_scenarios_json.py` — composes type + entry points + families
+     into the universal `scenarios.json` (§3.1.d).
+   - `emit_scenarios_md.py` — companion human-readable index.
+   - `discoverers/` — one Python module per software type:
+     `web_python_fastapi.py`, `web_python_flask.py`, `web_python_django.py`,
+     `web_node_express.py`, `web_node_nextjs.py`, `web_node_koa.py`,
+     `web_go_stdlib.py`, `web_go_gin.py`, `web_rust_axum.py`,
+     `web_rust_actix.py`, `web_ruby_rails.py`, `web_php_laravel.py`,
+     `web_java_spring.py`, `web_dotnet_aspnet.py`,
+     `cli_python_argparse.py`, `cli_python_click.py`, `cli_node_yargs.py`,
+     `cli_node_commander.py`, `cli_rust_clap.py`, `cli_go_cobra.py`,
+     `library_python.py`, `library_node.py`, `library_rust.py`,
+     `library_c.py`,
+     `mobile_android.py`, `mobile_ios.py`, `mobile_flutter.py`,
+     `mobile_reactnative.py`, `mobile_kmp.py`,
+     `firmware_arduino.py`, `firmware_platformio.py`,
+     `firmware_zephyr.py`, `firmware_espidf.py`, `firmware_stm32.py`,
+     `firmware_nordic.py`, `firmware_baremetal.py`,
+     `rtos_freertos.py`, `rtos_threadx.py`, `rtos_chibios.py`,
+     `kernel_linux_module.py`, `kernel_linux_tree.py`,
+     `kernel_windows_driver.py`, `kernel_bsd.py`, `kernel_macos_ext.py`,
+     `os_baremetal.py`,
+     `fpga_verilog.py`, `fpga_vhdl.py`, `asic_design.py`,
+     `compiler_parser.py`, `network_protocol_impl.py`,
+     `database_engine.py`, `distributed_system.py`,
+     `crypto_library.py`, `game_engine.py`,
+     `iac_terraform.py`, `iac_pulumi.py`, `iac_helm.py`,
+     `iac_ansible.py`, `iac_cloudformation.py`, `iac_kustomize.py`,
+     `iac_docker_compose.py`, `iac_k8s_operator.py`,
+     `data_pipeline_airflow.py`, `data_pipeline_dbt.py`,
+     `data_pipeline_prefect.py`, `data_pipeline_dagster.py`,
+     `ml_training.py`,
+     `browser_ext_chrome.py`, `browser_ext_firefox.py`,
+     `browser_ext_safari.py`,
+     `game_unity.py`, `game_unreal.py`, `game_godot.py`,
+     `desktop_qt.py`, `desktop_gtk.py`, `desktop_electron.py`,
+     `desktop_tauri.py`, `desktop_flutter.py`,
+     `webgl_three.py`, `websocket_server.py`,
+     `message_queue_consumer.py`,
+     `unknown_software.py` (fallback — main(), exported symbols).
+
+   Each discoverer file exports a single function:
+   `discover(repo_root: Path, detected_languages: list[str]) -> list[EntryPoint]`.
+   The shape of `EntryPoint` is defined in `scripts/scenario_generator/types.py`.
+   The skill loads discoverers by introspecting the directory — adding a
+   new discoverer is just adding a new file.
+
+   For v1 NOT all ~70 discoverers ship in Phase 1 — see §10 for the
+   minimal viable set. The unimplemented ones fall back to
+   `unknown_software.py` until added.
 5. `commands/caa-extended-audit-cmd.md` — extended-audit entry point
    (`/caa-audit-codebase --extended` and `/caa-extended-audit` alias)
 6. `tests/fixtures/scenario_walker/` — small fixture codebases (one per
@@ -568,15 +888,47 @@ A successful implementation MUST pass these scenarios:
 
 ## 10. Implementation order
 
-Phase 1 (single PR): `caa-scenario-generator-skill` + the
-`scripts/scenario_generator/` discovery helpers + golden-file fixture
-tests. Skill must produce byte-identical `scenarios.json` on the
-fixtures. NO agent yet — phase 1 is just deterministic discovery, easy
-to test, easy to land.
+Phase 1 — the skill foundation (single PR):
+- `caa-scenario-generator-skill` directory with SKILL.md + 4 references
+- `scripts/scenario_generator/detect_software_type.py` — full registry
+  of ~70 type fingerprints (§3.1.c). MUST be implemented in full because
+  later phases extend it incrementally; the registry is the table that
+  unblocks everything else.
+- `scripts/scenario_generator/scenario_families.py` — full registry of
+  scenario families with applies-to map (§3.1.e). Also implemented in
+  full — pure data, low cost.
+- `scripts/scenario_generator/emit_scenarios_json.py` + the universal
+  schema (§3.1.d).
+- `scripts/scenario_generator/types.py` — `EntryPoint` dataclass +
+  enums.
+- `scripts/scenario_generator/discoverers/unknown_software.py` —
+  fallback discoverer (always shipped first, used when no specific
+  discoverer matches).
+- **Minimal viable discoverer set for Phase 1** (the 10 most common
+  software types, ordered by likely real-world frequency):
+  `web_python_fastapi.py`, `web_node_express.py`, `web_node_nextjs.py`,
+  `cli_python_click.py`, `cli_node_yargs.py`, `library_python.py`,
+  `firmware_arduino.py`, `firmware_platformio.py`,
+  `kernel_linux_module.py`, `fpga_verilog.py`. Plus the fallback.
+- Golden-file fixture tests: one fixture per Phase-1 discoverer + one
+  fixture for the fallback. Each fixture has `expected-scenarios.json`
+  + `expected-detected-types.json` golden files. The skill must produce
+  byte-identical output. **NO agent yet** — Phase 1 is just deterministic
+  discovery, easy to test, easy to land.
+
+Phase 1.5 — discoverer expansion (separate PRs, can land in parallel):
+each remaining discoverer ships in its own PR with its own fixture +
+golden files. Adding a discoverer is a self-contained change (file ×
+fixture × golden), so 5 contributors can ship 5 discoverers in parallel
+without merge conflicts. Target: cover the top 30 types in v1.0; the
+remaining ~40 types land via community PRs (or as needed) and use the
+fallback in the interim.
 
 Phase 2 (single PR): `caa-scenario-walker-agent` definition + walker
 tests (consumes Phase 1's golden `scenarios.json`, asserts findings on
-incidents #1, #2, #5).
+incidents #1, #2, #5). The agent is type-blind, so Phase 2 is
+independent of which discoverers are in or out — the agent processes
+any scenarios.json that conforms to the §3.1.d schema.
 
 Phase 3 (single PR): `caa-assumption-auditor-agent` + tests for
 incidents #3, #4.
