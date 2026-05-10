@@ -187,7 +187,14 @@ only filepaths.
 scenario (or one agent per scenario-cluster when `scenarios.json` is
 large). Parallel execution bounded by the orchestrator (≤ 15 concurrent).
 
-**Model:** opus, effort: high, maxTurns: 50.
+**Model:** opus, effort: high.
+**Turn budget:** uncapped — see §3.3 below. The other existing CAA agents
+use 20–30 turn caps because they are bounded line-level audits; this
+agent recursively walks a call graph of unknown depth across an
+arbitrary number of scenarios, and an artificial cap could truncate the
+walk mid-scenario and silently miss findings. The user must be sure
+"no finding" means "the agent reached the end of every scenario", not
+"the agent ran out of turns at scenario 42 of 200".
 **Disallowed tools:** Edit, NotebookEdit, Write to source code paths.
 
 ### 3.2 caa-assumption-auditor-agent (HIGH priority)
@@ -235,8 +242,54 @@ each one against real-world adversarial inputs and edge cases.
 **Output:** One markdown report per file or function-cluster, under
 `<main-repo>/reports/caa-assumption-auditor/<ts>-<file-slug>.md`.
 
-**Model:** opus, effort: high, maxTurns: 40.
+**Model:** opus, effort: high.
+**Turn budget:** uncapped — see §3.3 below. Same reasoning as the
+walker: enumerating + adversarially-challenging every implicit
+assumption in a non-trivial file is unbounded; an artificial cap could
+truncate the audit mid-file. The agent must finish or fail loud — never
+silently stop.
 **Disallowed tools:** Edit, NotebookEdit, Write to source code paths.
+
+### 3.3 Turn-budget policy (per user directive)
+
+Per the user directive received during TRDD review: **the two new
+agents MUST NOT carry an artificial `maxTurns` cap.** Their workload
+(walking a call graph across N scenarios; auditing every implicit
+assumption per file) is fundamentally unbounded, and the existing
+CAA-agent caps of 20–30 turns were chosen for line-level audits that
+ARE bounded. Capping the new agents at any small number guarantees
+truncated walks and silently missed findings — the opposite of why
+they exist.
+
+**Implementation choice for the agent frontmatter:**
+
+We will OMIT the `maxTurns:` key entirely from both agent definition
+files. The behavior of an omitted `maxTurns` in Claude Code agent
+frontmatter is "use the platform default", which at the time of this
+TRDD revision is understood to be effectively very large (and is the
+designed escape hatch for long-running agents). If empirical testing
+during Phase 2 shows that omission triggers a low default, we will set
+an explicit `maxTurns: 999` (effectively unlimited for any plausible
+walk depth) and revisit. Either way: NO small cap. See §11 Q8 — the
+fallback policy is "explicit very-high integer" if omission turns out
+to default to a small number.
+
+This is intentional asymmetry vs the existing agents: those audit one
+file or one report and finish in 10–25 turns. These audit a workload
+whose size is determined by the codebase, not by the agent's own state
+machine, and must run to completion.
+
+**Operational consequences:**
+
+- The walker swarm and assumption-auditor swarm may run for many minutes
+  per agent on a large codebase. The orchestrator-side budget control is
+  the `≤ 15 concurrent` swarm cap and per-agent timeout (configurable
+  via plugin `userConfig`, default 30 min), NOT turn count.
+- If a single agent genuinely hangs (e.g. tool-call loop), the
+  orchestrator detects it via the per-agent timeout — not via maxTurns.
+- Phase 2/3 acceptance tests MUST include a fixture large enough that
+  the agents would have exceeded a 30- or 50-turn cap, to prove the
+  uncapped policy holds end-to-end.
 
 ## 4. Integration with the existing swarm
 
@@ -543,6 +596,14 @@ Each phase publishable independently via `scripts/publish.py --minor`.
    ship in v1? Current proposal: Python (FastAPI/Flask/argparse/click) +
    TypeScript/JavaScript (Express/Next.js/React Router/yargs/commander).
    Go/Rust/Java framework support deferred to v2 unless a user asks.
+8. **`maxTurns: omitted` vs `maxTurns: 999`.** §3.3 commits to omitting
+   `maxTurns:` entirely on the two new agents and relying on the platform
+   default being "effectively unlimited". Phase 2 testing MUST verify
+   this empirically: run the walker on a fixture that requires >50 tool
+   calls and confirm it completes. If the omitted default turns out to
+   be a small number (e.g. 25, 50), Phase 2 will switch to explicit
+   `maxTurns: 999`. The TRDD will be updated with whichever path proved
+   correct. No cap-with-small-value is acceptable either way.
 
 ## 12. Rollback plan
 
