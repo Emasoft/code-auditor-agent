@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_platformio",
+  "detected_types": [
+    {
+      "type": "firmware_arduino",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.ino matches 1 file(s); first=src/arduino_main.ino",
+        "disambig_content: src/arduino_main.ino matches one of ['void setup(', 'void loop(', 'pinMode(']"
+      ]
+    },
+    {
+      "type": "firmware_platformio",
+      "confidence": 0.85,
+      "evidence": [
+        "**/platformio.ini matches 1 file(s); first=platformio.ini"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "arduino",
+    "c"
+  ]
+}

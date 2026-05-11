@@ -130,11 +130,20 @@ CONTENT_PREVIEW_BYTES = 32768
 
 
 def _iter_source_files(repo_root: Path) -> list[Path]:
-    """Sorted list of source files we will inspect. Deterministic."""
+    """Sorted list of source files we will inspect. Deterministic.
+
+    Skip-dir check uses RELATIVE parts so a fixture under
+    tests/fixtures/... isn't mis-skipped (the absolute path would
+    contain "tests" and skip everything).
+    """
     out: list[Path] = []
     for ext in _EXT_TO_LANG:
         for p in repo_root.rglob(f"*{ext}"):
-            if any(part in _SKIP_DIRS for part in p.parts):
+            try:
+                rel_parts = p.relative_to(repo_root).parts
+            except ValueError:
+                continue
+            if any(part in _SKIP_DIRS for part in rel_parts):
                 continue
             if not p.is_file():
                 continue

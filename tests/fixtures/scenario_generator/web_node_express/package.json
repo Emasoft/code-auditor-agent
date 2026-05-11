@@ -1,0 +1,12 @@
+{
+  "name": "express-fixture-app",
+  "version": "0.0.1",
+  "description": "Test fixture for the web_node_express discoverer.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}

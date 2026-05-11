@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_node_nextjs",
+  "detected_types": [
+    {
+      "type": "web_service_node",
+      "confidence": 0.85,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"express\":', '\"koa\":', '\"fastify\":', '\"hapi\":', '\"@nestjs/', '\"next\":', '\"hono\":', '\"elysia\":']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "typescript"
+  ]
+}

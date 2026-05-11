@@ -406,7 +406,12 @@ FINGERPRINTS: tuple[TypeFingerprint, ...] = (
     TypeFingerprint(
         name="firmware_platformio",
         primary_globs=("**/platformio.ini",),
-        conflicts_with=("firmware_arduino",),
+        # NOTE: deliberately NO conflicts_with — PlatformIO is a build-system
+        # layer that hosts arduino/espidf/stm32cube/mbed/baremetal. A project
+        # using the arduino framework via PlatformIO is BOTH firmware_arduino
+        # AND firmware_platformio; the platformio discoverer dispatches per
+        # env to the right per-framework extractor. Excluding it when arduino
+        # also matches would silently drop the multi-env entry-point coverage.
     ),
     TypeFingerprint(
         name="firmware_zephyr",

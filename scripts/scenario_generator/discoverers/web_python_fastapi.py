@@ -25,6 +25,12 @@ from pathlib import Path
 
 from ..types import EntryPoint, EntryPointKind
 
+# Declared so the emit_scenarios_json dispatcher can route detected
+# `web_service_python` types here even though the filename uses the
+# shorter convention (web_python_fastapi vs web_service_python_fastapi).
+TYPE_ORIGIN = "web_service_python"
+
+
 _DECORATOR_RE = re.compile(
     r"^\s*@(?P<binding>\w+)\.(?P<method>get|post|put|delete|patch|head|options)\s*\(",
     re.MULTILINE,
@@ -126,9 +132,16 @@ def discover(repo_root: Path, languages: list[str]) -> list[EntryPoint]:
     repo_root = repo_root.resolve()
     found: list[EntryPoint] = []
 
+    # Check skip-dirs against RELATIVE parts so a fixture under
+    # tests/fixtures/... isn't mis-skipped (the absolute path would
+    # contain "tests" and skip everything).
     py_files = []
     for p in repo_root.rglob("*.py"):
-        if any(part in _SKIP_DIRS for part in p.parts):
+        try:
+            rel_parts = p.relative_to(repo_root).parts
+        except ValueError:
+            continue
+        if any(part in _SKIP_DIRS for part in rel_parts):
             continue
         if p.is_file():
             py_files.append(p)

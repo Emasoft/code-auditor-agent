@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/linux_kernel_module",
+  "detected_types": [
+    {
+      "type": "linux_kernel_module",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Kbuild \u2192 Kbuild contains one of ['obj-m']",
+        "**/Makefile \u2192 Makefile contains one of ['obj-m :=', 'obj-m +=']",
+        "disambig_content: myhw_main.c matches one of ['MODULE_LICENSE', 'module_init', 'module_exit', 'EXPORT_SYMBOL', '<linux/module.h>']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Makefile matches 1 file(s); first=Makefile"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

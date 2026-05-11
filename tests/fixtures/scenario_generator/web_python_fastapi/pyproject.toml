@@ -1,0 +1,6 @@
+[project]
+name = "fastapi-fixture"
+version = "0.1.0"
+description = "Fixture for caa-scenario-generator: web_python_fastapi discoverer"
+requires-python = ">=3.10"
+dependencies = ["fastapi>=0.100"]

@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_python_click",
+  "detected_types": [
+    {
+      "type": "cli_python",
+      "confidence": 0.89,
+      "evidence": [
+        "**/pyproject.toml \u2192 pyproject.toml contains one of ['[project.scripts]']",
+        "**/setup.py \u2192 setup.py contains one of ['console_scripts']",
+        "disambig_content: cli.py matches one of ['argparse', 'import click', 'import typer']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

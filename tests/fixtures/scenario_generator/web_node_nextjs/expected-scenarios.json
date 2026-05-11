@@ -1,0 +1,3579 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_node_nextjs",
+    "detected_types": [
+      {
+        "type": "web_service_node",
+        "confidence": 0.85,
+        "evidence": [
+          "**/package.json \u2192 package.json contains one of ['\"express\":', '\"koa\":', '\"fastify\":', '\"hapi\":', '\"@nestjs/', '\"next\":', '\"hono\":', '\"elysia\":']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "typescript"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "GET /api/orders rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "GET /api/orders re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "GET /api/orders applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "GET /api/orders tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "GET /api/orders parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "GET /api/orders is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "GET /api/orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "GET /api/orders rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of GET /api/orders",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "GET /api/orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "GET /api/orders survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "GET /api/orders rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "GET /api/orders respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "GET /api/orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 9,
+        "symbol": "GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "POST /api/orders rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "POST /api/orders re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "POST /api/orders applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "POST /api/orders tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "POST /api/orders parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "POST /api/orders is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "POST /api/orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "POST /api/orders rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of POST /api/orders",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "POST /api/orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "POST /api/orders survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "POST /api/orders rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "POST /api/orders respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "POST /api/orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app/api/orders/route.ts",
+        "line": 13,
+        "symbol": "POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/orders",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/orders",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "DashboardPage rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "DashboardPage re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "DashboardPage applies backpressure",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "DashboardPage tolerates clock skew",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "DashboardPage parser thread-safe",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "DashboardPage is safe under concurrent access",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "DashboardPage robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "DashboardPage rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of DashboardPage",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "DashboardPage handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "DashboardPage survives persistence corruption",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "DashboardPage rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "DashboardPage respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "DashboardPage survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "app/dashboard/page.tsx",
+        "line": 1,
+        "symbol": "DashboardPage",
+        "metadata": {
+          "method": "GET",
+          "path": "/dashboard",
+          "framework": "nextjs",
+          "router": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "DashboardPage",
+          "metadata": {
+            "method": "GET",
+            "path": "/dashboard",
+            "framework": "nextjs",
+            "router": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "GET /api/users rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "GET /api/users re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "GET /api/users applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "GET /api/users tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "GET /api/users parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "GET /api/users is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "GET /api/users robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "GET /api/users rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of GET /api/users",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "GET /api/users handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "GET /api/users survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "GET /api/users rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "GET /api/users respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "GET /api/users survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:GET",
+        "metadata": {
+          "method": "GET",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "handler:GET",
+          "metadata": {
+            "method": "GET",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "POST /api/users rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "POST /api/users re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "POST /api/users applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "POST /api/users tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "POST /api/users parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "POST /api/users is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "POST /api/users robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "POST /api/users rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of POST /api/users",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "POST /api/users handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "POST /api/users survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "POST /api/users rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "POST /api/users respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "POST /api/users survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "pages/api/users.ts",
+        "line": 9,
+        "symbol": "handler:POST",
+        "metadata": {
+          "method": "POST",
+          "path": "/api/users",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "handler:POST",
+          "metadata": {
+            "method": "POST",
+            "path": "/api/users",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "HomePage rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "HomePage re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "HomePage applies backpressure",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "HomePage tolerates clock skew",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "HomePage parser thread-safe",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "HomePage is safe under concurrent access",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "HomePage robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "HomePage rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of HomePage",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "HomePage handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "HomePage survives persistence corruption",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0082",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "HomePage rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0083",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "HomePage respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0084",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "HomePage survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "pages/index.tsx",
+        "line": 1,
+        "symbol": "HomePage",
+        "metadata": {
+          "method": "GET",
+          "path": "/",
+          "framework": "nextjs",
+          "router": "pages"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "HomePage",
+          "metadata": {
+            "method": "GET",
+            "path": "/",
+            "framework": "nextjs",
+            "router": "pages"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

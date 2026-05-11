@@ -182,14 +182,100 @@ def _load_discoverer(type_name: str):
         return None
 
 
-def _discover_entry_points(type_name: str, repo_root: Path, languages: tuple[str, ...]) -> list[EntryPoint]:
-    """Dispatch to the per-type discoverer; fall back to unknown_software."""
-    mod = _load_discoverer(type_name)
-    if mod is None:
-        mod = _load_discoverer("unknown_software")
+def _load_framework_discoverers(type_name: str) -> list[Any]:
+    """Find all framework-variant discoverers for a type.
+
+    Two resolution rules apply, both deterministic; results are unioned
+    and de-duplicated by module name:
+
+    1. **Filename prefix.** `discoverers/<type>_<framework>.py` — e.g.
+       `cli_node_yargs.py` for type `cli_node`. Works when the file
+       stem starts with `<type>_`.
+
+    2. **Module-declared TYPE_ORIGIN.** Any module under `discoverers/`
+       that exposes a top-level `TYPE_ORIGIN = "<type>"` constant whose
+       value equals `type_name` is also a match — even if its filename
+       does NOT start with `<type>_`. This supports the framework
+       naming convention from TRDD-6857f67f §3.1.d where simplified
+       prefixes are used (e.g. `web_node_express.py` for
+       `web_service_node`, `kernel_linux_module.py` for
+       `linux_kernel_module`).
+
+    Returns modules sorted by name for deterministic ordering. The
+    bare type-named module (if it exists) is excluded — that one is
+    loaded separately by _load_discoverer.
+    """
+    discoverers_dir = Path(__file__).parent / "discoverers"
+    if not discoverers_dir.is_dir():
+        return []
+
+    candidates: set[str] = set()
+
+    # Rule 1 — filename prefix.
+    prefix = f"{type_name}_"
+    for f in discoverers_dir.glob(f"{prefix}*.py"):
+        stem = f.stem
+        if stem.startswith("_"):
+            continue
+        if stem == type_name:
+            continue
+        candidates.add(stem)
+
+    # Rule 2 — TYPE_ORIGIN attribute. Scan every .py under discoverers/
+    # (cheap — directory is small) and probe-load. Cost: O(discoverers).
+    # Each module's import is memoised by importlib, so the second
+    # invocation is free.
+    for f in discoverers_dir.glob("*.py"):
+        stem = f.stem
+        if stem.startswith("_"):
+            continue
+        if stem == type_name:
+            continue
+        if stem in candidates:
+            continue
+        mod = _load_discoverer(stem)
         if mod is None:
-            return []
-    return list(mod.discover(repo_root, list(languages)))
+            continue
+        declared = getattr(mod, "TYPE_ORIGIN", None)
+        if declared == type_name:
+            candidates.add(stem)
+
+    mods: list[Any] = []
+    for stem in sorted(candidates):
+        mod = _load_discoverer(stem)
+        if mod is not None:
+            mods.append(mod)
+    return mods
+
+
+def _discover_entry_points(type_name: str, repo_root: Path, languages: tuple[str, ...]) -> list[EntryPoint]:
+    """Dispatch to the per-type discoverer; fall back to unknown_software.
+
+    Resolution order (deterministic):
+    1. `discoverers/<type_name>.py` — bare type-named module if present.
+    2. `discoverers/<type_name>_<framework>.py` — every framework-variant
+       module, scanned alphabetically. Results are concatenated.
+    3. `discoverers/unknown_software.py` — only if neither (1) nor (2)
+       contributed any modules.
+    """
+    found: list[EntryPoint] = []
+    matched_any = False
+
+    mod = _load_discoverer(type_name)
+    if mod is not None:
+        matched_any = True
+        found.extend(mod.discover(repo_root, list(languages)))
+
+    for variant_mod in _load_framework_discoverers(type_name):
+        matched_any = True
+        found.extend(variant_mod.discover(repo_root, list(languages)))
+
+    if not matched_any:
+        fallback = _load_discoverer("unknown_software")
+        if fallback is not None:
+            found.extend(fallback.discover(repo_root, list(languages)))
+
+    return found
 
 
 def _detect_languages(repo_root: Path) -> tuple[str, ...]:

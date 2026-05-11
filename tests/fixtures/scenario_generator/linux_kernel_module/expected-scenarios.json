@@ -1,0 +1,5832 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/linux_kernel_module",
+    "detected_types": [
+      {
+        "type": "linux_kernel_module",
+        "confidence": 0.89,
+        "evidence": [
+          "**/Kbuild \u2192 Kbuild contains one of ['obj-m']",
+          "**/Makefile \u2192 Makefile contains one of ['obj-m :=', 'obj-m +=']",
+          "disambig_content: myhw_main.c matches one of ['MODULE_LICENSE', 'module_init', 'module_exit', 'EXPORT_SYMBOL', '<linux/module.h>']"
+        ]
+      },
+      {
+        "type": "library_c",
+        "confidence": 0.85,
+        "evidence": [
+          "**/Makefile matches 1 file(s); first=Makefile"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_helper rejects adversarial input",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_helper re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_helper on boot path",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_helper tolerates clock skew",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_helper is safe under concurrent access",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_helper robust to dependency compromise",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_helper handles CPU/DMA race",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_helper",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_helper handles hardware failure",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_helper no integer overflow in size calc",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_helper preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_helper rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_helper bounds-checked",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_helper no use-after-free",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_helper handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_helper survives persistence corruption",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_helper prevents privilege escalation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_helper setuid/setgid race-free",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_helper respects resource limits",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_helper prevents sandbox escape",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_helper avoids scheduler starvation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_helper resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_helper across suspend/resume",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_helper survives upgrade/migration",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_helper validates userspace pointer",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_helper watchdog usage is correct",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "myhw_main.c",
+        "line": 19,
+        "symbol": "myhw_helper",
+        "metadata": {
+          "macro": "EXPORT_SYMBOL"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_helper",
+          "metadata": {
+            "macro": "EXPORT_SYMBOL"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_ioctl rejects adversarial input",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_ioctl re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_ioctl on boot path",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_ioctl tolerates clock skew",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_ioctl is safe under concurrent access",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_ioctl robust to dependency compromise",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_ioctl handles CPU/DMA race",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_ioctl",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_ioctl handles hardware failure",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_ioctl no integer overflow in size calc",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_ioctl preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_ioctl rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_ioctl bounds-checked",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_ioctl no use-after-free",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_ioctl handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_ioctl survives persistence corruption",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_ioctl prevents privilege escalation",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_ioctl setuid/setgid race-free",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_ioctl respects resource limits",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_ioctl prevents sandbox escape",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_ioctl avoids scheduler starvation",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_ioctl resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_ioctl across suspend/resume",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_ioctl survives upgrade/migration",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_ioctl validates userspace pointer",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_ioctl watchdog usage is correct",
+      "entry_point": {
+        "kind": "ioctl_handler",
+        "file": "myhw_main.c",
+        "line": 55,
+        "symbol": "myhw_ioctl",
+        "metadata": {
+          "op": "unlocked_ioctl",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_ioctl",
+          "metadata": {
+            "op": "unlocked_ioctl",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_read rejects adversarial input",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_read re-validates auth on state transition",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_read on boot path",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_read tolerates clock skew",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_read is safe under concurrent access",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_read robust to dependency compromise",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_read handles CPU/DMA race",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_read",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_read handles hardware failure",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_read no integer overflow in size calc",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_read preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_read rejects malformed IPC message",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_read bounds-checked",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_read no use-after-free",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_read handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_read survives persistence corruption",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_read prevents privilege escalation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_read setuid/setgid race-free",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_read respects resource limits",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_read prevents sandbox escape",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_read avoids scheduler starvation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_read resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_read across suspend/resume",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_read survives upgrade/migration",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_read validates userspace pointer",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_read watchdog usage is correct",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 56,
+        "symbol": "myhw_read",
+        "metadata": {
+          "op": "read",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_read",
+          "metadata": {
+            "op": "read",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_write rejects adversarial input",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_write re-validates auth on state transition",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_write on boot path",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0082",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_write tolerates clock skew",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0083",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_write is safe under concurrent access",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0084",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_write robust to dependency compromise",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0085",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_write handles CPU/DMA race",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0086",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_write",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0087",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_write handles hardware failure",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0088",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_write no integer overflow in size calc",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0089",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_write preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0090",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_write rejects malformed IPC message",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0091",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_write bounds-checked",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0092",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_write no use-after-free",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0093",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_write handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0094",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_write survives persistence corruption",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0095",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_write prevents privilege escalation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0096",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_write setuid/setgid race-free",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0097",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_write respects resource limits",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0098",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_write prevents sandbox escape",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0099",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_write avoids scheduler starvation",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0100",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_write resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0101",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_write across suspend/resume",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0102",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_write survives upgrade/migration",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0103",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_write validates userspace pointer",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0104",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_write watchdog usage is correct",
+      "entry_point": {
+        "kind": "syscall_handler",
+        "file": "myhw_main.c",
+        "line": 57,
+        "symbol": "myhw_write",
+        "metadata": {
+          "op": "write",
+          "fops_var": "myhw_fops"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_write",
+          "metadata": {
+            "op": "write",
+            "fops_var": "myhw_fops"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0105",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_init rejects adversarial input",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0106",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_init re-validates auth on state transition",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0107",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_init on boot path",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0108",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_init tolerates clock skew",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0109",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_init is safe under concurrent access",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0110",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_init robust to dependency compromise",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0111",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_init handles CPU/DMA race",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0112",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_init",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0113",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_init handles hardware failure",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0114",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_init no integer overflow in size calc",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0115",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_init preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0116",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_init rejects malformed IPC message",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0117",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_init bounds-checked",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0118",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_init no use-after-free",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0119",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_init handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0120",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_init survives persistence corruption",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0121",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_init prevents privilege escalation",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0122",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_init setuid/setgid race-free",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0123",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_init respects resource limits",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0124",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_init prevents sandbox escape",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0125",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_init avoids scheduler starvation",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0126",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_init resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0127",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_init across suspend/resume",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0128",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_init survives upgrade/migration",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0129",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_init validates userspace pointer",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0130",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_init watchdog usage is correct",
+      "entry_point": {
+        "kind": "module_init",
+        "file": "myhw_main.c",
+        "line": 72,
+        "symbol": "myhw_init",
+        "metadata": {
+          "macro": "module_init"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_init",
+          "metadata": {
+            "macro": "module_init"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0131",
+      "type_origin": "linux_kernel_module",
+      "family": "adversarial_input",
+      "title": "myhw_exit rejects adversarial input",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0132",
+      "type_origin": "linux_kernel_module",
+      "family": "auth_state_transition",
+      "title": "myhw_exit re-validates auth on state transition",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0133",
+      "type_origin": "linux_kernel_module",
+      "family": "boot_path",
+      "title": "myhw_exit on boot path",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0134",
+      "type_origin": "linux_kernel_module",
+      "family": "clock_skew",
+      "title": "myhw_exit tolerates clock skew",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0135",
+      "type_origin": "linux_kernel_module",
+      "family": "concurrent_state",
+      "title": "myhw_exit is safe under concurrent access",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0136",
+      "type_origin": "linux_kernel_module",
+      "family": "dependency_compromise",
+      "title": "myhw_exit robust to dependency compromise",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0137",
+      "type_origin": "linux_kernel_module",
+      "family": "dma_race",
+      "title": "myhw_exit handles CPU/DMA race",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0138",
+      "type_origin": "linux_kernel_module",
+      "family": "happy_path",
+      "title": "Happy path of myhw_exit",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0139",
+      "type_origin": "linux_kernel_module",
+      "family": "hardware_failure",
+      "title": "myhw_exit handles hardware failure",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0140",
+      "type_origin": "linux_kernel_module",
+      "family": "integer_overflow_in_size_calc",
+      "title": "myhw_exit no integer overflow in size calc",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0141",
+      "type_origin": "linux_kernel_module",
+      "family": "interrupt_atomicity",
+      "title": "myhw_exit preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0142",
+      "type_origin": "linux_kernel_module",
+      "family": "ipc_message_malformed",
+      "title": "myhw_exit rejects malformed IPC message",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0143",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_bounds",
+      "title": "myhw_exit bounds-checked",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0144",
+      "type_origin": "linux_kernel_module",
+      "family": "memory_safety_uaf",
+      "title": "myhw_exit no use-after-free",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0145",
+      "type_origin": "linux_kernel_module",
+      "family": "partial_failure",
+      "title": "myhw_exit handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0146",
+      "type_origin": "linux_kernel_module",
+      "family": "persistence_corruption",
+      "title": "myhw_exit survives persistence corruption",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0147",
+      "type_origin": "linux_kernel_module",
+      "family": "privilege_escalation",
+      "title": "myhw_exit prevents privilege escalation",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0148",
+      "type_origin": "linux_kernel_module",
+      "family": "race_in_setuid_or_setgid",
+      "title": "myhw_exit setuid/setgid race-free",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0149",
+      "type_origin": "linux_kernel_module",
+      "family": "resource_limits",
+      "title": "myhw_exit respects resource limits",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0150",
+      "type_origin": "linux_kernel_module",
+      "family": "sandbox_escape",
+      "title": "myhw_exit prevents sandbox escape",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0151",
+      "type_origin": "linux_kernel_module",
+      "family": "scheduler_starvation",
+      "title": "myhw_exit avoids scheduler starvation",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0152",
+      "type_origin": "linux_kernel_module",
+      "family": "side_channel",
+      "title": "myhw_exit resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0153",
+      "type_origin": "linux_kernel_module",
+      "family": "suspend_resume",
+      "title": "myhw_exit across suspend/resume",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0154",
+      "type_origin": "linux_kernel_module",
+      "family": "upgrade_migration",
+      "title": "myhw_exit survives upgrade/migration",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0155",
+      "type_origin": "linux_kernel_module",
+      "family": "userspace_pointer_validation",
+      "title": "myhw_exit validates userspace pointer",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "userspace_attacker",
+      "stimulus": {
+        "kind": "userspace_pointer_validation_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for userspace_pointer_validation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "missing_access_ok",
+        "toctou_between_check_and_copy",
+        "copy_size_attacker_controlled",
+        "leak_kernel_memory_on_failure"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0156",
+      "type_origin": "linux_kernel_module",
+      "family": "watchdog_misuse",
+      "title": "myhw_exit watchdog usage is correct",
+      "entry_point": {
+        "kind": "module_exit",
+        "file": "myhw_main.c",
+        "line": 73,
+        "symbol": "myhw_exit",
+        "metadata": {
+          "macro": "module_exit"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "myhw_exit",
+          "metadata": {
+            "macro": "module_exit"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

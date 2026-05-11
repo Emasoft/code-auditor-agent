@@ -1,0 +1,13 @@
+{
+  "name": "yargs-fixture-cli",
+  "version": "0.0.1",
+  "description": "Test fixture for the cli_node_yargs discoverer.",
+  "bin": "./cli.js",
+  "main": "./cli.js",
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "dependencies": {
+    "yargs": "^17.0.0"
+  }
+}

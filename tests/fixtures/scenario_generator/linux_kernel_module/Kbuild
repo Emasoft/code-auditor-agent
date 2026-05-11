@@ -1,0 +1,2 @@
+obj-m += myhw.o
+myhw-y := myhw_main.o

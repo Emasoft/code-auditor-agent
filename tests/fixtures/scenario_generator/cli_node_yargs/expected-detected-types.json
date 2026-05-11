@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_node_yargs",
+  "detected_types": [
+    {
+      "type": "cli_node",
+      "confidence": 0.89,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"bin\":']",
+        "disambig_content: cli.js matches one of [\"require('yargs')\", \"require('commander')\", '@oclif/']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "javascript"
+  ]
+}

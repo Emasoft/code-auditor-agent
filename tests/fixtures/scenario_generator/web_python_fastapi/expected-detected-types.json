@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_python_fastapi",
+  "detected_types": [
+    {
+      "type": "web_service_python",
+      "confidence": 0.89,
+      "evidence": [
+        "**/pyproject.toml \u2192 pyproject.toml contains one of ['fastapi', 'flask', 'django', 'starlette', 'sanic', 'aiohttp', 'bottle']",
+        "disambig_content: main.py matches one of ['@app.route', '@app.get', '@app.post', 'Flask(__name__)', 'FastAPI(', 'urls.py']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

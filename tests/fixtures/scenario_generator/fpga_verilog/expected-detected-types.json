@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/fpga_verilog",
+  "detected_types": [
+    {
+      "type": "fpga_verilog",
+      "confidence": 0.93,
+      "evidence": [
+        "**/*.v matches 2 file(s); first=submodule.v",
+        "disambig_glob: **/*.xdc \u2192 constraints/top.xdc",
+        "disambig_content: submodule.v matches one of ['module ', 'endmodule']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "verilog"
+  ]
+}

@@ -1,0 +1,631 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/library_python",
+    "detected_types": [
+      {
+        "type": "library_python",
+        "confidence": 0.89,
+        "evidence": [
+          "**/pyproject.toml matches 1 file(s); first=pyproject.toml",
+          "disambig_content: mylib/__init__.py matches one of ['__all__']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "python"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "library_python",
+      "family": "adversarial_input",
+      "title": "public_api rejects adversarial input",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 10,
+        "symbol": "public_api",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "public_api",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "Transform `value` into the library's canonical form.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "library_python",
+      "family": "dependency_compromise",
+      "title": "public_api robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 10,
+        "symbol": "public_api",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "public_api",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "Transform `value` into the library's canonical form.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "library_python",
+      "family": "happy_path",
+      "title": "Happy path of public_api",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 10,
+        "symbol": "public_api",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "public_api",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "Transform `value` into the library's canonical form.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "library_python",
+      "family": "partial_failure",
+      "title": "public_api handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 10,
+        "symbol": "public_api",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "public_api",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "Transform `value` into the library's canonical form.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "library_python",
+      "family": "resource_limits",
+      "title": "public_api respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 10,
+        "symbol": "public_api",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "public_api",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "Transform `value` into the library's canonical form.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "library_python",
+      "family": "adversarial_input",
+      "title": "MyClass rejects adversarial input",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 18,
+        "symbol": "MyClass",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "MyClass",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A simple value object exposed by mylib.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "library_python",
+      "family": "dependency_compromise",
+      "title": "MyClass robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 18,
+        "symbol": "MyClass",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "MyClass",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A simple value object exposed by mylib.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "library_python",
+      "family": "happy_path",
+      "title": "Happy path of MyClass",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 18,
+        "symbol": "MyClass",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "MyClass",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A simple value object exposed by mylib.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "library_python",
+      "family": "partial_failure",
+      "title": "MyClass handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 18,
+        "symbol": "MyClass",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "MyClass",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A simple value object exposed by mylib.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "library_python",
+      "family": "resource_limits",
+      "title": "MyClass respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 18,
+        "symbol": "MyClass",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "MyClass",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A simple value object exposed by mylib.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "library_python",
+      "family": "adversarial_input",
+      "title": "another_public rejects adversarial input",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 42,
+        "symbol": "another_public",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "another_public",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A public callable that is NOT listed in mylib.__init__.__all__.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "library_python",
+      "family": "dependency_compromise",
+      "title": "another_public robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 42,
+        "symbol": "another_public",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "another_public",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A public callable that is NOT listed in mylib.__init__.__all__.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "library_python",
+      "family": "happy_path",
+      "title": "Happy path of another_public",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 42,
+        "symbol": "another_public",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "another_public",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A public callable that is NOT listed in mylib.__init__.__all__.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "library_python",
+      "family": "partial_failure",
+      "title": "another_public handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 42,
+        "symbol": "another_public",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "another_public",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A public callable that is NOT listed in mylib.__init__.__all__.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "library_python",
+      "family": "resource_limits",
+      "title": "another_public respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "mylib/core.py",
+        "line": 42,
+        "symbol": "another_public",
+        "metadata": {
+          "language": "python",
+          "scope": "module",
+          "in_all": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "another_public",
+          "metadata": {
+            "language": "python",
+            "scope": "module",
+            "in_all": false
+          }
+        }
+      },
+      "intended_behaviour": "A public callable that is NOT listed in mylib.__init__.__all__.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

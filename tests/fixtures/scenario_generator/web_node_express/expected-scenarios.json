@@ -1,0 +1,2506 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_node_express",
+    "detected_types": [
+      {
+        "type": "web_service_node",
+        "confidence": 0.89,
+        "evidence": [
+          "**/package.json \u2192 package.json contains one of ['\"express\":', '\"koa\":', '\"fastify\":', '\"hapi\":', '\"@nestjs/', '\"next\":', '\"hono\":', '\"elysia\":']",
+          "disambig_content: app.js matches one of ['app.get(', 'app.post(', 'router.get(', 'pages/api/']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "javascript"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "GET /widgets rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "GET /widgets re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "GET /widgets applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "GET /widgets tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "GET /widgets parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "GET /widgets is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "GET /widgets robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "GET /widgets rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of GET /widgets",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "GET /widgets handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "GET /widgets survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "GET /widgets rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "GET /widgets respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "GET /widgets survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 13,
+        "symbol": "app.get /widgets",
+        "metadata": {
+          "method": "GET",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "app.get /widgets",
+          "metadata": {
+            "method": "GET",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "POST /widgets rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "POST /widgets re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "POST /widgets applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "POST /widgets tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "POST /widgets parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "POST /widgets is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "POST /widgets robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "POST /widgets rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of POST /widgets",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "POST /widgets handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "POST /widgets survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "POST /widgets rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "POST /widgets respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "POST /widgets survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 21,
+        "symbol": "app.post /widgets",
+        "metadata": {
+          "method": "POST",
+          "path": "/widgets",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "app.post /widgets",
+          "metadata": {
+            "method": "POST",
+            "path": "/widgets",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new widget from the request body.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "DELETE /widgets/:id rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "DELETE /widgets/:id re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "DELETE /widgets/:id applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "DELETE /widgets/:id tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "DELETE /widgets/:id parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "DELETE /widgets/:id is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "DELETE /widgets/:id robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "DELETE /widgets/:id rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of DELETE /widgets/:id",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "DELETE /widgets/:id handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "DELETE /widgets/:id survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "DELETE /widgets/:id rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "DELETE /widgets/:id respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "DELETE /widgets/:id survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 26,
+        "symbol": "app.delete /widgets/:id",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/widgets/:id",
+          "framework": "express",
+          "binding": "app",
+          "binding_kind": "app"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "app.delete /widgets/:id",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/widgets/:id",
+            "framework": "express",
+            "binding": "app",
+            "binding_kind": "app"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "web_service_node",
+      "family": "adversarial_input",
+      "title": "GET /health rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "web_service_node",
+      "family": "auth_state_transition",
+      "title": "GET /health re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "web_service_node",
+      "family": "backpressure",
+      "title": "GET /health applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for backpressure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "web_service_node",
+      "family": "clock_skew",
+      "title": "GET /health tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for clock_skew: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "web_service_node",
+      "family": "concurrency_in_parser",
+      "title": "GET /health parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "web_service_node",
+      "family": "concurrent_state",
+      "title": "GET /health is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "web_service_node",
+      "family": "dependency_compromise",
+      "title": "GET /health robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "web_service_node",
+      "family": "downgrade_attack",
+      "title": "GET /health rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "web_service_node",
+      "family": "happy_path",
+      "title": "Happy path of GET /health",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "web_service_node",
+      "family": "partial_failure",
+      "title": "GET /health handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "web_service_node",
+      "family": "persistence_corruption",
+      "title": "GET /health survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "web_service_node",
+      "family": "protocol_replay",
+      "title": "GET /health rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "web_service_node",
+      "family": "resource_limits",
+      "title": "GET /health respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "web_service_node",
+      "family": "upgrade_migration",
+      "title": "GET /health survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "app.js",
+        "line": 30,
+        "symbol": "apiRouter.get /health",
+        "metadata": {
+          "method": "GET",
+          "path": "/health",
+          "framework": "express",
+          "binding": "apiRouter",
+          "binding_kind": "router"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "apiRouter.get /health",
+          "metadata": {
+            "method": "GET",
+            "path": "/health",
+            "framework": "express",
+            "binding": "apiRouter",
+            "binding_kind": "router"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}
