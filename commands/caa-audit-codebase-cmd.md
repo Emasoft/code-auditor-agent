@@ -43,6 +43,25 @@ parameters:
     description: Run agent swarms in isolated git worktrees
     required: false
     default: "false"
+  - name: extended
+    description: >
+      Add scenario-walker + assumption-auditor swarms (TRDD-6857f67f).
+      Runs caa-scenario-generator-skill to emit scenarios.json, then dispatches
+      caa-scenario-walker-agent (one per scenario or cluster) and
+      caa-assumption-auditor-agent (one per high-risk file). Adds end-to-end
+      scenario coverage and per-file assumption coverage that line-level
+      review structurally cannot reach. Slower but catches architectural /
+      UX / protocol defects.
+    required: false
+    default: "false"
+  - name: no-scenarios
+    description: Inside extended mode, disable the scenario-walker swarm (keep assumption auditor only)
+    required: false
+    default: "false"
+  - name: no-assumptions
+    description: Inside extended mode, disable the assumption-auditor swarm (keep scenario walker only)
+    required: false
+    default: "false"
 ---
 
 # Codebase Audit & Fix
@@ -55,7 +74,29 @@ This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 /audit-codebase --scope ./plugins/my-plugin --standard ./docs/compliance-rules.md
 /audit-codebase --scope ./src --standard ./standards/api-rules.md --fix
 /audit-codebase --scope ./plugins/amcos --standard ./docs/decoupling-standard.md --todo-only --types HARDCODED_API,DIRECT_DEPENDENCY
+
+# Extended review — adds scenario walker + assumption auditor (TRDD-6857f67f)
+/audit-codebase --scope ./plugins/my-plugin --standard ./docs/compliance-rules.md --extended
 ```
+
+**Normal vs extended (TRDD-6857f67f §4.0):**
+
+| Mode | What runs |
+|---|---|
+| Normal (default) | Today's pipeline: correctness + domain + security + claim-verification + skeptical-review |
+| Extended (`--extended`) | Normal pipeline PLUS caa-scenario-generator-skill (emit scenarios.json) PLUS caa-scenario-walker-agent swarm PLUS caa-assumption-auditor-agent swarm |
+
+The three audit families (line-level, scenario-level, assumption-level)
+run in parallel; their reports converge at consolidation. Consolidation
+merges findings that point at the SAME defect from multiple angles into
+ONE finding with up to three evidence frames preserved.
+
+Two finer-grained flags allow partial extended runs:
+- `--extended --no-scenarios` → assumption auditor only
+- `--extended --no-assumptions` → scenario walker only
+
+These exist for debugging and partial rollback. If extended produces
+too many false positives, disabling one branch helps localize the noise.
 
 ## What Happens
 
@@ -65,10 +106,22 @@ This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 4. **Phase 3**: Gap-fill audits missed files (iterative until 100% coverage)
 5. **Phase 4**: Consolidation per domain (dedup, severity harmonization)
 6. **Phase 4b**: Security review — spawns caa-security-review-agent for vulnerability, secrets, and dependency scanning
-7. **Phase 5**: Generates actionable TODO files per scope
-8. **Phase 6** (if --fix): Applies fixes from TODOs
-9. **Phase 7** (if --fix): Verifies fixes, loops if regressions found
-10. **Phase 8**: Final merged report
+7. **Phase 4c** (if `--extended`): Invokes caa-scenario-generator-skill on the
+   scope to emit scenarios.json + detected-types.json. Then spawns the
+   caa-scenario-walker-agent swarm (one per scenario or cluster) — each agent
+   plays the actor_role from its scenario and walks the static call graph for
+   divergences. In parallel, spawns the caa-assumption-auditor-agent swarm
+   (one per high-risk file from the triage in Phase 0). Reports from these
+   swarms feed into Phase 4 consolidation as `scenario_divergence` and
+   `unguarded_assumption` finding categories, which cross-merge with
+   line-level findings into single multi-evidence findings.
+8. **Phase 5**: Generates actionable TODO files per scope. When merged
+   findings have multiple evidence frames (line + scenario + assumption),
+   the TODO entry includes optional sections surfacing each frame so the fix
+   agent picks the clearest framing.
+9. **Phase 6** (if `--fix`): Applies fixes from TODOs
+10. **Phase 7** (if `--fix`): Verifies fixes, loops if regressions found
+11. **Phase 8**: Final merged report
 - When `--worktrees` is enabled, each agent swarm runs in isolated git worktrees. Fix agent branches are merged back sequentially after completion.
 
 ## Reports

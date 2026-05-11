@@ -119,7 +119,8 @@ These Claude Code env vars are useful when running this plugin (set them in your
 
 ## Agents
 
-This plugin provides 11 agents, split across two pipelines.
+This plugin provides 13 agents, split across two pipelines + the
+extended-review extension (TRDD-6857f67f).
 
 ### PR Review Pipeline Agents
 
@@ -143,6 +144,26 @@ This plugin provides 11 agents, split across two pipelines.
 | `caa-fix-agent` | Implements TODO fixes with checkpoint tracking | Swarm (one per domain) |
 | `caa-fix-verifier-agent` | Verifies fixes were applied correctly, detects regressions | Swarm (one per fix report) |
 
+### Extended Review Agents (TRDD-6857f67f)
+
+Activated by `/audit-codebase --extended` and `/pr-review --extended`.
+Adds end-to-end scenario coverage and per-file assumption coverage that
+line-level review cannot reach. Designed to work for ANY software type
+the scenario generator recognises (web, CLI, library, mobile, firmware,
+RTOS, Linux kernel module, FPGA, browser extension, IaC, data pipeline,
+ML training, distributed system, etc., plus an `unknown_software`
+fallback).
+
+| Agent | Purpose | Concurrency |
+|-------|---------|-------------|
+| `caa-scenario-walker-agent` | Type-blind scenario executor: consumes scenarios.json, plays the actor role, walks the static call graph, flags divergences between intended and actual behaviour | Swarm (one per scenario or cluster, ≤15 parallel) |
+| `caa-assumption-auditor-agent` | Extracts implicit assumptions across 10 families (input shape, ordering, idempotency, auth state, network/IO, numerical, concurrency, data model, encoding, time/clock); generates adversarial inputs per assumption | Swarm (one per high-risk file) |
+
+The two new agents share an additive integration with consolidation/
+dedup/todo-gen: findings from line-level + scenario + assumption agents
+that point at the SAME defect get merged into ONE finding with all three
+evidence frames preserved.
+
 ---
 
 ## Skills
@@ -152,6 +173,7 @@ This plugin provides 11 agents, split across two pipelines.
 | `caa-pr-review-skill` | Six-phase PR review pipeline: correctness swarm, claim verification, skeptical review, security analysis, merge + dedup |
 | `caa-pr-review-and-fix-skill` | PR review with iterative fix loop: review, fix, re-test, re-review until clean |
 | `caa-codebase-audit-and-fix-skill` | Full 10-phase codebase audit: discovery, verify, gap-fill, consolidate, security scan, TODOs, fix, verify fixes |
+| `caa-scenario-generator-skill` | (Extended review) Deterministic discovery: classifies the codebase into one of ~70 software types and emits scenarios.json — universal schema covering HTTP routes, CLI commands, ISR vectors, syscall handlers, FPGA top ports, etc. Consumed by `caa-scenario-walker-agent` |
 
 ### `caa-pr-review-skill` (review only)
 

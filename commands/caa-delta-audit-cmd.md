@@ -28,6 +28,15 @@ parameters:
     description: "Directory for reports (default: reports/code-auditor/)"
     required: false
     default: "reports/code-auditor/"
+  - name: extended
+    description: >
+      Add scenario-walker + assumption-auditor swarms scoped to the delta
+      (TRDD-6857f67f). Runs caa-scenario-generator-skill in delta mode —
+      scenarios are emitted only for entry points that the changed files
+      participate in. Assumption auditor runs only on changed files. Same
+      cross-category consolidation as /audit-codebase --extended.
+    required: false
+    default: "false"
 ---
 
 # Delta Audit (Incremental)
@@ -40,6 +49,9 @@ This command audits ONLY files changed since a previous point in git history. It
 /delta-audit --scope ./src --since v3.2.0
 /delta-audit --scope ./src --since HEAD~10 --fix
 /delta-audit --scope . --since abc123def --previous-report reports/code-auditor/20260315_120000+0000-caa-audit-FINAL.md
+
+# Extended delta — scenario walker + assumption auditor on the delta only
+/delta-audit --scope ./src --since v3.2.0 --extended
 ```
 
 ## What Happens
@@ -48,7 +60,11 @@ This command audits ONLY files changed since a previous point in git history. It
 2. Trace dependents: find files that import/reference the changed files
 3. Combine changed files + dependents into the delta audit scope
 4. Run the standard Phase 1-7 pipeline on this reduced scope
-5. If `--previous-report` is provided, merge delta findings with the previous report
+5. If `--extended`: scenario-generator runs in delta mode — emits scenarios
+   only for entry points participating in the changed files. Walker swarm
+   processes those scenarios; assumption-auditor swarm processes the changed
+   files. Cross-category findings merged at consolidation.
+6. If `--previous-report` is provided, merge delta findings with the previous report
 
 ## Limitations
 
