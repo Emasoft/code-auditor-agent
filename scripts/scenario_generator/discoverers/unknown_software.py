@@ -211,9 +211,9 @@ def discover(repo_root: Path, languages: list[str]) -> list[EntryPoint]:
                 )
 
         # Public callables (libraries / general modules)
-        pat = _PUBLIC_CALLABLE_PATTERNS.get(lang)
-        if pat is not None:
-            for m in pat.finditer(text):
+        public_pat = _PUBLIC_CALLABLE_PATTERNS.get(lang)
+        if public_pat is not None:
+            for m in public_pat.finditer(text):
                 symbol = m.group(1)
                 line = _line_of(text, m.start())
                 entries.append(
