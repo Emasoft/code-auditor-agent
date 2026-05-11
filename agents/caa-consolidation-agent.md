@@ -79,6 +79,67 @@ When the same violation appears in multiple reports (same file+line+violation_ty
 4. **Prefer verified findings:** If one report's finding was verified (from a verification report)
    and another was not, keep the verified version
 
+### Step 3.5: Cross-category merging (TRDD-6857f67f Phase 4)
+
+A single defect can surface from three angles, each with a different
+`violation_type`:
+
+- **line-level** — categories like `type_safety`, `logic_bug`,
+  `null_deref`, `security_injection` (from caa-code-correctness-agent,
+  caa-domain-auditor-agent, caa-security-review-agent).
+- **scenario_divergence** — from caa-scenario-walker-agent. The defect
+  was reached by walking a user/system scenario end-to-end.
+- **unguarded_assumption** — from caa-assumption-auditor-agent. The
+  defect was reached by extracting an implicit assumption the code
+  makes and finding no guard for its violation.
+
+When findings from these three angles point at the SAME underlying
+defect (same `file`, same `line` or overlapping line range, same
+affected code region), MERGE them into ONE consolidated finding with
+all three evidence blocks preserved:
+
+```yaml
+finding_id: CA-DOMAIN-NNN
+severity: MUST-FIX            # max of {line, scenario, assumption} severities
+title: <descriptive title>
+file: <path>
+line: <line or range>
+evidences:
+  - kind: line                # always preserve the line-level evidence first
+    source_report: caa-code-correctness-...
+    excerpt: |
+      <5-line code snippet>
+    rationale: <why correctness flagged it>
+  - kind: scenario             # present iff walker found it
+    source_report: caa-scenario-walker-...
+    scenario_id: SCEN-NNNN
+    family: <family name>
+    actor_role: <actor>
+    rationale: <user-visible path that hits this defect>
+  - kind: assumption           # present iff assumption-auditor found it
+    source_report: caa-assumption-auditor-...
+    family: <one of 10 families>
+    assumption: <the explicit assumption>
+    violating_inputs: [<list>]
+    rationale: <the consequence chain>
+```
+
+**Why preserve all three:** The fix-agent in Phase 4 reads the merged
+finding and picks the BEST frame to write the TODO from. Sometimes the
+scenario evidence is clearer than the line evidence; sometimes the
+assumption framing makes the root cause obvious. Discarding any of the
+three would lose information.
+
+**Severity reconciliation across categories:** Take the MAX (CRITICAL
+beats MAJOR beats MINOR beats NIT). Record the per-category severity
+in a `severity_by_kind` block so the dedup agent in Phase 5 can verify
+the reconciliation.
+
+**Two findings from different angles count as ONE merged finding** for
+the violation-count metric, NOT as two duplicates. The fact that the
+same defect was reached from multiple angles is a STRONGER signal of
+importance, not a duplicate to be suppressed.
+
 ### Step 4: Separate RECORD_KEEPING
 Move all RECORD_KEEPING items into a separate PRESERVE section. These are NOT violations and
 must not be counted in violation totals.

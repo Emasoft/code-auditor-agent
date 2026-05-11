@@ -144,6 +144,57 @@ Each TODO entry must follow this exact format:
 The `Harmonization note` field is only included for RECORD_KEEPING items. Omit it
 for standard violations.
 
+### Cross-category evidence sections (TRDD-6857f67f Phase 4)
+
+When the consolidated finding has an `evidences:` block with multiple
+`kind:` values (any combination of `line`, `scenario`,
+`unguarded_assumption`), the TODO entry MUST include OPTIONAL sections
+that surface each frame. The fix agent in Phase 4 reads these to pick
+the clearest framing when writing the patch.
+
+```markdown
+### TODO-{PREFIX}-{PRIORITY}-{SEQ}: {title}
+- **File:** {path}
+- **Lines:** {start}-{end}
+- **Priority:** P1/P2/P3
+- **Source:** {consolidation finding ID}
+- **Category:** scenario_divergence + unguarded_assumption + line  (when multi)
+- **Severity rationale:** MAX of {line:MAJOR, scenario:MAJOR, assumption:MINOR}
+- **Current:** {brief}
+- **Change:** {exact change required}
+- **Verify:** {how to confirm}
+
+#### Line evidence (from caa-code-correctness-agent)
+- **Source report:** {report filename}
+- **Excerpt:** {5-10 line code snippet}
+- **Rationale:** {why correctness flagged it}
+
+#### Scenario evidence (from caa-scenario-walker-agent)
+- **Source report:** {report filename}
+- **Scenario ID:** SCEN-NNNN
+- **Family:** {scenario family}
+- **Actor:** {actor_role}
+- **Rationale:** {user-visible path that hits this defect}
+
+#### Assumption evidence (from caa-assumption-auditor-agent)
+- **Source report:** {report filename}
+- **Family:** {one of 10 assumption families}
+- **Assumption:** {explicit text}
+- **Violating inputs:** {list}
+- **Rationale:** {consequence chain}
+```
+
+Only include the evidence sections that the consolidated finding
+actually carries. A single-frame finding (only `line` kind) keeps the
+original simple format with no evidence sections appended.
+
+**Why preserve all three frames in the TODO:** The fix agent often
+finds that one frame makes the root cause obvious while another shows
+only the symptom. The TODO must expose all three so the fix agent
+picks the right one. This dramatically reduces "I fixed the symptom
+but the root cause re-surfaced elsewhere" — the most common failure
+mode of line-level patches.
+
 ## OUTPUT FORMAT
 
 Write the TODO file to `OUTPUT_PATH` in this exact format:

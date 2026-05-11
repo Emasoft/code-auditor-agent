@@ -97,6 +97,33 @@ For each group, compare findings pairwise. Two findings are **DUPLICATES** if **
   - Example: CC found "missing error handling" at line 42, SR found "UX: no user feedback on error" at line 42
   - These are complementary findings, not duplicates
 
+### CRITICAL (Phase 4 TRDD-6857f67f): Cross-category merged findings are ONE finding, not duplicates
+
+The consolidation agent in Phase 4 merges findings that point at the
+SAME underlying defect from three different angles:
+
+- **line-level** evidence (from correctness/domain/security agents)
+- **scenario_divergence** evidence (from scenario-walker-agent)
+- **unguarded_assumption** evidence (from assumption-auditor-agent)
+
+When you see a finding whose body contains an `evidences:` block listing
+2 or 3 different `kind:` values (`line`, `scenario`, `assumption`), it
+is ONE merged finding. **Do NOT split it.** Do NOT treat the multiple
+evidences as duplicates. The merge happened intentionally upstream
+because three independent agents flagged the same defect from
+different angles — that is the strongest possible signal of importance.
+
+Your job for merged findings:
+
+1. Verify the merge is consistent — `file` and `line` agree across
+   the evidences (allowing the ±5-line overlap rule).
+2. Verify severity is the MAX across kinds.
+3. Keep all evidences in the dedup output verbatim.
+4. Count the merged finding as ONE in the final tally.
+
+A merged finding that has only 1 kind of evidence is identical to a
+plain-line finding — handle it the same way.
+
 ### Step 4: Merge Confirmed Duplicates
 
 When merging duplicate findings:
