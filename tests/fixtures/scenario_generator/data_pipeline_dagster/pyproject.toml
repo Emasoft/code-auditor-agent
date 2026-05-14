@@ -1,0 +1,5 @@
+[project]
+name = "fixture-dagster-project"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["dagster>=1.5"]

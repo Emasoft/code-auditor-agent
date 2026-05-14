@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_dagster",
+  "detected_types": [
+    {
+      "type": "data_pipeline_dagster",
+      "confidence": 0.89,
+      "evidence": [
+        "**/dagster.yaml matches 1 file(s); first=dagster.yaml",
+        "disambig_content: assets.py matches one of ['@asset', '@op', 'from dagster']"
+      ]
+    },
+    {
+      "type": "library_python",
+      "confidence": 0.85,
+      "evidence": [
+        "**/pyproject.toml matches 1 file(s); first=pyproject.toml"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

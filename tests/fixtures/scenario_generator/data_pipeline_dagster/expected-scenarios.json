@@ -1,0 +1,2321 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_dagster",
+    "detected_types": [
+      {
+        "type": "data_pipeline_dagster",
+        "confidence": 0.89,
+        "evidence": [
+          "**/dagster.yaml matches 1 file(s); first=dagster.yaml",
+          "disambig_content: assets.py matches one of ['@asset', '@op', 'from dagster']"
+        ]
+      },
+      {
+        "type": "library_python",
+        "confidence": 0.85,
+        "evidence": [
+          "**/pyproject.toml matches 1 file(s); first=pyproject.toml"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "python"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "asset:raw_orders rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "asset:raw_orders applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "asset:raw_orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of asset:raw_orders",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "asset:raw_orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "asset:raw_orders survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "asset:raw_orders respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "asset:raw_orders avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "asset:raw_orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 12,
+        "symbol": "asset:raw_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "raw_orders",
+          "function": "raw_orders",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "asset:raw_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "raw_orders",
+            "function": "raw_orders",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to load raw order rows from a source system.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "asset:enriched_orders rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "asset:enriched_orders applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "asset:enriched_orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of asset:enriched_orders",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "asset:enriched_orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "asset:enriched_orders survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "asset:enriched_orders respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "asset:enriched_orders avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "asset:enriched_orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 18,
+        "symbol": "asset:enriched_orders",
+        "metadata": {
+          "kind": "asset",
+          "name": "enriched_orders",
+          "function": "_enriched",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "asset:enriched_orders",
+          "metadata": {
+            "kind": "asset",
+            "name": "enriched_orders",
+            "function": "_enriched",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Annotate each order with a derived field.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "op:fetch_op rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "op:fetch_op applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "op:fetch_op robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of op:fetch_op",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "op:fetch_op handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "op:fetch_op survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "op:fetch_op respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "op:fetch_op avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "op:fetch_op survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 24,
+        "symbol": "op:fetch_op",
+        "metadata": {
+          "kind": "op",
+          "name": "fetch_op",
+          "function": "fetch_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "op:fetch_op",
+          "metadata": {
+            "kind": "op",
+            "name": "fetch_op",
+            "function": "fetch_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Imperative computation op \u2014 returns a single integer.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "op:multiply-op rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "op:multiply-op applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "op:multiply-op robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of op:multiply-op",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "op:multiply-op handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "op:multiply-op survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "op:multiply-op respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "op:multiply-op avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "op:multiply-op survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 30,
+        "symbol": "op:multiply-op",
+        "metadata": {
+          "kind": "op",
+          "name": "multiply-op",
+          "function": "multiply_op",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "op:multiply-op",
+          "metadata": {
+            "kind": "op",
+            "name": "multiply-op",
+            "function": "multiply_op",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Multiply the upstream value by 3.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "graph:fetch_and_multiply_graph rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "graph:fetch_and_multiply_graph applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "graph:fetch_and_multiply_graph robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of graph:fetch_and_multiply_graph",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "graph:fetch_and_multiply_graph handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "graph:fetch_and_multiply_graph survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "graph:fetch_and_multiply_graph respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "graph:fetch_and_multiply_graph avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "graph:fetch_and_multiply_graph survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 36,
+        "symbol": "graph:fetch_and_multiply_graph",
+        "metadata": {
+          "kind": "graph",
+          "name": "fetch_and_multiply_graph",
+          "function": "fetch_and_multiply_graph",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "graph:fetch_and_multiply_graph",
+          "metadata": {
+            "kind": "graph",
+            "name": "fetch_and_multiply_graph",
+            "function": "fetch_and_multiply_graph",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Composite graph wiring fetch_op \u2192 multiply_op.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "data_pipeline_dagster",
+      "family": "adversarial_input",
+      "title": "job:main_job rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "data_pipeline_dagster",
+      "family": "backpressure",
+      "title": "job:main_job applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "data_pipeline_dagster",
+      "family": "dependency_compromise",
+      "title": "job:main_job robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "data_pipeline_dagster",
+      "family": "happy_path",
+      "title": "Happy path of job:main_job",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "data_pipeline_dagster",
+      "family": "partial_failure",
+      "title": "job:main_job handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "data_pipeline_dagster",
+      "family": "persistence_corruption",
+      "title": "job:main_job survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "data_pipeline_dagster",
+      "family": "resource_limits",
+      "title": "job:main_job respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "data_pipeline_dagster",
+      "family": "scheduler_starvation",
+      "title": "job:main_job avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "data_pipeline_dagster",
+      "family": "upgrade_migration",
+      "title": "job:main_job survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "assets.py",
+        "line": 42,
+        "symbol": "job:main_job",
+        "metadata": {
+          "kind": "job",
+          "name": "main_job",
+          "function": "main_job",
+          "framework": "dagster"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "job:main_job",
+          "metadata": {
+            "kind": "job",
+            "name": "main_job",
+            "function": "main_job",
+            "framework": "dagster"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Dagster job that executes the composite graph.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

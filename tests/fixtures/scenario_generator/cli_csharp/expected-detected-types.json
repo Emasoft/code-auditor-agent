@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_csharp",
+  "detected_types": [
+    {
+      "type": "cli_csharp",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.csproj \u2192 cli-fixture.csproj contains one of ['<OutputType>Exe</OutputType>']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "csharp"
+  ]
+}

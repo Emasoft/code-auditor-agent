@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_terraform",
+  "detected_types": [
+    {
+      "type": "iac_terraform",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.tf matches 2 file(s); first=main.tf",
+        "disambig_glob: **/terraform.tfvars \u2192 terraform.tfvars"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "terraform"
+  ]
+}

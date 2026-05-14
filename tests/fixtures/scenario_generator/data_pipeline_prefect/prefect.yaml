@@ -1,0 +1,12 @@
+# fixture for data_pipeline_prefect
+# Minimal Prefect project file. Triggers the data_pipeline_prefect
+# fingerprint (primary glob: prefect.yaml).
+
+name: fixture-prefect-project
+prefect-version: 2.14.0
+
+# Deployment configuration intentionally minimal — the discoverer
+# operates on flow.py source, not on deployment metadata.
+deployments:
+  - name: hello-deployment
+    entrypoint: flow.py:hello_flow

@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_ruby",
+  "detected_types": [
+    {
+      "type": "web_service_ruby",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Gemfile \u2192 Gemfile contains one of ['rails', 'sinatra', 'hanami', 'roda']",
+        "disambig_glob: **/config/routes.rb \u2192 config/routes.rb"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "ruby"
+  ]
+}

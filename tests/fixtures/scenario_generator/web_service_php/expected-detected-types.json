@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_php",
+  "detected_types": [
+    {
+      "type": "web_service_php",
+      "confidence": 0.89,
+      "evidence": [
+        "**/composer.json \u2192 composer.json contains one of ['symfony/', 'laravel/', 'slim/slim']",
+        "disambig_content: routes/web.php matches one of ['Route::get', '#[Route(', 'Symfony\\\\Component\\\\Routing']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "php"
+  ]
+}

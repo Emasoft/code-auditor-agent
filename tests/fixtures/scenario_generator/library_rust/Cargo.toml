@@ -1,0 +1,11 @@
+# fixture for library_rust — Cargo manifest declares an explicit [lib]
+# target so the type-detector picks `library_rust` over `cli_rust`.
+
+[package]
+name = "myrustlib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "myrustlib"
+path = "src/lib.rs"

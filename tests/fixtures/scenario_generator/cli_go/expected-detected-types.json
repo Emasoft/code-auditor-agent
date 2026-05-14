@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_go",
+  "detected_types": [
+    {
+      "type": "cli_go",
+      "confidence": 0.89,
+      "evidence": [
+        "**/main.go \u2192 main.go contains one of ['package main']",
+        "disambig_content: main.go matches one of ['flag.Parse(', 'github.com/spf13/cobra', 'github.com/urfave/cli']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "go"
+  ]
+}

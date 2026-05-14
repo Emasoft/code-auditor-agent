@@ -1,0 +1,15 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_docker_compose",
+  "detected_types": [
+    {
+      "type": "iac_docker_compose",
+      "confidence": 0.85,
+      "evidence": [
+        "**/docker-compose.yml matches 1 file(s); first=docker-compose.yml"
+      ]
+    }
+  ],
+  "detected_languages": []
+}

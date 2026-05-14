@@ -1,0 +1,4 @@
+# fixture for web_service_ruby
+source "https://rubygems.org"
+
+gem "rails", "~> 7.1"

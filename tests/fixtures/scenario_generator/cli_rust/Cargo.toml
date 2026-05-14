@@ -1,0 +1,13 @@
+# fixture for cli_rust — fingerprint requires [[bin]] in Cargo.toml plus
+# `use clap` / `structopt::` markers in *.rs files.
+[package]
+name = "rust-fixture-cli"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "rust-fixture-cli"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }

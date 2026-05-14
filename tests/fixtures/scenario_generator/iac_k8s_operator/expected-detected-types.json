@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_k8s_operator",
+  "detected_types": [
+    {
+      "type": "iac_k8s_operator",
+      "confidence": 0.89,
+      "evidence": [
+        "**/kubebuilder.yaml matches 1 file(s); first=kubebuilder.yaml",
+        "disambig_content: reconciler.go matches one of ['Reconcile(', 'controllerutil.']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "go"
+  ]
+}

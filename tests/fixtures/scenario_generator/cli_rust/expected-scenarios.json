@@ -1,0 +1,1546 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_rust",
+    "detected_types": [
+      {
+        "type": "cli_rust",
+        "confidence": 0.89,
+        "evidence": [
+          "**/Cargo.toml \u2192 Cargo.toml contains one of ['[[bin]]']",
+          "disambig_content: src/main.rs matches one of ['use clap', 'structopt::']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "rust"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "greet rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "greet robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of greet",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "greet handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "greet setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "greet respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 17,
+        "symbol": "Action::Greet",
+        "metadata": {
+          "command": "greet",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Greet"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Action::Greet",
+          "metadata": {
+            "command": "greet",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Greet"
+          }
+        }
+      },
+      "intended_behaviour": "Print a friendly greeting to the named user.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "say-goodbye rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "say-goodbye robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of say-goodbye",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "say-goodbye handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "say-goodbye setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "say-goodbye respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 20,
+        "symbol": "Action::Goodbye",
+        "metadata": {
+          "command": "say-goodbye",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Goodbye"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Action::Goodbye",
+          "metadata": {
+            "command": "say-goodbye",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Goodbye"
+          }
+        }
+      },
+      "intended_behaviour": "Wave goodbye before exiting.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "sync rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "sync robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of sync",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "sync handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "sync setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "sync respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 23,
+        "symbol": "Action::Sync",
+        "metadata": {
+          "command": "sync",
+          "framework": "clap",
+          "style": "derive",
+          "enum": "Action",
+          "variant": "Sync"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Action::Sync",
+          "metadata": {
+            "command": "sync",
+            "framework": "clap",
+            "style": "derive",
+            "enum": "Action",
+            "variant": "Sync"
+          }
+        }
+      },
+      "intended_behaviour": "Copy files from <src> to <dst>.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "fixture-cli-builder rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "fixture-cli-builder robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of fixture-cli-builder",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "fixture-cli-builder handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "fixture-cli-builder setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "fixture-cli-builder respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 28,
+        "symbol": "Command::new(fixture-cli-builder)",
+        "metadata": {
+          "command": "fixture-cli-builder",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Command::new(fixture-cli-builder)",
+          "metadata": {
+            "command": "fixture-cli-builder",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Fixture using the builder API",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "status rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "status robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of status",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "status handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "status setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "status respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 31,
+        "symbol": "Command::new(status)",
+        "metadata": {
+          "command": "status",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Command::new(status)",
+          "metadata": {
+            "command": "status",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Print current status to stdout.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "cli_rust",
+      "family": "adversarial_input",
+      "title": "reset rejects adversarial input",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "cli_rust",
+      "family": "dependency_compromise",
+      "title": "reset robust to dependency compromise",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "cli_rust",
+      "family": "happy_path",
+      "title": "Happy path of reset",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "cli_rust",
+      "family": "partial_failure",
+      "title": "reset handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "cli_rust",
+      "family": "race_in_setuid_or_setgid",
+      "title": "reset setuid/setgid race-free",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "cli_rust",
+      "family": "resource_limits",
+      "title": "reset respects resource limits",
+      "entry_point": {
+        "kind": "cli_command",
+        "file": "src/main.rs",
+        "line": 34,
+        "symbol": "Command::new(reset)",
+        "metadata": {
+          "command": "reset",
+          "framework": "clap",
+          "style": "builder"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Command::new(reset)",
+          "metadata": {
+            "command": "reset",
+            "framework": "clap",
+            "style": "builder"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

@@ -1,0 +1,1550 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_prefect",
+    "detected_types": [
+      {
+        "type": "data_pipeline_prefect",
+        "confidence": 0.89,
+        "evidence": [
+          "**/prefect.yaml matches 1 file(s); first=prefect.yaml",
+          "disambig_content: flow.py matches one of ['@flow', '@task', 'from prefect']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "python"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "data_pipeline_prefect",
+      "family": "adversarial_input",
+      "title": "task:fetch_data rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "data_pipeline_prefect",
+      "family": "backpressure",
+      "title": "task:fetch_data applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "data_pipeline_prefect",
+      "family": "dependency_compromise",
+      "title": "task:fetch_data robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "data_pipeline_prefect",
+      "family": "happy_path",
+      "title": "Happy path of task:fetch_data",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "data_pipeline_prefect",
+      "family": "partial_failure",
+      "title": "task:fetch_data handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "data_pipeline_prefect",
+      "family": "persistence_corruption",
+      "title": "task:fetch_data survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "data_pipeline_prefect",
+      "family": "resource_limits",
+      "title": "task:fetch_data respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "data_pipeline_prefect",
+      "family": "scheduler_starvation",
+      "title": "task:fetch_data avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "data_pipeline_prefect",
+      "family": "upgrade_migration",
+      "title": "task:fetch_data survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 13,
+        "symbol": "task:fetch_data",
+        "metadata": {
+          "kind": "task",
+          "task_name": "fetch_data",
+          "function": "fetch_data",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "task:fetch_data",
+          "metadata": {
+            "kind": "task",
+            "task_name": "fetch_data",
+            "function": "fetch_data",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Pretend to fetch a payload \u2014 returns three integers.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "data_pipeline_prefect",
+      "family": "adversarial_input",
+      "title": "task:aggregate-rows rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "data_pipeline_prefect",
+      "family": "backpressure",
+      "title": "task:aggregate-rows applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "data_pipeline_prefect",
+      "family": "dependency_compromise",
+      "title": "task:aggregate-rows robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "data_pipeline_prefect",
+      "family": "happy_path",
+      "title": "Happy path of task:aggregate-rows",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "data_pipeline_prefect",
+      "family": "partial_failure",
+      "title": "task:aggregate-rows handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "data_pipeline_prefect",
+      "family": "persistence_corruption",
+      "title": "task:aggregate-rows survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "data_pipeline_prefect",
+      "family": "resource_limits",
+      "title": "task:aggregate-rows respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "data_pipeline_prefect",
+      "family": "scheduler_starvation",
+      "title": "task:aggregate-rows avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "data_pipeline_prefect",
+      "family": "upgrade_migration",
+      "title": "task:aggregate-rows survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 19,
+        "symbol": "task:aggregate-rows",
+        "metadata": {
+          "kind": "task",
+          "task_name": "aggregate-rows",
+          "function": "aggregate",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "task:aggregate-rows",
+          "metadata": {
+            "kind": "task",
+            "task_name": "aggregate-rows",
+            "function": "aggregate",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Sum the incoming rows; the explicit name appears in Prefect UI.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "data_pipeline_prefect",
+      "family": "adversarial_input",
+      "title": "flow:hello-flow rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "data_pipeline_prefect",
+      "family": "backpressure",
+      "title": "flow:hello-flow applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "data_pipeline_prefect",
+      "family": "dependency_compromise",
+      "title": "flow:hello-flow robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "data_pipeline_prefect",
+      "family": "happy_path",
+      "title": "Happy path of flow:hello-flow",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "data_pipeline_prefect",
+      "family": "partial_failure",
+      "title": "flow:hello-flow handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "data_pipeline_prefect",
+      "family": "persistence_corruption",
+      "title": "flow:hello-flow survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "data_pipeline_prefect",
+      "family": "resource_limits",
+      "title": "flow:hello-flow respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "data_pipeline_prefect",
+      "family": "scheduler_starvation",
+      "title": "flow:hello-flow avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "data_pipeline_prefect",
+      "family": "upgrade_migration",
+      "title": "flow:hello-flow survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 25,
+        "symbol": "flow:hello-flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "hello-flow",
+          "function": "hello_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "flow:hello-flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "hello-flow",
+            "function": "hello_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "Top-level Prefect flow \u2014 fetches and aggregates.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "data_pipeline_prefect",
+      "family": "adversarial_input",
+      "title": "flow:secondary_flow rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "data_pipeline_prefect",
+      "family": "backpressure",
+      "title": "flow:secondary_flow applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "data_pipeline_prefect",
+      "family": "dependency_compromise",
+      "title": "flow:secondary_flow robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "data_pipeline_prefect",
+      "family": "happy_path",
+      "title": "Happy path of flow:secondary_flow",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "data_pipeline_prefect",
+      "family": "partial_failure",
+      "title": "flow:secondary_flow handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "data_pipeline_prefect",
+      "family": "persistence_corruption",
+      "title": "flow:secondary_flow survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "data_pipeline_prefect",
+      "family": "resource_limits",
+      "title": "flow:secondary_flow respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "data_pipeline_prefect",
+      "family": "scheduler_starvation",
+      "title": "flow:secondary_flow avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "data_pipeline_prefect",
+      "family": "upgrade_migration",
+      "title": "flow:secondary_flow survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "flow.py",
+        "line": 32,
+        "symbol": "flow:secondary_flow",
+        "metadata": {
+          "kind": "flow",
+          "flow_name": "secondary_flow",
+          "function": "secondary_flow",
+          "framework": "prefect"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "flow:secondary_flow",
+          "metadata": {
+            "kind": "flow",
+            "flow_name": "secondary_flow",
+            "function": "secondary_flow",
+            "framework": "prefect"
+          }
+        }
+      },
+      "intended_behaviour": "A second flow with no explicit name kwarg.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "mynodelib",
+  "version": "0.1.0",
+  "description": "Tiny fixture for the library_node discoverer.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "license": "MIT"
+}

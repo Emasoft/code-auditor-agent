@@ -1,0 +1,21 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_java_kotlin",
+  "detected_types": [
+    {
+      "type": "web_service_java_kotlin",
+      "confidence": 0.89,
+      "evidence": [
+        "**/pom.xml \u2192 pom.xml contains one of ['spring-boot-starter-web', 'spring-webflux', 'jersey', 'vertx-web']",
+        "**/build.gradle \u2192 build.gradle contains one of ['spring-boot-starter-web', 'spring-webflux']",
+        "**/build.gradle.kts \u2192 build.gradle.kts contains one of ['spring-boot-starter-web', 'spring-webflux']",
+        "disambig_content: UserController.java matches one of ['@RestController', '@RequestMapping']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "java",
+    "kotlin"
+  ]
+}

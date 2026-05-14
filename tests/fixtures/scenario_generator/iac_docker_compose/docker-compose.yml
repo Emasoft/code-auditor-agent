@@ -1,0 +1,22 @@
+# fixture for iac_docker_compose
+services:
+  web:
+    image: nginx:1.25
+    restart: always
+    ports:
+      - "8080:80"
+
+  api:
+    build: ./api
+    restart: on-failure
+    environment:
+      - DATABASE_URL=postgres://db/app
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=fixture
+
+volumes:
+  db_data:

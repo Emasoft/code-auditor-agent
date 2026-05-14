@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/mobile_android",
+  "detected_types": [
+    {
+      "type": "mobile_android",
+      "confidence": 0.85,
+      "evidence": [
+        "**/AndroidManifest.xml matches 1 file(s); first=AndroidManifest.xml"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "kotlin"
+  ]
+}

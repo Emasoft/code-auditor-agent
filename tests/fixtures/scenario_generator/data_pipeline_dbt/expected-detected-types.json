@@ -1,0 +1,15 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_dbt",
+  "detected_types": [
+    {
+      "type": "data_pipeline_dbt",
+      "confidence": 0.85,
+      "evidence": [
+        "**/dbt_project.yml matches 1 file(s); first=dbt_project.yml"
+      ]
+    }
+  ],
+  "detected_languages": []
+}

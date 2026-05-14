@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/mobile_reactnative",
+  "detected_types": [
+    {
+      "type": "mobile_reactnative",
+      "confidence": 0.89,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"react-native\":']",
+        "disambig_glob: **/app.json \u2192 app.json"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "typescript"
+  ]
+}

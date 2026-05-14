@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/library_rust",
+  "detected_types": [
+    {
+      "type": "library_rust",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Cargo.toml \u2192 Cargo.toml contains one of ['[lib]']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "rust"
+  ]
+}

@@ -1,0 +1,783 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_dbt",
+    "detected_types": [
+      {
+        "type": "data_pipeline_dbt",
+        "confidence": 0.85,
+        "evidence": [
+          "**/dbt_project.yml matches 1 file(s); first=dbt_project.yml"
+        ]
+      }
+    ],
+    "detected_languages": []
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "data_pipeline_dbt",
+      "family": "adversarial_input",
+      "title": "model:fct_daily_orders rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "data_pipeline_dbt",
+      "family": "backpressure",
+      "title": "model:fct_daily_orders applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "data_pipeline_dbt",
+      "family": "dependency_compromise",
+      "title": "model:fct_daily_orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "data_pipeline_dbt",
+      "family": "happy_path",
+      "title": "Happy path of model:fct_daily_orders",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "data_pipeline_dbt",
+      "family": "partial_failure",
+      "title": "model:fct_daily_orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "data_pipeline_dbt",
+      "family": "persistence_corruption",
+      "title": "model:fct_daily_orders survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "data_pipeline_dbt",
+      "family": "resource_limits",
+      "title": "model:fct_daily_orders respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "data_pipeline_dbt",
+      "family": "scheduler_starvation",
+      "title": "model:fct_daily_orders avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "data_pipeline_dbt",
+      "family": "upgrade_migration",
+      "title": "model:fct_daily_orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/fct_daily_orders.sql",
+        "line": 2,
+        "symbol": "model:fct_daily_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "fct_daily_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "model:fct_daily_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "fct_daily_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Daily aggregation of orders by calendar day.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/fct_daily_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "data_pipeline_dbt",
+      "family": "adversarial_input",
+      "title": "model:stg_orders rejects adversarial input",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "data_pipeline_dbt",
+      "family": "backpressure",
+      "title": "model:stg_orders applies backpressure",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "data_pipeline_dbt",
+      "family": "dependency_compromise",
+      "title": "model:stg_orders robust to dependency compromise",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "data_pipeline_dbt",
+      "family": "happy_path",
+      "title": "Happy path of model:stg_orders",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "data_pipeline_dbt",
+      "family": "partial_failure",
+      "title": "model:stg_orders handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "data_pipeline_dbt",
+      "family": "persistence_corruption",
+      "title": "model:stg_orders survives persistence corruption",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "data_pipeline_dbt",
+      "family": "resource_limits",
+      "title": "model:stg_orders respects resource limits",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "data_pipeline_dbt",
+      "family": "scheduler_starvation",
+      "title": "model:stg_orders avoids scheduler starvation",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "data_pipeline_dbt",
+      "family": "upgrade_migration",
+      "title": "model:stg_orders survives upgrade/migration",
+      "entry_point": {
+        "kind": "dag_task",
+        "file": "models/stg_orders.sql",
+        "line": 2,
+        "symbol": "model:stg_orders",
+        "metadata": {
+          "kind": "model",
+          "model": "stg_orders",
+          "framework": "dbt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "model:stg_orders",
+          "metadata": {
+            "kind": "model",
+            "model": "stg_orders",
+            "framework": "dbt"
+          }
+        }
+      },
+      "intended_behaviour": "Staging layer for the orders table \u2014 preserves grain, casts types.",
+      "intended_behaviour_source": [
+        "models/schema.yml:#models/stg_orders"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

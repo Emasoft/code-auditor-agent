@@ -1,0 +1,24 @@
+# fixture for data_pipeline_dbt
+# Minimal dbt project file. The discoverer fingerprint requires
+# dbt_project.yml at the root plus a models/** directory.
+
+name: "fixture_dbt_project"
+version: "1.0.0"
+config-version: 2
+
+profile: "default"
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  fixture_dbt_project:
+    +materialized: view

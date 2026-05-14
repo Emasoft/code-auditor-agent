@@ -1,0 +1,17 @@
+# fixture for iac_k8s_operator
+version: "3"
+domain: example.com
+projectName: tiny-fixture-operator
+layout:
+  - go.kubebuilder.io/v4
+repo: github.com/example/tiny-fixture-operator
+resources:
+  - api:
+      crdVersion: v1
+      namespaced: true
+    controller: true
+    domain: example.com
+    group: tiny
+    kind: Widget
+    path: github.com/example/tiny-fixture-operator/api/v1
+    version: v1

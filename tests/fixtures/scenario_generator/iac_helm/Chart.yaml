@@ -1,0 +1,7 @@
+# fixture for iac_helm
+apiVersion: v2
+name: tiny-fixture
+description: Tiny Helm chart used as a discoverer fixture.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

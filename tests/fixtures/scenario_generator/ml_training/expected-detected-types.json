@@ -1,0 +1,27 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/ml_training",
+  "detected_types": [
+    {
+      "type": "ml_training",
+      "confidence": 0.89,
+      "evidence": [
+        "**/pyproject.toml \u2192 pyproject.toml contains one of ['torch', 'tensorflow', 'jax', 'transformers', 'scikit-learn', 'lightning']",
+        "**/requirements.txt \u2192 requirements.txt contains one of ['torch', 'tensorflow', 'jax', 'transformers', 'scikit-learn', 'lightning']",
+        "disambig_content: train.py matches one of ['nn.Module', 'train_step', 'optimizer.step', 'loss.backward']"
+      ]
+    },
+    {
+      "type": "cli_python",
+      "confidence": 0.85,
+      "evidence": [
+        "**/pyproject.toml \u2192 pyproject.toml contains one of ['[project.scripts]']",
+        "**/setup.py \u2192 setup.py contains one of ['console_scripts']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

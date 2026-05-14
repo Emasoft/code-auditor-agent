@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/cli_rust",
+  "detected_types": [
+    {
+      "type": "cli_rust",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Cargo.toml \u2192 Cargo.toml contains one of ['[[bin]]']",
+        "disambig_content: src/main.rs matches one of ['use clap', 'structopt::']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "rust"
+  ]
+}

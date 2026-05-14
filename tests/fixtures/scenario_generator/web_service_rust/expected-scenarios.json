@@ -1,0 +1,1801 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_rust",
+    "detected_types": [
+      {
+        "type": "web_service_rust",
+        "confidence": 0.89,
+        "evidence": [
+          "**/Cargo.toml \u2192 Cargo.toml contains one of ['actix-web', 'axum', 'rocket', 'warp', 'hyper', 'poem', 'salvo']",
+          "disambig_content: src/main.rs matches one of ['#[get(', '#[post(', 'Router::new(', 'HttpServer::new(']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "rust"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "web_service_rust",
+      "family": "adversarial_input",
+      "title": "GET /items rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "web_service_rust",
+      "family": "auth_state_transition",
+      "title": "GET /items re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "web_service_rust",
+      "family": "backpressure",
+      "title": "GET /items applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "web_service_rust",
+      "family": "clock_skew",
+      "title": "GET /items tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "web_service_rust",
+      "family": "concurrency_in_parser",
+      "title": "GET /items parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "web_service_rust",
+      "family": "concurrent_state",
+      "title": "GET /items is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "web_service_rust",
+      "family": "dependency_compromise",
+      "title": "GET /items robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "web_service_rust",
+      "family": "downgrade_attack",
+      "title": "GET /items rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "web_service_rust",
+      "family": "happy_path",
+      "title": "Happy path of GET /items",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "web_service_rust",
+      "family": "partial_failure",
+      "title": "GET /items handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "web_service_rust",
+      "family": "persistence_corruption",
+      "title": "GET /items survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "web_service_rust",
+      "family": "protocol_replay",
+      "title": "GET /items rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "web_service_rust",
+      "family": "resource_limits",
+      "title": "GET /items respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "web_service_rust",
+      "family": "upgrade_migration",
+      "title": "GET /items survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 6,
+        "symbol": "list_items",
+        "metadata": {
+          "method": "GET",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[get]"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "list_items",
+          "metadata": {
+            "method": "GET",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[get]"
+          }
+        }
+      },
+      "intended_behaviour": "List all items.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "web_service_rust",
+      "family": "adversarial_input",
+      "title": "POST /items rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "web_service_rust",
+      "family": "auth_state_transition",
+      "title": "POST /items re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "web_service_rust",
+      "family": "backpressure",
+      "title": "POST /items applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "web_service_rust",
+      "family": "clock_skew",
+      "title": "POST /items tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "web_service_rust",
+      "family": "concurrency_in_parser",
+      "title": "POST /items parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "web_service_rust",
+      "family": "concurrent_state",
+      "title": "POST /items is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "web_service_rust",
+      "family": "dependency_compromise",
+      "title": "POST /items robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "web_service_rust",
+      "family": "downgrade_attack",
+      "title": "POST /items rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "web_service_rust",
+      "family": "happy_path",
+      "title": "Happy path of POST /items",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "web_service_rust",
+      "family": "partial_failure",
+      "title": "POST /items handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "web_service_rust",
+      "family": "persistence_corruption",
+      "title": "POST /items survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "web_service_rust",
+      "family": "protocol_replay",
+      "title": "POST /items rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "web_service_rust",
+      "family": "resource_limits",
+      "title": "POST /items respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "web_service_rust",
+      "family": "upgrade_migration",
+      "title": "POST /items survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 12,
+        "symbol": "create_item",
+        "metadata": {
+          "method": "POST",
+          "path": "/items",
+          "framework": "actix-web",
+          "binding": "#[post]"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "create_item",
+          "metadata": {
+            "method": "POST",
+            "path": "/items",
+            "framework": "actix-web",
+            "binding": "#[post]"
+          }
+        }
+      },
+      "intended_behaviour": "Create a new item and return its id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "web_service_rust",
+      "family": "adversarial_input",
+      "title": "DELETE /items/{id} rejects adversarial input",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "web_service_rust",
+      "family": "auth_state_transition",
+      "title": "DELETE /items/{id} re-validates auth on state transition",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "web_service_rust",
+      "family": "backpressure",
+      "title": "DELETE /items/{id} applies backpressure",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "backpressure_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unbounded_queue_growth",
+        "no_drop_or_throttle_policy",
+        "producer_blocks_forever",
+        "load_shedding_drops_critical_messages"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "web_service_rust",
+      "family": "clock_skew",
+      "title": "DELETE /items/{id} tolerates clock skew",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "web_service_rust",
+      "family": "concurrency_in_parser",
+      "title": "DELETE /items/{id} parser thread-safe",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "web_service_rust",
+      "family": "concurrent_state",
+      "title": "DELETE /items/{id} is safe under concurrent access",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "web_service_rust",
+      "family": "dependency_compromise",
+      "title": "DELETE /items/{id} robust to dependency compromise",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "web_service_rust",
+      "family": "downgrade_attack",
+      "title": "DELETE /items/{id} rejects protocol downgrade",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "web_service_rust",
+      "family": "happy_path",
+      "title": "Happy path of DELETE /items/{id}",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "web_service_rust",
+      "family": "partial_failure",
+      "title": "DELETE /items/{id} handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "web_service_rust",
+      "family": "persistence_corruption",
+      "title": "DELETE /items/{id} survives persistence corruption",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "web_service_rust",
+      "family": "protocol_replay",
+      "title": "DELETE /items/{id} rejects replayed protocol message",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "web_service_rust",
+      "family": "resource_limits",
+      "title": "DELETE /items/{id} respects resource limits",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "web_service_rust",
+      "family": "upgrade_migration",
+      "title": "DELETE /items/{id} survives upgrade/migration",
+      "entry_point": {
+        "kind": "http_route",
+        "file": "src/main.rs",
+        "line": 18,
+        "symbol": "delete_item",
+        "metadata": {
+          "method": "DELETE",
+          "path": "/items/{id}",
+          "framework": "actix-web",
+          "binding": "#[delete]"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "delete_item",
+          "metadata": {
+            "method": "DELETE",
+            "path": "/items/{id}",
+            "framework": "actix-web",
+            "binding": "#[delete]"
+          }
+        }
+      },
+      "intended_behaviour": "Delete an item by id.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

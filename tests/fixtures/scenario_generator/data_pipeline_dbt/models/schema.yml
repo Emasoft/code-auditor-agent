@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Staging layer for the orders table — preserves grain, casts types."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_daily_orders
+    description: "Daily aggregation of orders by calendar day."
+    columns:
+      - name: order_day
+        tests:
+          - unique
+          - not_null

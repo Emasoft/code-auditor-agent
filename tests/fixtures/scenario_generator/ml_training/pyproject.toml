@@ -1,0 +1,19 @@
+[project]
+name = "fixture-ml-training"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "hydra-core>=1.3.0",
+]
+
+# Console-script entry — declared so the project's detection registry
+# resolves to ml_training first. (The fingerprint registry's
+# conflict-direction means an isolated pyproject.toml here would be
+# claimed by ``library_python`` before ``ml_training`` ever runs;
+# advertising a console script causes ``cli_python`` to match first
+# and suppress ``library_python`` via its conflicts_with list,
+# clearing the way for the deeper ``ml_training`` fingerprint.)
+[project.scripts]
+run-train = "train:main"

@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/mobile_kotlin_multiplatform",
+  "detected_types": [
+    {
+      "type": "mobile_kotlin_multiplatform",
+      "confidence": 0.85,
+      "evidence": [
+        "**/build.gradle.kts \u2192 build.gradle.kts contains one of ['kotlin-multiplatform']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "kotlin"
+  ]
+}

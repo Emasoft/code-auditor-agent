@@ -1,0 +1,9 @@
+# fixture for web_service_rust
+[package]
+name = "rust-web-fixture"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4"
+tokio = { version = "1", features = ["full"] }

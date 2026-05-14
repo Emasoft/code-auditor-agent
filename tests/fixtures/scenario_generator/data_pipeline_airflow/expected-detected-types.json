@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/data_pipeline_airflow",
+  "detected_types": [
+    {
+      "type": "data_pipeline_airflow",
+      "confidence": 0.89,
+      "evidence": [
+        "**/airflow.cfg matches 1 file(s); first=airflow.cfg",
+        "disambig_content: dags/example_dag.py matches one of ['from airflow', 'DAG(', '@dag', '@task']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

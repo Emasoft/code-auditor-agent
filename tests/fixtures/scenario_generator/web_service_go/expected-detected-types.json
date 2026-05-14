@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_go",
+  "detected_types": [
+    {
+      "type": "web_service_go",
+      "confidence": 0.89,
+      "evidence": [
+        "**/go.mod \u2192 go.mod contains one of ['github.com/gin-gonic/gin', 'github.com/labstack/echo', 'github.com/go-chi/chi', 'github.com/gofiber/fiber', 'github.com/gorilla/mux']",
+        "disambig_content: main.go matches one of ['http.HandleFunc', 'r.GET(', 'Mux.HandleFunc']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "go"
+  ]
+}

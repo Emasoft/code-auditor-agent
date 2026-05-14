@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/mobile_ios",
+  "detected_types": [
+    {
+      "type": "mobile_ios",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Info.plist matches 1 file(s); first=Info.plist",
+        "disambig_content: AppDelegate.swift matches one of ['@main', 'UIApplicationDelegate', '@UIApplicationMain']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "swift"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/web_service_dotnet",
+  "detected_types": [
+    {
+      "type": "web_service_dotnet",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.csproj \u2192 DotnetWebFixture.csproj contains one of ['Microsoft.AspNetCore.']",
+        "disambig_content: Program.cs matches one of ['WebApplication.CreateBuilder', 'MapGet(', 'MapPost(']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "csharp"
+  ]
+}
