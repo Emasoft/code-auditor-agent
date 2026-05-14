@@ -84,6 +84,15 @@ parameters:
       Disable agent-written code detection even if auto-detection would trigger.
     required: false
     default: "false"
+  - name: skip-cross-layer-audit
+    description: >
+      Skip the caa-cross-layer-auditor-agent pass that hunts cross-file mismatches
+      (env-var name drift, default-value drift, schema-vs-code mismatch, removed-API-
+      still-called, hidden ops prerequisites). Use for very small PRs where cross-layer
+      mismatches are unlikely. Runs ONCE per audit (not per domain) since findings span
+      the whole repo. See TRDD-60f53034 §3.5.
+    required: false
+    default: "false"
 ---
 
 # Codebase Audit & Fix
@@ -127,12 +136,36 @@ too many false positives, disabling one branch helps localize the noise.
 ## What Happens
 
 1. **Phase 0**: Inventories all files, classifies by domain, triages with grep
-2. **Phase 1**: Spawns parallel auditor agents (3-4 files each)
-3. **Phase 2**: Verification swarm cross-checks all audit reports
-4. **Phase 3**: Gap-fill audits missed files (iterative until 100% coverage)
-5. **Phase 4**: Consolidation per domain (dedup, severity harmonization)
-6. **Phase 4b**: Security review — spawns caa-security-review-agent for vulnerability, secrets, and dependency scanning
-7. **Phase 4c** (if `--extended`): Invokes caa-scenario-generator-skill on the
+2. **Phase 1**: Spawns parallel auditor agents (3-4 files each), including
+   caa-code-correctness-agent for line-level correctness checks
+3. **Phase 1b** (unless `--skip-cross-layer-audit`): Dispatches
+   **caa-cross-layer-auditor-agent** ONCE per audit (not per domain) — this agent
+   hunts cross-file mismatches that single-file auditors structurally cannot detect:
+   env-var name drift, default-value drift, schema-vs-code mismatch, removed-API-
+   still-called, hidden ops prerequisites. Findings span the whole repo by definition.
+   See TRDD-60f53034 §3.5.
+
+   **Invocation** (single agent dispatch, not a per-domain swarm):
+
+   | Input | Source |
+   |---|---|
+   | `PR_NUMBER` | From PR context |
+   | `PR_DESCRIPTION_FILE` | Path to file containing PR body |
+   | `DIFF_FILE` | Path to unified diff of the PR |
+   | `REPO_PATH` | `--scope` directory |
+   | `REPORT_PATH` | Under `--report-dir` (e.g. `<report-dir>/cross-layer/CL-P0-A0-cross-layer.md`) |
+   | `AGENT_PREFIX` | Recommended: `CL-P0-A0` |
+
+4. **Phase 2**: Verification swarm cross-checks all audit reports
+5. **Phase 3**: Gap-fill audits missed files (iterative until 100% coverage)
+6. **Phase 4**: Consolidation per domain (dedup, severity harmonization).
+   **NOTE (cross-layer findings):** caa-cross-layer-auditor-agent emits findings
+   with `Layer: structural` by definition. These findings cite MULTIPLE files
+   (in a `Related files:` section), and consolidation MUST preserve all
+   related-file references — never collapse a cross-layer finding to a single
+   file or drop the `Related files:` block. See TRDD-60f53034 §3.5.
+7. **Phase 4b**: Security review — spawns caa-security-review-agent for vulnerability, secrets, and dependency scanning
+8. **Phase 4c** (if `--extended`): Invokes caa-scenario-generator-skill on the
    scope to emit scenarios.json + detected-types.json. Then spawns the
    caa-scenario-walker-agent swarm (one per scenario or cluster) — each agent
    plays the actor_role from its scenario and walks the static call graph for
@@ -141,13 +174,13 @@ too many false positives, disabling one branch helps localize the noise.
    swarms feed into Phase 4 consolidation as `scenario_divergence` and
    `unguarded_assumption` finding categories, which cross-merge with
    line-level findings into single multi-evidence findings.
-8. **Phase 5**: Generates actionable TODO files per scope. When merged
+9. **Phase 5**: Generates actionable TODO files per scope. When merged
    findings have multiple evidence frames (line + scenario + assumption),
    the TODO entry includes optional sections surfacing each frame so the fix
    agent picks the clearest framing.
-9. **Phase 6** (if `--fix`): Applies fixes from TODOs
-10. **Phase 7** (if `--fix`): Verifies fixes, loops if regressions found
-11. **Phase 8**: Final merged report
+10. **Phase 6** (if `--fix`): Applies fixes from TODOs
+11. **Phase 7** (if `--fix`): Verifies fixes, loops if regressions found
+12. **Phase 8**: Final merged report
 - When `--worktrees` is enabled, each agent swarm runs in isolated git worktrees. Fix agent branches are merged back sequentially after completion.
 
 **NOTE (BLOCKER short-circuit):** If caa-claim-verification-agent emits a BLOCKER

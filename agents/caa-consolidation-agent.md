@@ -275,6 +275,15 @@ Columns: **Finding** = file:line:type key; **Reports** = source reports that ide
 
 Findings with Confidence: LOW MUST be downgraded one severity level (MUST-FIX → SHOULD-FIX, SHOULD-FIX → NIT). Findings with Confidence: LOW AND Severity: NIT MUST be dropped UNLESS they are security findings.
 
+## Cross-layer findings
+
+Findings from caa-cross-layer-auditor-agent (prefix `CL-`) have a special `Related files:` field listing MULTIPLE files involved in the mismatch. Consolidation rules:
+
+1. **Preserve all related-file references verbatim.** Do not collapse them into a single 'File:' field — the cross-file relationship is what makes the finding actionable.
+2. **Do not merge a cross-layer finding with a per-file finding** even if they cite the same line. Per-file findings (CC-, SR-, etc.) describe what's wrong in ONE file; cross-layer findings describe what's wrong BETWEEN two files. Merging would lose the cross-layer dimension.
+3. **For dedup**: two cross-layer findings are duplicates only if they cite the SAME primary file:line AND the SAME set of related files. If the related files differ (even by one file), they are distinct findings.
+4. **In the report**: cross-layer findings are grouped under `## Structural Findings` (per Layer grouping). Within that section, they appear as a SUB-GROUP titled `### Cross-layer mismatches` to make them visually distinguishable — they require cross-file context that single-file findings don't.
+
 ## Layer grouping
 
 Group findings in the consolidated report under three top-level sections in this order: ## Structural Findings, ## Narrative Findings, ## Mechanical Findings. Within each section, sort by Severity DESC then File ASC.
