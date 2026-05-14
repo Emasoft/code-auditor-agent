@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_stm32",
+  "detected_types": [
+    {
+      "type": "firmware_stm32",
+      "confidence": 0.93,
+      "evidence": [
+        "**/STM32*.ld matches 1 file(s); first=STM32F407VGTx_FLASH.ld",
+        "disambig_content: Core/Src/main.c matches one of ['HAL_', 'NVIC_', '__HAL_RCC_']",
+        "disambig_content: Core/Inc/main.h matches one of ['stm32']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

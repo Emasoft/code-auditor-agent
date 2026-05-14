@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_tauri",
+  "detected_types": [
+    {
+      "type": "desktop_tauri",
+      "confidence": 0.89,
+      "evidence": [
+        "**/tauri.conf.json matches 1 file(s); first=tauri.conf.json",
+        "disambig_content: src-tauri/src/main.rs matches one of ['#[tauri::command]']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "rust"
+  ]
+}

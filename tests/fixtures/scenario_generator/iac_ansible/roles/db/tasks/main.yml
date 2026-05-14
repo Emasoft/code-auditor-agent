@@ -1,0 +1,16 @@
+# fixture for iac_ansible role
+- name: Install postgresql server
+  apt:
+    name: postgresql
+    state: present
+
+- name: Start postgresql service
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Create application database
+  postgresql_db:
+    name: fixture_app
+    state: present

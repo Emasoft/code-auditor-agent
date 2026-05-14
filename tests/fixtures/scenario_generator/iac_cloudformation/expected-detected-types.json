@@ -1,0 +1,17 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_cloudformation",
+  "detected_types": [
+    {
+      "type": "iac_cloudformation",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.template \u2192 raw.template contains one of ['AWSTemplateFormatVersion']",
+        "**/*.yaml \u2192 nested.yaml contains one of ['AWSTemplateFormatVersion']",
+        "**/*.yml \u2192 template.yml contains one of ['AWSTemplateFormatVersion']"
+      ]
+    }
+  ],
+  "detected_languages": []
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/rtos_zephyr",
+  "detected_types": [
+    {
+      "type": "firmware_zephyr",
+      "confidence": 0.89,
+      "evidence": [
+        "**/prj.conf matches 1 file(s); first=prj.conf",
+        "disambig_content: main.c matches one of ['SYS_INIT(', 'K_THREAD_DEFINE(', 'K_WORK_DEFINE(']"
+      ]
+    },
+    {
+      "type": "rtos_zephyr",
+      "confidence": 0.85,
+      "evidence": [
+        "**/prj.conf \u2192 prj.conf contains one of ['CONFIG_KERNEL', 'CONFIG_THREAD']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/bsd_kernel",
+  "detected_types": [
+    {
+      "type": "bsd_kernel",
+      "confidence": 0.89,
+      "evidence": [
+        "**/sys/kern/**/*.c matches 1 file(s); first=sys/kern/kern_foo.c",
+        "**/sys/dev/**/*.c matches 1 file(s); first=sys/dev/foo/foo.c",
+        "disambig_content: sys/dev/foo/foo.c matches one of ['MOD_LOAD', 'DEVMETHOD', 'DECLARE_MODULE']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Makefile matches 1 file(s); first=Makefile"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

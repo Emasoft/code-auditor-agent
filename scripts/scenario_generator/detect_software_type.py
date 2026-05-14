@@ -384,9 +384,22 @@ FINGERPRINTS: tuple[TypeFingerprint, ...] = (
             ("**/*.m", ("UIApplicationMain",)),
         ),
     ),
+    # desktop_flutter MUST come before mobile_flutter so its tighter
+    # primary check (flutter: AND a desktop platform string) gets a chance
+    # to match — once mobile_flutter matches, desktop_flutter's
+    # conflicts_with would skip it for the remainder of the run.
+    TypeFingerprint(
+        name="desktop_flutter",
+        primary_content=(
+            ("**/pubspec.yaml", ("flutter:",)),
+            ("**/pubspec.yaml", ("flutter_acrylic", "window_manager", "desktop_window", "windows:", "linux:", "macos:")),
+        ),
+        conflicts_with=("mobile_flutter",),
+    ),
     TypeFingerprint(
         name="mobile_flutter",
         primary_content=(("**/pubspec.yaml", ("flutter:",)),),
+        conflicts_with=("desktop_flutter",),
     ),
     TypeFingerprint(
         name="mobile_reactnative",
@@ -574,7 +587,7 @@ FINGERPRINTS: tuple[TypeFingerprint, ...] = (
     # ---- Games -------------------------------------------------------------
     TypeFingerprint(
         name="game_unity",
-        primary_globs=("**/ProjectSettings/**", "**/Assets/**"),
+        primary_globs=("**/ProjectSettings/*.asset", "**/Assets/**/*.cs"),
         disambiguator_content=(("**/*.cs", ("MonoBehaviour", "UnityEngine")),),
     ),
     TypeFingerprint(
@@ -746,12 +759,6 @@ FINGERPRINTS: tuple[TypeFingerprint, ...] = (
         name="desktop_tauri",
         primary_globs=("**/tauri.conf.json", "**/src-tauri/**"),
         disambiguator_content=(("**/*.rs", ("#[tauri::command]",)),),
-    ),
-    TypeFingerprint(
-        name="desktop_flutter",
-        primary_content=(("**/pubspec.yaml", ("flutter:",)),),
-        disambiguator_content=(("**/pubspec.yaml", ("windows", "linux", "macos")),),
-        conflicts_with=("mobile_flutter",),
     ),
     TypeFingerprint(
         name="webgl_three",

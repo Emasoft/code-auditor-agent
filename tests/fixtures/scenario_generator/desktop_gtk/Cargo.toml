@@ -1,0 +1,8 @@
+# fixture for desktop_gtk (Rust gtk-rs binding accompanies the C fixture)
+[package]
+name = "demo_gtk_app_rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gtk4 = "0.7"

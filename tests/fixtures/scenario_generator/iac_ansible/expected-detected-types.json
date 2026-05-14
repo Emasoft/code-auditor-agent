@@ -1,0 +1,15 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_ansible",
+  "detected_types": [
+    {
+      "type": "iac_ansible",
+      "confidence": 0.85,
+      "evidence": [
+        "**/playbook.yml matches 1 file(s); first=playbook.yml"
+      ]
+    }
+  ],
+  "detected_languages": []
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/browser_ext_chrome",
+  "detected_types": [
+    {
+      "type": "browser_ext_chrome",
+      "confidence": 0.89,
+      "evidence": [
+        "**/manifest.json \u2192 manifest.json contains one of ['\"manifest_version\": 3', 'background', 'content_scripts']",
+        "disambig_content: background.js matches one of ['chrome.runtime', 'chrome.tabs', 'chrome.storage']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "javascript"
+  ]
+}

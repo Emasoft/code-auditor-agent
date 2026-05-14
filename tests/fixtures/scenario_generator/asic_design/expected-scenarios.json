@@ -1,0 +1,2002 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/asic_design",
+    "detected_types": [
+      {
+        "type": "fpga_verilog",
+        "confidence": 0.93,
+        "evidence": [
+          "**/*.sv matches 2 file(s); first=foo_tb.sv",
+          "disambig_glob: **/*.sdc \u2192 constraints.sdc",
+          "disambig_content: foo_tb.sv matches one of ['module ', 'endmodule']"
+        ]
+      },
+      {
+        "type": "asic_design",
+        "confidence": 0.85,
+        "evidence": [
+          "**/*.sdc matches 1 file(s); first=constraints.sdc"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "verilog"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "asic_design",
+      "family": "dependency_compromise",
+      "title": "foo_tb robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "foo_tb.sv",
+        "line": 6,
+        "symbol": "foo_tb",
+        "metadata": {
+          "module": "foo_tb",
+          "role": "testbench",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "foo_tb",
+          "metadata": {
+            "module": "foo_tb",
+            "role": "testbench",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "asic_design",
+      "family": "happy_path",
+      "title": "Happy path of foo_tb",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "foo_tb.sv",
+        "line": 6,
+        "symbol": "foo_tb",
+        "metadata": {
+          "module": "foo_tb",
+          "role": "testbench",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "foo_tb",
+          "metadata": {
+            "module": "foo_tb",
+            "role": "testbench",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "asic_design",
+      "family": "resource_limits",
+      "title": "foo_tb respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "foo_tb.sv",
+        "line": 6,
+        "symbol": "foo_tb",
+        "metadata": {
+          "module": "foo_tb",
+          "role": "testbench",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "foo_tb",
+          "metadata": {
+            "module": "foo_tb",
+            "role": "testbench",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "asic_design",
+      "family": "signal_integrity",
+      "title": "foo_tb signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "foo_tb.sv",
+        "line": 6,
+        "symbol": "foo_tb",
+        "metadata": {
+          "module": "foo_tb",
+          "role": "testbench",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "foo_tb",
+          "metadata": {
+            "module": "foo_tb",
+            "role": "testbench",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "asic_design",
+      "family": "timing_constraint_violation",
+      "title": "foo_tb respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "foo_tb.sv",
+        "line": 6,
+        "symbol": "foo_tb",
+        "metadata": {
+          "module": "foo_tb",
+          "role": "testbench",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "foo_tb",
+          "metadata": {
+            "module": "foo_tb",
+            "role": "testbench",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "asic_design",
+      "family": "dependency_compromise",
+      "title": "top robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 7,
+        "symbol": "top",
+        "metadata": {
+          "module": "top",
+          "role": "design",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "top",
+          "metadata": {
+            "module": "top",
+            "role": "design",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "asic_design",
+      "family": "happy_path",
+      "title": "Happy path of top",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 7,
+        "symbol": "top",
+        "metadata": {
+          "module": "top",
+          "role": "design",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "top",
+          "metadata": {
+            "module": "top",
+            "role": "design",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "asic_design",
+      "family": "resource_limits",
+      "title": "top respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 7,
+        "symbol": "top",
+        "metadata": {
+          "module": "top",
+          "role": "design",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "top",
+          "metadata": {
+            "module": "top",
+            "role": "design",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "asic_design",
+      "family": "signal_integrity",
+      "title": "top signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 7,
+        "symbol": "top",
+        "metadata": {
+          "module": "top",
+          "role": "design",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "top",
+          "metadata": {
+            "module": "top",
+            "role": "design",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "asic_design",
+      "family": "timing_constraint_violation",
+      "title": "top respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 7,
+        "symbol": "top",
+        "metadata": {
+          "module": "top",
+          "role": "design",
+          "sdc_file": "constraints.sdc",
+          "sdc_clocks": [
+            "clk"
+          ]
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "top",
+          "metadata": {
+            "module": "top",
+            "role": "design",
+            "sdc_file": "constraints.sdc",
+            "sdc_clocks": [
+              "clk"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "clk robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of clk",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "clk handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "clk respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "clk signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "clk respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 8,
+        "symbol": "clk",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "clk",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "rst_n robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of rst_n",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "rst_n handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "rst_n respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "rst_n signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "rst_n respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 9,
+        "symbol": "rst_n",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "rst_n",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "axi_addr robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of axi_addr",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "axi_addr handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "axi_addr respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "axi_addr signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "axi_addr respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 10,
+        "symbol": "axi_addr",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "axi_addr",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "axi_wdata robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of axi_wdata",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "axi_wdata handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "axi_wdata respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "axi_wdata signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "axi_wdata respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 11,
+        "symbol": "axi_wdata",
+        "metadata": {
+          "port_direction": "input",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "axi_wdata",
+          "metadata": {
+            "port_direction": "input",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "axi_rdata robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of axi_rdata",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "axi_rdata handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "axi_rdata respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "axi_rdata signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "axi_rdata respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 12,
+        "symbol": "axi_rdata",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 32,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "axi_rdata",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 32,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "fpga_verilog",
+      "family": "dependency_compromise",
+      "title": "axi_ack robust to dependency compromise",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "fpga_verilog",
+      "family": "happy_path",
+      "title": "Happy path of axi_ack",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "fpga_verilog",
+      "family": "hardware_failure",
+      "title": "axi_ack handles hardware failure",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "fpga_verilog",
+      "family": "resource_limits",
+      "title": "axi_ack respects resource limits",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "fpga_verilog",
+      "family": "signal_integrity",
+      "title": "axi_ack signal integrity / metastability",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "fpga_verilog",
+      "family": "timing_constraint_violation",
+      "title": "axi_ack respects timing constraints",
+      "entry_point": {
+        "kind": "fpga_toplevel_port",
+        "file": "top.sv",
+        "line": 13,
+        "symbol": "axi_ack",
+        "metadata": {
+          "port_direction": "output",
+          "port_width_bits": 1,
+          "module": "top",
+          "constraint_file": "constraints.sdc"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "axi_ack",
+          "metadata": {
+            "port_direction": "output",
+            "port_width_bits": 1,
+            "module": "top",
+            "constraint_file": "constraints.sdc"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

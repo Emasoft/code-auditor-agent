@@ -1,0 +1,16 @@
+# fixture for linux_kernel_tree
+# Mimics the kernel's top-level Kconfig — needs the substrings
+# "source", "config", and "menuconfig" to satisfy the fingerprint.
+
+mainmenu "Linux/Fixture Kernel Configuration"
+
+source "arch/x86/Kconfig"
+source "drivers/foo/Kconfig"
+
+config FIXTURE_KERNEL
+	bool "Enable fixture kernel tree (for tests)"
+	default y
+
+menuconfig FIXTURE_DRIVERS
+	bool "Fixture drivers"
+	default y

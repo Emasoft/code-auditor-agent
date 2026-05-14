@@ -1,0 +1,15 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_kustomize",
+  "detected_types": [
+    {
+      "type": "iac_kustomize",
+      "confidence": 0.85,
+      "evidence": [
+        "**/kustomization.yaml matches 3 file(s); first=base/kustomization.yaml"
+      ]
+    }
+  ],
+  "detected_languages": []
+}

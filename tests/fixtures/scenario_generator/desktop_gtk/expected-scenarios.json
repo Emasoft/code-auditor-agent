@@ -1,0 +1,2624 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_gtk",
+    "detected_types": [
+      {
+        "type": "desktop_gtk",
+        "confidence": 0.89,
+        "evidence": [
+          "**/Cargo.toml \u2192 Cargo.toml contains one of ['gtk4', 'gtk3']",
+          "**/CMakeLists.txt \u2192 CMakeLists.txt contains one of ['gtk4', 'gtk-3.0']",
+          "disambig_content: main.c matches one of ['gtk_init', 'gtk_application_new']"
+        ]
+      },
+      {
+        "type": "library_c",
+        "confidence": 0.85,
+        "evidence": [
+          "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "desktop_gtk",
+      "family": "auth_state_transition",
+      "title": "on_button_clicked re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "desktop_gtk",
+      "family": "concurrent_state",
+      "title": "on_button_clicked is safe under concurrent access",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "desktop_gtk",
+      "family": "dependency_compromise",
+      "title": "on_button_clicked robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "desktop_gtk",
+      "family": "happy_path",
+      "title": "Happy path of on_button_clicked",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "desktop_gtk",
+      "family": "ipc_message_malformed",
+      "title": "on_button_clicked rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_bounds",
+      "title": "on_button_clicked bounds-checked",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_uaf",
+      "title": "on_button_clicked no use-after-free",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "desktop_gtk",
+      "family": "partial_failure",
+      "title": "on_button_clicked handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "desktop_gtk",
+      "family": "persistence_corruption",
+      "title": "on_button_clicked survives persistence corruption",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "desktop_gtk",
+      "family": "privilege_escalation",
+      "title": "on_button_clicked prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "desktop_gtk",
+      "family": "resource_limits",
+      "title": "on_button_clicked respects resource limits",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "desktop_gtk",
+      "family": "suspend_resume",
+      "title": "on_button_clicked across suspend/resume",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "desktop_gtk",
+      "family": "user_input_event",
+      "title": "on_button_clicked handles user input event",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 18,
+        "symbol": "on_button_clicked",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "clicked",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "on_button_clicked",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "clicked",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "desktop_gtk",
+      "family": "auth_state_transition",
+      "title": "on_window_destroy re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "desktop_gtk",
+      "family": "concurrent_state",
+      "title": "on_window_destroy is safe under concurrent access",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "desktop_gtk",
+      "family": "dependency_compromise",
+      "title": "on_window_destroy robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "desktop_gtk",
+      "family": "happy_path",
+      "title": "Happy path of on_window_destroy",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "desktop_gtk",
+      "family": "ipc_message_malformed",
+      "title": "on_window_destroy rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_bounds",
+      "title": "on_window_destroy bounds-checked",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_uaf",
+      "title": "on_window_destroy no use-after-free",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "desktop_gtk",
+      "family": "partial_failure",
+      "title": "on_window_destroy handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "desktop_gtk",
+      "family": "persistence_corruption",
+      "title": "on_window_destroy survives persistence corruption",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "desktop_gtk",
+      "family": "privilege_escalation",
+      "title": "on_window_destroy prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "desktop_gtk",
+      "family": "resource_limits",
+      "title": "on_window_destroy respects resource limits",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "desktop_gtk",
+      "family": "suspend_resume",
+      "title": "on_window_destroy across suspend/resume",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "desktop_gtk",
+      "family": "user_input_event",
+      "title": "on_window_destroy handles user input event",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 19,
+        "symbol": "on_window_destroy",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "destroy",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "on_window_destroy",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "destroy",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "desktop_gtk",
+      "family": "auth_state_transition",
+      "title": "main re-validates auth on state transition",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "desktop_gtk",
+      "family": "concurrent_state",
+      "title": "main is safe under concurrent access",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "desktop_gtk",
+      "family": "dependency_compromise",
+      "title": "main robust to dependency compromise",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "desktop_gtk",
+      "family": "happy_path",
+      "title": "Happy path of main",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "desktop_gtk",
+      "family": "ipc_message_malformed",
+      "title": "main rejects malformed IPC message",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_bounds",
+      "title": "main bounds-checked",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_uaf",
+      "title": "main no use-after-free",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "desktop_gtk",
+      "family": "partial_failure",
+      "title": "main handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "desktop_gtk",
+      "family": "persistence_corruption",
+      "title": "main survives persistence corruption",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "desktop_gtk",
+      "family": "privilege_escalation",
+      "title": "main prevents privilege escalation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "desktop_gtk",
+      "family": "resource_limits",
+      "title": "main respects resource limits",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "desktop_gtk",
+      "family": "suspend_resume",
+      "title": "main across suspend/resume",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "desktop_gtk",
+      "family": "user_input_event",
+      "title": "main handles user input event",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "main",
+        "metadata": {
+          "element": "main",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "element": "main",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "desktop_gtk",
+      "family": "auth_state_transition",
+      "title": "gtk_application_new re-validates auth on state transition",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "desktop_gtk",
+      "family": "concurrent_state",
+      "title": "gtk_application_new is safe under concurrent access",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "desktop_gtk",
+      "family": "dependency_compromise",
+      "title": "gtk_application_new robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "desktop_gtk",
+      "family": "happy_path",
+      "title": "Happy path of gtk_application_new",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "desktop_gtk",
+      "family": "ipc_message_malformed",
+      "title": "gtk_application_new rejects malformed IPC message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_bounds",
+      "title": "gtk_application_new bounds-checked",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_uaf",
+      "title": "gtk_application_new no use-after-free",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "desktop_gtk",
+      "family": "partial_failure",
+      "title": "gtk_application_new handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "desktop_gtk",
+      "family": "persistence_corruption",
+      "title": "gtk_application_new survives persistence corruption",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "desktop_gtk",
+      "family": "privilege_escalation",
+      "title": "gtk_application_new prevents privilege escalation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "desktop_gtk",
+      "family": "resource_limits",
+      "title": "gtk_application_new respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "desktop_gtk",
+      "family": "suspend_resume",
+      "title": "gtk_application_new across suspend/resume",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "desktop_gtk",
+      "family": "user_input_event",
+      "title": "gtk_application_new handles user input event",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 25,
+        "symbol": "gtk_application_new",
+        "metadata": {
+          "element": "boot_call",
+          "function": "gtk_application_new",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "gtk_application_new",
+          "metadata": {
+            "element": "boot_call",
+            "function": "gtk_application_new",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "desktop_gtk",
+      "family": "auth_state_transition",
+      "title": "activate re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "desktop_gtk",
+      "family": "concurrent_state",
+      "title": "activate is safe under concurrent access",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "desktop_gtk",
+      "family": "dependency_compromise",
+      "title": "activate robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "desktop_gtk",
+      "family": "happy_path",
+      "title": "Happy path of activate",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "desktop_gtk",
+      "family": "ipc_message_malformed",
+      "title": "activate rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_bounds",
+      "title": "activate bounds-checked",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "desktop_gtk",
+      "family": "memory_safety_uaf",
+      "title": "activate no use-after-free",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "desktop_gtk",
+      "family": "partial_failure",
+      "title": "activate handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "desktop_gtk",
+      "family": "persistence_corruption",
+      "title": "activate survives persistence corruption",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "desktop_gtk",
+      "family": "privilege_escalation",
+      "title": "activate prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "desktop_gtk",
+      "family": "resource_limits",
+      "title": "activate respects resource limits",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "desktop_gtk",
+      "family": "suspend_resume",
+      "title": "activate across suspend/resume",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "desktop_gtk",
+      "family": "user_input_event",
+      "title": "activate handles user input event",
+      "entry_point": {
+        "kind": "ui_event_handler",
+        "file": "main.c",
+        "line": 26,
+        "symbol": "activate",
+        "metadata": {
+          "element": "signal_callback",
+          "signal": "activate",
+          "framework": "gtk"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "activate",
+          "metadata": {
+            "element": "signal_callback",
+            "signal": "activate",
+            "framework": "gtk"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

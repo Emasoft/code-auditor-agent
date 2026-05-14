@@ -1,0 +1,2015 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/iac_kustomize",
+    "detected_types": [
+      {
+        "type": "iac_kustomize",
+        "confidence": 0.85,
+        "evidence": [
+          "**/kustomization.yaml matches 3 file(s); first=base/kustomization.yaml"
+        ]
+      }
+    ],
+    "detected_languages": []
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "Deployment/tiny-fixture-web robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of Deployment/tiny-fixture-web",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "Deployment/tiny-fixture-web handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "Deployment/tiny-fixture-web survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "Deployment/tiny-fixture-web respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "Deployment/tiny-fixture-web survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/deployment.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "deployment.yaml robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of deployment.yaml",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "deployment.yaml handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "deployment.yaml survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "deployment.yaml respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "deployment.yaml survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 5,
+        "symbol": "deployment.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "deployment.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "deployment.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "deployment.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "service.yaml robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of service.yaml",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "service.yaml handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "service.yaml survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "service.yaml respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "service.yaml survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/kustomization.yaml",
+        "line": 6,
+        "symbol": "service.yaml",
+        "metadata": {
+          "section": "resources",
+          "reference": "service.yaml",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "service.yaml",
+          "metadata": {
+            "section": "resources",
+            "reference": "service.yaml",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "Service/tiny-fixture-web robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of Service/tiny-fixture-web",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "Service/tiny-fixture-web handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "Service/tiny-fixture-web survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "Service/tiny-fixture-web respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "Service/tiny-fixture-web survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "base/service.yaml",
+        "line": 1,
+        "symbol": "Service/tiny-fixture-web",
+        "metadata": {
+          "kind": "Service",
+          "apiVersion": "v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "Service/tiny-fixture-web",
+          "metadata": {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "overlays/prod robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of overlays/prod",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "overlays/prod handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "overlays/prod survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "overlays/prod respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "overlays/prod survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "kustomization.yaml",
+        "line": 5,
+        "symbol": "overlays/prod",
+        "metadata": {
+          "section": "resources",
+          "reference": "overlays/prod",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "overlays/prod",
+          "metadata": {
+            "section": "resources",
+            "reference": "overlays/prod",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "../../base robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of ../../base",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "../../base handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "../../base survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "../../base respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "../../base survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 6,
+        "symbol": "../../base",
+        "metadata": {
+          "section": "resources",
+          "reference": "../../base",
+          "kind_role": "resource_reference"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "../../base",
+          "metadata": {
+            "section": "resources",
+            "reference": "../../base",
+            "kind_role": "resource_reference"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "Deployment/tiny-fixture-web robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of Deployment/tiny-fixture-web",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "Deployment/tiny-fixture-web handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "Deployment/tiny-fixture-web survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "Deployment/tiny-fixture-web respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "Deployment/tiny-fixture-web survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/kustomization.yaml",
+        "line": 8,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "section": "patches",
+          "kind_role": "patch_target",
+          "target_kind": "Deployment",
+          "target_name": "tiny-fixture-web",
+          "patch_path": "patch.yaml"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "section": "patches",
+            "kind_role": "patch_target",
+            "target_kind": "Deployment",
+            "target_name": "tiny-fixture-web",
+            "patch_path": "patch.yaml"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "iac_kustomize",
+      "family": "dependency_compromise",
+      "title": "Deployment/tiny-fixture-web robust to dependency compromise",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "iac_kustomize",
+      "family": "happy_path",
+      "title": "Happy path of Deployment/tiny-fixture-web",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "iac_kustomize",
+      "family": "partial_failure",
+      "title": "Deployment/tiny-fixture-web handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "iac_kustomize",
+      "family": "persistence_corruption",
+      "title": "Deployment/tiny-fixture-web survives persistence corruption",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "iac_kustomize",
+      "family": "resource_limits",
+      "title": "Deployment/tiny-fixture-web respects resource limits",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "iac_kustomize",
+      "family": "upgrade_migration",
+      "title": "Deployment/tiny-fixture-web survives upgrade/migration",
+      "entry_point": {
+        "kind": "terraform_resource",
+        "file": "overlays/prod/patch.yaml",
+        "line": 1,
+        "symbol": "Deployment/tiny-fixture-web",
+        "metadata": {
+          "kind": "Deployment",
+          "apiVersion": "apps/v1",
+          "name": "tiny-fixture-web",
+          "kind_role": "base_manifest"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "Deployment/tiny-fixture-web",
+          "metadata": {
+            "kind": "Deployment",
+            "apiVersion": "apps/v1",
+            "name": "tiny-fixture-web",
+            "kind_role": "base_manifest"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

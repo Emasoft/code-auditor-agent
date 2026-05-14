@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/game_unity",
+  "detected_types": [
+    {
+      "type": "game_unity",
+      "confidence": 0.89,
+      "evidence": [
+        "**/ProjectSettings/*.asset matches 1 file(s); first=ProjectSettings/ProjectSettings.asset",
+        "**/Assets/**/*.cs matches 1 file(s); first=Assets/Scripts/Player.cs",
+        "disambig_content: Assets/Scripts/Player.cs matches one of ['MonoBehaviour', 'UnityEngine']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "csharp"
+  ]
+}

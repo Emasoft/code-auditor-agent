@@ -1,0 +1,24 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_nordic_sdk",
+  "detected_types": [
+    {
+      "type": "firmware_nordic_sdk",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.h \u2192 include/nrf_drv_config.h contains one of ['nrf_', 'NRF_SDK', 'nrfx_']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Makefile matches 1 file(s); first=Makefile"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

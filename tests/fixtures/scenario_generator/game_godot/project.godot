@@ -1,0 +1,12 @@
+; fixture for game_godot
+config_version=5
+
+[application]
+
+config/name="SampleGame"
+config/features=PackedStringArray("4.2", "GL Compatibility")
+run/main_scene="res://scenes/main.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

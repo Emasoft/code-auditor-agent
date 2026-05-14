@@ -1,0 +1,2681 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_espidf",
+    "detected_types": [
+      {
+        "type": "firmware_espidf",
+        "confidence": 0.89,
+        "evidence": [
+          "**/sdkconfig matches 1 file(s); first=sdkconfig",
+          "disambig_content: main/main.c matches one of ['app_main(', 'esp_event_handler']"
+        ]
+      },
+      {
+        "type": "library_c",
+        "confidence": 0.85,
+        "evidence": [
+          "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "firmware_espidf",
+      "family": "adversarial_input",
+      "title": "app_main rejects adversarial input",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "firmware_espidf",
+      "family": "boot_path",
+      "title": "app_main on boot path",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "firmware_espidf",
+      "family": "concurrent_state",
+      "title": "app_main is safe under concurrent access",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "firmware_espidf",
+      "family": "dependency_compromise",
+      "title": "app_main robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "firmware_espidf",
+      "family": "dma_race",
+      "title": "app_main handles CPU/DMA race",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "firmware_espidf",
+      "family": "happy_path",
+      "title": "Happy path of app_main",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "firmware_espidf",
+      "family": "hardware_failure",
+      "title": "app_main handles hardware failure",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "firmware_espidf",
+      "family": "integer_overflow_in_size_calc",
+      "title": "app_main no integer overflow in size calc",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "firmware_espidf",
+      "family": "interrupt_atomicity",
+      "title": "app_main preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_bounds",
+      "title": "app_main bounds-checked",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_uaf",
+      "title": "app_main no use-after-free",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "firmware_espidf",
+      "family": "partial_failure",
+      "title": "app_main handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "firmware_espidf",
+      "family": "persistence_corruption",
+      "title": "app_main survives persistence corruption",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "firmware_espidf",
+      "family": "power_glitch",
+      "title": "app_main robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "firmware_espidf",
+      "family": "protocol_replay",
+      "title": "app_main rejects replayed protocol message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "firmware_espidf",
+      "family": "resource_limits",
+      "title": "app_main respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "firmware_espidf",
+      "family": "side_channel",
+      "title": "app_main resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "firmware_espidf",
+      "family": "signal_integrity",
+      "title": "app_main signal integrity / metastability",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "firmware_espidf",
+      "family": "suspend_resume",
+      "title": "app_main across suspend/resume",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "firmware_espidf",
+      "family": "timing_constraint_violation",
+      "title": "app_main respects timing constraints",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "firmware_espidf",
+      "family": "upgrade_migration",
+      "title": "app_main survives upgrade/migration",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "firmware_espidf",
+      "family": "watchdog_misuse",
+      "title": "app_main watchdog usage is correct",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main/main.c",
+        "line": 43,
+        "symbol": "app_main",
+        "metadata": {
+          "role": "espidf_app_main"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "app_main",
+          "metadata": {
+            "role": "espidf_app_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "firmware_espidf",
+      "family": "adversarial_input",
+      "title": "sensor_task rejects adversarial input",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "firmware_espidf",
+      "family": "boot_path",
+      "title": "sensor_task on boot path",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "firmware_espidf",
+      "family": "concurrent_state",
+      "title": "sensor_task is safe under concurrent access",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "firmware_espidf",
+      "family": "dependency_compromise",
+      "title": "sensor_task robust to dependency compromise",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "firmware_espidf",
+      "family": "dma_race",
+      "title": "sensor_task handles CPU/DMA race",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "firmware_espidf",
+      "family": "happy_path",
+      "title": "Happy path of sensor_task",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "firmware_espidf",
+      "family": "hardware_failure",
+      "title": "sensor_task handles hardware failure",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "firmware_espidf",
+      "family": "integer_overflow_in_size_calc",
+      "title": "sensor_task no integer overflow in size calc",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "firmware_espidf",
+      "family": "interrupt_atomicity",
+      "title": "sensor_task preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_bounds",
+      "title": "sensor_task bounds-checked",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_uaf",
+      "title": "sensor_task no use-after-free",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "firmware_espidf",
+      "family": "partial_failure",
+      "title": "sensor_task handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "firmware_espidf",
+      "family": "persistence_corruption",
+      "title": "sensor_task survives persistence corruption",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "firmware_espidf",
+      "family": "power_glitch",
+      "title": "sensor_task robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "firmware_espidf",
+      "family": "protocol_replay",
+      "title": "sensor_task rejects replayed protocol message",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "firmware_espidf",
+      "family": "resource_limits",
+      "title": "sensor_task respects resource limits",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "firmware_espidf",
+      "family": "side_channel",
+      "title": "sensor_task resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "firmware_espidf",
+      "family": "signal_integrity",
+      "title": "sensor_task signal integrity / metastability",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "firmware_espidf",
+      "family": "suspend_resume",
+      "title": "sensor_task across suspend/resume",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "firmware_espidf",
+      "family": "timing_constraint_violation",
+      "title": "sensor_task respects timing constraints",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "firmware_espidf",
+      "family": "upgrade_migration",
+      "title": "sensor_task survives upgrade/migration",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "firmware_espidf",
+      "family": "watchdog_misuse",
+      "title": "sensor_task watchdog usage is correct",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 45,
+        "symbol": "sensor_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "sensor",
+          "stack": "2048",
+          "priority": "5"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "sensor_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "sensor",
+            "stack": "2048",
+            "priority": "5"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "firmware_espidf",
+      "family": "adversarial_input",
+      "title": "uplink_task rejects adversarial input",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "firmware_espidf",
+      "family": "boot_path",
+      "title": "uplink_task on boot path",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "firmware_espidf",
+      "family": "concurrent_state",
+      "title": "uplink_task is safe under concurrent access",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "firmware_espidf",
+      "family": "dependency_compromise",
+      "title": "uplink_task robust to dependency compromise",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "firmware_espidf",
+      "family": "dma_race",
+      "title": "uplink_task handles CPU/DMA race",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "firmware_espidf",
+      "family": "happy_path",
+      "title": "Happy path of uplink_task",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "firmware_espidf",
+      "family": "hardware_failure",
+      "title": "uplink_task handles hardware failure",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "firmware_espidf",
+      "family": "integer_overflow_in_size_calc",
+      "title": "uplink_task no integer overflow in size calc",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "firmware_espidf",
+      "family": "interrupt_atomicity",
+      "title": "uplink_task preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_bounds",
+      "title": "uplink_task bounds-checked",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "firmware_espidf",
+      "family": "memory_safety_uaf",
+      "title": "uplink_task no use-after-free",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "firmware_espidf",
+      "family": "partial_failure",
+      "title": "uplink_task handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "firmware_espidf",
+      "family": "persistence_corruption",
+      "title": "uplink_task survives persistence corruption",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "firmware_espidf",
+      "family": "power_glitch",
+      "title": "uplink_task robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "firmware_espidf",
+      "family": "protocol_replay",
+      "title": "uplink_task rejects replayed protocol message",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "firmware_espidf",
+      "family": "resource_limits",
+      "title": "uplink_task respects resource limits",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "firmware_espidf",
+      "family": "side_channel",
+      "title": "uplink_task resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "firmware_espidf",
+      "family": "signal_integrity",
+      "title": "uplink_task signal integrity / metastability",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "firmware_espidf",
+      "family": "suspend_resume",
+      "title": "uplink_task across suspend/resume",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "firmware_espidf",
+      "family": "timing_constraint_violation",
+      "title": "uplink_task respects timing constraints",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "firmware_espidf",
+      "family": "upgrade_migration",
+      "title": "uplink_task survives upgrade/migration",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "firmware_espidf",
+      "family": "watchdog_misuse",
+      "title": "uplink_task watchdog usage is correct",
+      "entry_point": {
+        "kind": "rtos_task",
+        "file": "main/main.c",
+        "line": 46,
+        "symbol": "uplink_task",
+        "metadata": {
+          "macro": "xTaskCreate",
+          "task_name": "uplink",
+          "stack": "4096",
+          "priority": "4"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "uplink_task",
+          "metadata": {
+            "macro": "xTaskCreate",
+            "task_name": "uplink",
+            "stack": "4096",
+            "priority": "4"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

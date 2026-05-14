@@ -1,0 +1,4 @@
+# fixture for iac_pulumi
+name: tiny-fixture
+runtime: nodejs
+description: Tiny Pulumi project used as a discoverer fixture.

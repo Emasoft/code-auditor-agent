@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/asic_design",
+  "detected_types": [
+    {
+      "type": "fpga_verilog",
+      "confidence": 0.93,
+      "evidence": [
+        "**/*.sv matches 2 file(s); first=foo_tb.sv",
+        "disambig_glob: **/*.sdc \u2192 constraints.sdc",
+        "disambig_content: foo_tb.sv matches one of ['module ', 'endmodule']"
+      ]
+    },
+    {
+      "type": "asic_design",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.sdc matches 1 file(s); first=constraints.sdc"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "verilog"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/macos_kernel_ext",
+  "detected_types": [
+    {
+      "type": "macos_kernel_ext",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.kext/**/Info.plist matches 1 file(s); first=Foo.kext/Contents/Info.plist",
+        "disambig_content: FooDriver.cpp matches one of ['IOService', 'OSDeclareDefaultStructors']"
+      ]
+    },
+    {
+      "type": "mobile_ios",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Info.plist matches 1 file(s); first=Foo.kext/Contents/Info.plist"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c",
+    "cpp"
+  ]
+}

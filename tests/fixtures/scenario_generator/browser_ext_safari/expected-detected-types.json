@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/browser_ext_safari",
+  "detected_types": [
+    {
+      "type": "browser_ext_safari",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.safariextz matches 1 file(s); first=Extension.safariextz"
+      ]
+    },
+    {
+      "type": "mobile_ios",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Info.plist matches 1 file(s); first=Info.plist"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "javascript",
+    "swift"
+  ]
+}

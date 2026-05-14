@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tiny-fixture-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tiny-fixture-web
+  template:
+    metadata:
+      labels:
+        app: tiny-fixture-web
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25

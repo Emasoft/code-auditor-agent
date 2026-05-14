@@ -1,0 +1,4003 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_baremetal",
+    "detected_types": [
+      {
+        "type": "firmware_baremetal",
+        "confidence": 0.89,
+        "evidence": [
+          "**/startup.S matches 1 file(s); first=startup.S",
+          "**/*.ld \u2192 link.ld contains one of ['MEMORY', '.text', '.bss']",
+          "disambig_content: main.c matches one of ['_start', 'Reset_Handler', 'void __attribute__((interrupt))']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "firmware_baremetal",
+      "family": "adversarial_input",
+      "title": "Reset_Handler rejects adversarial input",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "firmware_baremetal",
+      "family": "boot_path",
+      "title": "Reset_Handler on boot path",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "firmware_baremetal",
+      "family": "concurrent_state",
+      "title": "Reset_Handler is safe under concurrent access",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "firmware_baremetal",
+      "family": "dependency_compromise",
+      "title": "Reset_Handler robust to dependency compromise",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "firmware_baremetal",
+      "family": "dma_race",
+      "title": "Reset_Handler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "firmware_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of Reset_Handler",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "firmware_baremetal",
+      "family": "hardware_failure",
+      "title": "Reset_Handler handles hardware failure",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "firmware_baremetal",
+      "family": "integer_overflow_in_size_calc",
+      "title": "Reset_Handler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "firmware_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "Reset_Handler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_bounds",
+      "title": "Reset_Handler bounds-checked",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_uaf",
+      "title": "Reset_Handler no use-after-free",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "firmware_baremetal",
+      "family": "partial_failure",
+      "title": "Reset_Handler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "firmware_baremetal",
+      "family": "persistence_corruption",
+      "title": "Reset_Handler survives persistence corruption",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "firmware_baremetal",
+      "family": "power_glitch",
+      "title": "Reset_Handler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "firmware_baremetal",
+      "family": "protocol_replay",
+      "title": "Reset_Handler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "firmware_baremetal",
+      "family": "resource_limits",
+      "title": "Reset_Handler respects resource limits",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "firmware_baremetal",
+      "family": "side_channel",
+      "title": "Reset_Handler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "firmware_baremetal",
+      "family": "signal_integrity",
+      "title": "Reset_Handler signal integrity / metastability",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "firmware_baremetal",
+      "family": "suspend_resume",
+      "title": "Reset_Handler across suspend/resume",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "firmware_baremetal",
+      "family": "timing_constraint_violation",
+      "title": "Reset_Handler respects timing constraints",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "firmware_baremetal",
+      "family": "upgrade_migration",
+      "title": "Reset_Handler survives upgrade/migration",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "firmware_baremetal",
+      "family": "watchdog_misuse",
+      "title": "Reset_Handler watchdog usage is correct",
+      "entry_point": {
+        "kind": "reset_path",
+        "file": "main.c",
+        "line": 14,
+        "symbol": "Reset_Handler",
+        "metadata": {
+          "role": "reset_vector"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "Reset_Handler",
+          "metadata": {
+            "role": "reset_vector"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "firmware_baremetal",
+      "family": "adversarial_input",
+      "title": "HardFault_Handler rejects adversarial input",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "firmware_baremetal",
+      "family": "boot_path",
+      "title": "HardFault_Handler on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "firmware_baremetal",
+      "family": "concurrent_state",
+      "title": "HardFault_Handler is safe under concurrent access",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "firmware_baremetal",
+      "family": "dependency_compromise",
+      "title": "HardFault_Handler robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "firmware_baremetal",
+      "family": "dma_race",
+      "title": "HardFault_Handler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "firmware_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of HardFault_Handler",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "firmware_baremetal",
+      "family": "hardware_failure",
+      "title": "HardFault_Handler handles hardware failure",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "firmware_baremetal",
+      "family": "integer_overflow_in_size_calc",
+      "title": "HardFault_Handler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "firmware_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "HardFault_Handler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_bounds",
+      "title": "HardFault_Handler bounds-checked",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_uaf",
+      "title": "HardFault_Handler no use-after-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "firmware_baremetal",
+      "family": "partial_failure",
+      "title": "HardFault_Handler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "firmware_baremetal",
+      "family": "persistence_corruption",
+      "title": "HardFault_Handler survives persistence corruption",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "firmware_baremetal",
+      "family": "power_glitch",
+      "title": "HardFault_Handler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "firmware_baremetal",
+      "family": "protocol_replay",
+      "title": "HardFault_Handler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "firmware_baremetal",
+      "family": "resource_limits",
+      "title": "HardFault_Handler respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "firmware_baremetal",
+      "family": "side_channel",
+      "title": "HardFault_Handler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "firmware_baremetal",
+      "family": "signal_integrity",
+      "title": "HardFault_Handler signal integrity / metastability",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "firmware_baremetal",
+      "family": "suspend_resume",
+      "title": "HardFault_Handler across suspend/resume",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "firmware_baremetal",
+      "family": "timing_constraint_violation",
+      "title": "HardFault_Handler respects timing constraints",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "firmware_baremetal",
+      "family": "upgrade_migration",
+      "title": "HardFault_Handler survives upgrade/migration",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "firmware_baremetal",
+      "family": "watchdog_misuse",
+      "title": "HardFault_Handler watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 23,
+        "symbol": "HardFault_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "HardFault_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "firmware_baremetal",
+      "family": "adversarial_input",
+      "title": "SysTick_Handler rejects adversarial input",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "firmware_baremetal",
+      "family": "boot_path",
+      "title": "SysTick_Handler on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "firmware_baremetal",
+      "family": "concurrent_state",
+      "title": "SysTick_Handler is safe under concurrent access",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "firmware_baremetal",
+      "family": "dependency_compromise",
+      "title": "SysTick_Handler robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "firmware_baremetal",
+      "family": "dma_race",
+      "title": "SysTick_Handler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "firmware_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of SysTick_Handler",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "firmware_baremetal",
+      "family": "hardware_failure",
+      "title": "SysTick_Handler handles hardware failure",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "firmware_baremetal",
+      "family": "integer_overflow_in_size_calc",
+      "title": "SysTick_Handler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "firmware_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "SysTick_Handler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_bounds",
+      "title": "SysTick_Handler bounds-checked",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_uaf",
+      "title": "SysTick_Handler no use-after-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "firmware_baremetal",
+      "family": "partial_failure",
+      "title": "SysTick_Handler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "firmware_baremetal",
+      "family": "persistence_corruption",
+      "title": "SysTick_Handler survives persistence corruption",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "firmware_baremetal",
+      "family": "power_glitch",
+      "title": "SysTick_Handler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "firmware_baremetal",
+      "family": "protocol_replay",
+      "title": "SysTick_Handler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "firmware_baremetal",
+      "family": "resource_limits",
+      "title": "SysTick_Handler respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "firmware_baremetal",
+      "family": "side_channel",
+      "title": "SysTick_Handler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "firmware_baremetal",
+      "family": "signal_integrity",
+      "title": "SysTick_Handler signal integrity / metastability",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "firmware_baremetal",
+      "family": "suspend_resume",
+      "title": "SysTick_Handler across suspend/resume",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "firmware_baremetal",
+      "family": "timing_constraint_violation",
+      "title": "SysTick_Handler respects timing constraints",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "firmware_baremetal",
+      "family": "upgrade_migration",
+      "title": "SysTick_Handler survives upgrade/migration",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "firmware_baremetal",
+      "family": "watchdog_misuse",
+      "title": "SysTick_Handler watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "main.c",
+        "line": 29,
+        "symbol": "SysTick_Handler",
+        "metadata": {
+          "attr": "interrupt"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "SysTick_Handler",
+          "metadata": {
+            "attr": "interrupt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "firmware_baremetal",
+      "family": "adversarial_input",
+      "title": "_start rejects adversarial input",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "firmware_baremetal",
+      "family": "boot_path",
+      "title": "_start on boot path",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "firmware_baremetal",
+      "family": "concurrent_state",
+      "title": "_start is safe under concurrent access",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "firmware_baremetal",
+      "family": "dependency_compromise",
+      "title": "_start robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "firmware_baremetal",
+      "family": "dma_race",
+      "title": "_start handles CPU/DMA race",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "firmware_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of _start",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "firmware_baremetal",
+      "family": "hardware_failure",
+      "title": "_start handles hardware failure",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "firmware_baremetal",
+      "family": "integer_overflow_in_size_calc",
+      "title": "_start no integer overflow in size calc",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "firmware_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "_start preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_bounds",
+      "title": "_start bounds-checked",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_uaf",
+      "title": "_start no use-after-free",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "firmware_baremetal",
+      "family": "partial_failure",
+      "title": "_start handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "firmware_baremetal",
+      "family": "persistence_corruption",
+      "title": "_start survives persistence corruption",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "firmware_baremetal",
+      "family": "power_glitch",
+      "title": "_start robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "firmware_baremetal",
+      "family": "protocol_replay",
+      "title": "_start rejects replayed protocol message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0082",
+      "type_origin": "firmware_baremetal",
+      "family": "resource_limits",
+      "title": "_start respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0083",
+      "type_origin": "firmware_baremetal",
+      "family": "side_channel",
+      "title": "_start resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0084",
+      "type_origin": "firmware_baremetal",
+      "family": "signal_integrity",
+      "title": "_start signal integrity / metastability",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0085",
+      "type_origin": "firmware_baremetal",
+      "family": "suspend_resume",
+      "title": "_start across suspend/resume",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0086",
+      "type_origin": "firmware_baremetal",
+      "family": "timing_constraint_violation",
+      "title": "_start respects timing constraints",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0087",
+      "type_origin": "firmware_baremetal",
+      "family": "upgrade_migration",
+      "title": "_start survives upgrade/migration",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0088",
+      "type_origin": "firmware_baremetal",
+      "family": "watchdog_misuse",
+      "title": "_start watchdog usage is correct",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "main.c",
+        "line": 36,
+        "symbol": "_start",
+        "metadata": {
+          "role": "crt0_entry"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "role": "crt0_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0089",
+      "type_origin": "firmware_baremetal",
+      "family": "adversarial_input",
+      "title": "main rejects adversarial input",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0090",
+      "type_origin": "firmware_baremetal",
+      "family": "boot_path",
+      "title": "main on boot path",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0091",
+      "type_origin": "firmware_baremetal",
+      "family": "concurrent_state",
+      "title": "main is safe under concurrent access",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0092",
+      "type_origin": "firmware_baremetal",
+      "family": "dependency_compromise",
+      "title": "main robust to dependency compromise",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0093",
+      "type_origin": "firmware_baremetal",
+      "family": "dma_race",
+      "title": "main handles CPU/DMA race",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0094",
+      "type_origin": "firmware_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of main",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0095",
+      "type_origin": "firmware_baremetal",
+      "family": "hardware_failure",
+      "title": "main handles hardware failure",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0096",
+      "type_origin": "firmware_baremetal",
+      "family": "integer_overflow_in_size_calc",
+      "title": "main no integer overflow in size calc",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0097",
+      "type_origin": "firmware_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "main preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0098",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_bounds",
+      "title": "main bounds-checked",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0099",
+      "type_origin": "firmware_baremetal",
+      "family": "memory_safety_uaf",
+      "title": "main no use-after-free",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0100",
+      "type_origin": "firmware_baremetal",
+      "family": "partial_failure",
+      "title": "main handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0101",
+      "type_origin": "firmware_baremetal",
+      "family": "persistence_corruption",
+      "title": "main survives persistence corruption",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0102",
+      "type_origin": "firmware_baremetal",
+      "family": "power_glitch",
+      "title": "main robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0103",
+      "type_origin": "firmware_baremetal",
+      "family": "protocol_replay",
+      "title": "main rejects replayed protocol message",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0104",
+      "type_origin": "firmware_baremetal",
+      "family": "resource_limits",
+      "title": "main respects resource limits",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0105",
+      "type_origin": "firmware_baremetal",
+      "family": "side_channel",
+      "title": "main resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0106",
+      "type_origin": "firmware_baremetal",
+      "family": "signal_integrity",
+      "title": "main signal integrity / metastability",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0107",
+      "type_origin": "firmware_baremetal",
+      "family": "suspend_resume",
+      "title": "main across suspend/resume",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0108",
+      "type_origin": "firmware_baremetal",
+      "family": "timing_constraint_violation",
+      "title": "main respects timing constraints",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0109",
+      "type_origin": "firmware_baremetal",
+      "family": "upgrade_migration",
+      "title": "main survives upgrade/migration",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0110",
+      "type_origin": "firmware_baremetal",
+      "family": "watchdog_misuse",
+      "title": "main watchdog usage is correct",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "main.c",
+        "line": 42,
+        "symbol": "main",
+        "metadata": {
+          "role": "baremetal_main"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "baremetal_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

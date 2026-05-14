@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/rtos_freertos",
+  "detected_types": [
+    {
+      "type": "rtos_freertos",
+      "confidence": 0.89,
+      "evidence": [
+        "**/FreeRTOSConfig.h matches 1 file(s); first=FreeRTOSConfig.h",
+        "disambig_content: main.c matches one of ['xTaskCreate(', 'vTaskStartScheduler(', 'xQueueCreate(']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

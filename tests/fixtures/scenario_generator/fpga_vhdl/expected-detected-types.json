@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/fpga_vhdl",
+  "detected_types": [
+    {
+      "type": "fpga_vhdl",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.vhd matches 2 file(s); first=foo.vhd",
+        "disambig_content: foo.vhd matches one of ['entity ', ' is', 'architecture ']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "vhdl"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/os_baremetal",
+  "detected_types": [
+    {
+      "type": "os_baremetal",
+      "confidence": 0.89,
+      "evidence": [
+        "**/linker.ld matches 1 file(s); first=linker.ld",
+        "disambig_content: kernel.c matches one of ['_start', 'kernel_main', 'void __attribute__((noreturn))']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

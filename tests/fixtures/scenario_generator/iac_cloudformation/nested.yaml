@@ -1,0 +1,9 @@
+# fixture for iac_cloudformation (.yaml ext to satisfy fingerprint)
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Nested stack carrying additional resources.
+
+Resources:
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: tiny-fixture-notify

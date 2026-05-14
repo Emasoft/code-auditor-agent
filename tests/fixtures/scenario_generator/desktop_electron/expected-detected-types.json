@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_electron",
+  "detected_types": [
+    {
+      "type": "desktop_electron",
+      "confidence": 0.89,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"electron\":']",
+        "disambig_content: main.js matches one of ['BrowserWindow', \"app.on('ready'\"]"
+      ]
+    },
+    {
+      "type": "library_node",
+      "confidence": 0.85,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"main\":', '\"exports\":']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "javascript"
+  ]
+}

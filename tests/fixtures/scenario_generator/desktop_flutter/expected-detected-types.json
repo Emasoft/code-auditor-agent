@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_flutter",
+  "detected_types": [
+    {
+      "type": "desktop_flutter",
+      "confidence": 0.85,
+      "evidence": [
+        "**/pubspec.yaml \u2192 pubspec.yaml contains one of ['flutter:']",
+        "**/pubspec.yaml \u2192 pubspec.yaml contains one of ['flutter_acrylic', 'window_manager', 'desktop_window', 'windows:', 'linux:', 'macos:']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "dart"
+  ]
+}

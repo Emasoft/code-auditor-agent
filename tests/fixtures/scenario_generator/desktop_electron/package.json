@@ -1,0 +1,12 @@
+{
+  "name": "demo-electron-app",
+  "version": "0.1.0",
+  "description": "fixture for desktop_electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

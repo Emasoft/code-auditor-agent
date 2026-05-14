@@ -1,0 +1,1003 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/game_unity",
+    "detected_types": [
+      {
+        "type": "game_unity",
+        "confidence": 0.89,
+        "evidence": [
+          "**/ProjectSettings/*.asset matches 1 file(s); first=ProjectSettings/ProjectSettings.asset",
+          "**/Assets/**/*.cs matches 1 file(s); first=Assets/Scripts/Player.cs",
+          "disambig_content: Assets/Scripts/Player.cs matches one of ['MonoBehaviour', 'UnityEngine']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "csharp"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "game_unity",
+      "family": "concurrent_state",
+      "title": "Player.Start is safe under concurrent access",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "game_unity",
+      "family": "dependency_compromise",
+      "title": "Player.Start robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "game_unity",
+      "family": "happy_path",
+      "title": "Happy path of Player.Start",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "game_unity",
+      "family": "partial_failure",
+      "title": "Player.Start handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "game_unity",
+      "family": "resource_limits",
+      "title": "Player.Start respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "game_unity",
+      "family": "user_input_event",
+      "title": "Player.Start handles user input event",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 8,
+        "symbol": "Player.Start",
+        "metadata": {
+          "callback": "Start",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "Player.Start",
+          "metadata": {
+            "callback": "Start",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called once at scene load \u2014 initialization hook.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "game_unity",
+      "family": "concurrent_state",
+      "title": "Player.Update is safe under concurrent access",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "game_unity",
+      "family": "dependency_compromise",
+      "title": "Player.Update robust to dependency compromise",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "game_unity",
+      "family": "happy_path",
+      "title": "Happy path of Player.Update",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "game_unity",
+      "family": "partial_failure",
+      "title": "Player.Update handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "game_unity",
+      "family": "resource_limits",
+      "title": "Player.Update respects resource limits",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "game_unity",
+      "family": "user_input_event",
+      "title": "Player.Update handles user input event",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 14,
+        "symbol": "Player.Update",
+        "metadata": {
+          "callback": "Update",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "Player.Update",
+          "metadata": {
+            "callback": "Update",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called every rendered frame \u2014 game tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "game_unity",
+      "family": "concurrent_state",
+      "title": "Player.FixedUpdate is safe under concurrent access",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "game_unity",
+      "family": "dependency_compromise",
+      "title": "Player.FixedUpdate robust to dependency compromise",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "game_unity",
+      "family": "happy_path",
+      "title": "Happy path of Player.FixedUpdate",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "game_unity",
+      "family": "partial_failure",
+      "title": "Player.FixedUpdate handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "game_unity",
+      "family": "resource_limits",
+      "title": "Player.FixedUpdate respects resource limits",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "game_unity",
+      "family": "user_input_event",
+      "title": "Player.FixedUpdate handles user input event",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 20,
+        "symbol": "Player.FixedUpdate",
+        "metadata": {
+          "callback": "FixedUpdate",
+          "class": "Player",
+          "framework": "unity"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "Player.FixedUpdate",
+          "metadata": {
+            "callback": "FixedUpdate",
+            "class": "Player",
+            "framework": "unity"
+          }
+        }
+      },
+      "intended_behaviour": "Called at a fixed physics interval \u2014 physics tick.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "game_unity",
+      "family": "concurrent_state",
+      "title": "Player.OnCollisionEnter is safe under concurrent access",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "game_unity",
+      "family": "dependency_compromise",
+      "title": "Player.OnCollisionEnter robust to dependency compromise",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "game_unity",
+      "family": "happy_path",
+      "title": "Happy path of Player.OnCollisionEnter",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "game_unity",
+      "family": "partial_failure",
+      "title": "Player.OnCollisionEnter handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "game_unity",
+      "family": "resource_limits",
+      "title": "Player.OnCollisionEnter respects resource limits",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "game_unity",
+      "family": "user_input_event",
+      "title": "Player.OnCollisionEnter handles user input event",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Assets/Scripts/Player.cs",
+        "line": 26,
+        "symbol": "Player.OnCollisionEnter",
+        "metadata": {
+          "callback": "OnCollisionEnter",
+          "class": "Player",
+          "framework": "unity",
+          "args": "Collision collision"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "Player.OnCollisionEnter",
+          "metadata": {
+            "callback": "OnCollisionEnter",
+            "class": "Player",
+            "framework": "unity",
+            "args": "Collision collision"
+          }
+        }
+      },
+      "intended_behaviour": "Called when a collider enters another collider \u2014 input/world event.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

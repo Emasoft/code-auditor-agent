@@ -1,0 +1,7 @@
+# fixture for firmware_stm32 — STM32CubeIDE .ioc project descriptor.
+# The file is text and is what CubeMX/CubeIDE generates from the
+# pinout/clock-tree configuration. Keeping it tiny here; the real one
+# is hundreds of lines of key=value pairs.
+Mcu.Family=STM32F4
+Mcu.Name=STM32F407VGTx
+ProjectManager.ProjectName=fixture

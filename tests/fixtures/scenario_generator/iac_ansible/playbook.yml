@@ -1,0 +1,21 @@
+# fixture for iac_ansible
+- name: Configure web tier
+  hosts: web
+  become: true
+  tasks:
+    - name: Install nginx package
+      apt:
+        name: nginx
+        state: present
+
+    - name: Ensure nginx service is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+- name: Configure database tier
+  hosts: db
+  become: true
+  roles:
+    - db

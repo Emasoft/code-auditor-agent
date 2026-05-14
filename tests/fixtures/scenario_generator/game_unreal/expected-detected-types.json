@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/game_unreal",
+  "detected_types": [
+    {
+      "type": "game_unreal",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.uproject matches 1 file(s); first=MyGame.uproject",
+        "disambig_content: Source/MyGame/Public/MyActor.h matches one of ['AActor', 'UCLASS(', 'GENERATED_BODY']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

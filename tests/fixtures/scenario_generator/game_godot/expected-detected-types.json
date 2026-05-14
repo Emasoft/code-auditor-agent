@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/game_godot",
+  "detected_types": [
+    {
+      "type": "game_godot",
+      "confidence": 0.85,
+      "evidence": [
+        "**/project.godot matches 1 file(s); first=project.godot",
+        "**/*.gd matches 1 file(s); first=scenes/main.gd"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "gdscript"
+  ]
+}

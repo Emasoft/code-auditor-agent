@@ -1,0 +1,24 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/driver_linux_userspace",
+  "detected_types": [
+    {
+      "type": "driver_linux_userspace",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.c \u2192 driver.c contains one of ['libusb_', 'hid_', 'spidev_', 'ioctl(']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Makefile matches 1 file(s); first=Makefile"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

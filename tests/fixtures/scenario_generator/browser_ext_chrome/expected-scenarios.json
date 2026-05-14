@@ -1,0 +1,4318 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/browser_ext_chrome",
+    "detected_types": [
+      {
+        "type": "browser_ext_chrome",
+        "confidence": 0.89,
+        "evidence": [
+          "**/manifest.json \u2192 manifest.json contains one of ['\"manifest_version\": 3', 'background', 'content_scripts']",
+          "disambig_content: background.js matches one of ['chrome.runtime', 'chrome.tabs', 'chrome.storage']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "javascript"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "chrome.runtime.onMessage rejects adversarial input",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "chrome.runtime.onMessage re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "chrome.runtime.onMessage robust to dependency compromise",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "chrome.runtime.onMessage rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of chrome.runtime.onMessage",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "chrome.runtime.onMessage rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "chrome.runtime.onMessage handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "chrome.runtime.onMessage prevents privilege escalation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "chrome.runtime.onMessage rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "chrome.runtime.onMessage respects resource limits",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "chrome.runtime.onMessage prevents sandbox escape",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "chrome.runtime.onMessage survives upgrade/migration",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "chrome.runtime.onMessage handles user input event",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 4,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "chrome.runtime.onInstalled rejects adversarial input",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "chrome.runtime.onInstalled re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "chrome.runtime.onInstalled robust to dependency compromise",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "chrome.runtime.onInstalled rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of chrome.runtime.onInstalled",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "chrome.runtime.onInstalled rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "chrome.runtime.onInstalled handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "chrome.runtime.onInstalled prevents privilege escalation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "chrome.runtime.onInstalled rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "chrome.runtime.onInstalled respects resource limits",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "chrome.runtime.onInstalled prevents sandbox escape",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "chrome.runtime.onInstalled survives upgrade/migration",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "chrome.runtime.onInstalled handles user input event",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "background.js",
+        "line": 13,
+        "symbol": "chrome.runtime.onInstalled",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onInstalled",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "chrome.runtime.onInstalled",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onInstalled",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "chrome.runtime.onMessage rejects adversarial input",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "chrome.runtime.onMessage re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "chrome.runtime.onMessage robust to dependency compromise",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "chrome.runtime.onMessage rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of chrome.runtime.onMessage",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "chrome.runtime.onMessage rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "chrome.runtime.onMessage handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "chrome.runtime.onMessage prevents privilege escalation",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "chrome.runtime.onMessage rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "chrome.runtime.onMessage respects resource limits",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "chrome.runtime.onMessage prevents sandbox escape",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "chrome.runtime.onMessage survives upgrade/migration",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "chrome.runtime.onMessage handles user input event",
+      "entry_point": {
+        "kind": "ipc_handler",
+        "file": "content.js",
+        "line": 3,
+        "symbol": "chrome.runtime.onMessage",
+        "metadata": {
+          "surface": "runtime_listener",
+          "api": "chrome.runtime.onMessage",
+          "external": false
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "chrome.runtime.onMessage",
+          "metadata": {
+            "surface": "runtime_listener",
+            "api": "chrome.runtime.onMessage",
+            "external": false
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "background.service_worker:background.js rejects adversarial input",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "background.service_worker:background.js re-validates auth on state transition",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "background.service_worker:background.js robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "background.service_worker:background.js rejects protocol downgrade",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of background.service_worker:background.js",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "background.service_worker:background.js rejects malformed IPC message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "background.service_worker:background.js handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "background.service_worker:background.js prevents privilege escalation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "background.service_worker:background.js rejects replayed protocol message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "background.service_worker:background.js respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "background.service_worker:background.js prevents sandbox escape",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "background.service_worker:background.js survives upgrade/migration",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "background.service_worker:background.js handles user input event",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "manifest.json",
+        "line": 7,
+        "symbol": "background.service_worker:background.js",
+        "metadata": {
+          "surface": "background_service_worker",
+          "script": "background.js",
+          "manifest_version": 3
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "background.service_worker:background.js",
+          "metadata": {
+            "surface": "background_service_worker",
+            "script": "background.js",
+            "manifest_version": 3
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "content_script[0]:content.js rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "content_script[0]:content.js re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "content_script[0]:content.js robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "content_script[0]:content.js rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of content_script[0]:content.js",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "content_script[0]:content.js rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "content_script[0]:content.js handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "content_script[0]:content.js prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "content_script[0]:content.js rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "content_script[0]:content.js respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "content_script[0]:content.js prevents sandbox escape",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "content_script[0]:content.js survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "content_script[0]:content.js handles user input event",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 9,
+        "symbol": "content_script[0]:content.js",
+        "metadata": {
+          "surface": "content_script",
+          "script": "content.js",
+          "matches": [
+            "https://example.com/*"
+          ]
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "content_script[0]:content.js",
+          "metadata": {
+            "surface": "content_script",
+            "script": "content.js",
+            "matches": [
+              "https://example.com/*"
+            ]
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "action.default_popup:popup.html rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "action.default_popup:popup.html re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "action.default_popup:popup.html robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "action.default_popup:popup.html rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of action.default_popup:popup.html",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "action.default_popup:popup.html rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "action.default_popup:popup.html handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "action.default_popup:popup.html prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "action.default_popup:popup.html rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "action.default_popup:popup.html respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "action.default_popup:popup.html prevents sandbox escape",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "action.default_popup:popup.html survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "action.default_popup:popup.html handles user input event",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 16,
+        "symbol": "action.default_popup:popup.html",
+        "metadata": {
+          "surface": "action_popup",
+          "html": "popup.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "action.default_popup:popup.html",
+          "metadata": {
+            "surface": "action_popup",
+            "html": "popup.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "options_page:options.html rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "options_page:options.html re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "options_page:options.html robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0082",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "options_page:options.html rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0083",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of options_page:options.html",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0084",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "options_page:options.html rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0085",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "options_page:options.html handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0086",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "options_page:options.html prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0087",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "options_page:options.html rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0088",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "options_page:options.html respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0089",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "options_page:options.html prevents sandbox escape",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0090",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "options_page:options.html survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0091",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "options_page:options.html handles user input event",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 19,
+        "symbol": "options_page:options.html",
+        "metadata": {
+          "surface": "options_page",
+          "html": "options.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "options_page:options.html",
+          "metadata": {
+            "surface": "options_page",
+            "html": "options.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0092",
+      "type_origin": "browser_ext_chrome",
+      "family": "adversarial_input",
+      "title": "devtools_page:devtools.html rejects adversarial input",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0093",
+      "type_origin": "browser_ext_chrome",
+      "family": "auth_state_transition",
+      "title": "devtools_page:devtools.html re-validates auth on state transition",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "auth_state_transition_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for auth_state_transition: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "token_expiry_mid_operation",
+        "role_change_not_reread",
+        "permission_revoke_not_propagated",
+        "session_fixation",
+        "auth_check_after_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0094",
+      "type_origin": "browser_ext_chrome",
+      "family": "dependency_compromise",
+      "title": "devtools_page:devtools.html robust to dependency compromise",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0095",
+      "type_origin": "browser_ext_chrome",
+      "family": "downgrade_attack",
+      "title": "devtools_page:devtools.html rejects protocol downgrade",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for downgrade_attack: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0096",
+      "type_origin": "browser_ext_chrome",
+      "family": "happy_path",
+      "title": "Happy path of devtools_page:devtools.html",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0097",
+      "type_origin": "browser_ext_chrome",
+      "family": "ipc_message_malformed",
+      "title": "devtools_page:devtools.html rejects malformed IPC message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0098",
+      "type_origin": "browser_ext_chrome",
+      "family": "partial_failure",
+      "title": "devtools_page:devtools.html handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0099",
+      "type_origin": "browser_ext_chrome",
+      "family": "privilege_escalation",
+      "title": "devtools_page:devtools.html prevents privilege escalation",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "privilege_escalation_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for privilege_escalation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "setuid_binary_unsafe_env_var",
+        "ioctl_capable_for_unprivileged_user",
+        "extension_requests_overbroad_permission",
+        "deeplink_grants_unintended_action"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0100",
+      "type_origin": "browser_ext_chrome",
+      "family": "protocol_replay",
+      "title": "devtools_page:devtools.html rejects replayed protocol message",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0101",
+      "type_origin": "browser_ext_chrome",
+      "family": "resource_limits",
+      "title": "devtools_page:devtools.html respects resource limits",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0102",
+      "type_origin": "browser_ext_chrome",
+      "family": "sandbox_escape",
+      "title": "devtools_page:devtools.html prevents sandbox escape",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0103",
+      "type_origin": "browser_ext_chrome",
+      "family": "upgrade_migration",
+      "title": "devtools_page:devtools.html survives upgrade/migration",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0104",
+      "type_origin": "browser_ext_chrome",
+      "family": "user_input_event",
+      "title": "devtools_page:devtools.html handles user input event",
+      "entry_point": {
+        "kind": "ui_route",
+        "file": "manifest.json",
+        "line": 20,
+        "symbol": "devtools_page:devtools.html",
+        "metadata": {
+          "surface": "devtools_page",
+          "html": "devtools.html"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "user_input_event_default",
+        "value": {
+          "entry_point": "devtools_page:devtools.html",
+          "metadata": {
+            "surface": "devtools_page",
+            "html": "devtools.html"
+          }
+        }
+      },
+      "intended_behaviour": "Default for user_input_event: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [
+        "manifest.json"
+      ],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "double_tap_triggers_twice",
+        "background_event_resumes_in_wrong_state",
+        "permission_dialog_dismissed_treated_as_grant",
+        "back_button_loses_unsaved_state"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_gtk",
+  "detected_types": [
+    {
+      "type": "desktop_gtk",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Cargo.toml \u2192 Cargo.toml contains one of ['gtk4', 'gtk3']",
+        "**/CMakeLists.txt \u2192 CMakeLists.txt contains one of ['gtk4', 'gtk-3.0']",
+        "disambig_content: main.c matches one of ['gtk_init', 'gtk_application_new']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

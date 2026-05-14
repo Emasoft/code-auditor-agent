@@ -1,0 +1,4887 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_stm32",
+    "detected_types": [
+      {
+        "type": "firmware_stm32",
+        "confidence": 0.93,
+        "evidence": [
+          "**/STM32*.ld matches 1 file(s); first=STM32F407VGTx_FLASH.ld",
+          "disambig_content: Core/Src/main.c matches one of ['HAL_', 'NVIC_', '__HAL_RCC_']",
+          "disambig_content: Core/Inc/main.h matches one of ['stm32']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "HAL_UART_RxCpltCallback rejects adversarial input",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "HAL_UART_RxCpltCallback on boot path",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "HAL_UART_RxCpltCallback is safe under concurrent access",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "HAL_UART_RxCpltCallback robust to dependency compromise",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "HAL_UART_RxCpltCallback handles CPU/DMA race",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of HAL_UART_RxCpltCallback",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "HAL_UART_RxCpltCallback handles hardware failure",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "HAL_UART_RxCpltCallback no integer overflow in size calc",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "HAL_UART_RxCpltCallback preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "HAL_UART_RxCpltCallback bounds-checked",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "HAL_UART_RxCpltCallback no use-after-free",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "HAL_UART_RxCpltCallback handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "HAL_UART_RxCpltCallback survives persistence corruption",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "HAL_UART_RxCpltCallback robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "HAL_UART_RxCpltCallback rejects replayed protocol message",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "HAL_UART_RxCpltCallback respects resource limits",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "HAL_UART_RxCpltCallback resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "HAL_UART_RxCpltCallback signal integrity / metastability",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "HAL_UART_RxCpltCallback across suspend/resume",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "HAL_UART_RxCpltCallback respects timing constraints",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "HAL_UART_RxCpltCallback survives upgrade/migration",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "HAL_UART_RxCpltCallback watchdog usage is correct",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 10,
+        "symbol": "HAL_UART_RxCpltCallback",
+        "metadata": {
+          "hal_module": "UART",
+          "hal_event": "RxCplt"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "HAL_UART_RxCpltCallback",
+          "metadata": {
+            "hal_module": "UART",
+            "hal_event": "RxCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "HAL_ADC_ConvCpltCallback rejects adversarial input",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "HAL_ADC_ConvCpltCallback on boot path",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "HAL_ADC_ConvCpltCallback is safe under concurrent access",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "HAL_ADC_ConvCpltCallback robust to dependency compromise",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "HAL_ADC_ConvCpltCallback handles CPU/DMA race",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of HAL_ADC_ConvCpltCallback",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "HAL_ADC_ConvCpltCallback handles hardware failure",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "HAL_ADC_ConvCpltCallback no integer overflow in size calc",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "HAL_ADC_ConvCpltCallback preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "HAL_ADC_ConvCpltCallback bounds-checked",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "HAL_ADC_ConvCpltCallback no use-after-free",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "HAL_ADC_ConvCpltCallback handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "HAL_ADC_ConvCpltCallback survives persistence corruption",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "HAL_ADC_ConvCpltCallback robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "HAL_ADC_ConvCpltCallback rejects replayed protocol message",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "HAL_ADC_ConvCpltCallback respects resource limits",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "HAL_ADC_ConvCpltCallback resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "HAL_ADC_ConvCpltCallback signal integrity / metastability",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "HAL_ADC_ConvCpltCallback across suspend/resume",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "HAL_ADC_ConvCpltCallback respects timing constraints",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "HAL_ADC_ConvCpltCallback survives upgrade/migration",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "HAL_ADC_ConvCpltCallback watchdog usage is correct",
+      "entry_point": {
+        "kind": "event_listener",
+        "file": "Core/Src/main.c",
+        "line": 16,
+        "symbol": "HAL_ADC_ConvCpltCallback",
+        "metadata": {
+          "hal_module": "ADC",
+          "hal_event": "ConvCplt"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "HAL_ADC_ConvCpltCallback",
+          "metadata": {
+            "hal_module": "ADC",
+            "hal_event": "ConvCplt"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "main rejects adversarial input",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "main on boot path",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "main is safe under concurrent access",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "main robust to dependency compromise",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "main handles CPU/DMA race",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of main",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "main handles hardware failure",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "main no integer overflow in size calc",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "main preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "main bounds-checked",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "main no use-after-free",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "main handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "main survives persistence corruption",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "main robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "main rejects replayed protocol message",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "main respects resource limits",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "main resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "main signal integrity / metastability",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "main across suspend/resume",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "main respects timing constraints",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "main survives upgrade/migration",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "main watchdog usage is correct",
+      "entry_point": {
+        "kind": "main_function",
+        "file": "Core/Src/main.c",
+        "line": 29,
+        "symbol": "main",
+        "metadata": {
+          "role": "stm32_main"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "main",
+          "metadata": {
+            "role": "stm32_main"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "EXTI0_IRQHandler rejects adversarial input",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "EXTI0_IRQHandler on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "EXTI0_IRQHandler is safe under concurrent access",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "EXTI0_IRQHandler robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "EXTI0_IRQHandler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of EXTI0_IRQHandler",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "EXTI0_IRQHandler handles hardware failure",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "EXTI0_IRQHandler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "EXTI0_IRQHandler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "EXTI0_IRQHandler bounds-checked",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "EXTI0_IRQHandler no use-after-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "EXTI0_IRQHandler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "EXTI0_IRQHandler survives persistence corruption",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "EXTI0_IRQHandler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "EXTI0_IRQHandler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0082",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "EXTI0_IRQHandler respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0083",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "EXTI0_IRQHandler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0084",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "EXTI0_IRQHandler signal integrity / metastability",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0085",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "EXTI0_IRQHandler across suspend/resume",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0086",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "EXTI0_IRQHandler respects timing constraints",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0087",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "EXTI0_IRQHandler survives upgrade/migration",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0088",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "EXTI0_IRQHandler watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 12,
+        "symbol": "EXTI0_IRQHandler",
+        "metadata": {
+          "irq": "EXTI0"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "EXTI0_IRQHandler",
+          "metadata": {
+            "irq": "EXTI0"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0089",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "TIM2_IRQHandler rejects adversarial input",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0090",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "TIM2_IRQHandler on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0091",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "TIM2_IRQHandler is safe under concurrent access",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0092",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "TIM2_IRQHandler robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0093",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "TIM2_IRQHandler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0094",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of TIM2_IRQHandler",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0095",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "TIM2_IRQHandler handles hardware failure",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0096",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "TIM2_IRQHandler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0097",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "TIM2_IRQHandler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0098",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "TIM2_IRQHandler bounds-checked",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0099",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "TIM2_IRQHandler no use-after-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0100",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "TIM2_IRQHandler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0101",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "TIM2_IRQHandler survives persistence corruption",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0102",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "TIM2_IRQHandler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0103",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "TIM2_IRQHandler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0104",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "TIM2_IRQHandler respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0105",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "TIM2_IRQHandler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0106",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "TIM2_IRQHandler signal integrity / metastability",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0107",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "TIM2_IRQHandler across suspend/resume",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0108",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "TIM2_IRQHandler respects timing constraints",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0109",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "TIM2_IRQHandler survives upgrade/migration",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0110",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "TIM2_IRQHandler watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 18,
+        "symbol": "TIM2_IRQHandler",
+        "metadata": {
+          "irq": "TIM2"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "TIM2_IRQHandler",
+          "metadata": {
+            "irq": "TIM2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0111",
+      "type_origin": "firmware_stm32",
+      "family": "adversarial_input",
+      "title": "USART2_IRQHandler rejects adversarial input",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0112",
+      "type_origin": "firmware_stm32",
+      "family": "boot_path",
+      "title": "USART2_IRQHandler on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0113",
+      "type_origin": "firmware_stm32",
+      "family": "concurrent_state",
+      "title": "USART2_IRQHandler is safe under concurrent access",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "concurrent_state_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrent_state: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "race_window_unprotected",
+        "lock_held_during_io",
+        "deadlock_two_resources",
+        "lost_update",
+        "double_free_or_release"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0114",
+      "type_origin": "firmware_stm32",
+      "family": "dependency_compromise",
+      "title": "USART2_IRQHandler robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0115",
+      "type_origin": "firmware_stm32",
+      "family": "dma_race",
+      "title": "USART2_IRQHandler handles CPU/DMA race",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "hardware_dma_engine",
+      "stimulus": {
+        "kind": "dma_race_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dma_race: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "cpu_reads_during_dma_write",
+        "no_cache_invalidate_before_read",
+        "no_cache_flush_before_dma",
+        "dma_buffer_freed_before_completion"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0116",
+      "type_origin": "firmware_stm32",
+      "family": "happy_path",
+      "title": "Happy path of USART2_IRQHandler",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0117",
+      "type_origin": "firmware_stm32",
+      "family": "hardware_failure",
+      "title": "USART2_IRQHandler handles hardware failure",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "hardware_failure_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for hardware_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_timeout_on_peripheral_wait",
+        "no_retry_or_degraded_mode",
+        "no_failure_indication_to_caller",
+        "infinite_loop_on_bus_error"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0118",
+      "type_origin": "firmware_stm32",
+      "family": "integer_overflow_in_size_calc",
+      "title": "USART2_IRQHandler no integer overflow in size calc",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0119",
+      "type_origin": "firmware_stm32",
+      "family": "interrupt_atomicity",
+      "title": "USART2_IRQHandler preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0120",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_bounds",
+      "title": "USART2_IRQHandler bounds-checked",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0121",
+      "type_origin": "firmware_stm32",
+      "family": "memory_safety_uaf",
+      "title": "USART2_IRQHandler no use-after-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0122",
+      "type_origin": "firmware_stm32",
+      "family": "partial_failure",
+      "title": "USART2_IRQHandler handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0123",
+      "type_origin": "firmware_stm32",
+      "family": "persistence_corruption",
+      "title": "USART2_IRQHandler survives persistence corruption",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "persistence_corruption_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for persistence_corruption: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_fsync_on_commit",
+        "torn_write_visible",
+        "no_checksum_on_record",
+        "rename_not_atomic",
+        "wal_truncated_silently"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0124",
+      "type_origin": "firmware_stm32",
+      "family": "power_glitch",
+      "title": "USART2_IRQHandler robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0125",
+      "type_origin": "firmware_stm32",
+      "family": "protocol_replay",
+      "title": "USART2_IRQHandler rejects replayed protocol message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for protocol_replay: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0126",
+      "type_origin": "firmware_stm32",
+      "family": "resource_limits",
+      "title": "USART2_IRQHandler respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0127",
+      "type_origin": "firmware_stm32",
+      "family": "side_channel",
+      "title": "USART2_IRQHandler resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for side_channel: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0128",
+      "type_origin": "firmware_stm32",
+      "family": "signal_integrity",
+      "title": "USART2_IRQHandler signal integrity / metastability",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "signal_integrity_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for signal_integrity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "metastability_on_async_crossing",
+        "no_cdc_synchroniser",
+        "setup_or_hold_time_violation",
+        "long_combinational_path"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0129",
+      "type_origin": "firmware_stm32",
+      "family": "suspend_resume",
+      "title": "USART2_IRQHandler across suspend/resume",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "power_event_source",
+      "stimulus": {
+        "kind": "suspend_resume_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for suspend_resume: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "state_not_persisted_before_suspend",
+        "interrupt_pending_lost_on_resume",
+        "peripheral_state_not_restored",
+        "race_on_wake_with_pending_work"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0130",
+      "type_origin": "firmware_stm32",
+      "family": "timing_constraint_violation",
+      "title": "USART2_IRQHandler respects timing constraints",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "timing_constraint_violation_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for timing_constraint_violation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "deadline_missed_under_load",
+        "isr_jitter_too_high",
+        "clock_constraint_unsatisfied",
+        "back_pressure_violates_deadline"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0131",
+      "type_origin": "firmware_stm32",
+      "family": "upgrade_migration",
+      "title": "USART2_IRQHandler survives upgrade/migration",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "ci_system",
+      "stimulus": {
+        "kind": "upgrade_migration_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for upgrade_migration: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_downgrade_path",
+        "partial_migration_state_unrecoverable",
+        "schema_assumption_drift_between_services",
+        "rollback_loses_data"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0132",
+      "type_origin": "firmware_stm32",
+      "family": "watchdog_misuse",
+      "title": "USART2_IRQHandler watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "Core/Src/stm32f4xx_it.c",
+        "line": 24,
+        "symbol": "USART2_IRQHandler",
+        "metadata": {
+          "irq": "USART2"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "USART2_IRQHandler",
+          "metadata": {
+            "irq": "USART2"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

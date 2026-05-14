@@ -1,0 +1,7 @@
+# fixture for firmware_espidf
+# Minimal ESP-IDF sdkconfig — triggers the firmware_espidf fingerprint
+# via primary_globs **/sdkconfig and the **/main.c disambiguator
+# (app_main, esp_event_handler).
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y

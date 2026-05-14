@@ -1,0 +1,16 @@
+# fixture for linux_kernel_tree
+# This file mimics the kernel's MAINTAINERS top-level index, which the
+# detect_software_type fingerprint uses as the primary glob.
+
+THE REST
+M:	Linus Torvalds <torvalds@linux-foundation.org>
+L:	linux-kernel@vger.kernel.org
+S:	Buried alive in reporters
+F:	*
+F:	*/
+
+FOO DRIVER
+M:	Fixture Maintainer <fixture@example.com>
+L:	linux-foo@vger.kernel.org
+S:	Maintained
+F:	drivers/foo/

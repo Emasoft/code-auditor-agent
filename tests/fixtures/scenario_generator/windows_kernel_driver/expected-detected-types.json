@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/windows_kernel_driver",
+  "detected_types": [
+    {
+      "type": "windows_kernel_driver",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.inf matches 1 file(s); first=foo.inf",
+        "disambig_content: foo.c matches one of ['DriverEntry', 'WdfDriverEntry', 'IO_STACK_LOCATION']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

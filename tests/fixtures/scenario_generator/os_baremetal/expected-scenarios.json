@@ -1,0 +1,2518 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/os_baremetal",
+    "detected_types": [
+      {
+        "type": "os_baremetal",
+        "confidence": 0.89,
+        "evidence": [
+          "**/linker.ld matches 1 file(s); first=linker.ld",
+          "disambig_content: kernel.c matches one of ['_start', 'kernel_main', 'void __attribute__((noreturn))']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "c"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "_start on boot path",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "_start robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of _start",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "_start preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "_start rejects malformed IPC message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "_start robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "_start setuid/setgid race-free",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "_start respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "_start prevents sandbox escape",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "_start avoids scheduler starvation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "_start watchdog usage is correct",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "entry.s",
+        "line": 15,
+        "symbol": "_start",
+        "metadata": {
+          "lang": "asm",
+          "role": "boot_label"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "_start",
+          "metadata": {
+            "lang": "asm",
+            "role": "boot_label"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "timer_irq on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "timer_irq robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of timer_irq",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "timer_irq preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "timer_irq rejects malformed IPC message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "timer_irq robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "timer_irq setuid/setgid race-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "timer_irq respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "timer_irq prevents sandbox escape",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "timer_irq avoids scheduler starvation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "timer_irq watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 20,
+        "symbol": "timer_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "timer_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "keyboard_irq on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "keyboard_irq robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of keyboard_irq",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "keyboard_irq preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "keyboard_irq rejects malformed IPC message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "keyboard_irq robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "keyboard_irq setuid/setgid race-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "keyboard_irq respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "keyboard_irq prevents sandbox escape",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "keyboard_irq avoids scheduler starvation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "keyboard_irq watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "entry.s",
+        "line": 24,
+        "symbol": "keyboard_irq",
+        "metadata": {
+          "lang": "asm",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "keyboard_irq",
+          "metadata": {
+            "lang": "asm",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "kernel_main on boot path",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "kernel_main robust to dependency compromise",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of kernel_main",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "kernel_main preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "kernel_main rejects malformed IPC message",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "kernel_main robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "kernel_main setuid/setgid race-free",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "kernel_main respects resource limits",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "kernel_main prevents sandbox escape",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "kernel_main avoids scheduler starvation",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "kernel_main watchdog usage is correct",
+      "entry_point": {
+        "kind": "boot_path",
+        "file": "kernel.c",
+        "line": 6,
+        "symbol": "kernel_main",
+        "metadata": {
+          "lang": "c",
+          "role": "kernel_entry"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "kernel_main",
+          "metadata": {
+            "lang": "c",
+            "role": "kernel_entry"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "page_fault_isr on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "page_fault_isr robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of page_fault_isr",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "page_fault_isr preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "page_fault_isr rejects malformed IPC message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "page_fault_isr robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "page_fault_isr setuid/setgid race-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "page_fault_isr respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "page_fault_isr prevents sandbox escape",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "page_fault_isr avoids scheduler starvation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "page_fault_isr watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 13,
+        "symbol": "page_fault_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "__attribute__((interrupt))"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "page_fault_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "__attribute__((interrupt))"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "os_baremetal",
+      "family": "boot_path",
+      "title": "timer_isr on boot path",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "bootloader",
+      "stimulus": {
+        "kind": "boot_path_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for boot_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "uninitialised_peripheral_used",
+        "stack_pointer_set_after_use",
+        "watchdog_not_serviced_during_long_init",
+        "no_brownout_safe_state"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "os_baremetal",
+      "family": "dependency_compromise",
+      "title": "timer_isr robust to dependency compromise",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "os_baremetal",
+      "family": "happy_path",
+      "title": "Happy path of timer_isr",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "os_baremetal",
+      "family": "interrupt_atomicity",
+      "title": "timer_isr preserves atomicity under interrupt",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "hardware_interrupt",
+      "stimulus": {
+        "kind": "interrupt_atomicity_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for interrupt_atomicity: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "isr_modifies_shared_without_lock",
+        "critical_section_not_irq_disabled",
+        "isr_yields_or_blocks",
+        "non_reentrant_function_called_from_isr"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "os_baremetal",
+      "family": "ipc_message_malformed",
+      "title": "timer_isr rejects malformed IPC message",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "ipc_message_malformed_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for ipc_message_malformed: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_length_validation",
+        "no_type_validation",
+        "trust_unsigned_peer",
+        "deserialization_of_untrusted_class"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "os_baremetal",
+      "family": "power_glitch",
+      "title": "timer_isr robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for power_glitch: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "os_baremetal",
+      "family": "race_in_setuid_or_setgid",
+      "title": "timer_isr setuid/setgid race-free",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "race_in_setuid_or_setgid_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for race_in_setuid_or_setgid: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "drop_privileges_after_action",
+        "file_op_between_check_and_use",
+        "saved_uid_not_dropped"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "os_baremetal",
+      "family": "resource_limits",
+      "title": "timer_isr respects resource limits",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "os_baremetal",
+      "family": "sandbox_escape",
+      "title": "timer_isr prevents sandbox escape",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "attacker_internal",
+      "stimulus": {
+        "kind": "sandbox_escape_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for sandbox_escape: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "permission_check_bypass",
+        "ipc_to_more_privileged_peer_unchecked",
+        "file_uri_leak_through_redirect",
+        "intent_hijack_or_url_scheme_takeover"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "os_baremetal",
+      "family": "scheduler_starvation",
+      "title": "timer_isr avoids scheduler starvation",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "os_scheduler",
+      "stimulus": {
+        "kind": "scheduler_starvation_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for scheduler_starvation: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "low_priority_task_never_runs",
+        "priority_inversion",
+        "leader_election_stuck",
+        "consumer_starved_by_producer"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "os_baremetal",
+      "family": "watchdog_misuse",
+      "title": "timer_isr watchdog usage is correct",
+      "entry_point": {
+        "kind": "isr_vector",
+        "file": "kernel.c",
+        "line": 19,
+        "symbol": "timer_isr",
+        "metadata": {
+          "lang": "c",
+          "marker": "suffix"
+        }
+      },
+      "actor_role": "watchdog",
+      "stimulus": {
+        "kind": "watchdog_misuse_default",
+        "value": {
+          "entry_point": "timer_isr",
+          "metadata": {
+            "lang": "c",
+            "marker": "suffix"
+          }
+        }
+      },
+      "intended_behaviour": "Default for watchdog_misuse: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "watchdog_disabled_during_critical_section",
+        "watchdog_petted_inside_a_hang",
+        "watchdog_reset_loses_state",
+        "watchdog_window_too_wide"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

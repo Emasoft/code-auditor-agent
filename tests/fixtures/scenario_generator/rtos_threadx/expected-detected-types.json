@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/rtos_threadx",
+  "detected_types": [
+    {
+      "type": "rtos_threadx",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.h \u2192 tx_user.h contains one of ['tx_api.h', 'tx_user.h']",
+        "**/*.c \u2192 main.c contains one of ['tx_thread_create(', 'tx_kernel_enter(']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

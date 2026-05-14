@@ -1,0 +1,44 @@
+; fixture for windows_kernel_driver
+; Minimal Windows kernel-mode driver install file.
+
+[Version]
+Signature  = "$Windows NT$"
+Class      = System
+ClassGuid  = {4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider   = %Manufacturer%
+DriverVer  = 01/01/2026, 1.0.0.0
+CatalogFile = foo.cat
+
+[Manufacturer]
+%Manufacturer% = Foo, NTamd64
+
+[Foo.NTamd64]
+%Foo.DeviceDesc% = Foo_Install, Root\Foo
+
+[Foo_Install.NT]
+CopyFiles = Foo.CopyFiles
+
+[Foo_Install.NT.Services]
+AddService = foo, 0x00000002, Foo.Service
+
+[Foo.Service]
+DisplayName    = %Foo.SvcDesc%
+ServiceType    = 1 ; SERVICE_KERNEL_DRIVER
+StartType      = 3 ; SERVICE_DEMAND_START
+ErrorControl   = 1 ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\foo.sys
+
+[Foo.CopyFiles]
+foo.sys
+
+[SourceDisksFiles]
+foo.sys = 1
+
+[SourceDisksNames]
+1 = %DiskId1%
+
+[Strings]
+Manufacturer      = "Fixture Inc."
+Foo.DeviceDesc    = "Foo Test Device"
+Foo.SvcDesc       = "Foo Test Driver"
+DiskId1           = "Foo Installation Disk"

@@ -1,0 +1,27 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/desktop_qt",
+  "detected_types": [
+    {
+      "type": "desktop_qt",
+      "confidence": 0.89,
+      "evidence": [
+        "**/CMakeLists.txt \u2192 CMakeLists.txt contains one of ['find_package(Qt6', 'find_package(Qt5']",
+        "**/*.pro \u2192 demo_qt.pro contains one of ['QT +=', 'QT +=']",
+        "disambig_content: MainWindow.cpp matches one of ['QApplication', 'QMainWindow']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c",
+    "cpp"
+  ]
+}

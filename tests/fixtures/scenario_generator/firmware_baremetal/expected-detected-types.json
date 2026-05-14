@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_baremetal",
+  "detected_types": [
+    {
+      "type": "firmware_baremetal",
+      "confidence": 0.89,
+      "evidence": [
+        "**/startup.S matches 1 file(s); first=startup.S",
+        "**/*.ld \u2192 link.ld contains one of ['MEMORY', '.text', '.bss']",
+        "disambig_content: main.c matches one of ['_start', 'Reset_Handler', 'void __attribute__((interrupt))']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

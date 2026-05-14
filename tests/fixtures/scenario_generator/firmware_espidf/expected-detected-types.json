@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/firmware_espidf",
+  "detected_types": [
+    {
+      "type": "firmware_espidf",
+      "confidence": 0.89,
+      "evidence": [
+        "**/sdkconfig matches 1 file(s); first=sdkconfig",
+        "disambig_content: main/main.c matches one of ['app_main(', 'esp_event_handler']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

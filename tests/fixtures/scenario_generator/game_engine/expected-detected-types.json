@@ -1,0 +1,26 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/game_engine",
+  "detected_types": [
+    {
+      "type": "game_engine",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.cpp \u2192 src/Engine.cpp contains one of ['class Renderer', 'SceneGraph', 'ShaderCompiler']",
+        "**/*.h \u2192 src/Engine.h contains one of ['class Renderer', 'SceneGraph', 'ShaderCompiler']"
+      ]
+    },
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/CMakeLists.txt matches 1 file(s); first=CMakeLists.txt"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c",
+    "cpp"
+  ]
+}

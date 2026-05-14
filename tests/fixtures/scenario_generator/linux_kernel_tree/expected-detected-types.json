@@ -1,0 +1,25 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/linux_kernel_tree",
+  "detected_types": [
+    {
+      "type": "library_c",
+      "confidence": 0.85,
+      "evidence": [
+        "**/Makefile matches 1 file(s); first=Makefile"
+      ]
+    },
+    {
+      "type": "linux_kernel_tree",
+      "confidence": 0.85,
+      "evidence": [
+        "MAINTAINERS matches 1 file(s); first=MAINTAINERS",
+        "Kconfig \u2192 Kconfig contains one of ['source', 'config', 'menuconfig']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c"
+  ]
+}

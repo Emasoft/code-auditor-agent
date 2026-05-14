@@ -1,0 +1,24 @@
+{
+  "$comment": "fixture for desktop_tauri",
+  "build": {
+    "devPath": "../src",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "demo-tauri-app",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "com.example.demo-tauri-app"
+    },
+    "windows": [
+      {
+        "title": "Demo Tauri",
+        "width": 800,
+        "height": 600
+      }
+    ]
+  }
+}
