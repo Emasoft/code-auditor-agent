@@ -14,8 +14,7 @@ the canonical artefact for IMPLEMENTATION decisions is this TRDD).
 
 > "continue and complete the remaining phases. then examine the
 > collection of review skills here and extract all significant ideas
-> that can improve our plugin: `/Users/emanuelesabetta/Code/
-> EMASOFT-CODE-AUDITOR-AGENT/skills_dev/PR-Review-Skills`"
+> that can improve our plugin: `<workspace>/skills_dev/PR-Review-Skills`"
 
 Extraction is done. This TRDD captures the SUBSET of extracted ideas
 that are highest-ROI (HIGH impact / LOW or MEDIUM effort) and turns

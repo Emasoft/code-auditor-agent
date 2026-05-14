@@ -173,6 +173,8 @@ Write your main findings to `REPORT_PATH` in this exact format:
 
 ### [SR-P1-001] {Title}
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** {breaking-change|ux-concern|missing-implementation|consistency|security|design}
 - **Description:** {Clear explanation of what's wrong}
 - **Evidence:** {file:line with code snippet}
@@ -182,12 +184,26 @@ Write your main findings to `REPORT_PATH` in this exact format:
 ## SHOULD-FIX
 
 ### [SR-P1-002] {Title}
-...
+- **Severity:** SHOULD-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {breaking-change|ux-concern|missing-implementation|consistency|security|design}
+- **Description:** {Clear explanation of what's wrong}
+- **Evidence:** {file:line with code snippet}
+- **Impact:** {What breaks or what users experience}
+- **Recommendation:** {How to fix it}
 
 ## NIT
 
 ### [SR-P1-003] {Title}
-...
+- **Severity:** NIT
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {breaking-change|ux-concern|missing-implementation|consistency|security|design}
+- **Description:** {Clear explanation of what's wrong}
+- **Evidence:** {file:line with code snippet}
+- **Impact:** {What breaks or what users experience}
+- **Recommendation:** {How to fix it}
 
 ## CLEAN
 
@@ -259,6 +275,19 @@ What's good enough as-is? What are the risks of merging vs not merging?}
    missing error handling, missing validation, missing tests.
 6. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] skeptical-review - Verdict: {verdict}, {N} issues ({M} must-fix). Report: {path}`
+7. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+8. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent after Phase 2 for holistic review.

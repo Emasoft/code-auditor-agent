@@ -184,6 +184,9 @@ When merging duplicate findings:
 
 ### [MF-001] {title}
 **File:** {file}:{line}
+**Severity:** MUST-FIX
+**Confidence:** {HIGH | MEDIUM | LOW}
+**Layer:** {mechanical | structural | narrative}
 **Original IDs:** {original_ids}
 **Phases:** {CC, CV, SR, SC — which phases caught this}
 {description}
@@ -230,6 +233,10 @@ When merging duplicate findings:
 - All counts = 0 → `APPROVE — No significant issues found.`
 - RECORD_KEEPING items are preserved as-is in the report but do NOT factor into the pass/fail verdict. They are informational observations (e.g., documentation gaps, naming conventions) that should be tracked but do not block approval.
 
+## Confidence merge rule
+
+When two findings about the same line are merged, use the HIGHEST confidence of the two.
+
 ## Edge Cases Reference
 
 ### Same Line, Different Bugs → KEEP BOTH
@@ -266,6 +273,22 @@ Phase 1: lib/auth.ts:42 — SHOULD-FIX "Missing null check"
 Phase 3: lib/auth.ts:42 — MUST-FIX "Missing null check allows crash"
 → MERGE into MUST-FIX (higher severity wins).
 ```
+
+## CRITICAL RULES
+
+1. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+2. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 ## REPORTING RULES
 - Write ALL detailed output to the OUTPUT_PATH file

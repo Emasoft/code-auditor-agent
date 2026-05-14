@@ -138,16 +138,18 @@ Write your findings to `REPORT_PATH` in this exact format:
 **Date:** {ISO timestamp}
 
 ## Completed
-- TODO-{X}: {brief description} — DONE
-- TODO-{Y}: {brief description} — DONE
+- TODO-{X}: {brief description} — DONE [Confidence: {HIGH|MEDIUM|LOW}] [Layer: {mechanical|structural|narrative}]
+- TODO-{Y}: {brief description} — DONE [Confidence: {HIGH|MEDIUM|LOW}] [Layer: {mechanical|structural|narrative}]
 
 ## Failed
-- TODO-{Z}: {brief description} — FAILED: {reason}
+- TODO-{Z}: {brief description} — FAILED: {reason} [Confidence: {HIGH|MEDIUM|LOW}] [Layer: {mechanical|structural|narrative}]
 
 ## Verification
 - {file}: re-read OK, no syntax errors
 - {file}: re-read ISSUE: {description of syntax/import problem found}
 ```
+
+**Note:** Input TODO entries are EXPECTED to carry `Confidence:` and `Layer:` fields (added by the upstream finding-emitting agents per the F-004 + F-001 schema). When emitting your disposition report, preserve those fields from each TODO so downstream verifiers and triagers retain the calibration/classification metadata. If a TODO arrives without these fields, copy them as `Confidence: MEDIUM` and `Layer: structural` (the safe defaults).
 
 ## CHECKPOINT FORMAT
 
@@ -197,6 +199,21 @@ crash recovery works at the individual TODO level.
 
 7. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] fix-{domain} - {completed}/{total} TODOs applied, {failed} failed. Report: {path}`
+
+8. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+
+9. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent to apply 3 TODOs to server files.

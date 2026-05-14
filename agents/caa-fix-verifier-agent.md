@@ -144,6 +144,8 @@ Write your findings to `REPORT_PATH` in this exact format:
 ### [FV-S{severity}-{PREFIX}-001] {title}
 - **File:** {path}:{line}
 - **Type:** TODO-not-applied / Regression / Incomplete-fix
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Description:** {what is still wrong}
 - **Evidence:** {code snippet showing the issue}
 - **Suggested fix:** {what should be done to resolve}
@@ -181,6 +183,21 @@ When this agent reports remaining issues or regressions, the orchestrator MUST c
 
 6. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] verify-{domain} - {PASS/FAIL}, {N}/{M} TODOs verified, {R} regressions. Report: {path}`
+
+7. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+
+8. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent to verify fixes applied to server files.

@@ -133,6 +133,8 @@ Write your findings to `REPORT_PATH` in this exact format:
 ### [CC-P1-A0-001] {Brief title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** {type-safety|logic|security|api-contract|race-condition|shell}
 - **Description:** {What's wrong}
 - **Evidence:** {Code snippet showing the bug}
@@ -141,12 +143,26 @@ Write your findings to `REPORT_PATH` in this exact format:
 ## SHOULD-FIX
 
 ### [CC-P1-A0-002] {Brief title}
-...
+- **File:** {path}:{line}
+- **Severity:** SHOULD-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {type-safety|logic|security|api-contract|race-condition|shell}
+- **Description:** {What's wrong}
+- **Evidence:** {Code snippet showing the bug}
+- **Fix:** {What should be done}
 
 ## NIT
 
 ### [CC-P1-A0-003] {Brief title}
-...
+- **File:** {path}:{line}
+- **Severity:** NIT
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {type-safety|logic|security|api-contract|race-condition|shell}
+- **Description:** {What's wrong}
+- **Evidence:** {Code snippet showing the bug}
+- **Fix:** {What should be done}
 
 ## CLEAN
 
@@ -164,6 +180,19 @@ Files with no issues found:
 5. **Show evidence.** Include the actual code snippet that demonstrates the bug.
 6. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] correctness-{domain} - {N} issues ({M} must-fix). Report: {path}`
+7. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+8. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent to audit messaging domain files.

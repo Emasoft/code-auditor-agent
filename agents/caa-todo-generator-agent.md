@@ -132,6 +132,9 @@ Each TODO entry must follow this exact format:
 - **File:** {path}
 - **Lines:** {start}-{end}
 - **Priority:** P1/P2/P3
+- **Severity:** {MUST-FIX | SHOULD-FIX | NIT}
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Source:** {consolidation finding ID, e.g. [CA-networking-003]}
 - **Depends on:** TODO-{X} or "None"
 - **Category:** {violation type}
@@ -157,6 +160,9 @@ the clearest framing when writing the patch.
 - **File:** {path}
 - **Lines:** {start}-{end}
 - **Priority:** P1/P2/P3
+- **Severity:** {MUST-FIX | SHOULD-FIX | NIT}
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Source:** {consolidation finding ID}
 - **Category:** scenario_divergence + unguarded_assumption + line  (when multi)
 - **Severity rationale:** MAX of {line:MAJOR, scenario:MAJOR, assumption:MINOR}
@@ -223,6 +229,10 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
 {text description of which TODOs depend on which, formatted as a list}
 ```
 
+## Layer-based TODO priority
+
+Order generated TODOs by Layer: Structural findings first, then Narrative, then Mechanical (since Mechanical should be caught by CI). Within each layer, order by Severity DESC.
+
 ## CRITICAL RULES
 
 1. **Every TODO must have file:line.** If the consolidated report does not include line numbers,
@@ -238,6 +248,19 @@ Write the TODO file to `OUTPUT_PATH` in this exact format:
 6. **Numbering uses priority-prefixed sequential IDs.** P1 items use `{PREFIX}-P1-001`, `{PREFIX}-P1-002`, ...; P2 items use `{PREFIX}-P2-001`, `{PREFIX}-P2-002`, ...; P3 items use `{PREFIX}-P3-001`, `{PREFIX}-P3-002`, .... This gives unlimited items per priority level and clear visual grouping.
 7. **Minimal report to orchestrator.** Write full details to the TODO file. Return to the
    orchestrator ONLY: `[DONE] todo-gen-{scope} - {N} TODOs (P1:{n}, P2:{n}, P3:{n}). File: {path}`
+8. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+9. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent to generate TODOs from a consolidated AMCOS report.

@@ -191,6 +191,8 @@ Write your findings to `OUTPUT_PATH` in this exact format:
 ### [CA-{DOMAIN}-001] {Brief title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** {violation category}
 - **Description:** {What's wrong}
 - **Evidence:** {Actual code snippet}
@@ -202,17 +204,39 @@ Write your findings to `OUTPUT_PATH` in this exact format:
 ## SHOULD-FIX
 
 ### [CA-{DOMAIN}-002] {Brief title}
-...
+- **File:** {path}:{line}
+- **Severity:** SHOULD-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {violation category}
+- **Description:** {What's wrong}
+- **Evidence:** {Actual code snippet}
+- **Reference rule:** {Which rule this violates}
+- **Fix:** {What should be done}
+- **Source reports:** {which input reports identified this}
+- **Harmonization note:** {if severity was changed, explain why}
 
 ## NIT
 
 ### [CA-{DOMAIN}-003] {Brief title}
-...
+- **File:** {path}:{line}
+- **Severity:** NIT
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {violation category}
+- **Description:** {What's wrong}
+- **Evidence:** {Actual code snippet}
+- **Reference rule:** {Which rule this violates}
+- **Fix:** {What should be done}
+- **Source reports:** {which input reports identified this}
+- **Harmonization note:** {if severity was changed, explain why}
 
 ## RECORD_KEEPING (PRESERVE)
 
 ### [CA-{DOMAIN}-RK-001] {Brief title}
 - **File:** {path}:{line}
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** RECORD_KEEPING
 - **Description:** {What it is and why it should be preserved}
 - **Evidence:** {Actual code snippet}
@@ -232,6 +256,14 @@ Columns: **Finding** = file:line:type key; **Reports** = source reports that ide
 | {file:line:type} | {report1, report2} | {MUST-FIX} | {DA-P1-A0-003, DA-P1-A2-007} | {merged evidence / harmonized} |
 ```
 
+## Confidence filtering
+
+Findings with Confidence: LOW MUST be downgraded one severity level (MUST-FIX → SHOULD-FIX, SHOULD-FIX → NIT). Findings with Confidence: LOW AND Severity: NIT MUST be dropped UNLESS they are security findings.
+
+## Layer grouping
+
+Group findings in the consolidated report under three top-level sections in this order: ## Structural Findings, ## Narrative Findings, ## Mechanical Findings. Within each section, sort by Severity DESC then File ASC.
+
 ## CRITICAL RULES
 
 1. **Max 5 input reports.** Refuse and return error if more than 5 are provided.
@@ -244,6 +276,19 @@ Columns: **Finding** = file:line:type key; **Reports** = source reports that ide
    override another report's finding for the same file.
 7. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] consolidate-{DOMAIN_NAME} - {N} unique violations ({M} must-fix), {K} record-keeping, {D} duplicates removed. Report: {path}`
+8. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+9. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 ## LESSONS LEARNED
 

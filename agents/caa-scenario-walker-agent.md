@@ -278,6 +278,10 @@ Schema:
 
 ### F-<id> [<SEVERITY>] <short description>
 
+**Confidence:** <HIGH | MEDIUM | LOW>
+
+**Layer:** <mechanical | structural | narrative>
+
 **Divergence type:** <one of: missing_step | wrong_step_order |
 invariant_violation | failure_mode_present | outcome_mismatch |
 feedback_mismatch>
@@ -308,6 +312,22 @@ found.")
 
 Summary count: <N> CRITICAL · <N> MAJOR · <N> MINOR · <N> NIT
 ```
+
+## CRITICAL RULES
+
+1. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+2. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 ## REPORTING RULES (when you're done)
 

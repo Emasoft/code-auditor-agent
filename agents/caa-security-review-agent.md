@@ -284,6 +284,8 @@ Write your main findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.
 ### [SC-P1-001] {Title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** {injection|auth-bypass|secrets-exposure|crypto-failure|misconfig|vuln-dependency|race-condition|info-disclosure}
 - **OWASP:** {A01-A10 reference}
 - **CWE:** {CWE-ID if applicable}
@@ -296,12 +298,34 @@ Write your main findings to `{REPORT_DIR}/caa-security-P{PASS}-R{RUN_ID}-{UUID}.
 ## SHOULD-FIX
 
 ### [SC-P1-002] {Title}
-...
+- **File:** {path}:{line}
+- **Severity:** SHOULD-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {injection|auth-bypass|secrets-exposure|crypto-failure|misconfig|vuln-dependency|race-condition|info-disclosure}
+- **OWASP:** {A01-A10 reference}
+- **CWE:** {CWE-ID if applicable}
+- **Description:** {What's vulnerable}
+- **Attack Scenario:** {How an attacker would exploit this}
+- **Evidence:** {Code snippet showing the vulnerability}
+- **Fix:** {Specific remediation steps}
+- **References:** {Links to relevant security guidance}
 
 ## NIT
 
 ### [SC-P1-003] {Title}
-...
+- **File:** {path}:{line}
+- **Severity:** NIT
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
+- **Category:** {injection|auth-bypass|secrets-exposure|crypto-failure|misconfig|vuln-dependency|race-condition|info-disclosure}
+- **OWASP:** {A01-A10 reference}
+- **CWE:** {CWE-ID if applicable}
+- **Description:** {What's vulnerable}
+- **Attack Scenario:** {How an attacker would exploit this}
+- **Evidence:** {Code snippet showing the vulnerability}
+- **Fix:** {Specific remediation steps}
+- **References:** {Links to relevant security guidance}
 
 ## Exploit Chain Analysis
 
@@ -343,6 +367,19 @@ Files with no security issues found:
 7. **Check dependencies.** Use `Bash` to run osv-scanner, pip-audit, or npm audit on lockfiles. Inspect pyproject.toml, requirements.txt, package.json for known vulnerable versions. Use `gh api` for GitHub security advisories.
 8. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] security-{domain} - {N} issues ({M} must-fix). Report: {path}`
+9. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+10. **Layer classification:** Every finding MUST include a `Layer:`
+    field with one of `mechanical` (lint/format/type/dep — should be
+    caught by CI), `structural` (correctness/security/architecture/
+    integration/perf/testing — primary CAA value), or `narrative`
+    (PR description accuracy, linked-issue match, migration docs).
+    When in doubt, default to `structural`.
 
 <example>
 Context: Orchestrator spawns this agent to audit API routes for security.

@@ -119,6 +119,8 @@ Write your findings to `REPORT_PATH` in this exact format:
 ### [DA-{PASS}-{AGENT_SUFFIX}-001] {Brief title}
 - **File:** {path}:{line}
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Category:** {HARDCODED_API|HARDCODED_GOVERNANCE|DIRECT_DEPENDENCY|HARDCODED_PATH|MISSING_ABSTRACTION}
 - **Description:** {What's wrong}
 - **Evidence:** {Actual code snippet showing the violation}
@@ -163,6 +165,19 @@ Files with no violations found:
 7. **One finding per issue.** Don't combine multiple violations into one finding.
 8. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] audit-{SCOPE}-{PASS} - {N} violations ({M} must-fix, {K} record-keeping). Report: {path}`
+9. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+10. **Layer classification:** Every finding MUST include a `Layer:`
+    field with one of `mechanical` (lint/format/type/dep — should be
+    caught by CI), `structural` (correctness/security/architecture/
+    integration/perf/testing — primary CAA value), or `narrative`
+    (PR description accuracy, linked-issue match, migration docs).
+    When in doubt, default to `structural`.
 
 ## LESSONS LEARNED
 

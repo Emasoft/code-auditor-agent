@@ -146,6 +146,8 @@ Write your findings to `REPORT_PATH` in this exact format:
 ### [CV-P1-001] Claim: "{exact quote from PR description}"
 - **Source:** PR description, section "{section}"
 - **Severity:** MUST-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Verification:** NOT IMPLEMENTED
 - **Expected:** {What the claim says should happen}
 - **Actual:** {What the code actually does}
@@ -156,6 +158,9 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ### [CV-P1-002] Claim: "{exact quote}"
 - **Source:** ...
+- **Severity:** SHOULD-FIX
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Verification:** PARTIALLY IMPLEMENTED
 - **What works:** {part that's implemented}
 - **What's missing:** {part that's not}
@@ -165,6 +170,8 @@ Write your findings to `REPORT_PATH` in this exact format:
 
 ### [CV-P1-003] {Title}
 - **Severity:** {MUST-FIX|SHOULD-FIX}
+- **Confidence:** {HIGH | MEDIUM | LOW}
+- **Layer:** {mechanical | structural | narrative}
 - **Files affected:** {list}
 - **Expected:** {consistent value}
 - **Found:** {inconsistent values with file:line for each}
@@ -193,6 +200,19 @@ Write your findings to `REPORT_PATH` in this exact format:
    experiment. Report the results, not the hypothesis.
 7. **Minimal report to orchestrator.** Write full details to the report file. Return to the
    orchestrator ONLY: `[DONE] claim-verification - {N} claims, {M} failed, {K} partial. Report: {path}`
+8. **Confidence calibration:** Every finding MUST include a
+   `Confidence:` field with one of HIGH (directly supported by
+   code/tests/config — safe to assert), MEDIUM (strongly suggested
+   by evidence but one runtime assumption hidden), LOW (a risk to
+   verify — phrase as a question, not an assertion). LOW-confidence
+   findings MUST begin with "May ", "Possibly ", "Verify whether ",
+   or end with a question mark.
+9. **Layer classification:** Every finding MUST include a `Layer:`
+   field with one of `mechanical` (lint/format/type/dep — should be
+   caught by CI), `structural` (correctness/security/architecture/
+   integration/perf/testing — primary CAA value), or `narrative`
+   (PR description accuracy, linked-issue match, migration docs).
+   When in doubt, default to `structural`.
 
 ## COMMON PATTERNS OF CLAIM FAILURE
 
