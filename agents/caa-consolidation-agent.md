@@ -50,6 +50,17 @@ harmonization, and completeness — not re-auditing.
 
 Other agents in the pipeline handle auditing and verification. You handle consolidation only.
 
+## BLOCKER short-circuit
+
+If any input report contains a BLOCKER finding (typically from caa-claim-verification-agent when functional completeness has failed), the consolidation agent MUST:
+
+a. Place a top-level `# BLOCKER` section AT THE START of the consolidated report containing all BLOCKER findings verbatim.
+b. Skip the normal consolidation of MUST-FIX/SHOULD-FIX/NIT findings — they are not actionable until the BLOCKER is resolved.
+c. Append a brief explanation: 'Downstream agents were not run. Resolve the BLOCKER (typically by addressing the unmet linked-issue acceptance criteria) and re-run the audit.'
+d. Set the consolidated report's `recommendation:` field (if present) to `REQUEST_CHANGES`.
+
+BLOCKER findings are identifiable by: title starting with 'BLOCKER:', or `Category: functional-completeness`, or an explicit `blocker: true` field.
+
 ## INPUT FORMAT
 
 You will receive:
@@ -172,6 +183,10 @@ Write your findings to `OUTPUT_PATH` in this exact format:
 **Input reports:** {comma-separated filenames}
 **Reference standard:** {REFERENCE_STANDARD filename}
 **Date:** {ISO timestamp}
+
+# BLOCKER (if any)
+
+{If any input report contains a BLOCKER finding, list each BLOCKER verbatim here AT THE START of the report. Then include the explanation: "Downstream agents were not run. Resolve the BLOCKER (typically by addressing the unmet linked-issue acceptance criteria) and re-run the audit." Set `recommendation: REQUEST_CHANGES`. Omit this section entirely if no BLOCKER findings are present.}
 
 ## Summary
 

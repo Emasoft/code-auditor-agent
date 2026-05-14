@@ -62,6 +62,13 @@ parameters:
     description: Inside extended mode, disable the assumption-auditor swarm (keep scenario walker only)
     required: false
     default: "false"
+  - name: skip-linked-issue
+    description: >
+      Skip the linked-issue verification step in caa-claim-verification-agent.
+      Use when `gh` is not authenticated or when the PR has no associated
+      GitHub issues.
+    required: false
+    default: "false"
 ---
 
 # Codebase Audit & Fix
@@ -78,6 +85,10 @@ This command launches the `caa-codebase-audit-and-fix-skill` skill pipeline.
 # Extended review — adds scenario walker + assumption auditor (TRDD-6857f67f)
 /audit-codebase --scope ./plugins/my-plugin --standard ./docs/compliance-rules.md --extended
 ```
+
+**When to use:** When auditing a GitHub PR, the linked-issue verification step
+automatically extracts `Fixes #NNN` references from the PR description and
+checks the issue's acceptance criteria against the diff.
 
 **Normal vs extended (TRDD-6857f67f §4.0):**
 
@@ -123,6 +134,16 @@ too many false positives, disabling one branch helps localize the noise.
 10. **Phase 7** (if `--fix`): Verifies fixes, loops if regressions found
 11. **Phase 8**: Final merged report
 - When `--worktrees` is enabled, each agent swarm runs in isolated git worktrees. Fix agent branches are merged back sequentially after completion.
+
+**NOTE (BLOCKER short-circuit):** If caa-claim-verification-agent emits a BLOCKER
+(functional completeness failed), the orchestrator MUST skip all downstream
+phases (Phase 2..N) and emit a final report containing only the BLOCKER and
+the original claim-verification output. The user can re-run with the BLOCKER
+acknowledged after the PR author addresses the unmet criteria.
+
+The `--skip-linked-issue` flag bypasses the linked-issue verification sub-step
+within caa-claim-verification-agent but does NOT disable the BLOCKER
+short-circuit for other claim-verification failures.
 
 ## Reports
 
