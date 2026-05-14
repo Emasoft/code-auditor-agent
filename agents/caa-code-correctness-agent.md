@@ -116,6 +116,30 @@ For each file, systematically check:
 - [ ] Error paths tested (not just happy path)
 - [ ] Regression test for any fixed bug
 
+## AGENT-WRITTEN CODE SUB-CHECKLIST
+
+The AWC (Agent-Written Code) sub-checklist below targets failure modes characteristic of code authored by AI coding assistants.
+
+This sub-checklist activates when EITHER condition is met:
+- The orchestrator passed `--agent-written-code` (explicit opt-in), OR
+- Auto-detection: the PR description mentions any of: Claude, Codex, Cursor, Copilot, GPT-4, GPT-5, Gemini, Aider, Continue, Cline; OR the PR author handle matches `*[bot]` (claude[bot], copilot[bot], etc.); OR a commit message in the PR contains 'Co-authored-by: claude' / 'Co-authored-by: codex' / similar.
+
+When active, audit EACH changed file for these characteristic agent-written failures:
+
+1. **Invented APIs** — function/method/import/attribute that does not exist in the named library version. Cross-reference imports against the actual installed package (use `find_referencing_symbols` if available; otherwise check the import path resolves to a real file). Flag as Category: invented-api, Confidence: HIGH if confirmed nonexistent, MEDIUM if version-uncertain.
+
+2. **Fake test coverage** — tests that mock the function under test, tests with no assertions, tests with assertions that always pass (e.g., `assert True`, `assert x == x`, `assert isinstance(x, object)`), tests that catch all exceptions and return success regardless. Flag as Category: fake-test-coverage.
+
+3. **Comment-vs-code contradiction** — a comment or docstring describes behavior the code does NOT implement (e.g., 'returns 0 on error' but function raises; 'thread-safe' but uses non-atomic ops; 'O(1) lookup' but uses linear search). Flag as Category: comment-contradiction.
+
+4. **Edits outside requested scope** — file changes far from what the PR description says it changed (e.g., PR titled 'fix typo in README' that also rewrites database layer). Flag as Category: scope-creep.
+
+5. **Stale library usage** — calling deprecated APIs that were valid in older agent training data but warned/removed in current versions (e.g., `pkg_resources` vs `importlib.metadata`; React class components vs hooks; `np.bool` vs `bool`; deprecated SQLAlchemy 1.x API in a 2.x codebase). Flag as Category: stale-library.
+
+6. **Plausible-but-incorrect logic** — off-by-one in slicing/ranges; swapped operand order (e.g., `divide(a, b)` called with `divide(b, a)`); inverted boolean conditions (`if x is None` vs `if x is not None`); reversed comparison operators. These require careful tracing — flag as Category: incorrect-logic with Confidence: HIGH only if traced, MEDIUM otherwise.
+
+When NONE of these patterns trigger but the agent-written-code mode is active, emit one positive note: 'Agent-written code passes the AWC sub-checklist.' This gives calibration.
+
 ## OUTPUT FORMAT
 
 Write your findings to `REPORT_PATH` in this exact format:
@@ -193,6 +217,7 @@ Files with no issues found:
    integration/perf/testing — primary CAA value), or `narrative`
    (PR description accuracy, linked-issue match, migration docs).
    When in doubt, default to `structural`.
+9. **Agent-written code mode**: When this mode is active (either via `--agent-written-code` flag or auto-detection), the AWC sub-checklist runs IN ADDITION to all other checklists; it does not replace them. All AWC findings carry `Category:` from the AWC taxonomy above and `Layer: structural` (unless they are specifically about test files, in which case `Category: fake-test-coverage` and `Layer: structural`).
 
 <example>
 Context: Orchestrator spawns this agent to audit messaging domain files.

@@ -69,6 +69,21 @@ parameters:
       GitHub issues.
     required: false
     default: "false"
+  - name: agent-written-code
+    description: >
+      Explicitly enable the agent-written code sub-checklist in
+      caa-code-correctness-agent. The orchestrator also AUTO-DETECTS this mode
+      when the PR description mentions Claude/Codex/Cursor/Copilot/GPT-N/Gemini/Aider/Continue/Cline;
+      or when the PR author matches `*[bot]` (e.g., claude[bot], copilot[bot]);
+      or when a commit in the PR has `Co-authored-by: claude` or similar. To
+      FORCE-DISABLE the mode, use the inverse `--no-agent-written-code` flag.
+    required: false
+    default: "false"
+  - name: no-agent-written-code
+    description: >
+      Disable agent-written code detection even if auto-detection would trigger.
+    required: false
+    default: "false"
 ---
 
 # Codebase Audit & Fix
@@ -144,6 +159,27 @@ acknowledged after the PR author addresses the unmet criteria.
 The `--skip-linked-issue` flag bypasses the linked-issue verification sub-step
 within caa-claim-verification-agent but does NOT disable the BLOCKER
 short-circuit for other claim-verification failures.
+
+**NOTE (agent-written code detection in Phase 1):** The orchestrator MUST check
+three conditions before invoking caa-code-correctness-agent: (a) explicit
+`--agent-written-code`, (b) `--no-agent-written-code` (force off), (c)
+auto-detection from PR description / author / co-authored-by. The agent
+invocation should set the `AGENT_WRITTEN_CODE_MODE` environment variable or
+equivalent parameter to true/false accordingly.
+
+Auto-detection precedence (highest to lowest):
+1. `--no-agent-written-code` — force OFF regardless of other signals
+2. `--agent-written-code` — force ON regardless of auto-detection
+3. Auto-detection signals:
+   - PR description mentions Claude / Codex / Cursor / Copilot / GPT-N /
+     Gemini / Aider / Continue / Cline
+   - PR author matches `*[bot]` pattern (claude[bot], copilot[bot], etc.)
+   - Any commit in the PR has `Co-authored-by: claude` or similar agent
+     attribution trailer
+
+When `AGENT_WRITTEN_CODE_MODE=true`, caa-code-correctness-agent activates the
+agent-written code sub-checklist (over-engineering, hallucinated APIs, drift
+from spec, etc.) in addition to its normal correctness checks.
 
 ## Reports
 
