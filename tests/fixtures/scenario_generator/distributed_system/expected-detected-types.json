@@ -1,0 +1,21 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/distributed_system",
+  "detected_types": [
+    {
+      "type": "distributed_system",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.go \u2192 raft.go contains one of ['appendEntries', 'requestVote', 'proposeValue']",
+        "**/*.rs \u2192 raft.rs contains one of ['appendEntries', 'request_vote', 'propose_value']",
+        "**/*.java \u2192 Raft.java contains one of ['appendEntries', 'requestVote']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "go",
+    "java",
+    "rust"
+  ]
+}

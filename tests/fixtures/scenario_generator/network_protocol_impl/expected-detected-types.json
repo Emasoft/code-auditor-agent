@@ -1,0 +1,21 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/network_protocol_impl",
+  "detected_types": [
+    {
+      "type": "network_protocol_impl",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.c \u2192 decoder.c contains one of ['parse_packet', 'encode_packet', 'packet_header']",
+        "**/*.rs \u2192 decoder.rs contains one of ['parse_packet', 'PacketHeader']",
+        "**/*.go \u2192 decoder.go contains one of ['parsePacket', 'PacketHeader']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c",
+    "go",
+    "rust"
+  ]
+}

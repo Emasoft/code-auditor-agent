@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/webgl_three",
+  "detected_types": [
+    {
+      "type": "webgl_three",
+      "confidence": 0.89,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"three\":', '\"@react-three/fiber\":']",
+        "disambig_content: scene.ts matches one of ['WebGLRenderer', 'Scene(']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "typescript"
+  ]
+}

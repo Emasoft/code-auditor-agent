@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/crypto_library",
+  "detected_types": [
+    {
+      "type": "crypto_library",
+      "confidence": 0.89,
+      "evidence": [
+        "**/Cargo.toml \u2192 Cargo.toml contains one of ['aes', 'rsa', 'ed25519', 'hkdf', 'x25519']",
+        "**/go.mod \u2192 go.mod contains one of ['crypto/aes', 'crypto/rsa', 'crypto/ed25519']",
+        "disambig_content: src/crypto.rs matches one of ['constant_time', 'subtle::']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "rust"
+  ]
+}

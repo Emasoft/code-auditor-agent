@@ -1,0 +1,2895 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/crypto_library",
+    "detected_types": [
+      {
+        "type": "crypto_library",
+        "confidence": 0.89,
+        "evidence": [
+          "**/Cargo.toml \u2192 Cargo.toml contains one of ['aes', 'rsa', 'ed25519', 'hkdf', 'x25519']",
+          "**/go.mod \u2192 go.mod contains one of ['crypto/aes', 'crypto/rsa', 'crypto/ed25519']",
+          "disambig_content: src/crypto.rs matches one of ['constant_time', 'subtle::']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "rust"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "aes_encrypt tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "aes_encrypt robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "aes_encrypt rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of aes_encrypt",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "aes_encrypt no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "aes_encrypt robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "aes_encrypt rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "aes_encrypt respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "aes_encrypt resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 11,
+        "symbol": "aes_encrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "encrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "aes_encrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "encrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM encryption of a plaintext block. Returns the ciphertext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "aes_decrypt tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "aes_decrypt robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "aes_decrypt rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of aes_decrypt",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "aes_decrypt no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "aes_decrypt robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "aes_decrypt rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "aes_decrypt respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "aes_decrypt resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 17,
+        "symbol": "aes_decrypt",
+        "metadata": {
+          "language": "rust",
+          "op": "decrypt",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "aes_decrypt",
+          "metadata": {
+            "language": "rust",
+            "op": "decrypt",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "AES-256-GCM decryption of a ciphertext. Returns the plaintext.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "rsa_sign tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "rsa_sign robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "rsa_sign rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of rsa_sign",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "rsa_sign no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "rsa_sign robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "rsa_sign rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "rsa_sign respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "rsa_sign resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 23,
+        "symbol": "rsa_sign",
+        "metadata": {
+          "language": "rust",
+          "op": "sign",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "rsa_sign",
+          "metadata": {
+            "language": "rust",
+            "op": "sign",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature over the SHA-256 digest of `message`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "rsa_verify tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "rsa_verify robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "rsa_verify rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of rsa_verify",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "rsa_verify no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "rsa_verify robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "rsa_verify rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "rsa_verify respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "rsa_verify resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 29,
+        "symbol": "rsa_verify",
+        "metadata": {
+          "language": "rust",
+          "op": "verify",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "rsa_verify",
+          "metadata": {
+            "language": "rust",
+            "op": "verify",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "RSA-PSS signature verification \u2014 uses constant_time comparison.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "kdf_derive tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "kdf_derive robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "kdf_derive rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of kdf_derive",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "kdf_derive no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "kdf_derive robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "kdf_derive rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "kdf_derive respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "kdf_derive resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 37,
+        "symbol": "kdf_derive",
+        "metadata": {
+          "language": "rust",
+          "op": "kdf",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "kdf_derive",
+          "metadata": {
+            "language": "rust",
+            "op": "kdf",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HKDF-SHA-256 key derivation. Returns `out_len` bytes of key material.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "hmac_sha256 tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "hmac_sha256 robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "hmac_sha256 rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of hmac_sha256",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "hmac_sha256 no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "hmac_sha256 robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "hmac_sha256 rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "hmac_sha256 respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "hmac_sha256 resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 43,
+        "symbol": "hmac_sha256",
+        "metadata": {
+          "language": "rust",
+          "op": "hmac",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "hmac_sha256",
+          "metadata": {
+            "language": "rust",
+            "op": "hmac",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "HMAC-SHA-256 over `message` keyed by `key`.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "random_bytes tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "random_bytes robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "random_bytes rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of random_bytes",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "random_bytes no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "random_bytes robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "random_bytes rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "random_bytes respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "random_bytes resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 49,
+        "symbol": "random_bytes",
+        "metadata": {
+          "language": "rust",
+          "op": "random",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "random_bytes",
+          "metadata": {
+            "language": "rust",
+            "op": "random",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Cryptographically-secure random bytes from the OS CSPRNG.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "crypto_library",
+      "family": "clock_skew",
+      "title": "hash_compare tolerates clock skew",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "peer_service",
+      "stimulus": {
+        "kind": "clock_skew_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "expiry_check_uses_local_time",
+        "skew_window_too_narrow",
+        "monotonic_vs_wall_clock_confused",
+        "leader_lease_breaks_on_minor_skew"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "crypto_library",
+      "family": "dependency_compromise",
+      "title": "hash_compare robust to dependency compromise",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "crypto_library",
+      "family": "downgrade_attack",
+      "title": "hash_compare rejects protocol downgrade",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "downgrade_attack_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "weak_cipher_acceptable",
+        "no_version_pinning",
+        "no_renegotiation_check",
+        "fallback_path_unauthenticated"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "crypto_library",
+      "family": "happy_path",
+      "title": "Happy path of hash_compare",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "crypto_library",
+      "family": "integer_overflow_in_size_calc",
+      "title": "hash_compare no integer overflow in size calc",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "crypto_library",
+      "family": "power_glitch",
+      "title": "hash_compare robust to power glitch / fault injection",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "brownout_detector",
+      "stimulus": {
+        "kind": "power_glitch_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_brownout_aware_critical_section",
+        "fault_injection_skips_security_check",
+        "voltage_drop_during_flash_write"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "crypto_library",
+      "family": "protocol_replay",
+      "title": "hash_compare rejects replayed protocol message",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "network_peer_malicious",
+      "stimulus": {
+        "kind": "protocol_replay_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_nonce_check",
+        "nonce_window_too_wide",
+        "replay_within_session_accepted",
+        "no_message_ordering_check"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "crypto_library",
+      "family": "resource_limits",
+      "title": "hash_compare respects resource limits",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "crypto_library",
+      "family": "side_channel",
+      "title": "hash_compare resistant to side-channel leakage",
+      "entry_point": {
+        "kind": "library_export",
+        "file": "src/crypto.rs",
+        "line": 54,
+        "symbol": "hash_compare",
+        "metadata": {
+          "language": "rust",
+          "op": "hash",
+          "visibility": "pub"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "side_channel_default",
+        "value": {
+          "entry_point": "hash_compare",
+          "metadata": {
+            "language": "rust",
+            "op": "hash",
+            "visibility": "pub"
+          }
+        }
+      },
+      "intended_behaviour": "Constant-time hash comparison; returns true iff the digests are equal.",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "non_constant_time_compare",
+        "key_dependent_branch_or_memory_access",
+        "cache_timing_leak",
+        "power_or_em_emanation"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

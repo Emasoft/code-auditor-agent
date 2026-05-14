@@ -1,0 +1,10 @@
+{
+  "_comment": "fixture for webgl_three — declares three.js + @react-three/fiber so the type-detector picks webgl_three. Intentionally omits 'main' and 'exports' so library_node does NOT match. No express/koa/fastify/etc. so web_service_node does not match. No 'bin' so cli_node does not match. No 'ws' or 'socket.io' so websocket_server does not match.",
+  "name": "scene-fixture",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "three": "^0.160.0",
+    "@react-three/fiber": "^8.15.0"
+  }
+}

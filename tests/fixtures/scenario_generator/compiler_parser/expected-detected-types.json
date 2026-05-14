@@ -1,0 +1,18 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/compiler_parser",
+  "detected_types": [
+    {
+      "type": "compiler_parser",
+      "confidence": 0.89,
+      "evidence": [
+        "**/*.g4 matches 1 file(s); first=expr.g4",
+        "disambig_content: parser.py matches one of ['re:def\\\\s+parse_\\\\w+', 're:def\\\\s+tokenize_\\\\w+']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

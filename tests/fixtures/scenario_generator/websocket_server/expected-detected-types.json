@@ -1,0 +1,19 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/websocket_server",
+  "detected_types": [
+    {
+      "type": "websocket_server",
+      "confidence": 0.85,
+      "evidence": [
+        "**/package.json \u2192 package.json contains one of ['\"ws\":', '\"socket.io\":']",
+        "**/Cargo.toml \u2192 Cargo.toml contains one of ['tokio-tungstenite']",
+        "**/go.mod \u2192 go.mod contains one of ['github.com/gorilla/websocket']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "javascript"
+  ]
+}

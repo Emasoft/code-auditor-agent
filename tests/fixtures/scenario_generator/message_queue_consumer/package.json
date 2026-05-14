@@ -1,0 +1,9 @@
+{
+  "_comment": "fixture for message_queue_consumer — adds kafkajs to satisfy the (package.json, ('\"kafkajs\":',)) content spec required by the fingerprint. No 'main' / 'exports' so library_node does not match. No express/koa/fastify so web_service_node does not match. No 'bin' so cli_node does not match.",
+  "name": "mq-fixture",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "kafkajs": "^2.2.0"
+  }
+}

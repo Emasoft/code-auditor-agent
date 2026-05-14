@@ -1,0 +1,27 @@
+// fixture for network_protocol_impl — protobuf schema accompanies the
+// Go decoder/encoder implementation in decoder.go. The fingerprint
+// triggers on the Go file's content (parsePacket + PacketHeader),
+// not this .proto file — but the .proto is present for realism.
+
+syntax = "proto3";
+
+package protocol;
+
+message PacketHeader {
+    uint32 magic = 1;
+    uint32 version = 2;
+    uint32 length = 3;
+    uint32 type = 4;
+}
+
+message DataPacket {
+    PacketHeader header = 1;
+    bytes payload = 2;
+    uint32 checksum = 3;
+}
+
+message ControlPacket {
+    PacketHeader header = 1;
+    uint32 opcode = 2;
+    string reason = 3;
+}

@@ -1,0 +1,3280 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "codebase": {
+    "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/compiler_parser",
+    "detected_types": [
+      {
+        "type": "compiler_parser",
+        "confidence": 0.89,
+        "evidence": [
+          "**/*.g4 matches 1 file(s); first=expr.g4",
+          "disambig_content: parser.py matches one of ['re:def\\\\s+parse_\\\\w+', 're:def\\\\s+tokenize_\\\\w+']"
+        ]
+      }
+    ],
+    "detected_languages": [
+      "python"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "SCEN-0001",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "prog rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0002",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "prog parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0003",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "prog robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0004",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of prog",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0005",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "prog no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0006",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "prog bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0007",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "prog no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0008",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "prog handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0009",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "prog respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 10,
+        "symbol": "prog",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "prog",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0010",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "stat rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0011",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "stat parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0012",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "stat robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0013",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of stat",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0014",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "stat no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0015",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "stat bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0016",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "stat no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0017",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "stat handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0018",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "stat respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 14,
+        "symbol": "stat",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "stat",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0019",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "expr rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0020",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "expr parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0021",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "expr robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0022",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of expr",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0023",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "expr no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0024",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "expr bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0025",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "expr no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0026",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "expr handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0027",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "expr respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "expr.g4",
+        "line": 19,
+        "symbol": "expr",
+        "metadata": {
+          "format": "grammar",
+          "dialect": "g4",
+          "language": "grammar"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "expr",
+          "metadata": {
+            "format": "grammar",
+            "dialect": "g4",
+            "language": "grammar"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0028",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "tokenize_input rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0029",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "tokenize_input parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0030",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "tokenize_input robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0031",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of tokenize_input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0032",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "tokenize_input no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0033",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "tokenize_input bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0034",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "tokenize_input no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0035",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "tokenize_input handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0036",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "tokenize_input respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 11,
+        "symbol": "tokenize_input",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "tokenize_input",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0037",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "parse_prog rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0038",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "parse_prog parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0039",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "parse_prog robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0040",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of parse_prog",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0041",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "parse_prog no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0042",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "parse_prog bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0043",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "parse_prog no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0044",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "parse_prog handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0045",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "parse_prog respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 16,
+        "symbol": "parse_prog",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "parse_prog",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0046",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "parse_stat_list rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0047",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "parse_stat_list parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0048",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "parse_stat_list robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0049",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of parse_stat_list",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0050",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "parse_stat_list no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0051",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "parse_stat_list bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0052",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "parse_stat_list no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0053",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "parse_stat_list handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0054",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "parse_stat_list respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 21,
+        "symbol": "parse_stat_list",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "parse_stat_list",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0055",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "parse_stat rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0056",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "parse_stat parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0057",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "parse_stat robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0058",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of parse_stat",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0059",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "parse_stat no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0060",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "parse_stat bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0061",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "parse_stat no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0062",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "parse_stat handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0063",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "parse_stat respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 29,
+        "symbol": "parse_stat",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "parse_stat",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0064",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "parse_expr rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0065",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "parse_expr parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0066",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "parse_expr robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0067",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of parse_expr",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0068",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "parse_expr no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0069",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "parse_expr bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0070",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "parse_expr no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0071",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "parse_expr handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0072",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "parse_expr respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 34,
+        "symbol": "parse_expr",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "parse"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "parse_expr",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "parse"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0073",
+      "type_origin": "compiler_parser",
+      "family": "adversarial_input",
+      "title": "tokenize_number rejects adversarial input",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "adversarial_input_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for adversarial_input: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "size_check_bypass",
+        "encoding_injection",
+        "unicode_normalization_inconsistency",
+        "out_of_range_numeric",
+        "type_confusion",
+        "parser_recursion_depth_unbounded"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0074",
+      "type_origin": "compiler_parser",
+      "family": "concurrency_in_parser",
+      "title": "tokenize_number parser thread-safe",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "network_peer_benign",
+      "stimulus": {
+        "kind": "concurrency_in_parser_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for concurrency_in_parser: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "shared_lexer_state",
+        "buffer_reuse_across_concurrent_parses",
+        "thread_unsafe_globals"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0075",
+      "type_origin": "compiler_parser",
+      "family": "dependency_compromise",
+      "title": "tokenize_number robust to dependency compromise",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "dependency_compromise_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for dependency_compromise: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "unpinned_dependency_version",
+        "supply_chain_unverified_signature",
+        "transitive_dep_with_known_cve",
+        "build_script_executes_untrusted_code"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0076",
+      "type_origin": "compiler_parser",
+      "family": "happy_path",
+      "title": "Happy path of tokenize_number",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "happy_path_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for happy_path: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "step_skipped",
+        "step_returned_wrong_status",
+        "expected_side_effect_missing"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0077",
+      "type_origin": "compiler_parser",
+      "family": "integer_overflow_in_size_calc",
+      "title": "tokenize_number no integer overflow in size calc",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "integer_overflow_in_size_calc_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for integer_overflow_in_size_calc: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "multiplication_overflow_for_alloc_size",
+        "addition_overflow_for_buffer_size",
+        "signed_unsigned_confusion",
+        "truncation_loses_high_bits"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0078",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_bounds",
+      "title": "tokenize_number bounds-checked",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_bounds_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_bounds: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "off_by_one_in_loop",
+        "size_attacker_controlled",
+        "no_buffer_check_in_copy",
+        "negative_index_passed_through"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0079",
+      "type_origin": "compiler_parser",
+      "family": "memory_safety_uaf",
+      "title": "tokenize_number no use-after-free",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "memory_safety_uaf_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for memory_safety_uaf: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "use_after_free",
+        "double_free",
+        "dangling_pointer_in_signal_handler",
+        "concurrent_free_and_use"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0080",
+      "type_origin": "compiler_parser",
+      "family": "partial_failure",
+      "title": "tokenize_number handles partial failure mid-operation",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "authenticated_user",
+      "stimulus": {
+        "kind": "partial_failure_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for partial_failure: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_compensation_on_step_failure",
+        "rollback_path_buggy",
+        "silent_swallowed_exception",
+        "double_commit_on_retry",
+        "partial_state_visible"
+      ],
+      "feedback_expected": null
+    },
+    {
+      "id": "SCEN-0081",
+      "type_origin": "compiler_parser",
+      "family": "resource_limits",
+      "title": "tokenize_number respects resource limits",
+      "entry_point": {
+        "kind": "parser_input",
+        "file": "parser.py",
+        "line": 39,
+        "symbol": "tokenize_number",
+        "metadata": {
+          "format": "function",
+          "language": "python",
+          "category": "tokenize"
+        }
+      },
+      "actor_role": "attacker_external",
+      "stimulus": {
+        "kind": "resource_limits_default",
+        "value": {
+          "entry_point": "tokenize_number",
+          "metadata": {
+            "format": "function",
+            "language": "python",
+            "category": "tokenize"
+          }
+        }
+      },
+      "intended_behaviour": "Default for resource_limits: see family playbook in scripts/scenario_generator/scenario_families.py (FAMILY_TO_FAILURE_MODES).",
+      "intended_behaviour_source": [],
+      "expected_path_summary": [],
+      "invariants_to_check": [],
+      "failure_modes_to_test": [
+        "no_quota_check",
+        "no_oom_handling",
+        "unbounded_allocation",
+        "no_disk_full_handling",
+        "no_stack_depth_limit"
+      ],
+      "feedback_expected": null
+    }
+  ]
+}

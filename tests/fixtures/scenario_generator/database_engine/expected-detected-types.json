@@ -1,0 +1,20 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/database_engine",
+  "detected_types": [
+    {
+      "type": "database_engine",
+      "confidence": 0.85,
+      "evidence": [
+        "**/*.c \u2192 btree.c contains one of ['wal_append', 'page_alloc', 'commit_record', 'btree_split']",
+        "**/*.rs \u2192 storage.rs contains one of ['wal_append', 'page_alloc', 'commit_record', 'btree_split']"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "c",
+    "cpp",
+    "rust"
+  ]
+}

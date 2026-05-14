@@ -1,0 +1,11 @@
+# fixture for websocket_server. Adds tokio-tungstenite to satisfy the
+# fingerprint content spec. Plain manifest body — comment text is bare
+# to avoid false positives in the substring-based fingerprint matcher.
+
+[package]
+name = "ws-fixture"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio-tungstenite = "0.21"

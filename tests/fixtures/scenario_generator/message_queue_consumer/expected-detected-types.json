@@ -1,0 +1,27 @@
+{
+  "$schema": "scenarios.v1.json",
+  "generated_at": "20260511_000000+0200",
+  "root": "/Users/emanuelesabetta/Code/EMASOFT-CODE-AUDITOR-AGENT/code-auditor-agent/tests/fixtures/scenario_generator/message_queue_consumer",
+  "detected_types": [
+    {
+      "type": "message_queue_consumer",
+      "confidence": 0.89,
+      "evidence": [
+        "**/pyproject.toml \u2192 pyproject.toml contains one of ['kafka-python', 'confluent-kafka', 'pika', 'redis', 'boto3', 'nats-py']",
+        "**/package.json \u2192 package.json contains one of ['\"kafkajs\":', '\"amqplib\":', '\"redis\":', '\"@aws-sdk/client-sqs\":', '\"nats\":']",
+        "**/go.mod \u2192 go.mod contains one of ['github.com/segmentio/kafka-go', 'github.com/streadway/amqp', 'github.com/nats-io/nats.go']",
+        "disambig_content: consumer.py matches one of ['consume(', 'subscribe(', 'channel.basic_consume']"
+      ]
+    },
+    {
+      "type": "library_python",
+      "confidence": 0.85,
+      "evidence": [
+        "**/pyproject.toml matches 1 file(s); first=pyproject.toml"
+      ]
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ]
+}

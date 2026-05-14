@@ -1,0 +1,10 @@
+{
+  "_comment": "fixture for websocket_server — declares ws + socket.io so the type-detector picks websocket_server. Intentionally omits 'main' and 'exports' so library_node does NOT match. No express/koa/fastify so web_service_node does not match. No 'bin' so cli_node does not match.",
+  "name": "ws-fixture",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "ws": "^8.16.0",
+    "socket.io": "^4.7.0"
+  }
+}
