@@ -238,8 +238,8 @@ new-step findings to the inventory.
 | 5 — linter pre-flight | ✅ shipped | c9ca3d2 |
 | 6 — cross-layer drift + ripple-effect + null safety | ✅ script-first split shipped (env-var drift, generated-file detection, orphan-naming scan); existing caa-cross-layer-auditor-agent still owns schema/UI-authz/removed-state judgment | dcc35e1 |
 | 7 — multi-tenant data isolation (NEW) | ✅ script shipped (query predicates, cache keys, module state, fn signatures); agent residue pending | 0b2bd72 |
-| 8 — silent-failure hunter | ✅ script shipped (Python AST: bare/broad except, empty handler, log-only handler, TODO-in-handler; JS/TS regex: empty catch, console-only catch, ?. over fallible chain; universal mock-fallback); agent residue pending | (pending commit) |
-| 9 — concurrency hazards (NEW) | ⬜ pending | — |
+| 8 — silent-failure hunter | ✅ script shipped (Python AST: bare/broad except, empty handler, log-only handler, TODO-in-handler; JS/TS regex: empty catch, console-only catch, ?. over fallible chain; universal mock-fallback); agent residue pending | 5de0ffc |
+| 9 — concurrency hazards (NEW) | ✅ script shipped (Python AST: detached create_task/ensure_future/run_in_executor; JS/TS: floating promise + Promise.all-no-catch; Go: goroutine-no-sync + channel-send-after-close); agent residue pending | (pending commit) |
 | 10 — complexity & dead-code | ⬜ pending | — |
 | 11 — AWC extensions | ⬜ pending | — |
 | 12 — comment & docstring quality | ⬜ pending | — |
