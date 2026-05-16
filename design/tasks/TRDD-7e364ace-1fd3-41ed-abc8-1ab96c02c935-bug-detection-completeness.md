@@ -250,7 +250,7 @@ new-step findings to the inventory.
 | 17 — architecture pattern consistency | ✅ agent shipped (caa-architecture-consistency-agent.md samples 3+ siblings per touched module to establish local convention, then flags deviations in error-handling/naming/data-shape/layering/inheritance/polyglot/api-shape) | 22bf29b |
 | 18 — pre-mortem risk analyzer | ✅ agent shipped (caa-pre-mortem-agent.md — Tiger/Paper-Tiger/Elephant taxonomy with mandatory mitigation_checked/mitigation_found/verify_by fields; reads pre-flight reports first to avoid duplicating deterministic findings) | a5dfe94 |
 | 19 — operational / deployment | ✅ script shipped (SCHEMA_NO_CODEGEN — proto/graphql/openapi touched without a generated file; CI_NO_NOTES — workflow change without docs update; DOCKERFILE_NO_NOTES — container change without docs update) | 72a1a92 |
-| 20 — domain specialists (HF) | ✅ 6 agents shipped (caa-graphql-reviewer / caa-jwt-reviewer / caa-api-design-reviewer / caa-docker-reviewer / caa-prompt-injection-reviewer / caa-frontend-reviewer) — each gated on Step-0 domains_detected, each ≤200 lines, each with focused 8-13 item checklist | (pending commit) |
+| 20 — domain specialists (HF) | ✅ 6 agents shipped (caa-graphql-reviewer / caa-jwt-reviewer / caa-api-design-reviewer / caa-docker-reviewer / caa-prompt-injection-reviewer / caa-frontend-reviewer) — each gated on Step-0 domains_detected, each ≤200 lines, each with focused 8-13 item checklist | 4621e84 |
 | 21 — domain specialists (LF) | ⬜ pending | — |
 | 22 — function-level deep-dive | ⬜ pending | — |
 | 23 — Opus second-opinion verification loop | ⬜ pending (external models via llm-externalizer only) | — |
