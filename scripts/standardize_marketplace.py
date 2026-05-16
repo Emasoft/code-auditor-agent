@@ -356,8 +356,7 @@ def audit_marketplace(marketplace_dir: Path, fix: bool, dry_run: bool) -> int:
 
     # -- Phase 3: Fix mode (optional) --
     fix_findings: list[Finding] = []
-    json_errors = sum(1 for f in json_findings if f.severity == SEVERITY_ERROR)
-    if fix and data is not None and json_errors == 0:
+    if fix and data is not None:
         print(f"{CYAN}[3/3] Generating missing standard files{NC}")
         fix_findings = fix_missing_files(marketplace_dir, data, dry_run)
         for f in fix_findings:
@@ -365,9 +364,6 @@ def audit_marketplace(marketplace_dir: Path, fix: bool, dry_run: bool) -> int:
         print()
     elif fix and data is None:
         print(f"{RED}[3/3] Cannot fix: marketplace.json is missing or invalid{NC}")
-        print()
-    elif fix and json_errors > 0:
-        print(f"{RED}[3/3] Cannot fix: marketplace.json has {json_errors} validation error(s) -- fix these first{NC}")
         print()
 
     # -- Summary --
@@ -398,20 +394,24 @@ def audit_marketplace(marketplace_dir: Path, fix: bool, dry_run: bool) -> int:
 
 def main() -> int:
     """Parse arguments and run the marketplace audit."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Audit and standardize a marketplace repository to match CPV standards.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
+Examples (always invoke via the launcher):
   # Audit only (no changes)
-  uv run scripts/standardize_marketplace.py /path/to/marketplace
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize_marketplace /path/to/marketplace
 
   # Audit and generate missing standard files
-  uv run scripts/standardize_marketplace.py /path/to/marketplace --fix
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize_marketplace /path/to/marketplace --fix
 
   # Preview what --fix would generate without writing
-  uv run scripts/standardize_marketplace.py /path/to/marketplace --fix --dry-run
-""",
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize_marketplace /path/to/marketplace --fix --dry-run
+
+"""
+        + launcher_epilog("standardize_marketplace"),
     )
 
     parser.add_argument(

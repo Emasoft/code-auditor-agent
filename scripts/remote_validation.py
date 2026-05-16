@@ -95,6 +95,11 @@ _ALIASES: dict[str, str] = {
     "agents": "validate_agent",
     "command": "validate_command",
     "security": "validate_security",
+    "cache": "validate_cache",
+    "cache-audit": "validate_cache",
+    "settings-marketplace": "validate_settings_marketplace",
+    "settings": "validate_settings_marketplace",
+    "telemetry": "validate_telemetry",
     "scoring": "validate_scoring",
     "marketplace": "validate_marketplace",
     "enterprise": "validate_enterprise",
@@ -105,7 +110,6 @@ _ALIASES: dict[str, str] = {
     "encoding": "validate_encoding",
     "rules": "validate_rules",
     "xref": "validate_xref",
-    "lint": "lint_files",
     "doctor": "manage_doctor",
     "registry": "manage_registry",
     "github": "manage_github_validate",
@@ -126,6 +130,9 @@ _ALIASES: dict[str, str] = {
     "validate_agents": "validate_agent",
     "validate_command": "validate_command",
     "validate_security": "validate_security",
+    "validate_cache": "validate_cache",
+    "validate_settings_marketplace": "validate_settings_marketplace",
+    "validate_telemetry": "validate_telemetry",
     "validate_scoring": "validate_scoring",
     "validate_marketplace": "validate_marketplace",
     "validate_enterprise": "validate_enterprise",
@@ -136,7 +143,6 @@ _ALIASES: dict[str, str] = {
     "validate_rules": "validate_rules",
     "validate_xref": "validate_xref",
     "validate_marketplace_pipeline": "validate_marketplace_pipeline",
-    "lint_files": "lint_files",
     "manage_doctor": "manage_doctor",
     "manage_registry": "manage_registry",
     "manage_github_validate": "manage_github_validate",
@@ -155,6 +161,9 @@ _COMMANDS: dict[str, str] = {
     "agent": "Agent definition validation",
     "command": "Command definition validation",
     "security": "Security vulnerability scan",
+    "cache": "Prompt-cache invalidation audit (CA-01..CA-06)",
+    "settings-marketplace": "Validate marketplace JSON in settings.json",
+    "telemetry": "OTEL telemetry supply-chain risk validation",
     "scoring": "Quality score calculation",
     "marketplace": "Marketplace manifest validation",
     "enterprise": "Enterprise compliance check",
@@ -164,7 +173,6 @@ _COMMANDS: dict[str, str] = {
     "encoding": "File encoding validation (UTF-8, BOM, line endings)",
     "rules": "Rules directory validation",
     "xref": "Cross-reference validation",
-    "lint": "Lint all scripts (Python, Shell, JS, PowerShell, Go, Rust)",
     "doctor": "Health-check installed plugins and settings",
     "standardize": "Audit and fix plugin repo to match standards",
     "local-scope": "Local scope validation (non-git-tracked .claude/ elements)",
@@ -184,12 +192,11 @@ def main() -> int:
         "Examples:\n"
         "  cpv-remote-validate plugin /path/to/plugin\n"
         "  cpv-remote-validate skill /path/to/skill --strict\n"
-        "  cpv-remote-validate plugin /path/to/plugin -o report.md --verbose\n"
-        "  cpv-remote-validate lint /path/to/plugin\n",
+        "  cpv-remote-validate plugin /path/to/plugin -o report.md --verbose\n",
     )
     parser.add_argument(
         "script",
-        help="Validation command (e.g., plugin, skill, hook, security, lint)",
+        help="Validation command (e.g., plugin, skill, hook, security)",
     )
     parser.add_argument(
         "target",

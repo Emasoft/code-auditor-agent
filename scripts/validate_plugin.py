@@ -3,7 +3,10 @@
 Claude Code Plugin Validator
 
 Comprehensive validation suite for Claude Code plugins.
-Validates structure, manifest, hooks, skills, scripts, and MCP servers.
+Validates structure, manifest, hooks, skills, scripts, MCP servers, and
+since v2.65.0 the whole-repo lint pass via `cpv_lint_engine.lint_repo`
+(15 languages, gitignore-aware, uvx/bunx/docker fallback for tool
+resolution — strict-by-default missing-tool detection).
 
 Usage:
     uv run python scripts/validate_plugin.py /path/to/plugin
@@ -34,22 +37,25 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import difflib
+import glob as _glob
 import json
 import os
 import platform
 import re
-import shutil
-import subprocess
+import shlex
 import sys
 from pathlib import Path
 from typing import Any, cast
 
 import yaml
+from cpv_lint_engine import lint_repo as run_lint_engine
 from cpv_validation_common import (
     COLORS,
     ValidationReport,
     check_remote_execution_guard,
-    resolve_tool_command,
+    is_vendored_path,
+    load_cpv_config,
     save_report_and_print_summary,
     validate_component_name,
     validate_md_file_paths,
@@ -61,10 +67,6 @@ from cpv_validation_common import (
 from detect_language import detect_languages
 from detect_lockfiles import detect_lockfiles
 from gitignore_filter import GitignoreFilter
-from validate_hook import (
-    lint_bash_script,
-    lint_js_script,
-)
 from validate_hook import (
     validate_hooks as validate_hook_file,
 )
@@ -153,6 +155,83 @@ def _path_has_traversal(path: str) -> bool:
     return any(p == ".." for p in parts)
 
 
+def _safe_load_marketplace_json(path: Path) -> dict[str, Any] | None:
+    """Read+parse a ``marketplace.json`` file. Returns None on any error.
+
+    Used by ``discover_hosting_marketplace`` so a malformed marketplace.json
+    on the filesystem never crashes the plugin validator — it just falls
+    back to the no-context INFO behaviour. Validation of the marketplace
+    file itself is the marketplace-validator's job, not the plugin
+    validator's.
+    """
+    try:
+        if not path.is_file():
+            return None
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def discover_hosting_marketplace(plugin_root: Path) -> dict[str, Any] | None:
+    """Auto-discover the hosting marketplace.json for a plugin on disk.
+
+    Returns the parsed marketplace.json dict (or ``None`` when no hosting
+    marketplace is on the filesystem). The result is suitable to pass as the
+    ``hosting_marketplace=`` kwarg on ``validate_manifest`` /
+    ``validate_dependencies``.
+
+    Discovery order (first match wins — Layout C beats Layout B beats cache):
+
+      1. **Layout C — marketplace-in-plugin.** Plugin's own
+         ``.claude-plugin/marketplace.json`` exists at ``plugin_root``.
+      2. **Layout B — nested monorepo.** Walk up at most 3 parents looking
+         for ``<parent>/.claude-plugin/marketplace.json``. (3 is enough to
+         cover ``<mkt>/plugins/<name>/`` and one extra for safety while
+         keeping the walk bounded.)
+      3. **Cache layout.** ``~/.claude/plugins/cache/<mkt>/<plugin>/`` —
+         the immediate parent's ``.claude-plugin/marketplace.json``. This
+         is the dominant deployment shape after ``claude plugin install``.
+
+    On a malformed marketplace.json the function returns None rather than
+    raising — that surface is owned by ``validate_marketplace.py`` and the
+    plugin validator must not crash on a sibling's bad JSON.
+    """
+    plugin_root = Path(plugin_root)
+
+    # 1. Layout C — self-marketplace
+    self_mkt = plugin_root / ".claude-plugin" / "marketplace.json"
+    layout_c = _safe_load_marketplace_json(self_mkt)
+    if layout_c is not None:
+        return layout_c
+
+    # 2. Layout B — walk up looking for a parent .claude-plugin/marketplace.json.
+    #    Bound the walk to 3 levels so we don't scan the entire filesystem
+    #    for an arbitrarily-deep nesting.
+    seen: set[Path] = set()
+    parent = plugin_root.parent
+    for _ in range(3):
+        if parent in seen or parent == parent.parent:
+            break
+        seen.add(parent)
+        parent_mkt = parent / ".claude-plugin" / "marketplace.json"
+        layout_b = _safe_load_marketplace_json(parent_mkt)
+        if layout_b is not None:
+            return layout_b
+        parent = parent.parent
+
+    # 3. Cache layout — ~/.claude/plugins/cache/<mkt>/<plugin>/.
+    #    Already covered by step 2 when the parent has .claude-plugin/marketplace.json.
+    #    Some cache layouts put marketplace.json directly at the cache-mkt root
+    #    (no .claude-plugin/ wrapper). Try that fallback too.
+    direct_parent_mkt = plugin_root.parent / "marketplace.json"
+    return _safe_load_marketplace_json(direct_parent_mkt)
+
+
 def validate_dependencies(
     manifest: dict[str, Any],
     report: ValidationReport,
@@ -172,13 +251,19 @@ def validate_dependencies(
     ``hosting_marketplace`` (TRDD-20108ab7, v2.22.3) is the parsed
     ``marketplace.json`` of the marketplace hosting the plugin under
     validation. When supplied, cross-marketplace dependency references are
-    checked against the marketplace's ``allowedDependencyMarketplaces``
-    allowlist. The dict MUST contain a ``name`` key identifying the hosting
+    checked against the marketplace's ``allowCrossMarketplaceDependenciesOn``
+    allowlist (per plugin-dependencies.md:54-79 — the canonical spec field
+    name). The dict MUST contain a ``name`` key identifying the hosting
     marketplace; the allowlist is read from
-    ``hosting_marketplace["allowedDependencyMarketplaces"]`` (optional,
+    ``hosting_marketplace["allowCrossMarketplaceDependenciesOn"]`` (optional,
     defaults to empty allowlist). Pass ``None`` to skip cross-marketplace
     allowlist checks (e.g. when validating a plugin in isolation without
     marketplace context) — in that case an INFO is emitted per cross-dep.
+
+    Backward-compat: an earlier CPV release used the non-spec name
+    ``allowedDependencyMarketplaces``. Plugins that still ship that key
+    are honoured as a fallback (with a NIT nudge to rename to the spec
+    field).
     """
     if "dependencies" not in manifest:
         return
@@ -196,7 +281,21 @@ def validate_dependencies(
         raw_name = hosting_marketplace.get("name")
         if isinstance(raw_name, str) and raw_name:
             hosting_name = raw_name
-        raw_allow = hosting_marketplace.get("allowedDependencyMarketplaces")
+        # Spec name (plugin-dependencies.md): allowCrossMarketplaceDependenciesOn.
+        # Fall back to the legacy name allowedDependencyMarketplaces only when
+        # the spec name is absent — emit a NIT so authors rename to the spec.
+        raw_allow = hosting_marketplace.get("allowCrossMarketplaceDependenciesOn")
+        if raw_allow is None:
+            raw_allow_legacy = hosting_marketplace.get("allowedDependencyMarketplaces")
+            if raw_allow_legacy is not None:
+                report.nit(
+                    "marketplace.json uses legacy 'allowedDependencyMarketplaces' — "
+                    "rename to the spec field 'allowCrossMarketplaceDependenciesOn' "
+                    "(plugin-dependencies.md:54-79). Both names are honoured but the "
+                    "legacy alias is removed in a future release.",
+                    ".claude-plugin/marketplace.json",
+                )
+                raw_allow = raw_allow_legacy
         if isinstance(raw_allow, list):
             # Keep only string items — bad items are the marketplace validator's job.
             hosting_allowlist = [x for x in raw_allow if isinstance(x, str) and x]
@@ -208,6 +307,28 @@ def validate_dependencies(
                     f"'dependencies[{i}]' bare-string name '{entry}' is not a valid kebab-case plugin name",
                     ".claude-plugin/plugin.json",
                 )
+            else:
+                # plugin-dependencies.md:9-11: "By default, a dependency tracks
+                # the latest available version, so an upstream release can
+                # change the dependency under your plugin without warning."
+                # An unversioned bare-string dep is therefore a soft-WARNING
+                # signal — install can break on the next upstream tag. Authors
+                # who explicitly want auto-tracking can suppress with
+                # `cpv: { allow_unversioned_dependencies: true }` in plugin.json.
+                cpv_block = manifest.get("cpv") if isinstance(manifest, dict) else None
+                allow_unversioned = isinstance(cpv_block, dict) and bool(
+                    cpv_block.get("allow_unversioned_dependencies")
+                )
+                if not allow_unversioned:
+                    report.warning(
+                        f"'dependencies[{i}]' = '{entry}' has no version constraint "
+                        f"— it auto-tracks the latest tag and the next upstream release "
+                        f"can break this plugin without warning. Pin a semver range: "
+                        f"{{'name': '{entry}', 'version': '~1.2.0'}} (plugin-dependencies.md:9-11). "
+                        f"Suppress with `cpv.allow_unversioned_dependencies: true` if "
+                        f"intentional.",
+                        ".claude-plugin/plugin.json",
+                    )
             continue
         if not isinstance(entry, dict):
             report.major(
@@ -219,8 +340,7 @@ def validate_dependencies(
         # name — required
         if "name" not in entry:
             report.major(
-                f"'dependencies[{i}]' object missing required 'name' field "
-                "(plugin-dependencies.md:46)",
+                f"'dependencies[{i}]' object missing required 'name' field (plugin-dependencies.md:46)",
                 ".claude-plugin/plugin.json",
             )
         else:
@@ -262,16 +382,14 @@ def validate_dependencies(
                     )
                 elif hosting_name is not None and market != hosting_name:
                     if hosting_allowlist is None or market not in hosting_allowlist:
-                        allow_desc = (
-                            sorted(hosting_allowlist)
-                            if hosting_allowlist is not None
-                            else "<none declared>"
-                        )
+                        allow_desc = sorted(hosting_allowlist) if hosting_allowlist is not None else "<none declared>"
                         report.major(
                             f"'dependencies[{i}].marketplace' = '{market}' is not in the hosting "
-                            f"marketplace's allowedDependencyMarketplaces allowlist "
-                            f"({allow_desc}) — cross-marketplace dependency is blocked "
-                            "(TRDD-20108ab7, plugin-dependencies.md)",
+                            f"marketplace's allowCrossMarketplaceDependenciesOn allowlist "
+                            f"({allow_desc}) — cross-marketplace dependency is blocked at install time "
+                            "with a 'cross-marketplace' error (plugin-dependencies.md:54-79). Add "
+                            f"'{market}' to the root marketplace.json's "
+                            "allowCrossMarketplaceDependenciesOn array OR remove the marketplace field.",
                             ".claude-plugin/plugin.json",
                         )
                     else:
@@ -291,14 +409,19 @@ def validate_dependencies(
         report.passed(f"'dependencies' schema valid: {len(deps)} entry(ies)", ".claude-plugin/plugin.json")
 
 
-def validate_user_config_structure(manifest: dict[str, Any], report: ValidationReport) -> None:
-    """Validate the ``userConfig`` root per plugins-reference.md:414-435.
+# v2.1.121 — userConfig per-key `type` enum (5 values).
+USER_CONFIG_TYPE_ENUM = frozenset({"string", "number", "boolean", "directory", "file"})
 
-    Each entry accepts optional ``description`` (string) and ``sensitive`` (bool).
-    Keys must be Python identifiers. Unknown sub-fields emit MINOR so typos
-    surface during validation. (This helper is complementary to the stricter
-    runtime-title check that lives inline in ``validate_manifest`` and keeps
-    existing plugins that rely on ``title``/``type``/``default`` healthy.)
+
+def validate_user_config_structure(manifest: dict[str, Any], report: ValidationReport) -> None:
+    """Validate the ``userConfig`` root per plugins-reference.md (v2.1.121).
+
+    Per-key fields:
+      Required: type, title, description
+      Optional: sensitive, required, default, multiple, min, max
+    Type enum: string | number | boolean | directory | file
+
+    Keys must be valid identifiers (CLAUDE_PLUGIN_OPTION_<KEY> env-var derivation).
     """
     if "userConfig" not in manifest:
         return
@@ -307,44 +430,113 @@ def validate_user_config_structure(manifest: dict[str, Any], report: ValidationR
         # The inline validator in validate_manifest already emits a MAJOR for
         # non-dict userConfig — no need to duplicate it here.
         return
-    # Sub-fields the runtime understands (title/type/default/sensitive/description);
-    # unknown keys beyond this set are MINOR.
-    known_sub = {"title", "description", "sensitive", "type", "default"}
+    # v2.1.121 spec — full sub-field set (9 fields total).
+    known_sub = frozenset(
+        {
+            "type",
+            "title",
+            "description",
+            "sensitive",
+            "required",
+            "default",
+            "multiple",
+            "min",
+            "max",
+        }
+    )
+    required_sub = frozenset({"type", "title", "description"})
     for key, entry in uc.items():
         if not isinstance(key, str) or not _IDENTIFIER_RE.match(key):
             report.major(
-                f"'userConfig.{key}' key must be a valid identifier "
-                "(plugins-reference.md:414-435)",
+                f"'userConfig.{key}' key must be a valid identifier — needed for the "
+                "CLAUDE_PLUGIN_OPTION_<KEY> env-var export",
                 ".claude-plugin/plugin.json",
             )
             continue
         if not isinstance(entry, dict):
             # Inline validator already reports a MAJOR — do not duplicate.
             continue
+
+        # v2.1.121 — required sub-fields.
+        for req in required_sub:
+            if req not in entry:
+                report.major(
+                    f"'userConfig.{key}' missing required sub-field '{req}' (spec requires type, title, description)",
+                    ".claude-plugin/plugin.json",
+                )
+
+        # type — enum validation.
+        if "type" in entry:
+            t = entry["type"]
+            if not isinstance(t, str):
+                report.major(
+                    f"'userConfig.{key}.type' must be a string, got {type(t).__name__}",
+                    ".claude-plugin/plugin.json",
+                )
+            elif t not in USER_CONFIG_TYPE_ENUM:
+                report.major(
+                    f"'userConfig.{key}.type' = {t!r} is not a valid type "
+                    f"(expected one of: {sorted(USER_CONFIG_TYPE_ENUM)})",
+                    ".claude-plugin/plugin.json",
+                )
+
+        # title — must be a non-empty string.
+        if "title" in entry:
+            title = entry["title"]
+            if not isinstance(title, str) or not title.strip():
+                report.major(
+                    f"'userConfig.{key}.title' must be a non-empty string",
+                    ".claude-plugin/plugin.json",
+                )
+
         # description — optional per spec; type-checked when present.
         if "description" in entry and not isinstance(entry["description"], str):
             report.major(
                 f"'userConfig.{key}.description' must be a string, got {type(entry['description']).__name__}",
                 ".claude-plugin/plugin.json",
             )
-        # sensitive — optional per spec; must be bool when present.
-        if "sensitive" in entry and not isinstance(entry["sensitive"], bool):
-            report.major(
-                f"'userConfig.{key}.sensitive' must be a boolean, got {type(entry['sensitive']).__name__}",
+
+        # sensitive / required / multiple — boolean.
+        for bool_field in ("sensitive", "required", "multiple"):
+            if bool_field in entry and not isinstance(entry[bool_field], bool):
+                report.major(
+                    f"'userConfig.{key}.{bool_field}' must be a boolean, got {type(entry[bool_field]).__name__}",
+                    ".claude-plugin/plugin.json",
+                )
+
+        # min / max — only meaningful for type: number.
+        for num_field in ("min", "max"):
+            if num_field in entry:
+                v = entry[num_field]
+                if not isinstance(v, (int, float)) or isinstance(v, bool):
+                    report.major(
+                        f"'userConfig.{key}.{num_field}' must be a number, got {type(v).__name__}",
+                        ".claude-plugin/plugin.json",
+                    )
+                elif entry.get("type") not in (None, "number"):
+                    report.minor(
+                        f"'userConfig.{key}.{num_field}' set on non-number type "
+                        f"({entry.get('type')!r}) — only meaningful for type: number",
+                        ".claude-plugin/plugin.json",
+                    )
+
+        # multiple is only meaningful for type: string per spec.
+        if entry.get("multiple") is True and entry.get("type") not in (None, "string"):
+            report.minor(
+                f"'userConfig.{key}.multiple' set on non-string type "
+                f"({entry.get('type')!r}) — only meaningful for type: string",
                 ".claude-plugin/plugin.json",
             )
+
         # Unknown sub-fields — MINOR so authors notice typos.
         for extra in set(entry.keys()) - known_sub:
             report.minor(
-                f"'userConfig.{key}.{extra}' is not a recognized sub-field "
-                "(recognized: title, description, sensitive, type, default)",
+                f"'userConfig.{key}.{extra}' is not a recognized sub-field (recognized: {sorted(known_sub)})",
                 ".claude-plugin/plugin.json",
             )
 
 
-_PLUGIN_ROOT_DIR_PATTERN = re.compile(
-    r"\$\{?CLAUDE_PLUGIN_ROOT\}?[/\\]+([A-Za-z0-9_.\-]+)[/\\]"
-)
+_PLUGIN_ROOT_DIR_PATTERN = re.compile(r"\$\{?CLAUDE_PLUGIN_ROOT\}?[/\\]+([A-Za-z0-9_.\-]+)[/\\]")
 
 
 def _extract_referenced_dirs_from_text(text: str) -> set[str]:
@@ -476,9 +668,7 @@ def _mcp_server_keys(manifest: dict[str, Any], plugin_root: Path) -> set[str] | 
     return None
 
 
-def validate_channels_structure(
-    manifest: dict[str, Any], plugin_root: Path, report: ValidationReport
-) -> None:
+def validate_channels_structure(manifest: dict[str, Any], plugin_root: Path, report: ValidationReport) -> None:
     """Validate the ``channels`` array per plugins-reference.md:438-455.
 
     Each entry is a dict with required ``server`` (string). ``server`` MUST
@@ -511,8 +701,7 @@ def validate_channels_structure(
         # server — required + cross-reference
         if "server" not in entry:
             report.major(
-                f"'channels[{i}]' missing required 'server' field "
-                "(plugins-reference.md:438-455)",
+                f"'channels[{i}]' missing required 'server' field (plugins-reference.md:438-455)",
                 ".claude-plugin/plugin.json",
             )
         elif not isinstance(entry["server"], str):
@@ -556,16 +745,51 @@ def validate_channels_structure(
                             )
 
 
+def _read_skill_md_name(skill_md: Path) -> str | None:
+    """Return the ``name`` frontmatter value of a SKILL.md file, or None.
+
+    Fail-safe by design: any read or parse error yields None so skill
+    discovery never crashes on a malformed file — the skill validator is
+    the surface that reports the actual defect.
+    """
+    try:
+        content = skill_md.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if not content.startswith("---"):
+        return None
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return None
+    try:
+        frontmatter = yaml.safe_load(parts[1])
+    except yaml.YAMLError:
+        return None
+    if isinstance(frontmatter, dict):
+        name = frontmatter.get("name")
+        if isinstance(name, str) and name.strip():
+            return name.strip()
+    return None
+
+
 def _discover_plugin_skills(plugin_root: Path) -> set[str]:
     """Return the set of skill names declared by this plugin.
 
     GAP-10 helper (v2.22.3): scans ``<plugin>/skills/<skill>/SKILL.md`` so
     the monitors validator can cross-reference ``on-skill-invoke:<skill>``
-    targets against actually-declared skills. Returns an empty set when
-    the plugin has no skills directory.
+    targets against actually-declared skills.
+
+    CC v2.1.142: when the plugin has no ``skills/`` subdirectory, a
+    root-level ``SKILL.md`` is surfaced as a skill — its invocable name is
+    the ``name`` frontmatter field, so it is included here too.
     """
     skills_dir = plugin_root / "skills"
     if not skills_dir.is_dir():
+        root_skill_md = plugin_root / "SKILL.md"
+        if root_skill_md.is_file():
+            name = _read_skill_md_name(root_skill_md)
+            if name:
+                return {name}
         return set()
     discovered: set[str] = set()
     for entry in skills_dir.iterdir():
@@ -632,11 +856,7 @@ def _validate_monitors_array(
                     "'on-skill-invoke:<skill-name>' (plugins-reference.md:302-318)",
                     source_label,
                 )
-            elif (
-                declared_skills is not None
-                and isinstance(when_val, str)
-                and when_val.startswith("on-skill-invoke:")
-            ):
+            elif declared_skills is not None and isinstance(when_val, str) and when_val.startswith("on-skill-invoke:"):
                 # GAP-10 (v2.22.3): cross-reference the skill name against
                 # declared skills. Empty declared_skills means the plugin
                 # has no skills/ directory at all — still report so authors
@@ -659,9 +879,7 @@ def _validate_monitors_array(
                 )
 
 
-def validate_monitors_entries(
-    manifest: dict[str, Any], plugin_root: Path, report: ValidationReport
-) -> None:
+def validate_monitors_entries(manifest: dict[str, Any], plugin_root: Path, report: ValidationReport) -> None:
     """Validate the ``monitors`` entries per plugins-reference.md:268-318.
 
     ``monitors`` may be inline in plugin.json OR a path string pointing at a
@@ -674,9 +892,7 @@ def validate_monitors_entries(
     monitors = manifest["monitors"]
     declared_skills = _discover_plugin_skills(plugin_root)
     if isinstance(monitors, list):
-        _validate_monitors_array(
-            monitors, ".claude-plugin/plugin.json", report, declared_skills
-        )
+        _validate_monitors_array(monitors, ".claude-plugin/plugin.json", report, declared_skills)
         return
     if isinstance(monitors, str):
         # Path string — resolve relative to plugin_root and load.
@@ -698,16 +914,113 @@ def validate_monitors_entries(
             _validate_monitors_array(data["monitors"], monitors, report, declared_skills)
         else:
             report.major(
-                f"monitors file must contain an array or {{'monitors': [...]}} wrapper, "
-                f"got {type(data).__name__}",
+                f"monitors file must contain an array or {{'monitors': [...]}} wrapper, got {type(data).__name__}",
                 monitors,
             )
         return
     report.major(
-        f"'monitors' must be an array or path string, got {type(monitors).__name__} "
-        "(plugins-reference.md:268-318)",
+        f"'monitors' must be an array or path string, got {type(monitors).__name__} (plugins-reference.md:268-318)",
         ".claude-plugin/plugin.json",
     )
+
+
+def validate_layout_c_consistency(
+    plugin_root: Path,
+    report: ValidationReport,
+) -> None:
+    """Validate Layout C (marketplace-in-plugin) cross-consistency.
+
+    Layout C exists when ONE root holds BOTH `.claude-plugin/plugin.json`
+    AND `.claude-plugin/marketplace.json`. The marketplace must list the
+    plugin's own name (self-reference) and version must match across the
+    two manifests.
+
+    Per references/marketplace-layouts.md§"Layout C", the rules are:
+      1. plugin.json.name MUST appear in marketplace.json.plugins[].name
+      2. The self-referenced plugin entry MUST use source: "./" (relative).
+      3. plugin.json.version MUST equal marketplace.json.plugins[<self>].version
+         (when both are set).
+
+    Severities are MAJOR for hard mismatches (would break install) and
+    MINOR for soft drift (cosmetic / future-confusion).
+    """
+    plugin_path = plugin_root / ".claude-plugin" / "plugin.json"
+    market_path = plugin_root / ".claude-plugin" / "marketplace.json"
+    if not plugin_path.is_file() or not market_path.is_file():
+        return  # Not Layout C — single-manifest plugins are unaffected.
+
+    try:
+        plugin_obj = json.loads(plugin_path.read_text(encoding="utf-8"))
+        market_obj = json.loads(market_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return  # Per-manifest validators already report parse errors.
+
+    plugin_name = plugin_obj.get("name") if isinstance(plugin_obj, dict) else None
+    plugin_version = plugin_obj.get("version") if isinstance(plugin_obj, dict) else None
+    if not plugin_name:
+        return  # Per-manifest validator already flagged missing name.
+
+    plugins_arr = market_obj.get("plugins") if isinstance(market_obj, dict) else None
+    if not isinstance(plugins_arr, list):
+        return
+
+    self_entry = None
+    for entry in plugins_arr:
+        if isinstance(entry, dict) and entry.get("name") == plugin_name:
+            self_entry = entry
+            break
+
+    if self_entry is None:
+        report.major(
+            f"Layout C: plugin.json declares name='{plugin_name}' but "
+            f"marketplace.json's plugins[] does not list a self-reference "
+            f"with that name. Add `{{name: '{plugin_name}', source: './'}}` "
+            f"to marketplace.json's plugins array, or remove marketplace.json "
+            f"if this is meant to be a plain plugin.",
+            ".claude-plugin/marketplace.json",
+        )
+        return
+
+    # Rule 2 — source must be "./" (relative)
+    src = self_entry.get("source")
+    src_ok = src == "./" or src == "." or (isinstance(src, str) and src.strip() in ("./", "."))
+    if not src_ok:
+        report.major(
+            f"Layout C: marketplace.json's self-reference for plugin "
+            f"'{plugin_name}' has source={src!r}; must be './' (relative) "
+            f"so install resolves to the same repo. Other source types "
+            f"would re-clone the repository.",
+            ".claude-plugin/marketplace.json",
+        )
+
+    # Rule 3 — version consistency
+    self_version = self_entry.get("version")
+    if plugin_version and self_version and plugin_version != self_version:
+        report.minor(
+            f"Layout C: plugin.json version '{plugin_version}' differs from "
+            f"marketplace.json plugins[{plugin_name}].version '{self_version}'. "
+            f"Bump both together to keep installation metadata consistent.",
+            ".claude-plugin/marketplace.json",
+        )
+
+    # v2.81.0 (TRDD-c0ee9543, Phase B / GAP-13) — also use the shared
+    # diff helper so description / author / keywords / homepage drift
+    # between the two manifests surfaces. The helper emits NIT for
+    # those fields (cosmetic), MAJOR for name (already covered above
+    # by the self-entry-presence check), MINOR for version (already
+    # covered above by Rule 3 — the helper will not double-report
+    # because we short-circuit via opt-out logic below).
+    try:
+        from cpv_upstream_plugin_json import diff_marketplace_vs_upstream  # noqa: PLC0415
+    except ImportError:
+        return  # Module not available — pre-Phase-B install; nothing to add.
+
+    # Don't double-emit NAME-MISMATCH or VERSION-DRIFT — those map to
+    # the rules above. We only forward metadata drift findings.
+    drifts = diff_marketplace_vs_upstream(self_entry, plugin_obj if isinstance(plugin_obj, dict) else {})
+    for drift in drifts:
+        if drift.code == "RC-MKPL-METADATA-DRIFT":
+            report.nit(drift.message, ".claude-plugin/marketplace.json")
 
 
 def validate_manifest(
@@ -754,8 +1067,7 @@ def validate_manifest(
             "output-styles",
         )
         has_components = any(
-            (plugin_root / d).is_dir() and any((plugin_root / d).iterdir())
-            for d in default_component_dirs
+            (plugin_root / d).is_dir() and any((plugin_root / d).iterdir()) for d in default_component_dirs
         )
         if has_components:
             report.minor(
@@ -831,9 +1143,11 @@ def validate_manifest(
             )
 
     # Check for unknown fields — warn but don't block, as custom fields
-    # may be consumed by plugin scripts or external tooling
+    # may be consumed by plugin scripts or external tooling.
+    # Aligned with plugins-reference.md (v2.1.121).
     known_fields = {
         "name",
+        "$schema",  # v2.1.120 — JSON-Schema link, ignored at load time
         "version",
         "description",
         "author",
@@ -847,11 +1161,22 @@ def validate_manifest(
         "hooks",
         "mcpServers",
         "outputStyles",
+        "themes",  # v2.1.118 — plugin-shipped theme JSON files under themes/
         "lspServers",
         "monitors",  # v2.1.105 — background monitor configs (monitors/monitors.json by default)
         "userConfig",  # User-configurable values prompted at enable time (v2.1.80)
         "channels",  # Channel declarations for message injection (v2.1.85)
         "dependencies",  # v2.1.110+ — plugin dependency declarations with semver ranges (see plugin-dependencies.md)
+        # CPV-managed config block (TRDD-793ac32a strip-dev-parts). The
+        # generator emits a `cpv.strip` block on every fresh scaffold, and
+        # `cpv strip-dev-parts` reads it later. Allowlisted so CPV's own
+        # creator output validates clean. Custom keys under `cpv.*` stay
+        # under the same namespace per CPV ownership.
+        "cpv",
+        # v2.1.129 — preferred wrapper for opt-in/experimental features.
+        # `themes` and `monitors` should now be declared under `experimental: { ... }`;
+        # top-level placement still works but `claude plugin validate` warns.
+        "experimental",
     }
     for key in manifest.keys():
         if key not in known_fields:
@@ -859,6 +1184,43 @@ def validate_manifest(
                 f"Unknown manifest field '{key}' — not part of the Claude Code plugin spec. If used by plugin scripts, consider documenting it.",
                 ".claude-plugin/plugin.json",
             )
+
+    # v2.1.129 — Recommend the `experimental: { themes, monitors }` wrapper.
+    # Top-level `themes` and `monitors` are still honoured but `claude plugin
+    # validate` emits a warning, so CPV mirrors that as a NIT (non-blocking
+    # nudge) so authors discover the new shape without breaking existing files.
+    experimental = manifest.get("experimental")
+    for legacy_key in ("themes", "monitors"):
+        # If author already nested the key under `experimental`, don't double-warn
+        # on a top-level appearance — the CC loader prefers the nested copy.
+        nested = isinstance(experimental, dict) and legacy_key in experimental
+        if legacy_key in manifest and not nested:
+            report.nit(
+                f"'{legacy_key}' should be nested under 'experimental: {{ ... }}' "
+                f"per v2.1.129. Top-level still works (claude plugin validate warns).",
+                ".claude-plugin/plugin.json",
+            )
+
+    # When an `experimental` block is present, validate it's an object and only
+    # contains recognised opt-in keys. Unknown keys inside `experimental` are
+    # WARNINGs (the wrapper is a forward-compat surface, so we don't reject).
+    if "experimental" in manifest:
+        if not isinstance(experimental, dict):
+            report.major(
+                f"'experimental' must be an object, got {type(experimental).__name__} "
+                "(plugins-reference.md / changelog v2.1.129)",
+                ".claude-plugin/plugin.json",
+            )
+        else:
+            known_experimental_keys = {"themes", "monitors"}
+            for exp_key in experimental.keys():
+                if exp_key not in known_experimental_keys:
+                    report.warning(
+                        f"Unknown 'experimental.{exp_key}' field — not part of the "
+                        "Claude Code experimental opt-in surface (v2.1.129). "
+                        f"Known keys: {sorted(known_experimental_keys)}.",
+                        ".claude-plugin/plugin.json",
+                    )
 
     # Validate repository field type — Claude Code requires a string URL, not an object
     if "repository" in manifest:
@@ -994,7 +1356,7 @@ def validate_manifest(
         "number": (int, float),
         "boolean": (bool,),
         "directory": (str,),  # path string
-        "file": (str,),       # path string
+        "file": (str,),  # path string
     }
     if "userConfig" in manifest:
         uc = manifest["userConfig"]
@@ -1033,7 +1395,7 @@ def validate_manifest(
                     report.major(
                         f"'userConfig.{key}' missing required 'type' field — Claude Code runtime "
                         f"rejects this at install time with 'Invalid option: expected one of "
-                        f"\"string\"|\"number\"|\"boolean\"|\"directory\"|\"file\"'",
+                        f'"string"|"number"|"boolean"|"directory"|"file"\'',
                         ".claude-plugin/plugin.json",
                     )
                 elif not isinstance(entry["type"], str):
@@ -1131,8 +1493,7 @@ def validate_manifest(
                         for ai, arg in enumerate(args_val):
                             if not isinstance(arg, str):
                                 report.minor(
-                                    f"LSP server '{name}' args[{ai}] must be a string, "
-                                    f"got {type(arg).__name__}",
+                                    f"LSP server '{name}' args[{ai}] must be a string, got {type(arg).__name__}",
                                     ".claude-plugin/plugin.json",
                                 )
                 # GAP-68 (v2.22.3): `env` must be a dict with string values per
@@ -1289,9 +1650,13 @@ def validate_manifest(
             normalized_with_slash = normalized.rstrip("/") + "/"
             is_default = normalized_with_slash == "./agents/"
             extra_default_note = (
-                " (Note: the default ./agents/ folder is auto-discovered — just remove "
-                "the 'agents' field entirely from plugin.json.)"
-            ) if is_default else ""
+                (
+                    " (Note: the default ./agents/ folder is auto-discovered — just remove "
+                    "the 'agents' field entirely from plugin.json.)"
+                )
+                if is_default
+                else ""
+            )
             report.major(
                 f"Field 'agents' contains folder path '{path_str}' — Claude Code's manifest validator "
                 f"REJECTS folder paths in the 'agents' field with the cryptic error 'agents: Invalid input' "
@@ -1341,12 +1706,131 @@ def validate_manifest(
             )
             break  # Only emit once even if listed in array — the message is the same.
 
+    # v2.84.0 — Plugin.json key shadows the default component folder (CC v2.1.140).
+    # When plugin.json sets one of {commands, agents, skills, outputStyles},
+    # the default folder is silently ignored at runtime: only the items the
+    # author explicitly listed are loaded. Files left in the default folder
+    # but not listed never reach Claude Code. CC's own /doctor / `claude plugin
+    # list` / /plugin views started warning about this in v2.1.140; CPV emits
+    # the same warning so authors catch the shadowing pre-publish.
+    #
+    # Coverage rules: the explicit value is considered to cover the default
+    # folder if it (a) IS the default folder path as a string, (b) is an
+    # array containing the default folder path, or (c) is an array that
+    # lists every loadable item inside the default folder.
+    _DEFAULT_COMPONENT_FOLDERS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+        # (manifest_key, default_folder, file_extensions)
+        ("commands", "commands", (".md",)),
+        ("agents", "agents", (".md",)),
+        ("outputStyles", "output-styles", (".md",)),
+    )
+
+    def _norm_path(p: str) -> str:
+        """Canonicalize a plugin.json path to a relative POSIX path with no
+        leading ``./`` and no trailing ``/``. Accepts both ``"./commands/"``
+        and ``"commands"`` and normalizes them to ``"commands"``."""
+        n = p.replace("\\", "/").strip().rstrip("/")
+        while n.startswith("./"):
+            n = n[2:]
+        return n
+
+    def _list_default_folder_files(folder: Path, exts: tuple[str, ...]) -> list[str]:
+        """Return loadable items in ``folder`` as POSIX-style ``folder/name``
+        strings (no leading ``./``), scanning only the top level."""
+        if not folder.is_dir():
+            return []
+        items = sorted(
+            p.name for p in folder.iterdir() if p.is_file() and p.suffix.lower() in exts and not p.name.startswith(".")
+        )
+        return [f"{folder.name}/{n}" for n in items]
+
+    def _list_default_skill_dirs(folder: Path) -> list[str]:
+        """Return skill subdirs in ``./skills/`` that contain SKILL.md.
+        Each returned path is normalized (no leading ``./``, no trailing ``/``)."""
+        if not folder.is_dir():
+            return []
+        items: list[str] = []
+        for sub in sorted(folder.iterdir()):
+            if not sub.is_dir() or sub.name.startswith("."):
+                continue
+            # Skill folder is loadable if it contains SKILL.md (case-insensitive on macOS).
+            for entry in sub.iterdir():
+                if entry.is_file() and entry.name.lower() == "skill.md":
+                    items.append(f"{folder.name}/{sub.name}")
+                    break
+        return items
+
+    def _emit_shadow_warning(
+        key: str,
+        default_rel: str,
+        shadowed: list[str],
+    ) -> None:
+        # Cap the listing to keep the message terminal-friendly.
+        shown = shadowed if len(shadowed) <= 6 else shadowed[:6] + [f"... and {len(shadowed) - 6} more"]
+        report.major(
+            f"Field '{key}' is set in plugin.json — Claude Code v2.1.140+ silently ignores "
+            f"the default '{default_rel}' folder when the matching key is declared. "
+            f"{len(shadowed)} item(s) inside the default folder will NOT load at runtime: "
+            f"{shown}. Fix: either remove the '{key}' field from plugin.json so the default "
+            f"folder is auto-discovered, or add the missing entries to the explicit '{key}' "
+            f"list. CC's /doctor, `claude plugin list`, and /plugin now surface this warning.",
+            ".claude-plugin/plugin.json",
+        )
+
+    def _shadowed_items(value: Any, folder_name: str, default_contents: list[str]) -> list[str]:
+        """Return default-folder items not reached by ``value``. Empty list
+        means the explicit value already covers everything (no warning)."""
+        if isinstance(value, str):
+            covered = {_norm_path(value)}
+        elif isinstance(value, list):
+            covered = {_norm_path(p) for p in value if isinstance(p, str)}
+        else:
+            covered = set()
+        # A bare-folder reference (e.g. "commands" or "./commands/") covers
+        # all current AND future content in that folder.
+        if folder_name in covered:
+            return []
+        return [item for item in default_contents if _norm_path(item) not in covered]
+
+    for key, folder_name, exts in _DEFAULT_COMPONENT_FOLDERS:
+        if key not in manifest:
+            continue
+        default_folder = plugin_root / folder_name
+        default_contents = _list_default_folder_files(default_folder, exts)
+        if not default_contents:
+            continue
+        shadowed = _shadowed_items(manifest[key], folder_name, default_contents)
+        if shadowed:
+            _emit_shadow_warning(key, f"./{folder_name}/", shadowed)
+
+    # Skills are folder-based (./skills/<name>/SKILL.md). Same shadowing rule:
+    # a 'skills' key in plugin.json suppresses auto-discovery of ./skills/.
+    if "skills" in manifest:
+        skills_folder = plugin_root / "skills"
+        default_skills = _list_default_skill_dirs(skills_folder)
+        if default_skills:
+            shadowed = _shadowed_items(manifest["skills"], "skills", default_skills)
+            if shadowed:
+                _emit_shadow_warning("skills", "./skills/", shadowed)
+
     # v2.22.0 spec-parity helpers — dependencies, userConfig sub-fields, channels/mcp
     # cross-ref, and monitors entry shape. Each helper is a no-op when the corresponding
     # field is absent so unused manifests pay zero extra cost.
     # v2.22.3 (TRDD-20108ab7): dependencies receives hosting_marketplace context
     # so cross-marketplace refs can be checked against the allowlist.
-    validate_dependencies(manifest, report, hosting_marketplace=hosting_marketplace)
+    # v2.79+ (TRDD-20108ab7, 2026-05-10): when caller did NOT supply explicit
+    # hosting_marketplace, attempt on-disk auto-discovery so end-users running
+    # ``validate_plugin <path>`` with NO marketplace flag also get the
+    # cross-marketplace enforcement (Layout C / Layout B / cache layout).
+    # Explicit context always wins over auto-discovery (test:
+    # test_validate_manifest_explicit_context_overrides_auto_discovery).
+    effective_hosting = hosting_marketplace
+    if effective_hosting is None and "dependencies" in manifest:
+        # Only pay the discovery cost when the manifest actually has deps.
+        # Manifests with no dependencies field never trigger the cross-mkt
+        # path, so the parent-walk filesystem cost would be wasted.
+        effective_hosting = discover_hosting_marketplace(plugin_root)
+    validate_dependencies(manifest, report, hosting_marketplace=effective_hosting)
     validate_user_config_structure(manifest, report)
     validate_channels_structure(manifest, plugin_root, report)
     validate_monitors_entries(manifest, plugin_root, report)
@@ -1522,8 +2006,32 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
             # Submodule pattern: subdirectory named after the plugin itself.
             # Common in Layout B nested marketplaces and dev-cached plugins.
             continue
-        report.warning(
-            f"Non-standard directory '{dirname}/' — not part of the plugin spec. If needed by plugin scripts, consider documenting its purpose in README."
+        # Issue #16 category H: skip vendoring-conventional roots
+        # (external/, vendor/, third_party/, node_modules/, etc.) AND any
+        # directory listed as a submodule in .gitmodules. Also honor
+        # `cpv.allow_root_dirs` allow-list in plugin.json for explicit
+        # opt-out of edge-case directory names.
+        if is_vendored_path(Path(dirname), plugin_root):
+            continue
+        cpv_cfg = load_cpv_config(plugin_root)
+        allow_roots = cpv_cfg.get("allow_root_dirs", [])
+        if isinstance(allow_roots, list) and dirname in allow_roots:
+            continue
+        # Severity: MAJOR (was WARNING). The user's directive: "NO DEVIATION
+        # FROM THE STANDARD can be allowed unless you declare the custom
+        # folder in plugin.json". An undeclared non-standard root folder
+        # is the #1 source of "the plugin published but installs to
+        # nothing" because the install pipeline only knows about the
+        # standard component directories.
+        report.major(
+            f"[RC-NONSTD-DIR-001] Non-standard directory '{dirname}/' — not part "
+            "of the plugin spec, and not declared in plugin.json's "
+            "`cpv.allow_root_dirs`. Either move the contents under a standard "
+            "component dir (skills/agents/commands/hooks/scripts/...) OR add "
+            f"'{dirname}' to `cpv.allow_root_dirs` in .claude-plugin/plugin.json. "
+            "Undeclared non-standard root dirs are the #1 cause of empty plugin "
+            "installs because the install pipeline only loads from the standard "
+            "directories."
         )
 
     # Validate plugin-shipped settings.json if present
@@ -1537,7 +2045,15 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
                 # "agent" is the primary plugin-level setting; "extraKnownMarketplaces"
                 # is the v2.1.80 inline-marketplace declaration validated separately below.
                 # "subagentStatusLine" is the v2.1.x plugin-scoped override (plugins.md:278-288).
-                recognized_keys = {"agent", "extraKnownMarketplaces", "subagentStatusLine"}
+                # TRDD-e2b17a61: "strictKnownMarketplaces" added so it does not emit a
+                # spurious "unrecognized key" MINOR — its actual scope violation
+                # (admin-managed only) is reported as a MAJOR below.
+                recognized_keys = {
+                    "agent",
+                    "extraKnownMarketplaces",
+                    "strictKnownMarketplaces",
+                    "subagentStatusLine",
+                }
                 has_unrecognized = False
                 for key in settings_data:
                     if key not in recognized_keys:
@@ -1561,14 +2077,52 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
                         report.major(
                             f"settings.json 'agent' must be a string, got {type(agent_val).__name__}", "settings.json"
                         )
-                # v2.1.80+: validate extraKnownMarketplaces block by delegating to the
-                # dedicated settings-marketplace validator. Results are merged into this
-                # plugin report so all findings land in a single report.
-                if "extraKnownMarketplaces" in settings_data:
+                # TRDD-e2b17a61 — v2.1.80+: validate extraKnownMarketplaces /
+                # strictKnownMarketplaces by delegating to the dedicated
+                # settings-marketplace validator. Wiring fires for EITHER block so
+                # authors get schema validation for whichever they ship. Results
+                # merge into this plugin report so all findings land in a single
+                # report.
+                #
+                # Open question 3 (TRDD-e2b17a61): both keys are scope-mismatched
+                # when they live in a plugin-shipped settings.json:
+                #   - extraKnownMarketplaces: USER/PROJECT-scope (silently ignored
+                #     from plugins) → emit WARNING so the author knows the
+                #     declaration is a no-op for end users.
+                #   - strictKnownMarketplaces: ADMIN-MANAGED-only allowlist → emit
+                #     MAJOR because the author may be relying on lockdown that
+                #     will never fire.
+                has_extra_kn_mp = "extraKnownMarketplaces" in settings_data
+                has_strict_kn_mp = "strictKnownMarketplaces" in settings_data
+                if has_extra_kn_mp or has_strict_kn_mp:
                     from validate_settings_marketplace import validate_settings_marketplace_file
 
                     sm_report = validate_settings_marketplace_file(settings_path)
                     report.merge(sm_report)
+
+                    if has_extra_kn_mp:
+                        report.warning(
+                            "settings.json: 'extraKnownMarketplaces' is a USER/PROJECT-scope "
+                            "key (settings.md). When shipped inside a plugin-shipped "
+                            "settings.json it is silently ignored at runtime — Claude Code "
+                            "only honours this block from user (~/.claude/settings.json) "
+                            "or project (.claude/settings.json) scopes. Move the "
+                            "declaration to your project README as installation guidance "
+                            "instead of bundling it in the plugin.",
+                            "settings.json",
+                        )
+                    if has_strict_kn_mp:
+                        report.major(
+                            "settings.json: 'strictKnownMarketplaces' is an "
+                            "ADMIN-MANAGED-only key (cc_scope_rules.MANAGED_ONLY_KEYS, "
+                            "managed-settings.md). Claude Code silently ignores this "
+                            "block from any plugin-shipped settings.json — the author "
+                            "is relying on lockdown enforcement that will NEVER fire. "
+                            "Strict allowlists belong in /etc/claude-code/managed-settings.json "
+                            "(Linux), /Library/Application Support/ClaudeCode/managed-settings.json "
+                            "(macOS), or C:\\ProgramData\\ClaudeCode\\managed-settings.json (Windows).",
+                            "settings.json",
+                        )
                 if not has_unrecognized:
                     report.passed("settings.json is valid", "settings.json")
                 else:
@@ -1578,13 +2132,17 @@ def validate_structure(plugin_root: Path, report: ValidationReport, marketplace_
 
     # Check that plugin has at least some actual content beyond just a manifest
     content_indicators = ["commands", "skills", "agents", "hooks", "scripts", "output-styles"]
-    file_indicators = [".mcp.json", ".lsp.json"]
+    # CC v2.1.142: a root-level SKILL.md (with no skills/ subdir) is surfaced
+    # as a skill, so it counts as plugin content on its own.
+    file_indicators = [".mcp.json", ".lsp.json", "SKILL.md"]
     has_content = any((plugin_root / d).is_dir() for d in content_indicators) or any(
         (plugin_root / f).exists() for f in file_indicators
     )
     if not has_content:
         report.major(
-            "Plugin has a manifest but no content — expected at least one of: commands/, skills/, agents/, hooks/, scripts/, .mcp.json, or .lsp.json",
+            "Plugin has a manifest but no content — expected at least one of: "
+            "commands/, skills/, agents/, hooks/, scripts/, .mcp.json, .lsp.json, "
+            "or a root-level SKILL.md",
             ".claude-plugin/plugin.json",
         )
 
@@ -1767,6 +2325,39 @@ def validate_mcp(plugin_root: Path, report: ValidationReport) -> None:
         report.add(result.level, result.message, result.file, result.line)
 
 
+# TRDD-e3e74f69 telemetry hookup
+def validate_telemetry(plugin_root: Path, report: ValidationReport) -> None:
+    """Run the OTEL telemetry supply-chain sub-validator.
+
+    Delegates to ``validate_telemetry.scan_plugin_for_telemetry`` and merges
+    findings into the umbrella report. Catches the OTEL hazards introduced
+    by ``monitoring-usage.md``: ``otelHeadersHelper`` in plugin settings
+    (CRITICAL — periodic arbitrary code execution),
+    ``OTEL_LOG_RAW_API_BODIES=1`` in plugin env (CRITICAL — full
+    request/response exfil), prompt-exfil flags (MAJOR), endpoint hijack
+    (MAJOR), and any plugin-shipped OTEL var (MINOR — telemetry config
+    belongs in ``managed-settings.json``).
+
+    The check stays silent when the plugin has no OTEL configuration at
+    all — PASSED-only results from the standalone validator are dropped to
+    avoid noise in the umbrella output for the 99% of plugins that don't
+    ship telemetry config.
+    """
+    # PLC0415: import inside the function to avoid pulling validate_telemetry
+    # at module import time. Multiple agents may add umbrella entries; this
+    # keeps the import surface stable across merges.
+    from validate_telemetry import scan_plugin_for_telemetry  # noqa: PLC0415
+
+    tel_report = scan_plugin_for_telemetry(plugin_root)
+
+    # Merge findings, filtering PASSED noise — the umbrella does not need
+    # a separate "telemetry passed" line for every clean plugin.
+    for result in tel_report.results:
+        if result.level == "PASSED":
+            continue
+        report.add(result.level, result.message, result.file, result.line)
+
+
 def _has_shebang(path: Path) -> bool:
     """Check if a file starts with a shebang (#!) line."""
     try:
@@ -1777,84 +2368,32 @@ def _has_shebang(path: Path) -> bool:
 
 
 def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
-    """Validate all scripts in scripts/ — Python, Shell, JS/TS, PowerShell, Go, Rust."""
+    """Validate scripts/ structure — exec bits + shebangs ONLY.
+
+    v2.64.0: the lint pieces that lived here (ruff / mypy / shellcheck /
+    eslint / PSScriptAnalyzer / gofmt / cargo) moved to
+    `cpv_lint_engine.lint_repo`, which is invoked by the main `validate()`
+    flow as a separate REPO LINT phase. That gives us a single source of
+    truth for linting and lets every linter resolve via uvx / bunx / npx /
+    docker without polluting the host.
+
+    What stays here: scripts/-specific structural checks that don't make
+    sense at the whole-repo level — exec-bit verification on .sh/.bash
+    files and shebang enforcement on script extensions.
+    """
     scripts_dir = plugin_root / "scripts"
 
     if not scripts_dir.is_dir():
         report.info("No scripts/ directory found")
         return
 
-    # When running via remote_validation.py, don't use target's config files
-    # for linters — the remote launcher provides its own safe config via env vars
-    is_remote = os.environ.get("CPV_REMOTE_VALIDATION") == "1"
-
-    # --- Python scripts (.py) ---
-    py_files = list(scripts_dir.glob("*.py"))
-    if py_files:
-        ruff_cmd = resolve_tool_command("ruff")
-        if ruff_cmd:
-            ruff_args = ruff_cmd + ["check", "--select", "E,F,W", "--ignore", "E501", "--output-format=concise"]
-            if not is_remote:
-                pyproject = plugin_root / "pyproject.toml"
-                if pyproject.exists():
-                    ruff_args.extend(["--config", str(pyproject)])
-            ruff_args.extend([str(f) for f in py_files])
-            try:
-                result = subprocess.run(ruff_args, capture_output=True, text=True, timeout=60)
-            except subprocess.TimeoutExpired:
-                report.warning("Ruff timed out after 60s — skipping lint check")
-                result = None
-            if result is not None and result.returncode == 0:
-                report.passed(f"Ruff check passed for {len(py_files)} Python files")
-            elif result is not None:
-                errors_by_file: dict[str, int] = {}
-                for ruff_line in result.stdout.strip().split("\n"):
-                    if ruff_line and ":" in ruff_line:
-                        file_part = ruff_line.split(":")[0].strip()
-                        if file_part:
-                            errors_by_file[file_part] = errors_by_file.get(file_part, 0) + 1
-                for file_path_str, count in sorted(errors_by_file.items()):
-                    rel = file_path_str
-                    try:
-                        rel = str(Path(file_path_str).relative_to(plugin_root))
-                    except ValueError:
-                        pass
-                    report.major(f"Ruff: {count} error(s) in {rel}", rel)
-                if not errors_by_file and result.stdout.strip():
-                    report.major("Ruff: error(s) across script files")
-        else:
-            report.minor("ruff not available locally or via uvx, skipping Python lint check")
-
-        mypy_cmd = resolve_tool_command("mypy")
-        if mypy_cmd:
-            mypy_args = mypy_cmd + ["--ignore-missing-imports"]
-            if not is_remote:
-                pyproject = plugin_root / "pyproject.toml"
-                if pyproject.exists():
-                    mypy_args.extend(["--config-file", str(pyproject)])
-            mypy_args.extend([str(f) for f in py_files])
-            try:
-                result = subprocess.run(mypy_args, capture_output=True, text=True, timeout=60)
-            except subprocess.TimeoutExpired:
-                report.warning("Mypy timed out after 60s — skipping type check")
-                result = None
-            if result is not None and result.returncode == 0:
-                report.passed(f"Mypy check passed for {len(py_files)} Python files")
-            elif result is not None:
-                for line in result.stdout.strip().split("\n"):
-                    if not line or line.startswith("Success") or line.startswith("Found"):
-                        continue
-                    report.minor(f"Mypy: {line}")
-        else:
-            report.minor("mypy not available locally or via uvx, skipping type check")
-
-    # --- Shell scripts (.sh, .bash) ---
+    # --- Shell scripts (.sh, .bash) — exec-bit only; lint runs in REPO LINT ---
     sh_files = list(scripts_dir.glob("*.sh")) + list(scripts_dir.glob("*.bash"))
     for sh_file in sh_files:
-        # os.access(..., X_OK) is unreliable on Windows (NTFS ACLs don't map to
-        # POSIX exec bits), so skip the exec-bit check there. Users on Windows
-        # won't be executing .sh scripts directly from PowerShell/cmd anyway;
-        # the check is a Unix portability safeguard.
+        # os.access(..., X_OK) is unreliable on Windows (NTFS ACLs don't map
+        # to POSIX exec bits), so skip the exec-bit check there. Users on
+        # Windows won't be executing .sh scripts directly from PowerShell/cmd
+        # anyway; the check is a Unix portability safeguard.
         if IS_WINDOWS:
             report.passed(
                 f"Shell script present (exec bit not checked on Windows): {sh_file.name}",
@@ -1864,85 +2403,6 @@ def validate_scripts(plugin_root: Path, report: ValidationReport) -> None:
             report.major(f"Shell script not executable: {sh_file.name}", f"scripts/{sh_file.name}")
         else:
             report.passed(f"Shell script executable: {sh_file.name}", f"scripts/{sh_file.name}")
-        # Delegate to validate_hook.py's lint function (shellcheck with JSON parsing)
-        lint_bash_script(sh_file, report)
-
-    # --- JavaScript/TypeScript scripts (.js, .ts, .mjs, .cjs) ---
-    js_files = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix.lower() in {".js", ".ts", ".mjs", ".cjs"}]
-    for js_file in js_files:
-        lint_js_script(js_file, report)
-
-    # --- PowerShell scripts (.ps1, .psm1) ---
-    ps_files = [f for f in scripts_dir.iterdir() if f.is_file() and f.suffix.lower() in {".ps1", ".psm1"}]
-    if ps_files:
-        pssa_cmd = resolve_tool_command("PSScriptAnalyzer")
-        if pssa_cmd:
-            for ps_file in ps_files:
-                try:
-                    result = subprocess.run(
-                        pssa_cmd + ["-Path", str(ps_file), "-Severity", "Error,Warning"],
-                        capture_output=True,
-                        text=True,
-                        timeout=30,
-                    )
-                except subprocess.TimeoutExpired:
-                    report.warning(f"PSScriptAnalyzer timed out on {ps_file.name}")
-                    continue
-                if result.returncode == 0 and not result.stdout.strip():
-                    report.passed(f"PSScriptAnalyzer passed: {ps_file.name}")
-                elif result.stdout.strip():
-                    for line in result.stdout.strip().split("\n")[:5]:
-                        report.minor(f"PSScriptAnalyzer: {line.strip()}", f"scripts/{ps_file.name}")
-        else:
-            report.info("PSScriptAnalyzer not available, skipping PowerShell lint")
-
-    # --- Go scripts (.go) ---
-    go_files = list(scripts_dir.glob("*.go"))
-    if go_files:
-        go_bin = shutil.which("go")
-        if go_bin:
-            for go_file in go_files:
-                try:
-                    result = subprocess.run(
-                        [go_bin, "vet", str(go_file)],
-                        capture_output=True,
-                        text=True,
-                        timeout=30,
-                    )
-                except subprocess.TimeoutExpired:
-                    report.warning(f"go vet timed out on {go_file.name}")
-                    continue
-                if result.returncode == 0:
-                    report.passed(f"go vet passed: {go_file.name}")
-                else:
-                    for line in (result.stderr or result.stdout).strip().split("\n")[:5]:
-                        if line.strip():
-                            report.minor(f"go vet: {line.strip()}", f"scripts/{go_file.name}")
-        else:
-            report.info("go not available, skipping Go lint")
-
-    # --- Rust scripts (check for Cargo.toml in scripts/) ---
-    if (scripts_dir / "Cargo.toml").exists():
-        cargo_bin = shutil.which("cargo")
-        if cargo_bin:
-            try:
-                result = subprocess.run(
-                    [cargo_bin, "check", "--manifest-path", str(scripts_dir / "Cargo.toml")],
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                )
-            except subprocess.TimeoutExpired:
-                report.warning("cargo check timed out")
-                result = None
-            if result is not None and result.returncode == 0:
-                report.passed("cargo check passed for Rust scripts")
-            elif result is not None:
-                for line in result.stderr.strip().split("\n")[:5]:
-                    if "error" in line.lower():
-                        report.minor(f"cargo: {line.strip()}", "scripts/Cargo.toml")
-        else:
-            report.info("cargo not available, skipping Rust lint")
 
     # Check Python scripts with shebang are executable (Unix only)
     if not IS_WINDOWS:
@@ -2038,9 +2498,7 @@ RECOMMENDED_PLATFORMS = {
 # Shebang interpreters that mark a file as an interpreted script rather than a compiled binary.
 # Matches `#!/usr/bin/env python3`, `#!/bin/bash`, `#!/usr/bin/python3.12`, etc.
 # `\b(name)[\d.]*` allows versioned interpreters like python3 / python3.12 / node18.
-_SCRIPT_SHEBANG_RE = re.compile(
-    r"^#!.*\b(python|bash|sh|node|deno|ruby|perl|pwsh|fish|zsh|tclsh)[\d.]*\b"
-)
+_SCRIPT_SHEBANG_RE = re.compile(r"^#!.*\b(python|bash|sh|node|deno|ruby|perl|pwsh|fish|zsh|tclsh)[\d.]*\b")
 
 
 def _file_has_script_shebang(path: Path) -> bool:
@@ -2382,6 +2840,95 @@ def validate_cross_platform(plugin_root: Path, report: ValidationReport) -> None
         )
 
 
+def validate_manifest_skill_paths(plugin_root: Path, report: ValidationReport) -> bool:
+    """Validate the optional ``skills`` path-list in plugin.json (CC v2.1.136+).
+
+    Per CC v2.1.136 changelog: a ``skills`` entry in plugin.json HIDES the
+    plugin's default ``skills/`` directory (auto-discovery is suppressed)
+    and listing a file path that doesn't exist now shows an error in
+    ``claude plugin validate``. CPV mirrors that behaviour:
+
+    - When ``manifest["skills"]`` is absent or not a list, this function
+      is a no-op and ``validate_skills`` continues with the default
+      ``skills/`` directory walk.
+    - When ``manifest["skills"]`` is a list, every entry is validated
+      against the filesystem. Each entry may be either:
+        - a folder path containing ``SKILL.md`` (e.g. ``skills/my-skill/``)
+        - a direct ``SKILL.md`` file path (e.g. ``skills/my-skill/SKILL.md``)
+      Missing paths emit MAJOR (not WARNING) — they break the plugin's
+      skill discovery silently in CC < v2.1.136 and produce a hard error
+      in ≥ v2.1.136.
+
+    Returns ``True`` when the manifest declares a ``skills`` array (so
+    the caller can suppress the default ``skills/`` directory walk),
+    ``False`` otherwise. Mirrors the CC loader: a present ``skills`` field
+    is authoritative — it does not augment the default discovery.
+    """
+    plugin_json = plugin_root / ".claude-plugin" / "plugin.json"
+    if not plugin_json.is_file():
+        return False
+    try:
+        manifest = json.loads(plugin_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(manifest, dict):
+        return False
+    skills_field = manifest.get("skills")
+    if skills_field is None:
+        return False
+    if not isinstance(skills_field, list):
+        report.major(
+            f"plugin.json::skills must be a list of paths (got "
+            f"{type(skills_field).__name__}). CC v2.1.136+ rejects non-list "
+            f"values and the field overrides the default skills/ directory.",
+            ".claude-plugin/plugin.json",
+        )
+        return True  # field IS declared (just malformed) — suppress default walk
+    for i, entry in enumerate(skills_field):
+        if not isinstance(entry, str):
+            report.major(
+                f"plugin.json::skills[{i}] must be a string path (got "
+                f"{type(entry).__name__}). CC v2.1.136+ rejects non-string entries.",
+                ".claude-plugin/plugin.json",
+            )
+            continue
+        # Resolve relative to plugin root; reject path-traversal.
+        candidate = (plugin_root / entry).resolve()
+        try:
+            candidate.relative_to(plugin_root.resolve())
+        except ValueError:
+            report.major(
+                f"plugin.json::skills[{i}] = {entry!r} escapes the plugin root "
+                f"(resolved to {candidate}). Reject for security.",
+                ".claude-plugin/plugin.json",
+            )
+            continue
+        # Accept either a directory containing SKILL.md OR a direct SKILL.md.
+        if candidate.is_dir():
+            if not (candidate / "SKILL.md").is_file():
+                report.major(
+                    f"plugin.json::skills[{i}] = {entry!r} is a directory but "
+                    f"contains no SKILL.md. CC v2.1.136+ shows this as an error "
+                    f"in `claude plugin validate`.",
+                    ".claude-plugin/plugin.json",
+                )
+        elif candidate.is_file():
+            if candidate.name != "SKILL.md":
+                report.major(
+                    f"plugin.json::skills[{i}] = {entry!r} is a file but not a "
+                    f"SKILL.md (got {candidate.name!r}). CC v2.1.136+ requires "
+                    f"either a folder containing SKILL.md or a direct SKILL.md path.",
+                    ".claude-plugin/plugin.json",
+                )
+        else:
+            report.major(
+                f"plugin.json::skills[{i}] = {entry!r} does not exist on disk. "
+                f"CC v2.1.136+ shows this as an error instead of failing silently.",
+                ".claude-plugin/plugin.json",
+            )
+    return True
+
+
 def validate_skills(plugin_root: Path, report: ValidationReport, skip_platform_checks: list[str] | None = None) -> None:
     """Validate all skills in the plugin's skills/ directory.
 
@@ -2389,12 +2936,57 @@ def validate_skills(plugin_root: Path, report: ValidationReport, skip_platform_c
         plugin_root: Path to plugin root directory
         report: ValidationReport to add results to
         skip_platform_checks: List of platforms to skip checks for (e.g., ['windows'])
+
+    CC v2.1.136+ semantics: when plugin.json declares a ``skills`` array,
+    that list is AUTHORITATIVE and the default ``skills/`` directory walk
+    is suppressed. ``validate_manifest_skill_paths`` runs first and
+    returns True when it consumed the field — in that case this function
+    early-returns so we don't double-validate (or validate skills the
+    plugin author intentionally hid).
     """
+    if validate_manifest_skill_paths(plugin_root, report):
+        # plugin.json::skills is the authoritative source — every listed
+        # path is the responsibility of the manifest validator above.
+        return
+
     skills_dir = plugin_root / "skills"
+    root_skill_md = plugin_root / "SKILL.md"
 
     if not skills_dir.is_dir():
-        report.info("No skills/ directory found")
+        # CC v2.1.142: a plugin with a root-level SKILL.md and no skills/
+        # subdirectory has that SKILL.md surfaced as a skill. Validate it with
+        # the full skill validator, the same scrutiny a skills/<name>/ skill
+        # gets — anything less would let a broken root-level skill ship.
+        if root_skill_md.is_file():
+            report.info("Root-level SKILL.md found — surfaced as a skill (CC v2.1.142)")
+            # The skill's directory IS the plugin root, so the frontmatter
+            # 'name' has no skills/<name>/ folder to be matched against.
+            skill_report = validate_skill_comprehensive(
+                plugin_root,
+                strict_mode=True,
+                strict_openspec=False,
+                validate_pillars_flag=False,
+                skip_platform_checks=skip_platform_checks,
+                skip_dir_name_check=True,
+            )
+            for result in skill_report.results:
+                report.add(result.level, result.message, result.file or "SKILL.md", result.line)
+        else:
+            report.info("No skills/ directory found")
         return
+
+    # A skills/ directory exists: per CC v2.1.142 a root-level SKILL.md is
+    # surfaced ONLY when the plugin has no skills/ subdir, so a SKILL.md left
+    # at the plugin root alongside skills/ is dead weight that never loads.
+    if root_skill_md.is_file():
+        report.minor(
+            "Root-level SKILL.md will NOT load: CC v2.1.142 surfaces a "
+            "root-level SKILL.md as a skill only when the plugin has no "
+            "skills/ subdirectory. Move it to skills/<name>/SKILL.md, or "
+            "remove the skills/ directory so the root-level SKILL.md is "
+            "surfaced instead.",
+            "SKILL.md",
+        )
 
     # Find all skill directories
     skill_dirs = [d for d in skills_dir.iterdir() if d.is_dir()]
@@ -2707,6 +3299,75 @@ def _category_has_matching_artifact(plugin_root: Path, patterns: list[str]) -> b
     return False
 
 
+def validate_strip_gitmodules(plugin_root: Path, report: ValidationReport) -> None:
+    """TRDD-793ac32a — validate `.gitmodules` URL allowlist.
+
+    Plugins that use the strip-dev-parts pattern (tests/ → submodule)
+    expose a `.gitmodules` URL surface that is normally trusted with no
+    defense (PSS pattern). CPV adds:
+
+      * URL-shape rules (no userinfo, no `..`, scheme in {https,ssh},
+        no backslash/newline) → CRITICAL on violation (STRIP-G010)
+      * Per-plugin allowlist via `cpv.strip.allowed_submodule_urls`
+        → CRITICAL on alien URL (STRIP-G011)
+      * Default rule when allowlist is absent: same owner as parent OR
+        `Emasoft` (transitional shared-dev repos) → CRITICAL on alien
+        owner (STRIP-G013)
+      * Opt-out via `cpv.strip.require_url_allowlist=false` → WARNING
+        for traceability (STRIP-G014)
+      * Recorded `submodule_commit_sha` cross-check vs git index
+        → CRITICAL on mismatch (STRIP-G015)
+
+    No-op when `.gitmodules` is absent. **Fail-closed** when CPV's own
+    `cpv_validate_gitmodules` module cannot be imported: emit CRITICAL
+    with code RC-STRIP-GITMODULES-IMPORT-FAILED. A missing security
+    validator is itself a security failure — refusing to validate is
+    safer than silently passing the plugin (the engine ALSO runs the
+    same check at strip time, but that is a separate execution
+    path).
+    """
+    gm = plugin_root / ".gitmodules"
+    if not gm.is_file():
+        return
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        scripts_dir = str(_Path(__file__).resolve().parent)
+        if scripts_dir not in _sys.path:
+            _sys.path.insert(0, scripts_dir)
+        from cpv_validate_gitmodules import validate_gitmodules  # noqa: PLC0415
+    except ImportError as e:
+        # Engine helper missing — security validator unavailable.
+        # FAIL-CLOSED: refuse to validate rather than silently pass.
+        # A missing CRITICAL-tier check on a security-sensitive surface
+        # (.gitmodules URL allowlist) must NEVER degrade to a soft warning
+        # — that turns a security validator into a fail-open path that
+        # an attacker can exploit by deleting / shadowing the helper.
+        report.critical(
+            "[RC-STRIP-GITMODULES-IMPORT-FAILED] .gitmodules present but "
+            "cpv_validate_gitmodules.py is not installed/importable — "
+            f"refusing to validate (import error: {e}). The .gitmodules URL "
+            "allowlist is a CRITICAL-tier security check (TRDD-793ac32a) "
+            "and CPV must not pass plugins through it silently. Reinstall "
+            "CPV from a release that ships scripts/cpv_validate_gitmodules.py, "
+            "or remove .gitmodules from the plugin if no submodule is needed."
+        )
+        return
+
+    findings = validate_gitmodules(plugin_root)
+    for f in findings:
+        msg = f"[{f.code}] submodule={f.submodule_name!r} {f.message}"
+        if f.severity == "CRITICAL":
+            report.critical(msg)
+        elif f.severity == "WARNING":
+            report.warning(msg)
+        else:
+            report.minor(msg)
+    if not findings:
+        report.passed(".gitmodules URLs pass the strip-dev-parts allowlist (TRDD-793ac32a)")
+
+
 def validate_gitignore(plugin_root: Path, report: ValidationReport) -> None:
     """Validate that the plugin has a .gitignore with essential patterns.
 
@@ -2803,6 +3464,159 @@ def validate_gitignore(plugin_root: Path, report: ValidationReport) -> None:
                     "This directory will be lost on every plugin update because ${{CLAUDE_PLUGIN_ROOT}} is replaced. "
                     "Use a SessionStart hook to install dependencies into ${{CLAUDE_PLUGIN_DATA}} instead — "
                     "see https://code.claude.com/docs/en/plugins-reference#persistent-data-directory",
+                )
+
+    # Check that Node.js plugins wire a SessionStart installer hook.
+    # Plugins that ship `package.json`/`package-lock.json`/`pnpm-lock.yaml`/
+    # `yarn.lock`/`bun.lock` need their `node_modules/` installed at
+    # runtime — and the only durable place to install them is
+    # ${CLAUDE_PLUGIN_DATA}, because ${CLAUDE_PLUGIN_ROOT} is wiped on
+    # every plugin update.
+    #
+    # We narrow this advisory to Node.js because:
+    #   - Python plugins typically run via `uv run`, which auto-provisions
+    #     deps from pyproject.toml lazily (no SessionStart needed).
+    #   - Rust/Go plugins typically `cargo build`/`go install` lazily.
+    #   - Node.js is the only ecosystem where the dependency resolver
+    #     refuses to run lazily — `require()` looks up `node_modules/`
+    #     in the running process's directory tree, so the install MUST
+    #     happen ahead of the first import.
+    #
+    # This rule fires in BOTH dev mode and packaged mode — the
+    # missing-installer case is a design mistake, not a packaging
+    # mistake, and the dev tree is the right place to catch it before
+    # publish.
+    node_manifests: tuple[str, ...] = (
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "bun.lock",
+    )
+    matched_manifests: list[str] = [m for m in node_manifests if (plugin_root / m).is_file()]
+    has_runtime_deps = bool(matched_manifests)
+
+    if has_runtime_deps:
+        # Look for a SessionStart hook in either of the two valid hook
+        # locations. The hook command must mention an installer command
+        # AND target ${CLAUDE_PLUGIN_DATA} for the install destination.
+        hook_files = [
+            plugin_root / "hooks" / "hooks.json",
+            plugin_root / ".claude-plugin" / "hooks" / "hooks.json",
+        ]
+        installer_keywords = re.compile(
+            r"(npm\s+(ci|install)|pnpm\s+install|yarn\s+install|bun\s+install|"
+            r"pip\s+install|uv\s+(pip\s+install|sync)|cargo\s+(build|install)|"
+            r"go\s+(install|build))",
+            re.IGNORECASE,
+        )
+        plugin_data_token = "CLAUDE_PLUGIN_DATA"
+        installer_found = False
+        for hook_file in hook_files:
+            if not hook_file.is_file():
+                continue
+            try:
+                hook_content = hook_file.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            # Cheap textual check — full JSON parsing happens in validate_hook.
+            # We just need to know whether the file mentions both an installer
+            # command AND ${CLAUDE_PLUGIN_DATA}, anywhere inside a SessionStart
+            # block.
+            if (
+                "SessionStart" in hook_content
+                and plugin_data_token in hook_content
+                and installer_keywords.search(hook_content)
+            ):
+                installer_found = True
+                break
+
+        if not installer_found:
+            manifests_str = ", ".join(matched_manifests)
+            report.warning(
+                f"[RC-DATA-INSTALLER-001] Plugin declares runtime dependencies in "
+                f"{manifests_str} but has no SessionStart hook installing them into "
+                "${CLAUDE_PLUGIN_DATA}. Without one, the plugin either has to bundle "
+                "node_modules/site-packages (which inflates the install + gets wiped on every "
+                "plugin update because ${CLAUDE_PLUGIN_ROOT} is replaced wholesale), or it "
+                "depends on the user having the tooling globally installed (fragile). The "
+                "canonical pattern is a SessionStart hook that runs `npm ci --prefix "
+                "$CLAUDE_PLUGIN_DATA` (or `uv pip install --target $CLAUDE_PLUGIN_DATA/...` "
+                "for Python, etc.) on first session and is a no-op afterwards. See "
+                "https://code.claude.com/docs/en/plugins-reference#persistent-data-directory."
+            )
+
+    # Check that no script / hook / config file references
+    # ${CLAUDE_PLUGIN_ROOT}/<dep-dir>/ — that path is wiped on every update.
+    # Mutable state belongs in ${CLAUDE_PLUGIN_DATA}/.
+    #
+    # Markdown files are EXCLUDED from this scan: they are documentation
+    # that often quotes both correct and incorrect patterns side-by-side
+    # (e.g. plugin-diagnoser.md has rule descriptions that LITERALLY
+    # contain the bad pattern as the thing being detected). Quoting an
+    # anti-pattern is fine; we only flag actual code that ships the
+    # anti-pattern.
+    plugin_root_dep_re = re.compile(
+        r"\$\{?CLAUDE_PLUGIN_ROOT\}?/(node_modules|\.venv|venv|vendor|site-packages|target|__pypackages__)\b"
+    )
+    code_extensions = {".py", ".sh", ".js", ".ts", ".mjs", ".cjs", ".json", ".yml", ".yaml", ".toml"}
+    scan_dirs = [
+        plugin_root / "scripts",
+        plugin_root / "hooks",
+        plugin_root / "git-hooks",
+        plugin_root,  # for top-level config files like .mcp.json
+    ]
+    for scan_dir in scan_dirs:
+        if not scan_dir.is_dir():
+            continue
+        for f in scan_dir.rglob("*"):
+            if not f.is_file():
+                continue
+            if f.suffix.lower() not in code_extensions:
+                continue
+            # Skip files inside node_modules / .venv / vendor / etc. (we don't
+            # care about third-party code) and inside `_dev` working dirs.
+            try:
+                rel_parts = f.relative_to(plugin_root).parts
+            except ValueError:
+                continue
+            # Skip third-party / build dirs (we don't audit code we don't own)
+            # AND skip tests/ — test files often embed the very anti-patterns
+            # they exist to detect, as fixtures. Same idea as why
+            # validate_security skips test files for password / token regexes.
+            if any(
+                p
+                in {
+                    "node_modules",
+                    ".venv",
+                    "venv",
+                    "vendor",
+                    "__pypackages__",
+                    "target",
+                    "build",
+                    "dist",
+                    "_dev",
+                    "tests",
+                    "tests_dev",
+                }
+                or p.endswith("_dev")
+                for p in rel_parts
+            ):
+                continue
+            try:
+                text = f.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for match in plugin_root_dep_re.finditer(text):
+                rel = str(f.relative_to(plugin_root))
+                line_no = text[: match.start()].count("\n") + 1
+                report.major(
+                    f"[RC-DATA-WRONG-ROOT-001] {rel}:{line_no} references "
+                    f"${{CLAUDE_PLUGIN_ROOT}}/{match.group(1)}/ — that path is wiped on "
+                    f"every plugin update. Use ${{CLAUDE_PLUGIN_DATA}}/{match.group(1)}/ "
+                    "instead, and install via a SessionStart hook.",
+                    file=rel,
+                    line=line_no,
                 )
 
     # Check that non-plugin artifacts that may exist are ignored
@@ -2988,7 +3802,12 @@ def validate_md_content_references(plugin_root: Path, report: ValidationReport) 
     if agents_dir.is_dir():
         md_files.extend(agents_dir.glob("*.md"))
 
-    # Skills (SKILL.md + references/*.md)
+    # Skills (SKILL.md + references/*.md). EXEMPT vendor-doc references
+    # — those are canonical embedded copies fetched from code.claude.com,
+    # and their cross-links use `/en/...` paths that target other Claude
+    # docs, not files inside the plugin. We keep them byte-identical to
+    # the upstream so doc updates produce clean diffs.
+    VENDOR_DOC_NAMES = {"plugins-reference.md", "skills-reference.md"}
     skills_dir = plugin_root / "skills"
     if skills_dir.is_dir():
         for skill_dir in skills_dir.iterdir():
@@ -2998,7 +3817,7 @@ def validate_md_content_references(plugin_root: Path, report: ValidationReport) 
                     md_files.append(skill_md)
                 refs_dir = skill_dir / "references"
                 if refs_dir.is_dir():
-                    md_files.extend(refs_dir.glob("*.md"))
+                    md_files.extend(f for f in refs_dir.glob("*.md") if f.name not in VENDOR_DOC_NAMES)
 
     if not md_files:
         return
@@ -3075,6 +3894,1020 @@ def validate_pipeline_readiness(plugin_root: Path, report: ValidationReport) -> 
             report.passed("Marketplace notification workflow found")
         else:
             report.warning("No notify-marketplace.yml workflow — plugin updates won't auto-notify marketplaces")
+
+
+# Regex matching `scripts/<name>.py` references in workflow / hook / template
+# files. Captures the script name only (no leading `scripts/` for cleaner
+# error messages).
+#   - The lookbehind `(?<![\w./])` blocks matches inside paths like
+#     `prefix/scripts/x.py` from being conflated with the project's scripts/.
+#   - The lookahead `(?![\w.])` blocks matches like `scripts/x.py.bak.gz` —
+#     a trailing `.` means the `.py` is part of a longer extension chain
+#     (backup, archive, .pyc-derivative), not an actual script reference.
+_SCRIPT_REF_RE = re.compile(r"(?<![\w./])scripts/([A-Za-z_][A-Za-z0-9_]*\.py)(?![\w.])")
+
+
+def _collect_script_refs(text: str, source_label: str) -> list[tuple[str, int, str]]:
+    """Yield (script_name, line_no, line_excerpt) for every scripts/*.py
+    reference found in ``text``. Used by ``validate_pipeline_script_refs``.
+    """
+    refs: list[tuple[str, int, str]] = []
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        for match in _SCRIPT_REF_RE.finditer(line):
+            script_name = match.group(1)
+            excerpt = line.strip()
+            if len(excerpt) > 120:
+                excerpt = excerpt[:117] + "..."
+            refs.append((script_name, line_no, excerpt))
+    _ = source_label  # kept for caller-side diagnostics
+    return refs
+
+
+def validate_pipeline_script_refs(plugin_root: Path, report: ValidationReport) -> None:
+    """Detect dangling `scripts/<name>.py` references in pipeline surface area.
+
+    Why this exists: every time a script in `scripts/` is renamed or removed,
+    multiple consumers silently break — `.github/workflows/*.yml`, the locally
+    installed `.git/hooks/pre-push`, the published `setup_plugin_pipeline.py`
+    template, and the `plugin-validation-skill` reference hooks all hardcode
+    `scripts/<name>.py` paths. The v2.65.0 lint consolidation triggered exactly
+    this regression — `lint_files.py` was removed but CI + the local hook still
+    invoked it, breaking every push until a follow-up patch.
+
+    This validator scans every place a stale reference could hide and emits
+    MAJOR for each missing target. Catching dangling references at PR / release
+    time is the only durable fix; the alternative is rediscovering the bug
+    every time a script gets renamed.
+    """
+    scripts_dir = plugin_root / "scripts"
+    if not scripts_dir.is_dir():
+        return  # plugin without a scripts/ folder — nothing to check
+
+    # Files that may legitimately hardcode `scripts/<name>.py` paths.
+    targets: list[tuple[Path, str]] = []
+
+    # GitHub workflows.
+    workflows_dir = plugin_root / ".github" / "workflows"
+    if workflows_dir.is_dir():
+        for wf in sorted(workflows_dir.glob("*.yml")):
+            targets.append((wf, f".github/workflows/{wf.name}"))
+        for wf in sorted(workflows_dir.glob("*.yaml")):
+            targets.append((wf, f".github/workflows/{wf.name}"))
+
+    # Locally-installed git hook (only present in dev checkouts; absent in
+    # cache installs because .git/ isn't shipped, so this is naturally a
+    # no-op for end users).
+    installed_hook = plugin_root / ".git" / "hooks" / "pre-push"
+    if installed_hook.is_file():
+        targets.append((installed_hook, ".git/hooks/pre-push"))
+
+    # Git-tracked source-of-truth hook templates under git-hooks/. These
+    # are the canonical templates that setup_git_hooks.py copies into
+    # .git/hooks/, so a stale ref here propagates to every fresh install.
+    # The v2.65.0 lint_files.py-removal regression slipped through because
+    # this directory was NOT scanned by the validator — the installed
+    # copy under .git/hooks/ had been hand-patched, so .git/hooks/pre-push
+    # passed validation while git-hooks/pre-push (the source) still had
+    # the dangling reference.
+    git_hooks_dir = plugin_root / "git-hooks"
+    if git_hooks_dir.is_dir():
+        for hook_name in (
+            "pre-push",
+            "pre-commit",
+            "post-rewrite",
+            "post-merge",
+            "commit-msg",
+        ):
+            tracked_hook = git_hooks_dir / hook_name
+            if tracked_hook.is_file():
+                targets.append((tracked_hook, f"git-hooks/{hook_name}"))
+
+    # Plugin-validation-skill reference hooks (template that gets copied into
+    # plugins by setup_plugin_pipeline).
+    pvs_hook = plugin_root / "skills" / "plugin-validation-skill" / "references" / "pre-push-hook.py"
+    if pvs_hook.is_file():
+        targets.append((pvs_hook, "skills/plugin-validation-skill/references/pre-push-hook.py"))
+
+    # The pipeline-template generator itself — its embedded PRE_PUSH_HOOK
+    # string is the source-of-truth for newly-scaffolded plugins.
+    pipeline_gen = plugin_root / "scripts" / "setup_plugin_pipeline.py"
+    if pipeline_gen.is_file():
+        targets.append((pipeline_gen, "scripts/setup_plugin_pipeline.py"))
+
+    if not targets:
+        return
+
+    # Build the set of scripts that actually exist on disk.
+    existing_scripts = {p.name for p in scripts_dir.glob("*.py")}
+
+    for path, label in targets:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for script_name, line_no, excerpt in _collect_script_refs(text, label):
+            if script_name in existing_scripts:
+                continue
+            report.major(
+                f"Dangling reference to scripts/{script_name} in {label}:{line_no} — "
+                f"the script does not exist. Update the reference or restore the file. "
+                f"Line: {excerpt}",
+                file=label,
+                line=line_no,
+            )
+
+
+# ── RC-WORKFLOW-PATH-BROKEN (issue #21 ask #2) ────────────────────────────────
+# Path-shape heuristic: a token is "path-like" if it starts with one of these
+# prefixes or carries a trailing ".sh"/".py" extension. We DELIBERATELY keep
+# this list narrow — broadening it (e.g. matching every `*` or every relative
+# segment) starts catching glob-formatted matrix variables, makefile vars,
+# bash arrays, etc. The narrow prefix list catches the documented symptom
+# (post-migration .sh references that no longer exist) without false-positives
+# on legitimate workflow constructs.
+_WORKFLOW_PATH_PREFIXES: tuple[str, ...] = (
+    "scripts/",
+    "tests/",
+    ".github/",
+    ".githooks/",
+    "git-hooks/",
+    "./",
+)
+
+# Glob meta-characters in the same shell sense Python's glob module uses.
+_WORKFLOW_GLOB_CHARS: frozenset[str] = frozenset({"*", "?", "[", "]"})
+
+# Trailing shell control operators that frequently glue onto path-like
+# tokens because shlex.split does NOT consume them as token separators —
+# they are shell metacharacters, not whitespace. Without stripping them,
+# `for h in scripts/hooks/*.py; do` produces the token
+# `scripts/hooks/*.py;` (with the semicolon attached), which globs to
+# zero matches and triggers a spurious MAJOR. Symmetric set for leading
+# operators (case branches, leading pipes); the sets must remain narrow
+# so we don't accidentally strip a leading dot or path separator.
+_TRAILING_SHELL_OPS: str = ";)&|<>"
+_LEADING_SHELL_OPS: str = "(&|"
+
+
+def _strip_shell_ops(token: str) -> str:
+    """Remove trailing/leading shell control operators (``;``, ``)``,
+    ``&``, ``|``, ``<``, ``>``, ``(``) that shlex.split leaves glued onto
+    path-like tokens. ``str.rstrip`` / ``lstrip`` take a *set* of
+    characters, so this collapses runs of mixed operators in one pass
+    (e.g. ``scripts/foo.sh;)`` → ``scripts/foo.sh``).
+    """
+    return token.lstrip(_LEADING_SHELL_OPS).rstrip(_TRAILING_SHELL_OPS)
+
+
+def _looks_like_workflow_path(token: str) -> bool:
+    """True iff ``token`` is a candidate path argument extracted from a
+    workflow ``run:`` body.
+
+    Excludes flag tokens (``-x``), URLs (``http://...``, ``https://...``),
+    env-var refs (``${{ matrix.x }}``, ``$FOO``, ``${HOME}``), tokens
+    that *contain* a shell variable reference anywhere (``./$h``,
+    ``path/${VAR}/x.sh``), bare binaries (``shellcheck``, ``bash``), and
+    KEY=VALUE assignments.
+    """
+    if not token:
+        return False
+    # Flags: -x, --foo, ---bar (anything starting with `-`).
+    if token.startswith("-"):
+        return False
+    # URLs.
+    lowered = token.lower()
+    if (
+        lowered.startswith("http://")
+        or lowered.startswith("https://")
+        or lowered.startswith("git+ssh://")
+        or lowered.startswith("ssh://")
+    ):
+        return False
+    # Shell variable references and GitHub Actions expressions. ${{ ... }}
+    # is the GHA expression form; $FOO and ${FOO} are POSIX shell. We
+    # exclude the token when ``$`` appears ANYWHERE in it — not just at
+    # the start. shlex.split with posix=True strips the surrounding
+    # quotes from `./"$h"`, leaving the bare string `./$h` which would
+    # otherwise pass the path-prefix check below and be reported as a
+    # missing literal. Any token containing ``$`` is dynamic at runtime
+    # and cannot be statically validated against the filesystem, so the
+    # honest answer is "not a literal path".
+    if "$" in token:
+        return False
+    # Backticked command substitutions are not paths. ($-anchored
+    # substitutions like $(...) are already excluded by the $-anywhere
+    # rule above.)
+    if token.startswith("`"):
+        return False
+    # KEY=VALUE shell assignments — the token isn't a path even when the value
+    # part *contains* one (the assignment as a whole is a single token).
+    if "=" in token and "/" not in token.split("=", 1)[0]:
+        return False
+    # Path-shape heuristic — must start with one of the known repo prefixes
+    # OR end in a recognised extension. Avoids flagging bare command names
+    # like ``shellcheck`` or ``bash``.
+    if any(token.startswith(p) for p in _WORKFLOW_PATH_PREFIXES):
+        return True
+    if token.endswith((".sh", ".py", ".yml", ".yaml", ".toml", ".json")):
+        # An unprefixed extension hit ('foo.sh') is too aggressive — only
+        # flag when the token also contains a path separator. ``echo done.sh``
+        # would otherwise emit a false positive.
+        if "/" in token:
+            return True
+    return False
+
+
+def _is_workflow_glob(token: str) -> bool:
+    """Treat ``token`` as a glob iff it contains shell wildcards. Anything
+    else is a literal path. Mirrors Python's ``glob`` module which treats
+    ``*``, ``?`` and ``[…]`` as wildcards."""
+    return any(ch in _WORKFLOW_GLOB_CHARS for ch in token)
+
+
+def _scan_workflow_run_body(body: str, body_start_line: int) -> list[tuple[str, int]]:
+    """Yield (token, absolute_line_no) tuples for every path-like token
+    found in a workflow ``run:`` body.
+
+    The body may be multi-line (``run: |`` literal block scalar). Each
+    line is shlex-tokenised independently with ``posix=True`` so quoted
+    strings collapse to single tokens. Tokeniser failures (unbalanced
+    quotes from ``run: |`` heredoc bodies, half-written EOF blocks, etc.)
+    fall back to whitespace-splitting that line — better than skipping
+    the entire file.
+    """
+    results: list[tuple[str, int]] = []
+    for offset, line in enumerate(body.splitlines()):
+        # Comments and empty lines: nothing to extract.
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        try:
+            tokens = shlex.split(line, comments=True, posix=True)
+        except ValueError:
+            tokens = line.split()
+        for raw_token in tokens:
+            # Strip shell control operators that shlex.split does not treat
+            # as token separators (`;`, `)`, `&`, `|`, `<`, `>` trailing;
+            # `(`, `&`, `|` leading). Without this step the for-loop
+            # syntax `for h in scripts/hooks/*.py; do` produces the token
+            # `scripts/hooks/*.py;` — a glob that matches zero files and
+            # triggers a spurious MAJOR. The strip is safe: pathnames
+            # ending in those characters are not legal in POSIX command
+            # arguments without explicit quoting (which shlex would have
+            # consumed before we see the token here).
+            token = _strip_shell_ops(raw_token)
+            if _looks_like_workflow_path(token):
+                results.append((token, body_start_line + offset))
+    return results
+
+
+def _collect_run_blocks(content: str) -> list[tuple[str, int]]:
+    """Extract every ``run:`` body from a workflow YAML as a (body, line_no)
+    list. Falls back to a regex pass when ``yaml.safe_load`` fails — better
+    than giving up because of a single malformed step.
+
+    We use a hybrid approach: PyYAML for structural extraction, then
+    re-locate the body in the raw source so we can attach correct line
+    numbers (PyYAML strips them). The line number returned is the line
+    of the first content line of the body, NOT the line of the ``run:``
+    key — the user wants citations like ``ci.yml:42`` to point at the
+    offending command, not at the block-header line above it.
+    """
+    blocks: list[tuple[str, int]] = []
+
+    # ── Structural pass via yaml.safe_load ────────────────────────────
+    try:
+        doc = yaml.safe_load(content)
+    except Exception:
+        doc = None
+
+    def _walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == "run" and isinstance(v, str):
+                    body_start = _locate_run_body(content, v)
+                    blocks.append((v, body_start))
+                else:
+                    _walk(v)
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
+
+    if doc is not None:
+        _walk(doc)
+        if blocks:
+            return blocks
+
+    # ── Regex fallback ─────────────────────────────────────────────────
+    # When PyYAML can't parse (e.g. tab indentation, unsupported tag), or
+    # the document parsed but contained zero ``run:`` keys (some workflows
+    # use only ``uses:`` actions), fall back to a regex that finds every
+    # ``run:`` line and grabs either the inline value or the literal-block
+    # body that follows.
+    pattern = re.compile(r"^([ \t]*)run:[ \t]*(\|[+-]?|>[+-]?)?[ \t]*(.*)$", re.MULTILINE)
+    for m in pattern.finditer(content):
+        indent = m.group(1)
+        block_marker = (m.group(2) or "").strip()
+        inline_value = m.group(3)
+        # Line number of the body's first physical line (NOT the run: line
+        # itself — the diagnostic message should point at the offending
+        # command). For inline ``run: foo`` that's the same line; for
+        # block ``run: |`` it's the next line.
+        line_at_run_key = content[: m.start()].count("\n") + 1
+        if block_marker.startswith("|") or block_marker.startswith(">"):
+            # Block scalar — collect indented continuation lines.
+            lines = content.splitlines()
+            start_idx = line_at_run_key  # 1-based: line AFTER the run: line
+            collected: list[str] = []
+            for idx in range(start_idx, len(lines)):
+                line = lines[idx]
+                if not line.strip():
+                    collected.append("")
+                    continue
+                # Block ends when indentation regresses to or below the
+                # ``run:`` line's indentation.
+                line_indent = line[: len(line) - len(line.lstrip())]
+                if len(line_indent) <= len(indent):
+                    break
+                collected.append(line)
+            body = "\n".join(collected).rstrip("\n")
+            blocks.append((body, start_idx + 1))  # 1-based body line
+        else:
+            blocks.append((inline_value or "", line_at_run_key))
+
+    return blocks
+
+
+def _locate_run_body(content: str, body: str) -> int:
+    """Best-effort 1-based line number of a ``run:`` body inside the raw
+    YAML source. Used when PyYAML stripped the line metadata.
+
+    Strategy: search for the first non-empty line of ``body`` as a
+    substring. Falls back to line 1 if not found.
+    """
+    first_line = next((line for line in body.splitlines() if line.strip()), body)
+    if not first_line:
+        return 1
+    idx = content.find(first_line.strip())
+    if idx < 0:
+        return 1
+    return content[:idx].count("\n") + 1
+
+
+def validate_workflow_path_broken(plugin_root: Path, report: ValidationReport) -> None:
+    """Detect broken literal paths and zero-match globs in workflow ``run:``
+    bodies — issue #21 ask #2 (RC-WORKFLOW-PATH-BROKEN, MAJOR).
+
+    Symptom this rule catches: a canonical-pipeline migration that
+    consolidates several scripts/*.sh helpers into publish.py but leaves
+    the workflow YAML still invoking the old shellcheck-on-globs lines:
+
+        run: shellcheck scripts/dispatch.sh scripts/detectors/*.sh \\
+                        scripts/hooks/*.sh scripts/lib/*.sh .githooks/pre-push
+
+    After consolidation, ``scripts/detectors/`` no longer exists, so
+    ``scripts/detectors/*.sh`` matches zero files and the workflow
+    silently passes (shellcheck reports zero issues on zero files). The
+    plugin then ships with NO shellcheck coverage, even though CI says
+    "green."
+
+    This validator detects the symptom by:
+      1. Walking every ``.github/workflows/*.yml``/``*.yaml`` file.
+      2. Extracting every ``run:`` body (multi-line block scalars too).
+      3. shlex-tokenising each line and selecting "path-like" tokens
+         via ``_looks_like_workflow_path``.
+      4. For literals: ``(plugin_root / token).exists()`` → MAJOR if
+         missing.
+      5. For globs (token contains ``*``/``?``/``[``): ``glob.glob`` from
+         the plugin root → MAJOR if zero matches.
+
+    Severity is MAJOR (not CRITICAL): the workflow still runs, but the
+    intended check is silently no-op'd. MAJOR means publish.py blocks the
+    release until the dangling reference is fixed. Severity NOT CRITICAL
+    because there is no security loss — only a lost lint/test signal.
+
+    Skipped when:
+      - The plugin has no ``.github/workflows/`` directory.
+      - The token is a flag (``-x``), URL, env-var ref, or KEY=VALUE
+        assignment (handled by ``_looks_like_workflow_path``).
+    """
+    workflows_dir = plugin_root / ".github" / "workflows"
+    if not workflows_dir.is_dir():
+        return
+
+    yaml_files: list[Path] = sorted(workflows_dir.glob("*.yml")) + sorted(workflows_dir.glob("*.yaml"))
+    if not yaml_files:
+        return
+
+    plugin_root_str = str(plugin_root)
+    found_any = False
+
+    for yaml_path in yaml_files:
+        try:
+            content = yaml_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        rel_path = str(yaml_path.relative_to(plugin_root))
+
+        run_blocks = _collect_run_blocks(content)
+        for body, body_start_line in run_blocks:
+            for token, line_no in _scan_workflow_run_body(body, body_start_line):
+                if _is_workflow_glob(token):
+                    # Resolve the glob from the plugin root. Use
+                    # ``recursive=False`` so ``*`` does NOT cross directory
+                    # boundaries (matches shell glob semantics, which is
+                    # what the workflow author wrote). ``**/*.sh`` would
+                    # need recursive=True, but the heuristic above only
+                    # accepts tokens with ``*`` not ``**``-style — and
+                    # even if it did, shell globs default non-recursive
+                    # unless the user enables ``shopt -s globstar``.
+                    abs_pattern = str(Path(plugin_root_str) / token)
+                    matches = _glob.glob(abs_pattern)
+                    if not matches:
+                        found_any = True
+                        report.major(
+                            f"[RC-WORKFLOW-PATH-BROKEN] {rel_path}:{line_no} — "
+                            f"glob '{token}' matches zero files in the plugin tree. "
+                            "If a canonical-pipeline migration consolidated the "
+                            "matched files into publish.py, remove the dangling "
+                            "glob from the workflow body; otherwise restore the "
+                            "missing files.",
+                            file=rel_path,
+                            line=line_no,
+                        )
+                else:
+                    target = plugin_root / token
+                    if not target.exists():
+                        found_any = True
+                        report.major(
+                            f"[RC-WORKFLOW-PATH-BROKEN] {rel_path}:{line_no} — "
+                            f"literal path '{token}' does not exist on disk. "
+                            "Update the workflow to point at the new canonical "
+                            "entry-point (e.g. publish.py / cpv_lint_engine), or "
+                            "restore the missing file.",
+                            file=rel_path,
+                            line=line_no,
+                        )
+
+    if not found_any and yaml_files:
+        report.passed(
+            f"All workflow run: paths/globs resolve in {len(yaml_files)} workflow file(s) (RC-WORKFLOW-PATH-BROKEN)"
+        )
+
+
+# Files generated by `generate_plugin_repo.gen_*` that are pure
+# infrastructure (publish pipeline, retry helper, pre-push hook, CI / release
+# / notify workflows, changelog config, mega-linter config). Plugins are NOT
+# expected to customise these — their job is to stay in lockstep with the
+# canonical CPV templates so every plugin gets the same security gates,
+# idempotent publish pipeline, cross-platform Python, etc.
+#
+# When any of these drifts from the canonical content, the validator emits a
+# WARNING (not blocking a publish, but visible in CI). The plugin-fixer agent
+# picks the WARNING up and offers `/cpv-upgrade-plugin` to migrate.
+_CANONICAL_PIPELINE_FILES: tuple[tuple[str, str], ...] = (
+    ("scripts/publish.py", "gen_publish_py"),
+    ("scripts/cpv_network_resilience.py", "gen_cpv_network_resilience_py"),
+    ("git-hooks/pre-push", "gen_pre_push_hook"),
+    (".github/workflows/ci.yml", "gen_ci_yml"),
+    (".github/workflows/release.yml", "gen_release_yml"),
+    (".github/workflows/notify-marketplace.yml", "gen_notify_marketplace_yml"),
+    ("cliff.toml", "gen_cliff_toml"),
+    (".mega-linter.yml", "gen_mega_linter_yml"),
+    (".markdownlint.json", "gen_markdownlint_json"),
+)
+
+
+def validate_canonical_pipeline_drift(plugin_root: Path, report: ValidationReport) -> None:
+    """Emit a WARNING for every canonical pipeline file that drifts from the
+    latest CPV template.
+
+    Each file in ``_CANONICAL_PIPELINE_FILES`` is generated from a deterministic
+    `gen_*(p: PluginParams)` function in `generate_plugin_repo`. We re-run the
+    generator with the plugin's own manifest params and byte-compare the
+    rendered string against the file on disk.
+
+    Plugins that opted into a specific older standard, or that intentionally
+    customised one of these files, will see the WARNING — and that is desired
+    behaviour: the WARNING tells them `/cpv-upgrade-plugin` will sync them to
+    the latest standard (idempotent publish.py, sanitized inputs, pathlib-only
+    Python, no bash hook constructs, validate_pipeline_script_refs, etc.).
+
+    Skipped when scanning CPV itself — the canonical templates ARE CPV's own
+    files, so any change CPV makes to the templates would self-warn.
+
+    Skipped silently when:
+      - The file is missing (validate_pipeline_readiness already flags missing
+        publish.py / cliff.toml / workflows; emitting a drift warning on top
+        would be noise).
+      - `generate_plugin_repo` cannot be imported (e.g. the plugin under test
+        is on an old CPV checkout that lacks one of the gen_* helpers).
+      - The plugin's manifest cannot be read (other validators already warn).
+    """
+    # CPV self-scan: skip — the templates ARE CPV's own files.
+    try:
+        from validate_security import is_cpv_self_scan
+
+        if is_cpv_self_scan(plugin_root):
+            return
+    except Exception:
+        # Best-effort import; if validate_security is unavailable, fall through
+        # to the manifest-name heuristic below.
+        plugin_json = plugin_root / ".claude-plugin" / "plugin.json"
+        if plugin_json.is_file():
+            try:
+                manifest_data = json.loads(plugin_json.read_text(encoding="utf-8"))
+                if isinstance(manifest_data, dict) and manifest_data.get("name") == "claude-plugins-validation":
+                    return
+            except Exception:
+                pass
+
+    # Read the plugin's manifest so we can populate template params.
+    plugin_json = plugin_root / ".claude-plugin" / "plugin.json"
+    if not plugin_json.is_file():
+        return  # validate_required_files already flags this
+    try:
+        manifest_data = json.loads(plugin_json.read_text(encoding="utf-8"))
+    except Exception:
+        return
+
+    # Import the generator and the params helper.
+    scripts_dir = Path(__file__).resolve().parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        import generate_plugin_repo as gen_module
+        from standardize_plugin import _params_from_manifest
+    except Exception:
+        return
+
+    try:
+        params = _params_from_manifest(manifest_data)
+    except Exception:
+        return
+
+    # Per-file emission with embedded unified diff.
+    #
+    # Issue #21 ask #3: instead of one consolidated warning naming six files,
+    # emit one warning per drifted file containing the unified diff hunks
+    # (with @@ line markers) so the reader can immediately see WHICH lines
+    # drifted, not just WHICH files. Severity stays WARNING — escalation to
+    # MAJOR is the job of validate_workflow_path_refs (issue #21 ask #2),
+    # which targets a NARROWER subset (broken paths/globs in workflow run:
+    # bodies), not whole-file template drift.
+    for rel_path, gen_func_name in _CANONICAL_PIPELINE_FILES:
+        target = plugin_root / rel_path
+        if not target.is_file():
+            continue
+        try:
+            actual_content = target.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        gen_func = getattr(gen_module, gen_func_name, None)
+        if gen_func is None:
+            continue
+        try:
+            # Some gen_* are unparameterized; introspect the signature instead
+            # of guessing.
+            import inspect
+
+            sig = inspect.signature(gen_func)
+            expected_content = gen_func(params) if sig.parameters else gen_func()
+        except Exception:
+            continue
+        if actual_content == expected_content:
+            continue
+
+        # Build a unified diff. Cap at ±10 hunks per file or 200 diff lines
+        # total per emission so the message stays readable. The diff is
+        # produced with `lineterm=""` per Python docs — every yielded hunk
+        # line already contains its own newline, so no double-newlines and
+        # no trailing-LF noise.
+        diff_iter = difflib.unified_diff(
+            expected_content.splitlines(),
+            actual_content.splitlines(),
+            fromfile=f"canonical/{rel_path}",
+            tofile=f"plugin/{rel_path}",
+            lineterm="",
+            n=3,
+        )
+        diff_lines: list[str] = []
+        hunk_count = 0
+        max_hunks = 10
+        max_diff_lines = 200
+        truncated = False
+        for hunk_line in diff_iter:
+            if hunk_line.startswith("@@"):
+                hunk_count += 1
+                if hunk_count > max_hunks:
+                    truncated = True
+                    break
+            if len(diff_lines) >= max_diff_lines:
+                truncated = True
+                break
+            diff_lines.append(hunk_line)
+
+        diff_body = "\n".join(diff_lines)
+        if truncated:
+            diff_body += (
+                f"\n... (diff truncated at {max_hunks} hunks / "
+                f"{max_diff_lines} lines — full diff: "
+                f"`diff -u <canonical> {rel_path}`)"
+            )
+
+        # v2.86.0: reword to handle the case where the plugin's pipeline is
+        # AT or ABOVE canon (issue #22 case — the plugin had extra hardening
+        # CPV is now adopting). The blanket "migrate to the latest standard"
+        # phrasing previously suggested regressing such plugins. Now we
+        # describe the drift neutrally and let the maintainer judge whether
+        # to migrate. Files that match canon-hardening checkpoints (SHA-pin
+        # comments, atomic-push pattern, env-sanitization comments) get a
+        # softer phrasing.
+        already_hardened = any(
+            marker in diff_body
+            for marker in (
+                "git push --atomic",
+                "SHA-pin",
+                "actionlint",
+                "commitlint-github-action",
+                "wagoid/commitlint",
+                "rhysd/actionlint",
+            )
+        )
+        if already_hardened:
+            recommendation = (
+                "This file appears to already include canon-level hardening "
+                "(SHA-pinned actions, atomic push, actionlint/commitlint, "
+                "etc.). Review the unified diff and decide whether the "
+                "remaining deltas are intentional. If your version is "
+                "STRICTLY above canon, consider opening an upstream PR to "
+                "narrow this gap; if you want CPV to ignore it for this "
+                "plugin, add the file path to "
+                "`cpv.allow_pipeline_drift` in plugin.json."
+            )
+        else:
+            recommendation = (
+                "Run `/cpv-upgrade-plugin` (or `uvx cpv-remote-validate "
+                "standardize <plugin> --fix --force-templates`) to migrate "
+                "to the latest standard (canon now bundles idempotent "
+                "publish.py, atomic push, SHA-pinned actions, actionlint + "
+                "commitlint gates, macOS matrix, env-sanitized run blocks)."
+            )
+        report.warning(
+            f"[RC-PIPELINE-DRIFT-001] Plugin pipeline differs from the "
+            f"canonical CPV standard in {rel_path}. {recommendation}\n"
+            f"Unified diff (canonical → plugin):\n{diff_body}",
+            file=rel_path,
+        )
+
+
+# Legacy pipeline scripts that older `generate_plugin_repo` versions emitted
+# but that publish.py now subsumes. Plugins upgraded to the canonical pipeline
+# should NOT keep these around — invoking them bypasses the 14 publish gates
+# (security scans, gh-auth precheck, integrity manifest, idempotency, etc.).
+#
+# Each entry: (relative-path, replaced-by, why-it's-legacy).
+# Severity emitted by `validate_legacy_pipeline_scripts`: MINOR — informational,
+# does not block publish; the fixer agent moves these to scripts_dev/ on the
+# `/cpv-upgrade-plugin` path.
+_LEGACY_PIPELINE_SCRIPTS: tuple[tuple[str, str, str], ...] = (
+    (
+        "scripts/bump_version.py",
+        "scripts/publish.py --patch / --minor / --major",
+        "publish.py owns version bumping — Gate 7 reads the remote tag and calls bump_semver() idempotently",
+    ),
+    (
+        "scripts/release.sh",
+        "scripts/publish.py",
+        "publish.py is the canonical 14-gate release pipeline; .sh blocks Windows users",
+    ),
+    (
+        "scripts/release.py",
+        "scripts/publish.py",
+        "publish.py is the canonical 14-gate release pipeline",
+    ),
+    (
+        "scripts/publish.sh",
+        "scripts/publish.py",
+        "publish.py replaces publish.sh; .sh blocks Windows users",
+    ),
+    (
+        "scripts/lint.sh",
+        ".github/workflows/ci.yml + publish.py Gate 4 (lint)",
+        "linting runs in CI on every push and inside publish.py Gate 4 — lint.sh is a pre-CPV-pipeline artefact",
+    ),
+    (
+        "scripts/setup-hooks.sh",
+        "scripts/setup-hooks.py",
+        "setup-hooks.py is cross-platform Python; .sh blocks Windows users",
+    ),
+    (
+        "scripts/compute_hashes.py",
+        "scripts/publish.py Gate 8 (integrity manifest)",
+        "publish.py Gate 8 generates and signs the integrity manifest; "
+        "third-party plugins should NOT ship a hash computer",
+    ),
+    (
+        "scripts/verify_hashes.py",
+        "scripts/publish.py Gate 8 verification",
+        "publish.py verifies hashes during the release; downstream verifiers live in CPV's _plugin_verify_hashes.py",
+    ),
+    (
+        "scripts/changelog.py",
+        "scripts/publish.py Gate 9 (git-cliff)",
+        "publish.py Gate 9 invokes git-cliff with the cliff.toml emitted by the canonical pipeline",
+    ),
+    (
+        "scripts/generate_changelog.py",
+        "scripts/publish.py Gate 9",
+        "publish.py Gate 9 generates CHANGELOG.md",
+    ),
+    (
+        "scripts/check_version.py",
+        "scripts/publish.py Gate 7",
+        "publish.py Gate 7 validates version consistency across plugin.json, marketplace.json, pyproject.toml, etc.",
+    ),
+    (
+        "scripts/install.sh",
+        "Documentation in README + claude plugin install",
+        "users install via `claude plugin install` — install.sh is a pre-pipeline artefact",
+    ),
+)
+
+
+def validate_legacy_pipeline_scripts(plugin_root: Path, report: ValidationReport) -> None:
+    """Emit a MINOR finding for every known-legacy pipeline script that
+    survives in the plugin's `scripts/` folder.
+
+    Older versions of `generate_plugin_repo.py` shipped helpers
+    (bump_version.py, release.sh, lint.sh, etc.) that have since been
+    subsumed by publish.py's 14-gate pipeline. Plugins migrated via
+    `/cpv-upgrade-plugin` MUST have these removed — leaving them around
+    invites users to invoke the legacy entry-point and skip the canonical
+    gates (security scans, gh-auth precheck, integrity manifest,
+    idempotent commit/tag/push, etc.).
+
+    Severity is MINOR (not MAJOR) so the finding is informational and
+    does not block publishing — the fixer's `--upgrade` flow moves the
+    files to `scripts_dev/` (preservation guardrail) instead of deleting
+    them, then the user can decide whether to delete after verifying.
+
+    Skipped on CPV self-scan (CPV is the canonical source — the listed
+    files don't exist at CPV root anyway, but the early-return keeps the
+    rule cheap on every CPV-self lint pass).
+    """
+    # Skip CPV self-scan.
+    try:
+        from validate_security import is_cpv_self_scan
+
+        if is_cpv_self_scan(plugin_root):
+            return
+    except Exception:
+        plugin_json = plugin_root / ".claude-plugin" / "plugin.json"
+        if plugin_json.is_file():
+            try:
+                manifest_data = json.loads(plugin_json.read_text(encoding="utf-8"))
+                if isinstance(manifest_data, dict) and manifest_data.get("name") == "claude-plugins-validation":
+                    return
+            except Exception:
+                pass
+
+    for rel_path, replaced_by, reason in _LEGACY_PIPELINE_SCRIPTS:
+        target = plugin_root / rel_path
+        if not target.is_file():
+            continue
+        report.minor(
+            f"[RC-LEGACY-PIPELINE-001] Legacy pipeline script `{rel_path}` is "
+            f"obsoleted by `{replaced_by}` — {reason}. The fixer can move it "
+            f"to scripts_dev/ via `/cpv-upgrade-plugin` (preservation guardrail: "
+            f"the legacy file is moved, not deleted, so the user can review "
+            f"before final removal).",
+            rel_path,
+        )
+
+
+_PEP723_BLOCK_RE = re.compile(
+    r"^# /// script\s*\n(?P<body>(?:^#.*\n)*?)^# ///\s*$",
+    re.MULTILINE,
+)
+_PEP723_DEPS_RE = re.compile(
+    r"^#\s*dependencies\s*=\s*\[(?P<deps>.*?)\]",
+    re.MULTILINE | re.DOTALL,
+)
+_PYTHON_STDLIB_PREFIXES: tuple[str, ...] = (
+    # Conservative subset — anything else is treated as needing a venv.
+    "argparse",
+    "ast",
+    "asyncio",
+    "base64",
+    "bisect",
+    "collections",
+    "concurrent",
+    "contextlib",
+    "copy",
+    "csv",
+    "dataclasses",
+    "datetime",
+    "difflib",
+    "enum",
+    "errno",
+    "fnmatch",
+    "functools",
+    "glob",
+    "gzip",
+    "hashlib",
+    "heapq",
+    "hmac",
+    "html",
+    "http",
+    "importlib",
+    "inspect",
+    "io",
+    "ipaddress",
+    "itertools",
+    "json",
+    "logging",
+    "math",
+    "mimetypes",
+    "multiprocessing",
+    "operator",
+    "os",
+    "pathlib",
+    "pickle",
+    "platform",
+    "pprint",
+    "queue",
+    "random",
+    "re",
+    "secrets",
+    "select",
+    "shlex",
+    "shutil",
+    "signal",
+    "socket",
+    "sqlite3",
+    "ssl",
+    "stat",
+    "string",
+    "struct",
+    "subprocess",
+    "sys",
+    "tempfile",
+    "textwrap",
+    "threading",
+    "time",
+    "tomllib",
+    "traceback",
+    "types",
+    "typing",
+    "unicodedata",
+    "unittest",
+    "urllib",
+    "uuid",
+    "venv",
+    "warnings",
+    "weakref",
+    "xml",
+    "zipfile",
+    "zlib",
+)
+
+
+def _pep723_has_runtime_deps(body: str) -> bool:
+    """True when a PEP 723 metadata block declares ≥ 1 non-stdlib dependency.
+
+    Body is the inline-comment block between `# /// script` and `# ///`. We
+    parse the `dependencies = [ ... ]` list and check each entry's leading
+    package-name token against the conservative stdlib prefix list. An empty
+    list (`dependencies = []`) is fine — no `uv run` needed because the
+    script imports nothing extra.
+    """
+    deps_match = _PEP723_DEPS_RE.search(body)
+    if not deps_match:
+        return False
+    deps_str = deps_match.group("deps")
+    # Strip per-line comment leaders and quotes; collect package-name tokens.
+    cleaned = re.sub(r"^\s*#\s?", "", deps_str, flags=re.MULTILINE)
+    for raw in cleaned.split(","):
+        token = raw.strip().strip("\"'")
+        if not token:
+            continue
+        # Slice off version/extra markers (e.g. "ruamel.yaml>=0.18", "pkg[opt]>=1").
+        pkg = re.split(r"[<>=!~\[;]", token, maxsplit=1)[0].strip()
+        if not pkg:
+            continue
+        # Top-level module name (e.g. "ruamel.yaml" → "ruamel" — close enough).
+        head = pkg.split(".")[0].lower().replace("-", "_")
+        if head not in _PYTHON_STDLIB_PREFIXES:
+            return True
+    return False
+
+
+def validate_pep723_invocations(plugin_root: Path, report: ValidationReport) -> None:
+    """Emit MAJOR for `python <script.py>` invocations of PEP 723 scripts.
+
+    Background (reported 2026-05-09): plugin-creator scaffolded scripts that
+    declare runtime dependencies via a PEP 723 inline-script metadata block
+    (``# /// script ... # ///``), but the generated invocations in commands /
+    agents / skills / hooks / README used bare ``python <script>`` /
+    ``python3 <script>`` instead of ``uv run <script>``. Bare ``python`` ignores
+    the inline metadata block, so the script ImportErrors on the first
+    non-stdlib import the moment a user runs it. The plugin "looks valid" to
+    every static check yet is broken at runtime for anyone whose Python env
+    lacks the listed deps.
+
+    Detection:
+      1. Walk ``scripts/*.py`` for the regex
+         ``^# /// script\\s*\\n(?:^#.*\\n)*?^# ///\\s*$``.
+      2. For each script with a non-empty ``dependencies`` list (i.e. NOT
+         ``dependencies = []``) AND at least one non-stdlib package, record
+         the relative path + basename.
+      3. Walk every ``commands/*.md``, ``agents/*.md``, ``skills/**/SKILL.md``,
+         ``skills/**/references/*.md``, ``hooks/hooks.json``, ``.mcp.json``,
+         ``.lsp.json``, and the plugin's ``README.md`` for invocations
+         matching ``\\bpython3?\\s+[^\\n]*<script-basename>``.
+      4. Flag every bare-python invocation as MAJOR
+         ``[RC-PEP723-INVOCATION-001]``. Use the FIX hint to point at
+         ``uv run <script>`` (or ``uv run --with <deps> python <script>`` if
+         the plugin author insists on the explicit-deps form).
+
+    Severity is MAJOR — silent runtime breakage for end users is much worse
+    than the build-time noise of a wrong invocation pattern. The fixer's
+    cpv-codemod already supports a ``python-to-uv-run`` transform; the
+    upgrade flow chains it after the validator's report.
+    """
+    scripts_dir = plugin_root / "scripts"
+    if not scripts_dir.is_dir():
+        return
+
+    pep723_scripts: list[tuple[str, str]] = []  # [(rel_path, basename)]
+    for py_file in sorted(scripts_dir.glob("*.py")):
+        try:
+            text = py_file.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        match = _PEP723_BLOCK_RE.search(text)
+        if not match:
+            continue
+        if not _pep723_has_runtime_deps(match.group("body")):
+            continue
+        rel = str(py_file.relative_to(plugin_root))
+        pep723_scripts.append((rel, py_file.name))
+
+    if not pep723_scripts:
+        return
+
+    # Where to look for invocations. Skip ``scripts_dev/`` (gitignored dev
+    # scratch — not shipped) and the script files themselves.
+    candidate_files: list[Path] = []
+    for sub in ("commands", "agents", "skills", "hooks"):
+        d = plugin_root / sub
+        if d.is_dir():
+            candidate_files.extend(p for p in d.rglob("*.md") if p.is_file())
+            candidate_files.extend(p for p in d.rglob("*.json") if p.is_file())
+    for top_file in (".mcp.json", ".lsp.json", "README.md"):
+        f = plugin_root / top_file
+        if f.is_file():
+            candidate_files.append(f)
+
+    # Build one regex per script — match `python` or `python3` followed by
+    # optional flags + any path that ends with the script's basename.
+    bare_python_patterns = {
+        basename: re.compile(
+            rf"\bpython3?\b(?!\s+(?:-c|-m)\b)(?:\s+-[A-Za-z]+)*\s+\S*{re.escape(basename)}\b",
+        )
+        for _rel, basename in pep723_scripts
+    }
+    # `uv run python <script>` is acceptable — uv's environment satisfies
+    # PEP 723 deps. Detect the prefix to avoid false positives.
+    uv_prefix = re.compile(r"\b(?:uvx?|pipx)\s+(?:run\s+)?(?:--[a-z\-]+\s+\S+\s+)*", re.IGNORECASE)
+
+    for cand in sorted(set(candidate_files)):
+        try:
+            content = cand.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        rel_cand = str(cand.relative_to(plugin_root))
+        for line_no, line in enumerate(content.splitlines(), start=1):
+            for basename, pat in bare_python_patterns.items():
+                m = pat.search(line)
+                if not m:
+                    continue
+                # Skip if a uv/uvx/pipx prefix immediately precedes the python token.
+                pre = line[: m.start()]
+                if uv_prefix.search(pre[-100:]):  # 100-char lookback
+                    continue
+                report.major(
+                    f"[RC-PEP723-INVOCATION-001] Bare `python {basename}` "
+                    f"invocation in {rel_cand}:{line_no} — `scripts/{basename}` "
+                    f"declares PEP 723 inline runtime deps that bare python "
+                    f"ignores. Replace with `uv run scripts/{basename}` (or "
+                    f"`uv run --with <deps> python scripts/{basename}` if the "
+                    f"plugin author wants explicit deps). The cpv-codemod "
+                    f"`python-to-uv-run` transform applies the fix in bulk.",
+                    rel_cand,
+                    line_no,
+                )
 
 
 def validate_workflow_best_practices(plugin_root: Path, report: ValidationReport) -> None:
@@ -3312,8 +5145,19 @@ def _find_plugin_candidates(root: Path, max_depth: int = 3) -> list[Path]:
     with irrelevant hits.
     """
     skip_names = {
-        "node_modules", ".git", ".venv", "venv", "__pycache__", "dist", "build",
-        "target", ".idea", ".vscode", "tmp", "vendor", "cache",
+        "node_modules",
+        ".git",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "dist",
+        "build",
+        "target",
+        ".idea",
+        ".vscode",
+        "tmp",
+        "vendor",
+        "cache",
     }
     candidates: list[Path] = []
 
@@ -3458,13 +5302,25 @@ def _format_no_plugin_found_hint(plugin_root: Path) -> str:
 
 
 def main() -> int:
-    """Main entry point."""
+    """Main entry point.
+
+    First action: verify CPV's own source has not been tampered with
+    by checking each validator file's SHA256 against the GitHub
+    canonical manifest for the running plugin version. Exits with
+    code 2 on mismatch — a tampered validator cannot be trusted.
+    """
+    from _plugin_verify_hashes import verify_self_integrity  # noqa: PLC0415
+
+    verify_self_integrity(quiet=True)
+
     check_remote_execution_guard()
+
+    from cpv_validation_common import launcher_epilog
 
     parser = argparse.ArgumentParser(
         description="Validate a Claude Code plugin against all validation rules.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="This is the main entry point. It orchestrates all 17 sub-validators.\nExample: uv run python scripts/validate_plugin.py . --strict --verbose",
+        epilog=("This is the main entry point. It orchestrates all 17 sub-validators.\n\n" + launcher_epilog("plugin")),
     )
     parser.add_argument(
         "--verbose",
@@ -3489,15 +5345,35 @@ def main() -> int:
     parser.add_argument(
         "--report", type=str, default=None, help="Save detailed report to file, print only summary to stdout"
     )
+    # TRDD-20108ab7 (2026-05-10): explicit hosting-marketplace override.
+    # When passed, the plugin's cross-marketplace dep allowlist is checked
+    # against THIS marketplace.json instead of the auto-discovered one.
+    # Useful for CI where the plugin lives outside its production marketplace
+    # tree (e.g. a worktree, a packed tarball, or a freshly cloned PR).
+    parser.add_argument(
+        "--marketplace-context",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help=(
+            "Path to a marketplace.json (or its containing directory) that "
+            "should be treated as the plugin's hosting marketplace for "
+            "cross-marketplace dependency-allowlist enforcement. Overrides "
+            "auto-discovery. See plugin-dependencies.md:54-79."
+        ),
+    )
     parser.add_argument("path", nargs="?", help="Plugin root path (default: parent of scripts/)")
     args = parser.parse_args()
 
-    # Disable ANSI colors when --no-color is passed or stdout is not a TTY
+    # Disable ANSI colors when --no-color is passed or stdout is not a TTY.
+    # Use the set_color_enabled() helper instead of mutating COLORS — direct
+    # mutation is shared-state pollution that flares under pytest-xdist
+    # parallel workers (one worker's --no-color clobbers COLORS for every
+    # subsequent colorize() call by any other test in the same process).
     if args.no_color or not (hasattr(sys.stdout, "isatty") and sys.stdout.isatty()):
         import cpv_validation_common
 
-        for key in list(cpv_validation_common.COLORS.keys()):
-            cpv_validation_common.COLORS[key] = ""
+        cpv_validation_common.set_color_enabled(False)
 
     # Determine plugin root — always resolve to absolute path so relative_to() works
     if args.path:
@@ -3551,16 +5427,77 @@ def main() -> int:
     # this is a marketplace folder, not a plugin. Bail with a targeted error so we
     # don't emit dozens of false positives ("Non-standard directory") for the
     # plugin subfolders that ARE the marketplace's content.
-    has_marketplace = (
-        (plugin_root / ".claude-plugin" / "marketplace.json").is_file()
-        or (plugin_root / "marketplace.json").is_file()
-    )
+    has_marketplace = (plugin_root / ".claude-plugin" / "marketplace.json").is_file() or (
+        plugin_root / "marketplace.json"
+    ).is_file()
     has_plugin_manifest = (plugin_root / ".claude-plugin" / "plugin.json").is_file()
     if has_marketplace and not has_plugin_manifest and not args.marketplace_only:
         print(
             f"Error: {plugin_root} is a MARKETPLACE folder (has marketplace.json), not a plugin.\n"
             f"  Use validate_marketplace.py to validate marketplaces, or pass a plugin\n"
             f"  subfolder to validate_plugin.py.",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Phase 0 plugin-shape detection — refuse to "validate as plugin" something
+    # that clearly isn't a plugin. Real incident: CPV agents wrapped a SKILL
+    # (which has SKILL.md at root + a `references/` folder + relative-path
+    # references) into a plugin manifest + marketplace + publish pipeline,
+    # and the published artifact installed to nothing because the underlying
+    # content was a skill, not a plugin. This guard fails fast with a clear
+    # message telling the user to call the right validator OR convert the
+    # content to a plugin first.
+    if not has_plugin_manifest and not has_marketplace and not args.marketplace_only:
+        skill_md_at_root = (plugin_root / "SKILL.md").is_file()
+        agents_only = (
+            (plugin_root / "agents").is_dir()
+            and not (plugin_root / "skills").is_dir()
+            and not (plugin_root / "commands").is_dir()
+            and not (plugin_root / "hooks").is_dir()
+        )
+        commands_only = (
+            (plugin_root / "commands").is_dir()
+            and not (plugin_root / "skills").is_dir()
+            and not (plugin_root / "agents").is_dir()
+            and not (plugin_root / "hooks").is_dir()
+        )
+        if skill_md_at_root:
+            print(
+                f"Error: {plugin_root} contains SKILL.md at root — it is a SKILL, not a plugin.\n"
+                f"  This is the most common mis-classification that produces empty plugin\n"
+                f"  installs. Either:\n"
+                f"  (a) wrap this skill INTO a new plugin: place its content under\n"
+                f"      <new-plugin>/skills/<skill-name>/SKILL.md, then add\n"
+                f"      <new-plugin>/.claude-plugin/plugin.json;\n"
+                f"  (b) ADD this skill to an existing plugin's skills/ folder;\n"
+                f"  (c) validate as a skill: `cpv-remote-validate skill {plugin_root}`.",
+                file=sys.stderr,
+            )
+            return 1
+        if agents_only:
+            print(
+                f"Error: {plugin_root} only has agents/ — it is a single agent, not a plugin.\n"
+                f"  Wrap into a plugin (add .claude-plugin/plugin.json + at least one\n"
+                f"  component) or add the agent to an existing plugin's agents/ folder.",
+                file=sys.stderr,
+            )
+            return 1
+        if commands_only:
+            print(
+                f"Error: {plugin_root} only has commands/ — it is a loose commands folder,\n"
+                f"  not a plugin. Wrap into a plugin or add to an existing plugin's commands/.",
+                file=sys.stderr,
+            )
+            return 1
+        # Generic missing-manifest case (no recognised standalone shape):
+        print(
+            f"Error: {plugin_root} has no .claude-plugin/plugin.json and no recognised\n"
+            f"  standalone Claude Code shape (no SKILL.md, no agents/, no commands/).\n"
+            f"  CPV refuses to validate this as a plugin — wrapping arbitrary directories\n"
+            f"  into plugin manifests has historically produced empty installs.\n"
+            f"  Add .claude-plugin/plugin.json (and at least one component dir) or pass\n"
+            f"  a different path.",
             file=sys.stderr,
         )
         return 1
@@ -3574,13 +5511,50 @@ def main() -> int:
     marketplace_only = args.marketplace_only
     skip_platform_checks = args.skip_platform_checks
 
-    validate_manifest(plugin_root, report, marketplace_only)
+    # TRDD-20108ab7 (2026-05-10): resolve --marketplace-context (if any) so
+    # validate_manifest sees the explicit hosting marketplace and skips
+    # auto-discovery. Malformed/missing marketplace.json at the override path
+    # falls through to auto-discovery rather than crashing.
+    explicit_hosting: dict[str, Any] | None = None
+    if args.marketplace_context:
+        ctx_path = Path(args.marketplace_context).resolve()
+        if ctx_path.is_dir():
+            # Try Layout C location first, then bare marketplace.json at root.
+            for cand in (
+                ctx_path / ".claude-plugin" / "marketplace.json",
+                ctx_path / "marketplace.json",
+            ):
+                explicit_hosting = _safe_load_marketplace_json(cand)
+                if explicit_hosting is not None:
+                    break
+        else:
+            explicit_hosting = _safe_load_marketplace_json(ctx_path)
+        if explicit_hosting is None:
+            print(
+                f"Warning: --marketplace-context {args.marketplace_context!r} "
+                "did not resolve to a readable marketplace.json — auto-discovery "
+                "will be used instead.",
+                file=sys.stderr,
+            )
+
+    validate_manifest(plugin_root, report, marketplace_only, hosting_marketplace=explicit_hosting)
     validate_structure(plugin_root, report, marketplace_only)
+    # v2.32.0 — Layout C cross-validation (marketplace-in-plugin)
+    validate_layout_c_consistency(plugin_root, report)
     validate_commands(plugin_root, report)
     validate_agents(plugin_root, report)
     validate_hooks(plugin_root, report)
     validate_mcp(plugin_root, report)
+    # TRDD-e3e74f69 telemetry hookup — OTEL supply-chain audit on every plugin
+    validate_telemetry(plugin_root, report)
     validate_scripts(plugin_root, report)
+    # v2.64.0 — single source of truth for repo-wide linting.
+    # Replaces the inline lint pieces of validate_scripts (Python ruff/mypy,
+    # shell shellcheck, JS eslint, PowerShell PSSA, Go vet, Rust cargo) AND
+    # the standalone scripts/lint_files.py orchestrator. Strict-by-default:
+    # any missing linter for a detected language fails the run with MAJOR.
+    print(f"\n{COLORS['BOLD']}═══ [REPO LINT] (15 languages, gitignore-filtered) ═══{COLORS['RESET']}")
+    run_lint_engine(plugin_root, report, strict_missing_tools=True)
     validate_bin_executables(plugin_root, report)
     validate_skills(plugin_root, report, skip_platform_checks)
     validate_rules(plugin_root, report)
@@ -3589,12 +5563,18 @@ def main() -> int:
     validate_license(plugin_root, report)
     validate_no_local_paths(plugin_root, report)
     validate_gitignore(plugin_root, report)
+    validate_strip_gitmodules(plugin_root, report)
     validate_cross_platform(plugin_root, report)
     # Check for stale ~/.claude/settings.local.json — should not exist at user level
     _check_stale_user_settings_local(report)
     validate_md_content_references(plugin_root, report)
     validate_workflow_inline_python(plugin_root, report)
     validate_pipeline_readiness(plugin_root, report)
+    validate_pipeline_script_refs(plugin_root, report)
+    validate_workflow_path_broken(plugin_root, report)
+    validate_canonical_pipeline_drift(plugin_root, report)
+    validate_legacy_pipeline_scripts(plugin_root, report)
+    validate_pep723_invocations(plugin_root, report)
     validate_workflow_best_practices(plugin_root, report)
     # Submodule + language + lockfile detection (TRDD-79638eb6)
     validate_submodule_containment(plugin_root, report)

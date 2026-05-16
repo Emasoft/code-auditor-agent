@@ -103,9 +103,6 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
     _info("Installing git hooks...")
     print()
 
-    installed: list[str] = []
-    missing: list[str] = []
-
     for hook_name in HOOKS:
         src_path = src_dir / hook_name
         dest_path = dest_dir / hook_name
@@ -113,7 +110,6 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
         # Verify the source hook file exists
         if not src_path.is_file():
             print(f"  {_RED}ERROR:{_NC} Source hook not found: {src_path}")
-            missing.append(hook_name)
             continue
 
         # Remove existing hook (regular file or dangling symlink)
@@ -143,16 +139,6 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
 
         # Make the hook executable (no-op on Windows but safe to call)
         _make_executable(dest_path)
-        installed.append(hook_name)
-
-    # Fail-fast: if any hook was missing from the source, installation is incomplete.
-    if missing:
-        print()
-        _err(
-            "ERROR: Installation failed -- source hook(s) not found: "
-            + ", ".join(missing)
-        )
-        sys.exit(1)
 
     # Summary
     print()
@@ -160,11 +146,7 @@ def _install_hooks(src_dir: Path, dest_dir: Path, *, use_symlinks: bool) -> None
     _ok("Git hooks installed successfully!")
     print()
     _info("Installed hooks:")
-    for hook_name in installed:
-        if hook_name == "pre-push":
-            print("  - pre-push: Read-only linting + plugin validation (blocks ALL issues)")
-        else:
-            print(f"  - {hook_name}")
+    print("  - pre-push: Read-only linting + plugin validation (blocks ALL issues)")
     print()
     _info("To test the hooks:")
     print("  git push --dry-run origin HEAD")

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import stat
 from typing import TYPE_CHECKING
 
@@ -332,45 +333,23 @@ def _parse_pyproject_dependencies(pyproject_path: Path) -> list[str]:
                             if isinstance(item, str):
                                 names.append(_extract_dist_name(item))
     else:
-        # Naive fallback — scan lines inside `dependencies = [ ... ]` and each
-        # `<group> = [ ... ]` under `[project.optional-dependencies]`.
-        import re as _re_fb
-
+        # Naive fallback — scan lines inside `dependencies = [ ... ]`.
         in_deps = False
-        in_opt_deps_section = False
         text = raw.decode("utf-8", errors="replace")
-        # Matches quoted items inside a [ ... ] list, allowing items on the
-        # declaration line as well as on continuation lines.
-        item_re = _re_fb.compile(r"""["']([^"']+)["']""")
         for line in text.splitlines():
             s = line.strip()
-            # Section headers
-            if s.startswith("["):
-                in_opt_deps_section = s == "[project.optional-dependencies]"
-                in_deps = False
-                continue
-            # Top-level `dependencies = [ ... ]` or any `<group> = [ ... ]`
-            # under [project.optional-dependencies].
-            if "=" in s and "[" in s and (
-                s.startswith("dependencies") or in_opt_deps_section
-            ):
+            if s.startswith("dependencies") and "=" in s and "[" in s:
                 in_deps = True
-                # Grab any items that already appear on the declaration line.
-                for item in item_re.findall(s):
-                    names.append(_extract_dist_name(item))
-                # If the closing ']' is on the same line, the block is done.
-                if "]" in s.split("[", 1)[1]:
-                    in_deps = False
                 continue
             if in_deps:
-                if s.startswith("]") or "]" in s:
-                    # Collect any items before the ']' on this line too.
-                    for item in item_re.findall(s):
-                        names.append(_extract_dist_name(item))
+                if s.startswith("]"):
                     in_deps = False
                     continue
-                for item in item_re.findall(s):
-                    names.append(_extract_dist_name(item))
+                # Lines like:  "requests>=2.30",
+                if s.startswith('"') or s.startswith("'"):
+                    stripped = s.strip().strip(",").strip("\"'")
+                    if stripped:
+                        names.append(_extract_dist_name(stripped))
 
     # Dedupe while preserving order
     seen: set[str] = set()
@@ -610,7 +589,6 @@ def save_report_to_file(results: list[AuditItem], plugin_path: Path, report_path
         "badges": "README Badges",
         "pyproject": "pyproject.toml Sections",
         "python": "Python Version",
-        "drift": "Project Drift (deps vs imports)",
     }
 
     categories: dict[str, list[AuditItem]] = {}
@@ -701,7 +679,9 @@ _FILE_TO_GENERATOR: dict[str, str] = {
     "README.md": "gen_readme",
     "cliff.toml": "gen_cliff_toml",
     ".mega-linter.yml": "gen_mega_linter_yml",
+    ".markdownlint.json": "gen_markdownlint_json",
     "scripts/publish.py": "gen_publish_py",
+    "scripts/cpv_network_resilience.py": "gen_cpv_network_resilience_py",
     "git-hooks/pre-push": "gen_pre_push_hook",
     ".github/workflows/ci.yml": "gen_ci_yml",
     ".github/workflows/release.yml": "gen_release_yml",
@@ -711,17 +691,283 @@ _FILE_TO_GENERATOR: dict[str, str] = {
 # Files that should have the executable bit set
 _EXECUTABLE_FILES: set[str] = {
     "scripts/publish.py",
+    "scripts/cpv_network_resilience.py",
     "git-hooks/pre-push",
 }
 
+# Files safe to OVERWRITE in --force-templates mode. These are pure
+# infrastructure (publish pipeline, CI, retry helpers, hook scripts) that
+# the user is not expected to customise — keeping them in lockstep with
+# the canonical CPV standard is the whole point of TRDD-bbff5bc5. README
+# / pyproject.toml / .gitignore stay user-owned and are NEVER force-written.
+_FORCE_TEMPLATE_FILES: set[str] = {
+    "scripts/publish.py",
+    "scripts/cpv_network_resilience.py",
+    "git-hooks/pre-push",
+    ".github/workflows/ci.yml",
+    ".github/workflows/release.yml",
+    ".github/workflows/notify-marketplace.yml",
+    "cliff.toml",
+    ".mega-linter.yml",
+    ".markdownlint.json",
+}
+
+# Mirror of validate_plugin._LEGACY_PIPELINE_SCRIPTS — the names of older
+# helpers that publish.py now subsumes. Kept here so the upgrade flow can
+# move them without an extra import (avoids circular-import surprises during
+# remote_validation launcher dispatch).
+#
+# Source-of-truth for severity + user-facing wording stays in validate_plugin;
+# this list only needs the relative-path strings.
+_LEGACY_PIPELINE_SCRIPTS_RELPATHS: tuple[str, ...] = (
+    "scripts/bump_version.py",
+    "scripts/release.sh",
+    "scripts/release.py",
+    "scripts/publish.sh",
+    "scripts/lint.sh",
+    "scripts/setup-hooks.sh",
+    "scripts/compute_hashes.py",
+    "scripts/verify_hashes.py",
+    "scripts/changelog.py",
+    "scripts/generate_changelog.py",
+    "scripts/check_version.py",
+    "scripts/install.sh",
+)
+
+
+def move_legacy_pipeline_scripts(plugin_path: Path, dry_run: bool = False) -> list[str]:
+    """Move every legacy pipeline script (per ``_LEGACY_PIPELINE_SCRIPTS_RELPATHS``)
+    from `scripts/` into `scripts_dev/` so the canonical publish.py is the
+    only release entry point.
+
+    Preservation guardrail: scripts are MOVED, not deleted, so the user can
+    review the relocated files in `scripts_dev/` before final deletion. This
+    matches the user's explicit feedback: "be careful with purging dead
+    code or unreferenced scripts" — moving keeps the content git-recoverable
+    if the user wants to bring something back.
+
+    `scripts_dev/` is gitignored per the user's `.gitignore` convention so
+    moved files won't be committed accidentally; the user can either delete
+    them in a follow-up commit or run `git add scripts_dev/<file>` to keep
+    them tracked.
+
+    Returns the list of relative paths actually moved (or would-have-moved
+    in dry-run mode).
+    """
+    moved: list[str] = []
+    scripts_dev = plugin_path / "scripts_dev"
+
+    for rel_path in _LEGACY_PIPELINE_SCRIPTS_RELPATHS:
+        src = plugin_path / rel_path
+        if not src.is_file():
+            continue
+        dest = scripts_dev / Path(rel_path).name
+        if dry_run:
+            print(f"  {BLUE}[dry-run] Would move{NC} {rel_path} → scripts_dev/{Path(rel_path).name}")
+            moved.append(rel_path)
+            continue
+        scripts_dev.mkdir(parents=True, exist_ok=True)
+        # If the destination already exists, append a `.<n>` suffix so we
+        # don't clobber an earlier move (idempotent re-runs).
+        if dest.exists():
+            n = 1
+            while True:
+                candidate = dest.with_name(f"{dest.name}.{n}")
+                if not candidate.exists():
+                    dest = candidate
+                    break
+                n += 1
+        src.rename(dest)
+        rel_dest = dest.relative_to(plugin_path)
+        print(f"  {GREEN}[moved]{NC} {rel_path} → {rel_dest}")
+        moved.append(rel_path)
+
+    return moved
+
+
+_NOTIFY_MARKETPLACE_REL = ".github/workflows/notify-marketplace.yml"
+
+# Issue #23: regex sources for detecting pre-existing values inside the
+# plugin's notify-marketplace.yml. The MARKETPLACE_OWNER / MARKETPLACE_REPO
+# patterns mirror the parser already in validate_plugin.py:2040 so the
+# canonical regex stays in one place semantically. Quotes are optional —
+# the field is YAML-quoted in canonical templates but plain in some forks.
+_NOTIFY_OWNER_RE = re.compile(r"^\s*MARKETPLACE_OWNER:\s*['\"]?([^'\"\s]+)['\"]?\s*$", re.MULTILINE)
+_NOTIFY_REPO_RE = re.compile(r"^\s*MARKETPLACE_REPO:\s*['\"]?([^'\"\s]+)['\"]?\s*$", re.MULTILINE)
+# Match `secrets.NAME` references; we pick the FIRST hit because the file
+# only ever references one PAT secret. The regex requires UPPER_SNAKE_CASE
+# to filter out non-secret identifiers.
+_NOTIFY_SECRET_RE = re.compile(r"secrets\.([A-Z][A-Z0-9_]*)")
+
+# Placeholder values the canonical template emits when no real values are
+# supplied. Detecting these prevents the migration from accidentally
+# "preserving" the placeholder it just clobbered the real value with on a
+# prior buggy run.
+_NOTIFY_PLACEHOLDER_REPO = "my-plugins-marketplace"
+_NOTIFY_PLACEHOLDER_OWNER = ""  # canonical template emits MARKETPLACE_OWNER: '<empty>' when github_owner is unset
+
+
+def _detect_existing_notify_marketplace(plugin_path: Path) -> dict[str, str | None]:
+    """Issue #23: extract pre-existing values from notify-marketplace.yml.
+
+    Returns a dict ``{"owner": ..., "repo": ..., "secret_name": ...}`` with
+    each entry set to ``None`` when not found OR when the value matches the
+    canonical placeholder (so a re-migration of a previously-clobbered file
+    doesn't keep the placeholder).
+    """
+    yml_path = plugin_path / _NOTIFY_MARKETPLACE_REL
+    out: dict[str, str | None] = {"owner": None, "repo": None, "secret_name": None}
+    if not yml_path.is_file():
+        return out
+    try:
+        content = yml_path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        return out
+
+    owner_match = _NOTIFY_OWNER_RE.search(content)
+    if owner_match:
+        owner_val = owner_match.group(1).strip()
+        if owner_val and owner_val != _NOTIFY_PLACEHOLDER_OWNER:
+            out["owner"] = owner_val
+
+    repo_match = _NOTIFY_REPO_RE.search(content)
+    if repo_match:
+        repo_val = repo_match.group(1).strip()
+        if repo_val and repo_val != _NOTIFY_PLACEHOLDER_REPO:
+            out["repo"] = repo_val
+
+    secret_match = _NOTIFY_SECRET_RE.search(content)
+    if secret_match:
+        out["secret_name"] = secret_match.group(1)
+
+    return out
+
+
+def _apply_notify_marketplace_overrides(
+    params: PluginParams,
+    plugin_path: Path,
+    cli_marketplace: str | None,
+) -> dict[str, tuple[str | None, str | None]]:
+    """Issue #23: populate marketplace_owner / marketplace_secret_name on params.
+
+    Precedence: CLI ``--marketplace`` flag > existing-YAML detection > defaults.
+    Returns a dict mapping field name → (old_value, new_value) for every
+    field that changed, so the caller can print a [migration] note.
+    """
+    changes: dict[str, tuple[str | None, str | None]] = {}
+    detected = _detect_existing_notify_marketplace(plugin_path)
+
+    # 1. CLI --marketplace=owner/repo wins for owner+repo (explicit user intent).
+    cli_owner: str | None = None
+    cli_repo: str | None = None
+    if cli_marketplace and "/" in cli_marketplace:
+        cli_owner, cli_repo = cli_marketplace.split("/", 1)
+
+    # MARKETPLACE_OWNER resolution
+    target_owner = cli_owner or detected["owner"]
+    if target_owner and target_owner != params.marketplace_owner:
+        changes["marketplace_owner"] = (params.marketplace_owner or None, target_owner)
+        params.marketplace_owner = target_owner
+
+    # MARKETPLACE_REPO resolution
+    target_repo = cli_repo or detected["repo"]
+    if target_repo and target_repo != params.marketplace:
+        changes["marketplace"] = (params.marketplace or None, target_repo)
+        params.marketplace = target_repo
+
+    # v2.86.0 canon-name enforcement: the secret NAME is always
+    # ``MARKETPLACE_PAT`` in CPV's canonical template. We record the
+    # detected pre-existing name (when it differs) as a "deviation" so the
+    # caller can emit a loud [ACTION REQUIRED] block telling the maintainer
+    # to rename their gh secret. We do NOT plumb it back onto PluginParams
+    # — the canon name wins.
+    target_secret = detected["secret_name"]
+    if target_secret and target_secret != "MARKETPLACE_PAT":
+        changes["marketplace_secret_name__DEVIATION"] = (target_secret, "MARKETPLACE_PAT")
+
+    return changes
+
+
+# Issue #25 Defect D (v2.87.1): canonical workflows the migration installs
+# (release.yml, ci.yml) run `uv run <tool>` for these tools. If the plugin's
+# pre-existing pyproject.toml's [project.optional-dependencies].dev lacks any
+# of them, `uv sync --extra dev` will not install them and the workflow step
+# crashes on first push with "Failed to spawn: <tool>". pyproject.toml is
+# user-owned (never force-overwritten — see _NEVER_FORCE_OVERWRITE), so we
+# ALERT loudly rather than auto-edit, matching the issue-#23 pattern.
+_CANONICAL_DEV_EXTRA_TOOLS: tuple[str, ...] = ("mypy", "pytest", "ruff")
+_CANONICAL_DEV_EXTRA_FLOORS: dict[str, str] = {
+    "mypy": ">=1.19.1",
+    "pytest": ">=8.0.0",
+    "ruff": ">=0.14.14",
+}
+_WORKFLOW_PATHS_REQUIRING_DEV_EXTRAS: frozenset[str] = frozenset(
+    {".github/workflows/release.yml", ".github/workflows/ci.yml"}
+)
+
+
+def _canonical_dev_extras_missing(plugin_path: Path) -> list[str]:
+    """Return canonical dev-extra tools missing from pyproject.toml.
+
+    Read-only — pyproject.toml is user-owned, so this function only detects
+    the gap. Callers emit the [ACTION REQUIRED] alert. Returns [] when
+    pyproject.toml is absent (no Python toolchain to reconcile) or when
+    every canonical tool is already declared in
+    ``[project.optional-dependencies].dev``.
+    """
+    pyproject = plugin_path / "pyproject.toml"
+    if not pyproject.is_file():
+        return []
+    try:
+        import tomllib  # type: ignore[import-not-found]
+    except ImportError:
+        # Python < 3.11 — refuse to guess. Plugins on those interpreters
+        # were never going to run the canonical 3.12+ workflows anyway.
+        return []
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    project = data.get("project")
+    if not isinstance(project, dict):
+        return []
+    opt = project.get("optional-dependencies")
+    if not isinstance(opt, dict):
+        return []
+    dev = opt.get("dev")
+    if not isinstance(dev, list):
+        return []
+    declared: set[str] = set()
+    for spec in dev:
+        if not isinstance(spec, str):
+            continue
+        # PEP-508 name = everything before any version/extras/marker suffix.
+        # Case-insensitive per PEP-503.
+        name = re.split(r"[<>=~!\[;]", spec, 1)[0].strip().lower()
+        if name:
+            declared.add(name)
+    return [tool for tool in _CANONICAL_DEV_EXTRA_TOOLS if tool not in declared]
+
 
 def fix_missing_files(
-    plugin_path: Path, results: list[AuditItem], dry_run: bool = False, marketplace: str | None = None
+    plugin_path: Path,
+    results: list[AuditItem],
+    dry_run: bool = False,
+    marketplace: str | None = None,
+    force_templates: bool = False,
 ) -> list[str]:
     """Generate missing standard files using templates from generate_plugin_repo.
 
-    Only creates files that do not already exist. Never overwrites existing files.
-    If marketplace is provided (owner/repo), patches notify-marketplace.yml with the values.
+    By default: only creates files that do not already exist (never overwrites).
+    With force_templates=True: ALSO overwrites files in _FORCE_TEMPLATE_FILES
+    (publish.py, ci/release/notify workflows, retry helpers, pre-push hook,
+    cliff.toml, .mega-linter.yml). Existing copies are backed up to
+    `<file>.bak` before being replaced. README / pyproject.toml / .gitignore
+    are NEVER force-overwritten — those stay user-owned.
+
+    If marketplace is provided (owner/repo), patches notify-marketplace.yml.
     Returns list of created (or would-create in dry-run) file paths.
     """
     import importlib
@@ -732,7 +978,17 @@ def fix_missing_files(
         if item.category == "files" and item.status in ("MISSING",) and item.name in _FILE_TO_GENERATOR:
             missing_files.add(item.name)
 
-    if not missing_files:
+    # Force-overwrite mode: ALSO regenerate _FORCE_TEMPLATE_FILES even when
+    # they already exist. Skipped when force_templates=False (default).
+    force_overwrite: set[str] = set()
+    if force_templates:
+        for rel in _FORCE_TEMPLATE_FILES:
+            if rel in _FILE_TO_GENERATOR:
+                force_overwrite.add(rel)
+        # Drop any missing-files duplicates so we don't process them twice.
+        force_overwrite -= missing_files
+
+    if not missing_files and not force_overwrite:
         print(f"  {GREEN}No fixable missing files.{NC}")
         return []
 
@@ -750,12 +1006,83 @@ def fix_missing_files(
 
     params = _params_from_manifest(manifest)
 
+    # Issue #23 (v2.85.0): before generating notify-marketplace.yml, detect
+    # values from the pre-existing file (if any) and let them override the
+    # PluginParams defaults. Without this, --force-templates silently
+    # clobbers a real MARKETPLACE_REPO with the literal placeholder and
+    # rewrites the secret name to MARKETPLACE_PAT even when the repo's
+    # configured secret is e.g. MARKETPLACE_DISPATCH_TOKEN.
+    notify_changes: dict[str, tuple[str | None, str | None]] = {}
+    will_emit_notify = _NOTIFY_MARKETPLACE_REL in missing_files or _NOTIFY_MARKETPLACE_REL in force_overwrite
+    if will_emit_notify:
+        notify_changes = _apply_notify_marketplace_overrides(params, plugin_path, marketplace)
+        # Refuse-to-emit-placeholder guard: when --force-templates is on AND
+        # an existing notify-marketplace.yml is being overwritten AND we
+        # still have no real marketplace name (no CLI flag, nothing
+        # detectable in the pre-existing YAML), refuse to ship the literal
+        # placeholder. The caller's working YAML may have used a different
+        # template version that doesn't match our regex; making them
+        # supply --marketplace=owner/repo explicitly is safer than
+        # silently breaking their notification chain.
+        existing_yml = plugin_path / _NOTIFY_MARKETPLACE_REL
+        if _NOTIFY_MARKETPLACE_REL in force_overwrite and existing_yml.is_file() and not params.marketplace:
+            print(
+                f"  {RED}REFUSED:{NC} cannot regenerate {_NOTIFY_MARKETPLACE_REL} — no marketplace "
+                f"name detected in the existing file and no --marketplace=owner/repo flag was "
+                f"passed. Emitting the placeholder '{_NOTIFY_PLACEHOLDER_REPO}' would silently "
+                f"break the plugin's marketplace dispatch chain (issue #23). Re-run with "
+                f"--marketplace=<owner>/<repo> to override, or check the existing file's "
+                f"MARKETPLACE_REPO line is parseable."
+            )
+            # Drop notify-marketplace.yml from the work-set so the rest of
+            # the migration proceeds. Other files still regenerate.
+            force_overwrite.discard(_NOTIFY_MARKETPLACE_REL)
+            missing_files.discard(_NOTIFY_MARKETPLACE_REL)
+        elif notify_changes:
+            # Surface the changes so the user notices when --force-templates
+            # would alter a real value (e.g. owner override) AND emit a loud
+            # [ACTION REQUIRED] block when a secret-name deviation is found.
+            print(f"  {CYAN}[migration]{NC} notify-marketplace.yml derived from existing file:")
+            deviation_key = "marketplace_secret_name__DEVIATION"
+            for field_name, (old, new) in notify_changes.items():
+                if field_name == deviation_key:
+                    continue  # surfaced separately below with the action-required block
+                if old != new:
+                    print(f"    {DIM}{field_name}:{NC} {old!r} → {new!r}")
+
+            if deviation_key in notify_changes:
+                old_secret, _ = notify_changes[deviation_key]
+                owner_for_gh = params.marketplace_owner or params.github_owner or "<owner>"
+                repo_for_gh = params.repo_name or "<repo>"
+                print()
+                print(f"  {YELLOW}{BOLD}[ACTION REQUIRED]{NC} secret-name deviation detected")
+                print(f"  The previous notify-marketplace.yml referenced {BOLD}secrets.{old_secret}{NC}.")
+                print(
+                    f"  CPV v2.86.0+ enforces the canonical secret name {BOLD}MARKETPLACE_PAT{NC} across all plugins —"
+                )
+                print(f"  the regenerated YAML now references {BOLD}secrets.MARKETPLACE_PAT{NC}.")
+                print()
+                print(f"  {GREEN}Run (assumes $MARKETPLACE_PAT is exported):{NC}")
+                print(
+                    f'    gh secret set MARKETPLACE_PAT --repo {owner_for_gh}/{repo_for_gh} --body "$MARKETPLACE_PAT"'
+                )
+                print()
+                print(f"  {DIM}After the next push triggers a marketplace dispatch successfully:{NC}")
+                print(f"    gh secret delete {old_secret} --repo {owner_for_gh}/{repo_for_gh}")
+                print()
+
     # Import generator functions from generate_plugin_repo
     gen_module = importlib.import_module("generate_plugin_repo")
 
     created: list[str] = []
 
-    for rel_path in sorted(missing_files):
+    # Process missing-then-force so the [create] / [overwrite] markers in the
+    # output reflect the actual operation.
+    process_set: list[tuple[str, str]] = [(p, "create") for p in sorted(missing_files)] + [
+        (p, "overwrite") for p in sorted(force_overwrite)
+    ]
+
+    for rel_path, op_kind in process_set:
         gen_func_name = _FILE_TO_GENERATOR[rel_path]
         gen_func = getattr(gen_module, gen_func_name)
 
@@ -772,15 +1099,22 @@ def fix_missing_files(
         is_executable = rel_path in _EXECUTABLE_FILES
 
         if dry_run:
-            print(
-                f"  {BLUE}[dry-run]{NC} Would create {file_path} ({len(content)} bytes)"
-                f"{' [exec]' if is_executable else ''}"
-            )
+            tag = f"[dry-run] Would {op_kind}"
+            print(f"  {BLUE}{tag}{NC} {file_path} ({len(content)} bytes){' [exec]' if is_executable else ''}")
             created.append(str(file_path))
             continue
 
         # Create parent directories
         file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # On overwrite, save a .bak alongside the original so the user can
+        # diff / restore if the new template breaks something specific to
+        # their plugin. Backup is silent — listed in the output line below.
+        backup_str = ""
+        if op_kind == "overwrite" and file_path.is_file():
+            bak = file_path.with_suffix(file_path.suffix + ".bak")
+            bak.write_bytes(file_path.read_bytes())
+            backup_str = f" (backup: {bak.name})"
 
         # Write the file
         file_path.write_text(content, encoding="utf-8")
@@ -797,7 +1131,8 @@ def fix_missing_files(
             patched = patched.replace("MARKETPLACE_REPO: 'my-plugins-marketplace'", f"MARKETPLACE_REPO: '{repo}'")
             file_path.write_text(patched, encoding="utf-8")
 
-        print(f"  {GREEN}Created:{NC} {file_path}{' [exec]' if is_executable else ''}")
+        verb = "Overwrote" if op_kind == "overwrite" else "Created"
+        print(f"  {GREEN}{verb}:{NC} {file_path}{' [exec]' if is_executable else ''}{backup_str}")
         created.append(str(file_path))
 
     # Also create missing component directories
@@ -815,20 +1150,9 @@ def fix_missing_files(
     gitignore_path = plugin_path / ".gitignore"
     if not dry_run and gitignore_path.exists():
         content = gitignore_path.read_text(encoding="utf-8")
-        # Mirror the audit_gitignore() logic: only count active (non-comment,
-        # non-blank) lines, otherwise an entry that only appears inside a
-        # comment would be considered "present" even though audit_gitignore
-        # correctly flagged it as missing.
-        active_lines = [
-            stripped
-            for line in content.splitlines()
-            for stripped in (line.strip(),)
-            if stripped and not stripped.startswith("#")
-        ]
         missing = []
         for entry in REQUIRED_GITIGNORE_ENTRIES:
-            found = any(entry in active or active == entry for active in active_lines)
-            if not found:
+            if entry not in content:
                 missing.append(entry)
         if missing:
             with open(gitignore_path, "a", encoding="utf-8") as f:
@@ -836,6 +1160,38 @@ def fix_missing_files(
                 for entry in missing:
                     f.write(f"{entry}\n")
             print(f"  {GREEN}Updated:{NC} .gitignore — added {len(missing)} missing entries")
+
+    # Issue #25 Defect D (v2.87.1): when the migration emits release.yml or
+    # ci.yml — both of which run `uv run mypy / pytest / ruff` under
+    # `uv sync --extra dev` — alert the user if the pre-existing pyproject.toml
+    # does not declare those tools in `[project.optional-dependencies].dev`.
+    # Without this alert the workflow step crashes on first push with
+    # `Failed to spawn: <tool>` even though the migration reported success.
+    # pyproject.toml is user-owned, so we never auto-edit — we alert.
+    workflow_emitted = bool(_WORKFLOW_PATHS_REQUIRING_DEV_EXTRAS & (missing_files | force_overwrite))
+    if workflow_emitted and not dry_run:
+        missing_tools = _canonical_dev_extras_missing(plugin_path)
+        if missing_tools:
+            print()
+            print(f"  {YELLOW}{BOLD}[ACTION REQUIRED]{NC} pyproject.toml dev extras incomplete")
+            print(
+                f"  The CPV-shipped {BOLD}release.yml{NC} / {BOLD}ci.yml{NC} run "
+                f"`uv run <tool>` for: {', '.join(_CANONICAL_DEV_EXTRA_TOOLS)}."
+            )
+            print(
+                f"  Your pyproject.toml's {BOLD}[project.optional-dependencies].dev{NC} "
+                f"is missing: {RED}{', '.join(missing_tools)}{NC}."
+            )
+            print(
+                f"  `uv sync --extra dev` in CI will NOT install them — the workflow "
+                f"step crashes on first push with {DIM}Failed to spawn: <tool>{NC}."
+            )
+            print()
+            print(f"  {GREEN}Add to pyproject.toml's `dev` extra:{NC}")
+            for tool in missing_tools:
+                floor = _CANONICAL_DEV_EXTRA_FLOORS.get(tool, "")
+                print(f'    "{tool}{floor}",')
+            print()
 
     return created
 
@@ -847,26 +1203,30 @@ def fix_missing_files(
 
 def main() -> int:
     """Parse CLI arguments, run audit, optionally fix missing files."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Audit and standardize a Claude Code plugin repo against CPV standards.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
+Examples (always invoke via the launcher):
   # Audit only (report gaps)
-  uv run scripts/standardize_plugin.py /path/to/plugin
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize /path/to/plugin
 
   # Audit + fix missing files (never overwrites existing)
-  uv run scripts/standardize_plugin.py /path/to/plugin --fix
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize /path/to/plugin --fix
 
   # Dry-run fix (show what would be created)
-  uv run scripts/standardize_plugin.py /path/to/plugin --fix --dry-run
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize /path/to/plugin --fix --dry-run
 
   # Save detailed report to file
-  uv run scripts/standardize_plugin.py /path/to/plugin --report audit.md
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize /path/to/plugin --report audit.md
 
   # Also run full CPV validation
-  uv run scripts/standardize_plugin.py /path/to/plugin --validate
-""",
+  uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/remote_validation.py" standardize /path/to/plugin --validate
+
+"""
+        + launcher_epilog("standardize"),
     )
     parser.add_argument("plugin_path", type=Path, help="Path to the plugin repository root")
     parser.add_argument("--fix", action="store_true", help="Generate missing standard files from templates")
@@ -878,6 +1238,29 @@ Examples:
         help="Marketplace owner/repo for notify-marketplace.yml (e.g., Emasoft/emasoft-plugins)",
     )
     parser.add_argument("--validate", action="store_true", help="Also run validate_plugin.py for full validation")
+    parser.add_argument(
+        "--force-templates",
+        action="store_true",
+        help=(
+            "OVERWRITE infrastructure files (publish.py, ci/release/notify "
+            "workflows, retry helpers, pre-push hook, cliff.toml, .mega-linter.yml) "
+            "with the canonical CPV templates. Existing copies are backed up to "
+            "<file>.bak before being replaced. README, pyproject.toml, .gitignore "
+            "are NEVER force-written. Use this to propagate TRDD-bbff5bc5 changes "
+            "to existing plugins. Implies --fix and --clean-legacy."
+        ),
+    )
+    parser.add_argument(
+        "--clean-legacy",
+        action="store_true",
+        help=(
+            "Move known-legacy pipeline scripts (bump_version.py, release.sh, "
+            "lint.sh, compute_hashes.py, etc.) from scripts/ to scripts_dev/ — "
+            "they are obsoleted by publish.py's 14-gate pipeline. Files are "
+            "MOVED (not deleted) so the user can review before final removal. "
+            "Auto-enabled when --force-templates is passed."
+        ),
+    )
 
     args = parser.parse_args()
     plugin_path: Path = args.plugin_path.resolve()
@@ -904,18 +1287,33 @@ Examples:
     if args.report:
         save_report_to_file(results, plugin_path, args.report.resolve())
 
-    # Fix mode — generate missing files
-    if args.fix:
-        print(f"{BOLD}Fix Mode{NC} {'(dry-run)' if args.dry_run else ''}")
-        created = fix_missing_files(plugin_path, results, dry_run=args.dry_run, marketplace=args.marketplace)
+    # Fix mode — generate missing files. --force-templates implies --fix.
+    if args.fix or args.force_templates:
+        mode_label = " (dry-run)" if args.dry_run else ""
+        if args.force_templates:
+            mode_label += " [FORCE TEMPLATES]"
+        print(f"{BOLD}Fix Mode{NC}{mode_label}")
+        created = fix_missing_files(
+            plugin_path,
+            results,
+            dry_run=args.dry_run,
+            marketplace=args.marketplace,
+            force_templates=args.force_templates,
+        )
+        # Move legacy pipeline scripts (RC-LEGACY-PIPELINE-001) — auto-enabled
+        # under --force-templates because the upgrade flow's whole point is
+        # making publish.py the only release entry point.
+        clean_legacy = args.clean_legacy or args.force_templates
+        if clean_legacy:
+            print(f"\n{BOLD}Legacy pipeline cleanup{NC}{mode_label}")
+            moved = move_legacy_pipeline_scripts(plugin_path, dry_run=args.dry_run)
+            if not moved:
+                print(f"  {GREEN}No legacy pipeline scripts found.{NC}")
         if created and not args.dry_run:
             # Re-run audit after fixes to show updated status
             print(f"\n{BOLD}Post-fix audit:{NC}")
             post_results = run_audit(plugin_path)
             print_audit_report(post_results, plugin_path)
-            # Use the post-fix results for the exit code, otherwise a
-            # successful fix run still exits non-zero for CI pipelines.
-            results = post_results
 
     # Optionally run full CPV validation
     if args.validate:

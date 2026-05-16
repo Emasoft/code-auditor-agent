@@ -553,9 +553,13 @@ def validate_plugin_lsp(
             if len(source_list) >= 2:
                 joined = " and ".join(sorted(source_list))
                 inline_wins_note = (
-                    " (when collisions occur, the inline plugin.json:lspServers entry "
-                    "WINS per empirical test; the other source is silently dropped)"
-                ) if "plugin.json:lspServers" in source_list else ""
+                    (
+                        " (when collisions occur, the inline plugin.json:lspServers entry "
+                        "WINS per empirical test; the other source is silently dropped)"
+                    )
+                    if "plugin.json:lspServers" in source_list
+                    else ""
+                )
                 report.major(
                     f"LSP server '{name}' is declared in {joined} — server names "
                     f"must be unique across all LSP sources{inline_wins_note}",
@@ -617,9 +621,12 @@ def print_results(report: ValidationReport, verbose: bool = False) -> None:
 
 def main() -> int:
     """Main entry point."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Validate LSP (Language Server Protocol) server configuration for Claude Code plugins.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=launcher_epilog("lsp"),
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Show all results")
     parser.add_argument("--json", action="store_true", help="Output as JSON")

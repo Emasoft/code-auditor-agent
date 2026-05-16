@@ -56,7 +56,11 @@ from cpv_validation_common import (
     VALID_PLUGIN_ENV_VARS,
     VALID_TOOLS,
     Level,
+    description_has_trigger_phrases,
+    has_numbered_prose_steps,
+    is_orchestrator_skill,
     is_valid_plugin_env_var,
+    load_cpv_config,
     save_report_and_print_summary,
     validate_component_name,
     validate_toc_embedding,
@@ -386,9 +390,17 @@ class ComprehensiveSkillReport(BaseValidationReport):
         """Add a passed check with optional category."""
         self.add("PASSED", message, file, category=category, score=3)
 
-    def info(self, message: str, file: str | None = None, category: str | None = None) -> None:
-        """Add an info message with optional category."""
-        self.add("INFO", message, file, category=category, score=2)
+    def info(self, message: str, file: str | None = None, line: int | None = None, category: str | None = None) -> None:
+        """Add an info message with optional category.
+
+        ``line`` is accepted for Liskov compatibility with the parent
+        ValidationReport.info() (added so demote-to-info paths can call
+        ``getattr(report, level)(msg, file, line)`` uniformly). The
+        per-skill comprehensive scorer doesn't track line for INFO, so
+        the value is forwarded to ``self.add`` and stored on the result
+        for any consumer that wants it.
+        """
+        self.add("INFO", message, file, line, category=category, score=2)
 
     def nit(self, message: str, file: str | None = None, line: int | None = None, category: str | None = None) -> None:
         """Add a nit issue -- blocks only in --strict mode."""
@@ -587,8 +599,16 @@ def validate_name_field(
     skill_dir_name: str,
     report: ValidationReport,
     strict_openspec: bool = False,
+    skip_dir_name_check: bool = False,
 ) -> None:
-    """Validate the 'name' frontmatter field with AgentSkills OpenSpec rules."""
+    """Validate the 'name' frontmatter field with AgentSkills OpenSpec rules.
+
+    ``skip_dir_name_check`` suppresses the frontmatter-name vs directory-name
+    match. Set it for a root-level SKILL.md (CC v2.1.142): such a skill has no
+    ``skills/<name>/`` directory — its directory IS the plugin root, whose name
+    (often a version string under the plugin cache) is unrelated to the skill
+    name, so the match would be a guaranteed false positive.
+    """
     if "name" not in frontmatter:
         if strict_openspec:
             report.critical("Missing required field: 'name'", "SKILL.md", category="Frontmatter")
@@ -616,7 +636,9 @@ def validate_name_field(
         name,
         "skill",
         report,
-        directory_name=unicodedata.normalize("NFKC", skill_dir_name) if "name" in frontmatter else None,
+        directory_name=(
+            unicodedata.normalize("NFKC", skill_dir_name) if "name" in frontmatter and not skip_dir_name_check else None
+        ),
     )
 
     # Reserved words check (Anthropic-specific)
@@ -717,11 +739,29 @@ def validate_description_field(
             category="Description Quality",
         )
     elif len(desc) > MAX_DESCRIPTION_WARN:
-        report.minor(
-            f"Description is long ({len(desc)} chars), consider shortening to < {MAX_DESCRIPTION_WARN}",
-            "SKILL.md",
-            category="Description Quality",
-        )
+        # Issue #16 category E: when the description packs explicit
+        # trigger phrases ("use when …", "trigger with …", "include
+        # keywords …", etc.) the readability heuristic should raise the
+        # cap. Triggerable descriptions earn the longer length — they
+        # carry the dispatcher info Claude needs at skill-selection time.
+        if description_has_trigger_phrases(desc):
+            extended_cap = max(MAX_DESCRIPTION_WARN * 2, 500)
+            if len(desc) > extended_cap:
+                report.minor(
+                    f"Description is long ({len(desc)} chars), even after the "
+                    f"trigger-phrase exemption (cap raised to {extended_cap}). "
+                    "Consider tightening — the trailing trigger guidance may "
+                    "still be readable but loses signal.",
+                    "SKILL.md",
+                    category="Description Quality",
+                )
+            # else: long but acceptable because of trigger phrases.
+        else:
+            report.minor(
+                f"Description is long ({len(desc)} chars), consider shortening to < {MAX_DESCRIPTION_WARN}",
+                "SKILL.md",
+                category="Description Quality",
+            )
 
     # Determine if this skill is user-invocable (default True per spec)
     is_user_invocable = frontmatter.get("user-invocable", True)
@@ -1432,33 +1472,68 @@ def validate_field_whitelist(
                 )
 
 
-def validate_token_budget(content: str, body: str, report: ValidationReport) -> None:
+def validate_token_budget(
+    content: str,
+    body: str,
+    report: ValidationReport,
+    skill_path: Path | None = None,
+) -> None:
     """Validate token budget (line count, character count, word count).
 
-    Hard limits: 500 lines and 5000 characters. Both conditions enforced.
+    Default hard limits: 500 lines and 5000 characters. Both enforced.
+
+    Issue #16 category B: maintainers can override per-plugin via
+    `cpv.max_chars` / `cpv.max_lines` in plugin.json. They can also
+    downgrade the severity to WARNING via `cpv.skill_size_severity`
+    when the deep-domain skill genuinely requires the larger budget
+    (e.g. amw-mermaid-render covers 9 grammar types × multiple themes).
     """
     total_lines = content.count("\n") + 1
     char_count = len(content)
     word_count = len(body.split())
 
-    # Line count check — 500 lines is the hard limit
-    if total_lines > MAX_SKILL_LINES:
-        report.major(
-            f"SKILL.md has {total_lines} lines (max {MAX_SKILL_LINES}). "
-            "Must use progressive disclosure — move content to reference files.",
-            "SKILL.md",
-            category="Token Budget",
+    max_lines = MAX_SKILL_LINES
+    max_chars = MAX_CHAR_COUNT_ERROR
+    severity = "major"
+    if skill_path is not None:
+        # skill_path is something like .../skills/<name>/SKILL.md — the
+        # plugin root is two directories up.
+        plugin_root = skill_path.parent.parent.parent
+        cpv_cfg = load_cpv_config(plugin_root)
+        cfg_max_lines = cpv_cfg.get("max_lines")
+        cfg_max_chars = cpv_cfg.get("max_chars")
+        cfg_severity = cpv_cfg.get("skill_size_severity")
+        if isinstance(cfg_max_lines, int) and cfg_max_lines > 0:
+            max_lines = cfg_max_lines
+        if isinstance(cfg_max_chars, int) and cfg_max_chars > 0:
+            max_chars = cfg_max_chars
+        if isinstance(cfg_severity, str) and cfg_severity.lower() in {"warning", "minor", "major"}:
+            severity = cfg_severity.lower()
+
+    def _emit(message: str) -> None:
+        if severity == "warning":
+            report.warning(message, "SKILL.md", category="Token Budget")
+        elif severity == "minor":
+            report.minor(message, "SKILL.md", category="Token Budget")
+        else:
+            report.major(message, "SKILL.md", category="Token Budget")
+
+    # Line count check
+    if total_lines > max_lines:
+        _emit(
+            f"SKILL.md has {total_lines} lines (max {max_lines}). "
+            "Must use progressive disclosure — move content to reference files. "
+            "(Override via cpv.max_lines / cpv.skill_size_severity in plugin.json.)"
         )
     else:
         report.passed(f"SKILL.md line count OK ({total_lines} lines)", "SKILL.md", category="Token Budget")
 
-    # Character count check — 5000 characters is the hard limit
-    if char_count > MAX_CHAR_COUNT_ERROR:
-        report.major(
-            f"SKILL.md has {char_count} characters (max {MAX_CHAR_COUNT_ERROR}). "
-            "Must use progressive disclosure — move content to reference files.",
-            "SKILL.md",
-            category="Token Budget",
+    # Character count check
+    if char_count > max_chars:
+        _emit(
+            f"SKILL.md has {char_count} characters (max {max_chars}). "
+            "Must use progressive disclosure — move content to reference files. "
+            "(Override via cpv.max_chars / cpv.skill_size_severity in plugin.json.)"
         )
     elif char_count > MAX_CHAR_COUNT_WARN:
         report.minor(
@@ -1881,7 +1956,19 @@ def validate_content_patterns(body: str, report: ValidationReport, strict_mode: 
 
     Detects and validates the presence of recommended content patterns.
     """
-    # Check for checklist patterns ([ ] and [x])
+    # Check for checklist patterns ([ ] and [x]).
+    # Issue #16 category I: a numbered-prose step list ("1. Do X. 2. Do Y. ...")
+    # is ALSO a valid Instructions format. Both formats describe ordered
+    # workflows; the distinction is purely cosmetic. Accept either.
+    #
+    # Severity: MINOR — fires on every skill, NOT gated on strict_mode.
+    # Without a checklist (or numbered-prose equivalent), neither the
+    # skill itself nor any consumer (an agent, a command, another
+    # reference file) can detect when the skill's goal has been
+    # accomplished. The progressive-discovery algorithm uses these
+    # ordered steps to drive the "did I finish?" check. A skill without
+    # one is genuinely incomplete, not just stylistically off, so the
+    # rule must fire universally.
     checklist_matches = RE_CHECKLIST.findall(body)
     if checklist_matches:
         report.passed(
@@ -1889,9 +1976,19 @@ def validate_content_patterns(body: str, report: ValidationReport, strict_mode: 
             "SKILL.md",
             category="Content Patterns",
         )
-    elif strict_mode:
+    elif has_numbered_prose_steps(body):
+        report.passed(
+            "Skill uses numbered-prose step list (valid alternative to checkboxes)",
+            "SKILL.md",
+            category="Content Patterns",
+        )
+    else:
         report.minor(
-            "No checklist pattern found (best practice: use [ ] / [x] for complex workflows)",
+            "No checklist or numbered-prose step list found — without one, "
+            "neither the skill nor any consumer can detect when the skill's "
+            "goal has been accomplished. Add either '- [ ]' checkboxes OR "
+            "'1. step' numbered prose covering the workflow's terminating "
+            "conditions.",
             "SKILL.md",
             category="Content Patterns",
         )
@@ -2052,16 +2149,60 @@ def validate_resource_references(skill_path: Path, body: str, report: Validation
             continue
         checked_files.add(file_path)
 
-        # Check for parent directory traversal (../) which breaks portability
+        # Check for parent directory traversal (../) which breaks portability.
+        # Issue #16 category A: when the traversal targets an orchestrator
+        # skill (≥3 sibling skills reference the same `../<name>/` prefix),
+        # downgrade to MINOR — this is the documented orchestrator+
+        # executor+shared-library pattern, not a portability bug.
+        # An explicit `cpv.allow_orchestrator_traversal` allow-list in
+        # plugin.json overrides the heuristic and skips the rule entirely
+        # for the listed prefixes.
         if "../" in file_path:
-            report.major(
-                f"Reference uses parent traversal '../': {file_path} - skill should be self-contained",
-                "SKILL.md",
-                category="Resource References",
+            target_skill_name = file_path.split("/")[1] if file_path.startswith("../") else None
+            skills_root = skill_path.parent
+            plugin_root = skills_root.parent
+
+            cpv_cfg = load_cpv_config(plugin_root)
+            allow_traversal = cpv_cfg.get("allow_orchestrator_traversal", "")
+            if isinstance(allow_traversal, str):
+                allow_list = [allow_traversal] if allow_traversal else []
+            elif isinstance(allow_traversal, list):
+                allow_list = [a for a in allow_traversal if isinstance(a, str)]
+            else:
+                allow_list = []
+
+            target_subpath = f"skills/{target_skill_name}" if target_skill_name else ""
+            in_allow_list = any(
+                target_subpath == p.strip().rstrip("/") or target_subpath.startswith(p.strip().rstrip("/") + "/")
+                for p in allow_list
             )
+            is_orchestrator_target = bool(target_skill_name and is_orchestrator_skill(target_skill_name, skills_root))
+
+            if in_allow_list:
+                report.passed(
+                    f"Parent-traversal allowed by cpv.allow_orchestrator_traversal: {file_path}",
+                    "SKILL.md",
+                    category="Resource References",
+                )
+            elif is_orchestrator_target:
+                report.minor(
+                    f"Reference uses parent traversal '../': {file_path} — target "
+                    f"'{target_skill_name}' is an orchestrator-shared library "
+                    f"(referenced by ≥3 sibling skills). This is intentional "
+                    f"shared-rule reuse, not a portability bug. Add to "
+                    f"cpv.allow_orchestrator_traversal in plugin.json to silence.",
+                    "SKILL.md",
+                    category="Resource References",
+                )
+            else:
+                report.major(
+                    f"Reference uses parent traversal '../': {file_path} - skill should be self-contained",
+                    "SKILL.md",
+                    category="Resource References",
+                )
             # Still check if file exists for completeness
             ref_path = skill_path / file_path
-            if ref_path.exists():
+            if ref_path.exists() and not (in_allow_list or is_orchestrator_target):
                 report.info(
                     f"External file exists but skill not portable: {file_path}",
                     "SKILL.md",
@@ -2216,8 +2357,22 @@ def validate_reference_files(skill_path: Path, report: ValidationReport) -> None
                     category="Structure",
                 )
 
-    # Check reference files for TOC presence (must appear in first 200 chars)
+    # Check reference files for TOC presence (must appear in first 200 chars).
+    # Issue #16 category D: only require a TOC for files >=500 lines.
+    # Short technique files (TECH-NN-*.md, 100-500 lines) work fine without
+    # a TOC because every markdown viewer's outline panel already shows the
+    # ## headings. Above 500 lines a TOC genuinely helps navigation.
+    #
+    # EXEMPT: vendor-doc reference files (e.g. plugins-reference.md,
+    # skills-reference.md fetched verbatim from code.claude.com). These are
+    # canonical embedded copies; we keep them byte-identical to the upstream
+    # so future doc updates produce clean diffs. Forcing CPV's TOC convention
+    # on them would mean editing them — exactly what we don't want.
+    VENDOR_DOC_NAMES = {"plugins-reference.md", "skills-reference.md"}
+    TOC_MIN_LINES = 500
     for ref_file in refs_dir.glob("*.md"):
+        if ref_file.name in VENDOR_DOC_NAMES:
+            continue
         try:
             content = ref_file.read_text(encoding="utf-8")
             line_count = content.count("\n") + 1
@@ -2231,12 +2386,21 @@ def validate_reference_files(skill_path: Path, report: ValidationReport) -> None
             )
 
             if not has_toc_early:
-                report.minor(
-                    f"Reference file has no table of contents in the first 200 characters "
-                    f"({line_count} lines): references/{ref_file.name}",
-                    f"references/{ref_file.name}",
-                    category="Reference Files",
-                )
+                if line_count < TOC_MIN_LINES:
+                    report.info(
+                        f"Reference file <{TOC_MIN_LINES} lines without TOC "
+                        f"({line_count} lines, OK for short files): "
+                        f"references/{ref_file.name}",
+                        f"references/{ref_file.name}",
+                        category="Reference Files",
+                    )
+                else:
+                    report.minor(
+                        f"Reference file has no table of contents in the first 200 characters "
+                        f"({line_count} lines): references/{ref_file.name}",
+                        f"references/{ref_file.name}",
+                        category="Reference Files",
+                    )
             else:
                 report.passed(
                     f"Reference file has TOC ({line_count} lines): references/{ref_file.name}",
@@ -2387,6 +2551,7 @@ def validate_skill(
     strict_openspec: bool = False,
     validate_pillars_flag: bool = False,
     skip_platform_checks: list[str] | None = None,
+    skip_dir_name_check: bool = False,
 ) -> ValidationReport:
     """Validate a complete skill directory.
 
@@ -2396,6 +2561,9 @@ def validate_skill(
         strict_openspec: Enable AgentSkills OpenSpec strict validation
         validate_pillars_flag: Enable 8+1 Pillars validation
         skip_platform_checks: List of platforms to skip checks for (e.g., ['windows'])
+        skip_dir_name_check: Suppress the frontmatter-name vs directory-name
+            match. Set it when validating a root-level SKILL.md (CC v2.1.142):
+            the skill's directory IS the plugin root, so the match is N/A.
 
     Returns:
         ValidationReport with all results
@@ -2430,7 +2598,9 @@ def validate_skill(
         validate_field_whitelist(frontmatter, report, strict_openspec)
 
         # Validate individual frontmatter fields
-        validate_name_field(frontmatter, skill_path.name, report, strict_openspec)
+        validate_name_field(
+            frontmatter, skill_path.name, report, strict_openspec, skip_dir_name_check=skip_dir_name_check
+        )
         validate_description_field(frontmatter, body, report, strict_mode)
         validate_context_field(frontmatter, report)
         validate_agent_field(frontmatter, report)
@@ -2506,8 +2676,10 @@ def validate_skill(
                     category="Frontmatter",
                 )
 
-    # Validate token budget
-    validate_token_budget(content, body, report)
+    # Validate token budget — pass the SKILL.md path so the override
+    # config in plugin.json can be discovered (issue #16 category B).
+    skill_md_for_budget = find_skill_md(skill_path)
+    validate_token_budget(content, body, report, skill_path=skill_md_for_budget)
 
     # Validate required sections (Nixtla strict mode)
     validate_required_sections(body, report, strict_mode)
@@ -2669,7 +2841,13 @@ def print_json(report: ValidationReport) -> None:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Comprehensive skill validator with 190+ validation rules")
+    from cpv_validation_common import launcher_epilog
+
+    parser = argparse.ArgumentParser(
+        description="Comprehensive skill validator with 190+ validation rules",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=launcher_epilog("skill"),
+    )
     parser.add_argument("skill_path", help="Path to the skill directory")
     parser.add_argument(
         "--verbose",

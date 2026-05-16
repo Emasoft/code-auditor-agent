@@ -394,7 +394,7 @@ jobs:
       - name: Detect Layout B (nested plugins)
         id: layout
         run: |
-          if [ -d "plugins" ] && find plugins -mindepth 3 -maxdepth 3 -name plugin.json -path '*/.claude-plugin/plugin.json' -print -quit | grep -q .; then
+          if [ -d "plugins" ] && find plugins -mindepth 2 -maxdepth 2 -name plugin.json -path '*/.claude-plugin/plugin.json' -print -quit | grep -q .; then
             echo "is_layout_b=true" >> $GITHUB_OUTPUT
             echo "Layout B detected — plugins nested under plugins/"
           else
@@ -512,20 +512,14 @@ jobs:
         run: |
           git add README.md
           git commit -m "docs: regenerate plugin catalog from marketplace.json"
-          pushed=false
           for attempt in 1 2 3; do
             if git push; then
               echo "Push succeeded on attempt $attempt"
-              pushed=true
               break
             fi
             echo "Push failed (attempt $attempt), pulling and retrying..."
             git pull --rebase origin ${{ github.event.repository.default_branch }}
           done
-          if [ "$pushed" != "true" ]; then
-            echo "::error::git push failed after 3 attempts — catalog regeneration NOT propagated to origin"
-            exit 1
-          fi
 
       - name: Summary
         run: |
@@ -560,16 +554,9 @@ from pathlib import Path
 
 def main() -> int:
     """Regenerate plugin catalog table in README.md from marketplace.json."""
-    # Determine marketplace directory (repo root). Accept either the
-    # documented --marketplace-dir PATH flag or a bare positional path.
-    args = sys.argv[1:]
-    if args and args[0] == "--marketplace-dir":
-        if len(args) < 2:
-            print("Error: --marketplace-dir requires a PATH argument", file=sys.stderr)
-            return 1
-        marketplace_dir = Path(args[1])
-    elif args and args[0] != "--help":
-        marketplace_dir = Path(args[0])
+    # Determine marketplace directory (repo root)
+    if len(sys.argv) > 1 and sys.argv[1] != "--help":
+        marketplace_dir = Path(sys.argv[1])
     else:
         marketplace_dir = Path.cwd()
 
@@ -600,7 +587,7 @@ def main() -> int:
 
     table_header = """| Plugin | Description | Install |
 |--------|-------------|---------|"""
-    table = table_header + "\\n" + "\\n".join(rows) if rows else table_header + "\\n| (no plugins yet) | | |"
+    table = table_header + "\n" + "\n".join(rows) if rows else table_header + "\n| (no plugins yet) | | |"
 
     # Read existing README
     if not readme_path.exists():
@@ -610,7 +597,7 @@ def main() -> int:
     content = readme_path.read_text(encoding="utf-8")
 
     # Replace the Plugins section table (between "## Plugins" and the next "##")
-    lines = content.split("\\n")
+    lines = content.split("\n")
     new_lines: list[str] = []
     in_plugins_section = False
     table_replaced = False
@@ -640,7 +627,7 @@ def main() -> int:
         print("Warning: ## Plugins section not found in README.md", file=sys.stderr)
         return 0
 
-    readme_path.write_text("\\n".join(new_lines), encoding="utf-8")
+    readme_path.write_text("\n".join(new_lines), encoding="utf-8")
     print(f"Updated README.md with {{len(plugins)}} plugin(s)")
     return 0
 
@@ -699,7 +686,7 @@ split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
   # Replace issue numbers
-  {{ pattern = '\\((\\w+\\s)?#([0-9]+)\\)', replace = "([#${{2}}](https://github.com/{github_owner}/{name}/issues/${{2}}))" }},
+  {{ pattern = '\\((\\ w+\\s)?#([0-9]+)\\)', replace = "([#${{2}}](https://github.com/{github_owner}/{name}/issues/${{2}}))" }},
   # Remove trailing whitespace
   {{ pattern = '\\s+$', replace = "" }},
 ]
@@ -982,26 +969,30 @@ def generate_marketplace_repo(
     mj_data = _marketplace_json(name, owner_name, description, plugins)
     write_json(target_dir / ".claude-plugin" / "marketplace.json", mj_data, dry_run)
 
-    # 2. README.md
-    readme_content = _readme(name, description, github_owner, plugins)
+    # 2. README.md — route through the LOCAL template when github_owner is
+    # empty (no remote, no badges, no workflow links).
+    if github_owner:
+        readme_content = _readme(name, description, github_owner, plugins)
+    else:
+        readme_content = _readme_local(name, description, plugins)
     write_file(target_dir / "README.md", readme_content, dry_run)
 
     # 3. .gitignore
     write_file(target_dir / ".gitignore", _gitignore(), dry_run)
 
-    # 4. .github/workflows/validate.yml
-    write_file(
-        target_dir / ".github" / "workflows" / "validate.yml",
-        _validate_workflow(),
-        dry_run,
-    )
-
-    # 5. .github/workflows/update-catalog.yml
-    write_file(
-        target_dir / ".github" / "workflows" / "update-catalog.yml",
-        _update_catalog_workflow(name),
-        dry_run,
-    )
+    # 4 + 5. .github/workflows/ — only emitted in github mode. Local-only
+    # marketplaces (no github_owner) skip CI scaffolding entirely.
+    if github_owner:
+        write_file(
+            target_dir / ".github" / "workflows" / "validate.yml",
+            _validate_workflow(),
+            dry_run,
+        )
+        write_file(
+            target_dir / ".github" / "workflows" / "update-catalog.yml",
+            _update_catalog_workflow(name),
+            dry_run,
+        )
 
     # 6. scripts/update_catalog.py
     write_file(
@@ -1092,8 +1083,15 @@ Examples:
     )
     parser.add_argument(
         "--github-owner",
-        required=True,
-        help="GitHub username or org (e.g. 'my-org')",
+        default="",
+        help=(
+            "GitHub username or org (e.g. 'my-org'). "
+            "If empty, the marketplace is scaffolded in LOCAL-ONLY mode: "
+            "no .github/workflows/, no badges, README routes through the "
+            "local-only template. Useful for marketplaces that won't be "
+            "published to GitHub (private dev catalogs, project-internal "
+            "marketplaces, etc.)."
+        ),
     )
     parser.add_argument(
         "--add-plugin",

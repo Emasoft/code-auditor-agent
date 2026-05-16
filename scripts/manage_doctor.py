@@ -19,6 +19,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
@@ -48,6 +49,9 @@ from manage_plugin import _portable_path, _run_cpv_validation, read_plugin_meta
 __all__ = [
     "do_doctor",
     "_run_claude_validate",
+    "do_prune_old_versions",
+    "find_active_versions",
+    "find_cached_versions",
 ]
 
 
@@ -206,8 +210,17 @@ def _check_orphaned_settings(settings: dict, fix: bool = False, settings_path: P
 # ── Doctor command ───────────────────────────────────────────────────
 
 
-def do_doctor(verbose: bool = False, fix: bool = False):
-    """Check overall health of local plugin installation."""
+def do_doctor(verbose: bool = False, fix: bool = False, quick: bool = False):
+    """Check overall health of local plugin installation.
+
+    `quick=True` (added 2026-05-09 to back the cpv-doctor menu's choice 20)
+    SKIPS the per-plugin `_run_cpv_validation` call inside the marketplace-
+    iteration loop. Everything else still runs: CLI auth, settings
+    integrity, marketplace-registration cross-checks, orphaned-entry
+    detection, stale `settings.local.json` detection. The result is a
+    sub-second health snapshot instead of the multi-minute full sweep —
+    appropriate for "do I need to investigate further?" triage.
+    """
     print(f"{BOLD}Plugin installation health check{NC}")
     print()
 
@@ -265,6 +278,40 @@ def do_doctor(verbose: bool = False, fix: bool = False):
                     enabled = sum(1 for v in ep.values() if v)
                     disabled = sum(1 for v in ep.values() if not v)
                     info(f"  {enabled} plugin(s) enabled, {disabled} disabled")
+
+                # TRDD-e2b17a61: when extraKnownMarketplaces or
+                # strictKnownMarketplaces is present, run the dedicated
+                # settings-marketplace schema validator so doctor surfaces
+                # spec violations (unknown source type, missing required
+                # fields, strict-allowlist breaches) without forcing the
+                # user to invoke /cpv-validate-settings-marketplace
+                # manually. We render only CRITICAL/MAJOR/MINOR/WARNING
+                # findings — PASSED/INFO are silent in the doctor sweep so
+                # we don't drown the health check in low-signal noise.
+                if "extraKnownMarketplaces" in data or "strictKnownMarketplaces" in data:
+                    try:
+                        from validate_settings_marketplace import (
+                            validate_settings_marketplace_file,
+                        )
+
+                        sm_report = validate_settings_marketplace_file(path)
+                        for r in sm_report.results:
+                            if r.level == "CRITICAL":
+                                err(f"  marketplace schema CRITICAL — {r.message}")
+                                issues += 1
+                            elif r.level == "MAJOR":
+                                warn(f"  marketplace schema MAJOR — {r.message}")
+                                issues += 1
+                            elif r.level == "MINOR":
+                                warn(f"  marketplace schema MINOR — {r.message}")
+                            elif r.level == "WARNING":
+                                warn(f"  marketplace schema warning — {r.message}")
+                    except ImportError:
+                        # If the validator module isn't importable for any
+                        # reason (e.g. running from an incomplete checkout),
+                        # the doctor must continue without crashing — schema
+                        # validation is a value-add, not a hard dependency.
+                        info("  (marketplace schema validator not available — skipped)")
             except Exception as e:
                 err(f"{label}: CORRUPT — {e}")
                 issues += 1
@@ -529,8 +576,17 @@ def do_doctor(verbose: bool = False, fix: bool = False):
             meta = read_plugin_meta(plug_dir)
             plugin_key = f"{meta['name']}@{mp_name}"
 
-            # Use CPV's modular validator via shared helper from manage_plugin
-            v_errors, v_warnings, _valid = _run_cpv_validation(plug_dir, quiet=True)
+            # Quick mode (cpv-doctor menu option 20) skips the per-plugin
+            # validator call. The wholesale scan dominates wall-clock time
+            # on installs with 20+ plugins (3-8 minutes); for a "do I need
+            # to investigate?" triage we only need the listing + enable
+            # state + marketplace-declaration cross-check.
+            if quick:
+                v_errors: list[str] = []
+                v_warnings: list[str] = []
+            else:
+                # Use CPV's modular validator via shared helper from manage_plugin
+                v_errors, v_warnings, _valid = _run_cpv_validation(plug_dir, quiet=True)
 
             status_parts = []
             if v_errors:
@@ -538,7 +594,9 @@ def do_doctor(verbose: bool = False, fix: bool = False):
                 issues += len(v_errors)
             if v_warnings:
                 status_parts.append(f"{YELLOW}{len(v_warnings)} warning(s){NC}")
-            if not v_errors and not v_warnings:
+            if quick:
+                status_parts.append(f"{CYAN}validation skipped (quick){NC}")
+            elif not v_errors and not v_warnings:
                 status_parts.append(f"{GREEN}clean{NC}")
 
             # Check enabled status
@@ -585,12 +643,347 @@ def do_doctor(verbose: bool = False, fix: bool = False):
     print()
 
 
+def do_install_scanners() -> int:
+    """Install every external scanner CPV uses, silently. v2.48 entry point.
+
+    Idempotent: scanners already on PATH are reported "available" without
+    re-installing. Per-platform install cascades live in
+    ``cpv_install_scanners`` and are silent (capture_output=True) — the user
+    never sees brew/snap/cargo chatter. Returns the number of scanners that
+    are NOT available after the run, so CI gates can `exit $?` cleanly.
+
+    Tools installed:
+      * fclones — pre-scan dedup helper (brew/snap/cargo/GitHub-release)
+      * cc-audit — npm-installed AI-rules scanner
+      * trufflehog — Go-binary verified-secret scanner (~700 detectors)
+      * semgrep — Python static analyzer
+      * tirith — terminal-security scanner (pipx → brew/npm/cargo cascade)
+      * skill-scanner — Cisco AI Defense (uv tool install)
+
+    Per-tool opt-out: ``CPV_NO_<TOOL>_INSTALL=1`` skips that tool's autoinstall
+    and reports it as unavailable (CPV degrades gracefully — every scanner
+    self-skips when its binary is missing).
+    """
+    # Local import keeps the doctor's normal-path startup cheap.
+    from cpv_install_scanners import install_all_scanners  # noqa: PLC0415
+
+    print(f"\n{BOLD}Installing CPV external scanners...{NC}\n")
+    statuses = install_all_scanners()
+
+    width = max(len(name) for name in statuses)
+    not_available = 0
+    for name, available in statuses.items():
+        if available:
+            ok(f"  {name:<{width}}  available on PATH")
+        else:
+            warn(f"  {name:<{width}}  NOT available — install attempt failed or opted out")
+            not_available += 1
+
+    print()
+    if not_available == 0:
+        ok("All 6 scanners ready. CPV will run at full speed.")
+    else:
+        warn(
+            f"{not_available} scanner(s) unavailable. CPV will still run but with degraded "
+            "coverage / no dedup. See README §External Security Scanners for manual install."
+        )
+    print()
+    return not_available
+
+
+def find_active_versions(cache_root: Path | None = None) -> dict[tuple[str, str], str]:
+    """Return ``{(marketplace, plugin): active_version}`` for every plugin
+    referenced as enabled in any of:
+
+    * ``~/.claude.json`` top-level ``enabledPlugins`` (per-project + global)
+    * ``~/.claude/settings.json`` ``enabledPlugins`` (user scope)
+    * Any project's ``.claude/settings.local.json`` we can find
+      (best-effort — we only know about the active project Claude Code
+      tells us via ``CLAUDE_PROJECT_DIR``)
+
+    A plugin is considered "active" when it appears as an
+    ``"<plugin>@<marketplace>": true`` entry. We resolve its version by
+    inspecting the cache directory it points at — Claude Code keeps the
+    active version under ``cache/<marketplace>/<plugin>/<version>/``.
+
+    If a plugin has multiple cached versions but no ``enabledPlugins``
+    entry tells us which one is active, the version with the highest
+    semver string is treated as active (latest wins; older versions
+    are pruneable). This is the safe default — pruning a non-active
+    version is reversible (re-install will re-cache it).
+    """
+    cache_root = cache_root or CACHE_DIR
+    active: dict[tuple[str, str], str] = {}
+
+    # Source 1: ~/.claude.json (global state) — has projects[<path>].enabledPlugins
+    claude_json = Path.home() / ".claude.json"
+    enabled_keys: set[str] = set()
+    if claude_json.exists():
+        try:
+            data = load_json_safe(claude_json)
+            if isinstance(data, dict):
+                for proj_state in (data.get("projects") or {}).values():
+                    if isinstance(proj_state, dict):
+                        for key, on in (proj_state.get("enabledPlugins") or {}).items():
+                            if on and isinstance(key, str):
+                                enabled_keys.add(key)
+                # Top-level enabledPlugins (rare, but supported)
+                for key, on in (data.get("enabledPlugins") or {}).items():
+                    if on and isinstance(key, str):
+                        enabled_keys.add(key)
+        except Exception:
+            pass
+
+    # Source 2: ~/.claude/settings.json (user-scope)
+    if SETTINGS_FILE.exists():
+        try:
+            settings = load_jsonc(SETTINGS_FILE)
+            if isinstance(settings, dict):
+                for key, on in (settings.get("enabledPlugins") or {}).items():
+                    if on and isinstance(key, str):
+                        enabled_keys.add(key)
+        except Exception:
+            pass
+
+    # Each enabled key looks like "plugin@marketplace" — we don't get the
+    # version directly; Claude Code resolves it at install time. The cached
+    # version is whichever directory exists under cache/<marketplace>/<plugin>/.
+    for key in enabled_keys:
+        if "@" not in key:
+            continue
+        plugin, marketplace = key.split("@", 1)
+        plugin_dir = cache_root / marketplace / plugin
+        if plugin_dir.is_dir():
+            versions = sorted(
+                (d.name for d in plugin_dir.iterdir() if d.is_dir()),
+                key=_semver_sort_key,
+                reverse=True,
+            )
+            if versions:
+                active[(marketplace, plugin)] = versions[0]
+
+    return active
+
+
+def find_cached_versions(cache_root: Path | None = None) -> dict[tuple[str, str], list[str]]:
+    """Return ``{(marketplace, plugin): [version, ...]}`` for every plugin
+    in the cache. Versions are sorted newest-first by semver-aware key.
+    """
+    cache_root = cache_root or CACHE_DIR
+    if not cache_root.is_dir():
+        return {}
+    out: dict[tuple[str, str], list[str]] = {}
+    for marketplace_dir in cache_root.iterdir():
+        if not marketplace_dir.is_dir() or marketplace_dir.name.startswith("."):
+            continue
+        for plugin_dir in marketplace_dir.iterdir():
+            if not plugin_dir.is_dir() or plugin_dir.name.startswith("."):
+                continue
+            versions = [d.name for d in plugin_dir.iterdir() if d.is_dir()]
+            if versions:
+                versions.sort(key=_semver_sort_key, reverse=True)
+                out[(marketplace_dir.name, plugin_dir.name)] = versions
+    return out
+
+
+def _semver_sort_key(version: str) -> tuple:
+    """Sort key for semver-ish strings. Falls back to string compare on
+    non-semver names (e.g. git-hash dirs). Higher = newer.
+    """
+    parts = re.split(r"[.\-]", version)
+    out: list = []
+    for p in parts:
+        if p.isdigit():
+            out.append((1, int(p)))  # numeric segments sort numerically
+        else:
+            out.append((0, p))  # non-numeric segments sort lexicographically
+    return tuple(out)
+
+
+def _dir_size_bytes(path: Path) -> int:
+    """Total size of a directory tree in bytes. Best-effort — symlinks and
+    permission errors are silently skipped.
+    """
+    total = 0
+    for root, _dirs, files in os.walk(path, followlinks=False):
+        for fname in files:
+            try:
+                total += (Path(root) / fname).stat().st_size
+            except (OSError, FileNotFoundError):
+                pass
+    return total
+
+
+def _human_bytes(n: int) -> str:
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if n < 1024:
+            return f"{n:.1f} {unit}" if unit != "B" else f"{n} B"
+        n /= 1024  # type: ignore[assignment]
+    return f"{n:.1f} PB"
+
+
+def do_prune_old_versions(dry_run: bool = True, keep_n: int = 1) -> int:
+    """Prune older versions from the plugin cache. Returns the number of
+    version directories removed (0 in dry-run).
+
+    Strategy:
+      1. Walk ``CACHE_DIR/<marketplace>/<plugin>/`` to find every version
+         tuple ``(marketplace, plugin, version)``.
+      2. For each ``(marketplace, plugin)``, sort versions newest-first
+         via ``_semver_sort_key``.
+      3. The active version is whichever Claude Code currently references
+         in ``enabledPlugins`` (resolved via ``find_active_versions``).
+         If no enabledPlugins entry, the highest semver wins.
+      4. Keep the ``keep_n`` newest versions (default 1 = current only).
+         Older versions are deleted (or just listed in dry-run).
+
+    Safe by default (dry-run on). Pass ``dry_run=False`` to actually
+    delete. Re-install will re-populate the cache from the marketplace
+    if the user later needs an older version.
+    """
+    cached = find_cached_versions()
+    active = find_active_versions()
+
+    if not cached:
+        info("No plugin cache found at " + str(CACHE_DIR))
+        return 0
+
+    print(f"\n{BOLD}CPV cache prune — keeping {keep_n} newest version(s) per plugin{NC}")
+    if dry_run:
+        print(f"  {YELLOW}(dry-run — no files will be deleted){NC}")
+    print()
+
+    total_freed = 0
+    total_removed_dirs = 0
+    plugins_with_old = 0
+
+    for (marketplace, plugin), versions in sorted(cached.items()):
+        if len(versions) <= keep_n:
+            continue
+        # Identify the active version (if known) — always keep it.
+        active_v = active.get((marketplace, plugin))
+        kept = list(versions[:keep_n])
+        if active_v and active_v not in kept:
+            # Replace the oldest "kept" with the active version so the
+            # kept set always includes whatever the user currently runs.
+            kept[-1] = active_v
+        old_versions = [v for v in versions if v not in kept]
+        if not old_versions:
+            continue
+
+        plugins_with_old += 1
+        plugin_dir = CACHE_DIR / marketplace / plugin
+        plugin_freed = 0
+        for v in old_versions:
+            vdir = plugin_dir / v
+            try:
+                size = _dir_size_bytes(vdir)
+            except OSError:
+                size = 0
+            plugin_freed += size
+
+        print(f"  {CYAN}{marketplace}/{plugin}{NC}")
+        print(f"    keep:   {', '.join(kept)}")
+        print(f"    prune:  {', '.join(old_versions)}  ({_human_bytes(plugin_freed)})")
+
+        if not dry_run:
+            for v in old_versions:
+                vdir = plugin_dir / v
+                try:
+                    shutil.rmtree(vdir)
+                    total_removed_dirs += 1
+                except OSError as exc:
+                    err(f"    Failed to remove {vdir}: {exc}")
+                    continue
+        else:
+            total_removed_dirs += len(old_versions)
+        total_freed += plugin_freed
+
+    print()
+    if plugins_with_old == 0:
+        ok("No old versions to prune. Cache is clean.")
+        return 0
+
+    suffix = " (dry-run — re-run with --prune-old-versions to actually delete)" if dry_run else ""
+    ok(
+        f"{plugins_with_old} plugin(s) with old versions, "
+        f"{total_removed_dirs} directory(ies), "
+        f"{_human_bytes(total_freed)} freed{suffix}"
+    )
+    if dry_run:
+        print(f"\n  {BOLD}To delete for real:{NC}")
+        print('    uv run --with pyyaml python "${CLAUDE_PLUGIN_ROOT}/scripts/manage_doctor.py" --prune-old-versions')
+    print()
+    return total_removed_dirs
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Plugin health check")
+    from cpv_validation_common import launcher_epilog
+
+    parser = argparse.ArgumentParser(
+        description="Plugin health check",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=launcher_epilog("doctor"),
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed validation")
     parser.add_argument("--fix", action="store_true", help="Auto-fix orphaned entries in settings files")
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help=(
+            "Sub-second triage mode (added 2026-05-09): skip the per-plugin "
+            "`validate_plugin.py` sweep inside the marketplace-iteration loop. "
+            "All other checks (CLI auth, settings integrity, marketplace "
+            "registrations, orphaned entries, stale settings.local.json) still "
+            "run. Used by /cpv-doctor menu option 20."
+        ),
+    )
+    parser.add_argument(
+        "--install-scanners",
+        action="store_true",
+        help=(
+            "v2.48 — install every external scanner CPV uses (fclones, cc-audit, "
+            "trufflehog, semgrep, tirith, Cisco skill-scanner). Silent and "
+            "idempotent. Set CPV_NO_<TOOL>_INSTALL=1 to skip a specific tool."
+        ),
+    )
+    parser.add_argument(
+        "--prune-old-versions",
+        action="store_true",
+        help=(
+            "v2.48 — DELETE older plugin cache versions, keeping only the "
+            "active version (or the highest semver if no enabledPlugins "
+            "entry resolves it). Frees disk space accumulated from "
+            "`claude plugin update` (which never removes old versions)."
+        ),
+    )
+    parser.add_argument(
+        "--prune-dry-run",
+        action="store_true",
+        help=(
+            "v2.48 — list what --prune-old-versions WOULD delete without "
+            "actually deleting anything. Use this to preview before pruning."
+        ),
+    )
+    parser.add_argument(
+        "--prune-keep",
+        type=int,
+        default=1,
+        metavar="N",
+        help="v2.48 — number of newest versions to keep per plugin (default: 1).",
+    )
     args = parser.parse_args()
-    do_doctor(verbose=args.verbose, fix=args.fix)
+    if args.install_scanners:
+        sys.exit(do_install_scanners())
+    if args.prune_old_versions or args.prune_dry_run:
+        # --prune-dry-run implies dry-run; --prune-old-versions actually deletes
+        sys.exit(
+            do_prune_old_versions(
+                dry_run=args.prune_dry_run and not args.prune_old_versions,
+                keep_n=args.prune_keep,
+            )
+        )
+    do_doctor(verbose=args.verbose, fix=args.fix, quick=args.quick)
 
 
 if __name__ == "__main__":

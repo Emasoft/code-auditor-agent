@@ -855,6 +855,8 @@ def print_json(report: EnterpriseComplianceReport) -> None:
 
 def main() -> int:
     """Main entry point."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Validate enterprise compliance for Claude Code plugins",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -875,7 +877,9 @@ Exit codes:
   1 - CRITICAL issues found
   2 - MAJOR issues found
   3 - MINOR issues found
-""",
+
+"""
+        + launcher_epilog("enterprise"),
     )
     parser.add_argument("plugin_path", help="Path to the plugin directory")
     parser.add_argument(

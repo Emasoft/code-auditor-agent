@@ -257,15 +257,22 @@ if __name__ == "__main__":
 '''
 
 PRE_PUSH_HOOK = '''#!/usr/bin/env python3
-"""pre-push hook: Lint and validate before pushing.
+"""pre-push hook: validate the plugin before pushing.
 
-Thin wrapper that delegates to scripts/lint_files.py and
-scripts/validate_plugin.py — the single source of truth.
+Thin wrapper around scripts/validate_plugin.py. As of CPV v2.64.0,
+the validator owns repo-wide linting via cpv_lint_engine, so a single
+invocation covers ruff + mypy + shellcheck + eslint + ... + structural
+checks in one pass — there is no separate lint step.
+
+Cross-platform: uses pathlib throughout (no os.path.join, no /tmp/
+literals, no shell-isms) so this hook runs identically on Linux, macOS,
+and Windows.
 """
 
-import os
+import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 if sys.stdout.isatty():
     RED = "\\033[0;31m"
@@ -277,29 +284,24 @@ else:
     RED = GREEN = YELLOW = BOLD = NC = ""
 
 
-def is_rebase_in_progress(git_dir: str) -> bool:
+def is_rebase_in_progress(git_dir: Path) -> bool:
     """Return True if a rebase is in progress — skip hook."""
-    return (
-        os.path.isdir(os.path.join(git_dir, "rebase-merge"))
-        or os.path.isdir(os.path.join(git_dir, "rebase-apply"))
-    )
+    return (git_dir / "rebase-merge").is_dir() or (git_dir / "rebase-apply").is_dir()
 
 
-def find_scripts_dir(repo_root: str) -> str | None:
+def find_scripts_dir(repo_root: Path) -> Path | None:
     """Locate scripts/ directory — may be at root or in a subdirectory."""
-    candidates = [
-        os.path.join(repo_root, "scripts"),
-        os.path.join(repo_root, "claude-plugins-validation", "scripts"),
-    ]
-    for d in candidates:
-        if os.path.isdir(d):
-            return d
+    for candidate in (
+        repo_root / "scripts",
+        repo_root / "claude-plugins-validation" / "scripts",
+    ):
+        if candidate.is_dir():
+            return candidate
     return None
 
 
 def find_python() -> str:
     """Return best available Python interpreter."""
-    import shutil
     for name in ("python3", "python"):
         if shutil.which(name):
             return name
@@ -307,18 +309,21 @@ def find_python() -> str:
 
 
 def main() -> int:
-    """Run linting and validation sequentially, fail-fast."""
+    """Run plugin validation (lint + structure) before push, fail-fast."""
     # Determine repo root
     try:
-        repo_root = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-    except subprocess.CalledProcessError:
+        repo_root = Path(
+            subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"],
+                text=True,
+                timeout=10,
+            ).strip()
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         print(f"{RED}ERROR: Not inside a git repository{NC}")
         return 1
 
-    git_dir = os.path.join(repo_root, ".git")
+    git_dir = repo_root / ".git"
     if is_rebase_in_progress(git_dir):
         print(f"{YELLOW}Rebase in progress — skipping pre-push hook{NC}")
         return 0
@@ -329,32 +334,23 @@ def main() -> int:
         return 0
 
     python = find_python()
-    overall = 0
 
-    # Step 1: Read-only linting
-    lint_script = os.path.join(scripts_dir, "lint_files.py")
-    if os.path.isfile(lint_script):
-        print(f"{BOLD}Running file linting (read-only)...{NC}")
-        result = subprocess.run([python, lint_script, repo_root])
-        if result.returncode != 0:
-            print(f"{RED}Linting failed — push blocked{NC}")
-            overall = 1
+    # Plugin validation — owns repo-wide lint via cpv_lint_engine since v2.64.0
+    validate_script = scripts_dir / "validate_plugin.py"
+    if not validate_script.is_file():
+        print(f"{YELLOW}WARNING: validate_plugin.py not found — skipping hook{NC}")
+        return 0
 
-    # Step 2: Plugin validation
-    validate_script = os.path.join(scripts_dir, "validate_plugin.py")
-    if os.path.isfile(validate_script):
-        print(f"{BOLD}Running plugin validation...{NC}")
-        result = subprocess.run([python, validate_script, repo_root, "--verbose"])
-        if result.returncode != 0:
-            print(f"{RED}Validation failed — push blocked{NC}")
-            overall = max(overall, result.returncode)
+    print(f"{BOLD}Running plugin validation (lint + structure)...{NC}")
+    result = subprocess.run(
+        [python, str(validate_script), str(repo_root), "--verbose"]
+    )
+    if result.returncode != 0:
+        print(f"{RED}{BOLD}Validation failed — push blocked (exit code: {result.returncode}){NC}")
+        return result.returncode
 
-    if overall == 0:
-        print(f"{GREEN}{BOLD}All checks passed — push allowed{NC}")
-    else:
-        print(f"{RED}{BOLD}Push blocked (exit code: {overall}){NC}")
-
-    return overall
+    print(f"{GREEN}{BOLD}All checks passed — push allowed{NC}")
+    return 0
 
 
 if __name__ == "__main__":
@@ -583,18 +579,8 @@ class PipelineSetup:
         self.verbose = verbose
         self.status = PipelineStatus(project_type=ProjectType.UNKNOWN, project_path=self.project_path)
 
-    def detect_project_type(self, forced_type: ProjectType | None = None) -> ProjectType:
-        """Detect what type of project this is.
-
-        If forced_type is given, skip auto-detection and use it. Submodule
-        detection still runs for MARKETPLACE so downstream fixes work.
-        """
-        if forced_type is not None:
-            self.status.project_type = forced_type
-            if forced_type == ProjectType.MARKETPLACE:
-                self._detect_submodules()
-            return self.status.project_type
-
+    def detect_project_type(self) -> ProjectType:
+        """Detect what type of project this is."""
         marketplace_json = self.project_path / ".claude-plugin" / "marketplace.json"
         plugin_json = self.project_path / ".claude-plugin" / "plugin.json"
 
@@ -617,15 +603,7 @@ class PipelineSetup:
         return self.status.project_type
 
     def _detect_submodules(self) -> None:
-        """Detect git submodules in the project.
-
-        Stores the submodule NAME (from the `[submodule "name"]` section) rather
-        than the checkout path, because git stores per-submodule metadata under
-        `.git/modules/<name>/`, not `.git/modules/<path>/`. The two coincide when
-        submodules are added without `--name`, but differ otherwise — using the
-        path would cause hook validation/installation to look at the wrong
-        directory.
-        """
+        """Detect git submodules in the project."""
         gitmodules = self.project_path / ".gitmodules"
         if not gitmodules.exists():
             return
@@ -639,15 +617,15 @@ class PipelineSetup:
                     name = section.replace("submodule ", "").strip('"')
                     path = config.get(section, "path", fallback=name)
                     if (self.project_path / path).exists():
-                        self.status.submodules.append(name)
+                        self.status.submodules.append(path)
         except (configparser.Error, OSError) as e:
             # If we can't parse .gitmodules, just skip submodule detection
             if self.verbose:
                 print(f"{YELLOW}Warning: Could not parse .gitmodules: {e}{NC}")
 
-    def validate(self, forced_type: ProjectType | None = None) -> PipelineStatus:
+    def validate(self) -> PipelineStatus:
         """Validate the current pipeline setup."""
-        self.detect_project_type(forced_type=forced_type)
+        self.detect_project_type()
 
         if self.status.project_type == ProjectType.UNKNOWN:
             self.status.issues.append(
@@ -957,23 +935,17 @@ class PipelineSetup:
                 print(f"{GREEN}✓{NC} Created .gitignore")
             fixed += 1
         else:
-            # Append only the entries that are not already present, so repeated
-            # runs are idempotent even when .gitignore already contains some of
-            # the patterns (e.g. __pycache__/ but not docs_dev/).
+            # Check if it needs additions - check for all expected patterns
             try:
                 content = gitignore.read_text(encoding="utf-8")
-                missing_entries = [
-                    line
-                    for line in GITIGNORE_ADDITIONS.splitlines()
-                    if line.strip() and not line.lstrip().startswith("#") and line.strip() not in content
-                ]
-                if missing_entries:
-                    addition = "\n# Added by setup_plugin_pipeline\n" + "\n".join(missing_entries) + "\n"
+                # Check for multiple markers to avoid duplicating content
+                needs_update = not all(marker in content for marker in ["__pycache__", ".mypy_cache", "docs_dev/"])
+                if needs_update:
                     if self.dry_run:
                         print(f"{YELLOW}Would update:{NC} .gitignore")
                     else:
                         with open(gitignore, "a", encoding="utf-8") as f:
-                            f.write(addition)
+                            f.write("\n" + GITIGNORE_ADDITIONS)
                         print(f"{GREEN}✓{NC} Updated .gitignore")
                     fixed += 1
             except (OSError, UnicodeDecodeError) as e:
@@ -1128,15 +1100,8 @@ Examples:
 
     setup = PipelineSetup(project_path, dry_run=args.dry_run, verbose=args.verbose)
 
-    # Honor --type to force project type (auto-detected otherwise)
-    forced_type: ProjectType | None = None
-    if args.type == "marketplace":
-        forced_type = ProjectType.MARKETPLACE
-    elif args.type == "plugin":
-        forced_type = ProjectType.PLUGIN
-
     # Validate
-    status = setup.validate(forced_type=forced_type)
+    status = setup.validate()
 
     # JSON output
     if args.json:
@@ -1185,7 +1150,7 @@ Examples:
 
                 # Re-validate
                 setup.status = PipelineStatus(project_type=ProjectType.UNKNOWN, project_path=project_path)
-                status = setup.validate(forced_type=forced_type)
+                status = setup.validate()
 
                 if status.is_valid and not status.issues:
                     print(f"{GREEN}Pipeline is now fully configured{NC}")

@@ -18,9 +18,8 @@ import json
 import sys
 from pathlib import Path
 
-# ── Per-model pricing (USD per million tokens, as of 2026-05) ──
+# ── Per-model pricing (USD per million tokens, as of 2025-12) ──
 MODEL_PRICING: dict[str, dict[str, float]] = {
-    "claude-opus-4-7": {"input": 5.0, "output": 25.0, "cache_write": 6.25, "cache_read": 0.50},
     "claude-opus-4-6": {"input": 5.0, "output": 25.0, "cache_write": 6.25, "cache_read": 0.50},
     "claude-opus-4-5": {"input": 5.0, "output": 25.0, "cache_write": 6.25, "cache_read": 0.50},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0, "cache_write": 3.75, "cache_read": 0.30},
@@ -40,34 +39,18 @@ def get_pricing(model_name: str) -> dict[str, float]:
         return DEFAULT_PRICING
     if model_name in MODEL_PRICING:
         return MODEL_PRICING[model_name]
-    # Fuzzy family match — run BEFORE substring loop so specific versions
-    # (4-7, 4-6, 4-5, 3-5) are not shadowed by generic family prefixes like
-    # "claude-opus-4" matching "claude-opus-4-7" and returning the wrong price.
+    # Try prefix/substring match
+    for key, pricing in MODEL_PRICING.items():
+        if key in model_name or model_name.startswith(key):
+            return pricing
+    # Fuzzy family match
     ml = model_name.lower()
-    if "opus" in ml and ("4-7" in ml or "4.7" in ml):
-        return MODEL_PRICING["claude-opus-4-7"]
     if "opus" in ml and ("4-6" in ml or "4.6" in ml):
         return MODEL_PRICING["claude-opus-4-6"]
     if "opus" in ml and ("4-5" in ml or "4.5" in ml):
         return MODEL_PRICING["claude-opus-4-5"]
-    if "opus" in ml and ("4-1" in ml or "4.1" in ml):
-        return MODEL_PRICING["claude-opus-4-1"]
-    if "sonnet" in ml and ("4-6" in ml or "4.6" in ml):
-        return MODEL_PRICING["claude-sonnet-4-6"]
-    if "sonnet" in ml and ("4-5" in ml or "4.5" in ml):
-        return MODEL_PRICING["claude-sonnet-4-5"]
-    if "haiku" in ml and ("3-5" in ml or "3.5" in ml):
-        return MODEL_PRICING["claude-haiku-3-5"]
-    if "haiku" in ml and ("4-5" in ml or "4.5" in ml):
-        return MODEL_PRICING["claude-haiku-4-5"]
-    # Generic prefix/substring match for canonical dashed forms
-    for key, pricing in MODEL_PRICING.items():
-        if key in model_name or model_name.startswith(key):
-            return pricing
-    # Family-only fallbacks (no version in name) — a bare "opus" alias now
-    # resolves to Opus 4.7, so fall back to current pricing, not legacy 4.1.
     if "opus" in ml:
-        return MODEL_PRICING["claude-opus-4-7"]
+        return MODEL_PRICING["claude-opus-4-1"]
     if "sonnet" in ml:
         return MODEL_PRICING["claude-sonnet-4-6"]
     if "haiku" in ml:
@@ -151,7 +134,7 @@ def parse_transcript(path: str | Path) -> TokenUsage:
 
                 model = msg.get("model", "unknown")
                 model_counts[model] = model_counts.get(model, 0) + 1
-    except OSError as e:
+    except (OSError, IOError) as e:
         print(f"Warning: Could not read transcript: {e}", file=sys.stderr)
 
     # Most-used model

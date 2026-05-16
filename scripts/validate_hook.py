@@ -77,14 +77,17 @@ EVENTS_WITHOUT_MATCHERS = {
     "CwdChanged",  # v2.1.83
 }
 
-# Valid hook types (v2.1.63+: "http" hooks POST JSON to a URL)
-VALID_HOOK_TYPES = {"command", "http", "prompt", "agent"}
+# Valid hook types (5 as of v2.1.118: command, http, mcp_tool, prompt, agent).
+VALID_HOOK_TYPES = {"command", "http", "mcp_tool", "prompt", "agent"}
 
-# Events that only support "command" or "http" hooks (not prompt or agent)
+# Events that only support "command", "http", and "mcp_tool" hooks
+# (no prompt / agent — lifecycle/notification events that don't support
+# prompt-synthesis or sub-agent dispatch).
 COMMAND_ONLY_EVENTS = {
     "ConfigChange",
     "InstructionsLoaded",
     "Notification",
+    "PermissionDenied",
     "PreCompact",
     "PostCompact",  # v2.1.76
     "SessionEnd",
@@ -98,13 +101,16 @@ COMMAND_ONLY_EVENTS = {
     "CwdChanged",  # v2.1.83
     "FileChanged",  # v2.1.83
     "TaskCreated",  # v2.1.84
+    "StopFailure",  # v2.1.78
 }
 
-# Events that only support "command" hooks — a STRICT subset of
-# COMMAND_ONLY_EVENTS. Per hooks.md L687 and L2109, SessionStart rejects
-# `http`, `prompt`, and `agent` hook types unconditionally.
+# Events that ONLY support `command` and `mcp_tool` hooks — strict subset.
+# Per hooks.md (v2.1.121), SessionStart and Setup fire BEFORE MCP servers
+# connect, so they reject `http`, `prompt`, and `agent` types. The `mcp_tool`
+# type is allowed but will report "not connected" on first run.
 COMMAND_STRICT_EVENTS = {
     "SessionStart",
+    "Setup",
 }
 
 # Common tool names for matcher validation hints
@@ -220,6 +226,43 @@ PRETOOLUSE_HOOK_SPECIFIC_OUTPUT_FIELDS = {
     "additionalContext",  # v2.1.110 — retained on tool failure (GAP-19)
 }
 
+# PostToolUse / PostToolUseFailure `hookSpecificOutput` known fields.
+# v2.1.121 — PostToolUse hooks can replace tool output via
+# `hookSpecificOutput.updatedToolOutput` for ALL tools (previously MCP-only).
+# v2.1.119 — PostToolUse and PostToolUseFailure hook *inputs* now carry
+# `duration_ms` (tool execution time, excluding permission prompts and
+# PreToolUse hooks). CPV does not validate runtime hook stdin shape, so the
+# constant lives in POSTTOOLUSE_HOOK_INPUT_FIELDS for future use.
+POSTTOOLUSE_HOOK_SPECIFIC_OUTPUT_FIELDS = {
+    "hookEventName",  # == "PostToolUse" or "PostToolUseFailure"
+    "updatedToolOutput",  # v2.1.121 — replaces tool output (string OR object)
+    "additionalContext",  # echoed from PreToolUse retention pattern
+}
+
+# Hook *input* fields delivered to EVERY hook's stdin, regardless of event.
+# Authoritative for hook scripts that parse `JSON.parse(stdin)`.
+# Per hooks-reference.md every hook receives at least these five fields.
+# v2.1.133 added the nested `effort` object (with `level` sub-key) so the
+# hook can read `effort.level` to know the active reasoning tier.
+GENERIC_HOOK_INPUT_FIELDS = {
+    "hook_event_name",  # canonical event-name field (lowercase per stdin spec)
+    "session_id",
+    "transcript_path",
+    "cwd",
+    "effort",  # v2.1.133 — nested object with `level` sub-key (low/medium/high/xhigh/max)
+}
+
+# PostToolUse / PostToolUseFailure hook *input* fields (stdin-side).
+# Authoritative for hook scripts that parse `JSON.parse(stdin)`.
+# Composes the generic baseline with PostToolUse-specific tool-level keys.
+POSTTOOLUSE_HOOK_INPUT_FIELDS = GENERIC_HOOK_INPUT_FIELDS | {
+    "tool_name",
+    "tool_input",
+    "tool_response",  # PostToolUse only
+    "tool_error",  # PostToolUseFailure only
+    "duration_ms",  # v2.1.119 — tool execution time
+}
+
 # Permission-update-entry type enum (hooks.md L1115-1141, PermissionRequest
 # output schema). 6 types total. Exposed for downstream validators.
 # CPV-P2-m2 requested these constants exist even if unused by today's
@@ -331,32 +374,186 @@ _ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # Python 3.10+: sys.stdlib_module_names is the authoritative source.
 # For older Pythons we supply a conservative fallback. CPV itself requires
 # Python 3.11+ (see pyproject.toml) so this fallback is a safety net only.
-_STDLIB_FALLBACK = frozenset({
-    "abc", "argparse", "ast", "asyncio", "base64", "binascii", "bisect", "builtins",
-    "bz2", "calendar", "cgi", "cmath", "cmd", "codecs", "collections", "colorsys",
-    "compileall", "concurrent", "configparser", "contextlib", "contextvars", "copy",
-    "csv", "ctypes", "curses", "dataclasses", "datetime", "dbm", "decimal", "difflib",
-    "dis", "doctest", "email", "encodings", "enum", "errno", "fcntl", "filecmp",
-    "fileinput", "fnmatch", "fractions", "ftplib", "functools", "gc", "getopt",
-    "getpass", "gettext", "glob", "graphlib", "grp", "gzip", "hashlib", "heapq",
-    "hmac", "html", "http", "imaplib", "imp", "importlib", "inspect", "io",
-    "ipaddress", "itertools", "json", "keyword", "lib2to3", "linecache", "locale",
-    "logging", "lzma", "mailbox", "mailcap", "marshal", "math", "mimetypes",
-    "mmap", "modulefinder", "multiprocessing", "netrc", "numbers", "operator", "optparse",
-    "os", "pathlib", "pdb", "pickle", "pickletools", "pkgutil", "platform", "plistlib",
-    "poplib", "posix", "posixpath", "pprint", "profile", "pstats", "pty", "pwd",
-    "py_compile", "pyclbr", "pydoc", "queue", "quopri", "random", "re", "readline",
-    "reprlib", "resource", "rlcompleter", "runpy", "sched", "secrets", "select",
-    "selectors", "shelve", "shlex", "shutil", "signal", "site", "smtplib", "sndhdr",
-    "socket", "socketserver", "spwd", "sqlite3", "ssl", "stat", "statistics",
-    "string", "stringprep", "struct", "subprocess", "sys", "sysconfig", "syslog",
-    "tabnanny", "tarfile", "telnetlib", "tempfile", "termios", "textwrap", "threading",
-    "time", "timeit", "tkinter", "token", "tokenize", "tomllib", "trace", "traceback",
-    "tracemalloc", "tty", "turtle", "types", "typing", "unicodedata", "unittest",
-    "urllib", "uu", "uuid", "venv", "warnings", "wave", "weakref", "webbrowser",
-    "winreg", "winsound", "wsgiref", "xdrlib", "xml", "xmlrpc", "zipapp", "zipfile",
-    "zipimport", "zlib", "zoneinfo",
-})
+_STDLIB_FALLBACK = frozenset(
+    {
+        "abc",
+        "argparse",
+        "ast",
+        "asyncio",
+        "base64",
+        "binascii",
+        "bisect",
+        "builtins",
+        "bz2",
+        "calendar",
+        "cgi",
+        "cmath",
+        "cmd",
+        "codecs",
+        "collections",
+        "colorsys",
+        "compileall",
+        "concurrent",
+        "configparser",
+        "contextlib",
+        "contextvars",
+        "copy",
+        "csv",
+        "ctypes",
+        "curses",
+        "dataclasses",
+        "datetime",
+        "dbm",
+        "decimal",
+        "difflib",
+        "dis",
+        "doctest",
+        "email",
+        "encodings",
+        "enum",
+        "errno",
+        "fcntl",
+        "filecmp",
+        "fileinput",
+        "fnmatch",
+        "fractions",
+        "ftplib",
+        "functools",
+        "gc",
+        "getopt",
+        "getpass",
+        "gettext",
+        "glob",
+        "graphlib",
+        "grp",
+        "gzip",
+        "hashlib",
+        "heapq",
+        "hmac",
+        "html",
+        "http",
+        "imaplib",
+        "imp",
+        "importlib",
+        "inspect",
+        "io",
+        "ipaddress",
+        "itertools",
+        "json",
+        "keyword",
+        "lib2to3",
+        "linecache",
+        "locale",
+        "logging",
+        "lzma",
+        "mailbox",
+        "mailcap",
+        "marshal",
+        "math",
+        "mimetypes",
+        "mmap",
+        "modulefinder",
+        "multiprocessing",
+        "netrc",
+        "numbers",
+        "operator",
+        "optparse",
+        "os",
+        "pathlib",
+        "pdb",
+        "pickle",
+        "pickletools",
+        "pkgutil",
+        "platform",
+        "plistlib",
+        "poplib",
+        "posix",
+        "posixpath",
+        "pprint",
+        "profile",
+        "pstats",
+        "pty",
+        "pwd",
+        "py_compile",
+        "pyclbr",
+        "pydoc",
+        "queue",
+        "quopri",
+        "random",
+        "re",
+        "readline",
+        "reprlib",
+        "resource",
+        "rlcompleter",
+        "runpy",
+        "sched",
+        "secrets",
+        "select",
+        "selectors",
+        "shelve",
+        "shlex",
+        "shutil",
+        "signal",
+        "site",
+        "smtplib",
+        "sndhdr",
+        "socket",
+        "socketserver",
+        "spwd",
+        "sqlite3",
+        "ssl",
+        "stat",
+        "statistics",
+        "string",
+        "stringprep",
+        "struct",
+        "subprocess",
+        "sys",
+        "sysconfig",
+        "syslog",
+        "tabnanny",
+        "tarfile",
+        "telnetlib",
+        "tempfile",
+        "termios",
+        "textwrap",
+        "threading",
+        "time",
+        "timeit",
+        "tkinter",
+        "token",
+        "tokenize",
+        "tomllib",
+        "trace",
+        "traceback",
+        "tracemalloc",
+        "tty",
+        "turtle",
+        "types",
+        "typing",
+        "unicodedata",
+        "unittest",
+        "urllib",
+        "uu",
+        "uuid",
+        "venv",
+        "warnings",
+        "wave",
+        "weakref",
+        "webbrowser",
+        "winreg",
+        "winsound",
+        "wsgiref",
+        "xdrlib",
+        "xml",
+        "xmlrpc",
+        "zipapp",
+        "zipfile",
+        "zipimport",
+        "zlib",
+        "zoneinfo",
+    }
+)
 PYTHON_STDLIB_MODULES: frozenset[str] = (
     frozenset(sys.stdlib_module_names) if hasattr(sys, "stdlib_module_names") else _STDLIB_FALLBACK
 )
@@ -559,10 +756,7 @@ def validate_matcher(matcher: Any, event_name: str, report: ValidationReport) ->
         # Split on typical glob/regex separators and check whether every part
         # looks like a tool identifier (PascalCase, no dot, no slash, no wildcard).
         parts = [p.strip() for p in re.split(r"[|()]", matcher) if p.strip()]
-        tool_like = [
-            p for p in parts
-            if p in COMMON_TOOL_NAMES and "." not in p and "/" not in p and "*" not in p
-        ]
+        tool_like = [p for p in parts if p in COMMON_TOOL_NAMES and "." not in p and "/" not in p and "*" not in p]
         if tool_like and len(tool_like) == len(parts):
             report.info(
                 f"FileChanged matcher '{matcher}' looks like a tool name, but per "
@@ -1080,9 +1274,7 @@ def extract_script_path(command: str, plugin_root: Path | None) -> Path | None:
 # ---------------------------------------------------------------------------
 
 
-def detect_python_third_party_imports(
-    script_path: Path, plugin_script_dir: Path | None = None
-) -> set[str]:
+def detect_python_third_party_imports(script_path: Path, plugin_script_dir: Path | None = None) -> set[str]:
     """Parse a Python file with ast and return the set of third-party module
     root names it imports.
 
@@ -1467,8 +1659,7 @@ def reconcile_python_runtime_deps(
             )
         else:
             report.passed(
-                f"Runtime-dep reconciliation: {script_path.name} — "
-                f"`uv run --with` covers all third-party imports."
+                f"Runtime-dep reconciliation: {script_path.name} — `uv run --with` covers all third-party imports."
             )
         return
 
@@ -1719,6 +1910,138 @@ def validate_script(script_path: Path, report: ValidationReport) -> None:
         lint_js_script(script_path, report)
 
 
+# ---------------------------------------------------------------------------
+# Cross-platform + persistent-data checks (reusable across hooks.json AND
+# agent/skill frontmatter hooks)
+# ---------------------------------------------------------------------------
+
+# Detect writes to ${CLAUDE_PLUGIN_ROOT} — that directory is REPLACED on
+# every plugin update (~7-day cleanup window). State written there is
+# silently destroyed. Plugins must persist data in ${CLAUDE_PLUGIN_DATA}.
+_PD_HOOK_WRITE_ROOT_RE = re.compile(
+    r"""
+    (?:
+        # Shell redirect: > "${CLAUDE_PLUGIN_ROOT}/..." or >>$CLAUDE_PLUGIN_ROOT/...
+        >>?\s*"?\$\{?CLAUDE_PLUGIN_ROOT\}?
+        |
+        # Pipe to a write command targeting CLAUDE_PLUGIN_ROOT
+        \|\s*(?:tee|sqlite3)\s+(?:-\w+\s+)*"?\$\{?CLAUDE_PLUGIN_ROOT\}?
+        |
+        # `tee "${CLAUDE_PLUGIN_ROOT}/..."` (no pipe — direct invocation)
+        (?:^|\s)(?:tee|sqlite3)\s+(?:-\w+\s+)*"?\$\{?CLAUDE_PLUGIN_ROOT\}?
+        |
+        # Install/store flags pointing at CLAUDE_PLUGIN_ROOT
+        --(?:prefix|target|cache-dir|store-dir|venv-dir|directory|out-dir|output|to|dir)
+        (?:\s+|=)"?\$\{?CLAUDE_PLUGIN_ROOT\}?
+    )
+    """,
+    re.VERBOSE,
+)
+
+# Bash-only constructs that break on Windows (where the hook runner uses
+# cmd.exe / PowerShell, not bash — even when WSL is installed). Plugin
+# authors must either write commands in POSIX-portable shell, OR delegate
+# to a Python script (recommended).
+_BASH_ONLY_RE = re.compile(
+    r"""
+    (?:
+        # `set -e`, `set -eu`, `set -euo`, `set -euo pipefail`. Option chunk
+        # is followed by ANY non-letter char (space, semicolon, &&, end-of-string)
+        # so all of these match: `set -e;`, `set -e\n`, `set -e &&`, `set -e$`.
+        (?:^|[\s;&|])set\s+-(?:eu?o?(?![A-Za-z])|euo\s+pipefail)
+        |
+        (?:^|[\s;&|])shopt\s+-                          # shopt
+        |
+        \[\[[^\]]+\]\]                                  # [[ ... ]]
+        |
+        \$\(<\s*[^)]+\)                                 # $(<file)
+        |
+        <\([^)]+\)                                      # <(cmd)
+        |
+        >\([^)]+\)                                      # >(cmd)
+        |
+        \{[a-zA-Z0-9_,-]+,[a-zA-Z0-9_,-]+\}             # {a,b}
+    )
+    """,
+    re.VERBOSE,
+)
+
+# POSIX-only tools that aren't natively packaged on Windows. Flagged unless
+# wrapped in an explicit `python3 -c "..."`, `bash -c "..."`, or
+# `wsl bash -c "..."` (in which case the user has owned the platform decision).
+_POSIX_ONLY_TOOLS = ("jq", "sed", "awk", "shellcheck")
+_POSIX_TOOL_RE = re.compile(r"(?:^|[\s;&|])(" + "|".join(_POSIX_ONLY_TOOLS) + r")(?=\s|$)")
+_SHELL_WRAPPER_RE = re.compile(r"(?:python3?|node|bash|sh|wsl)\s+-c\b")
+
+
+def check_hook_command_cross_platform(
+    command: str,
+    report: Any,
+    *,
+    file_label: str | None = None,
+) -> None:
+    """Run the persistent-data + cross-platform checks against a hook command.
+
+    Shared between:
+      - validate_command_hook (hooks defined in hooks/hooks.json or
+        plugin.json's `hooks` block)
+      - validate_agent.validate_hooks_field (hooks defined in agent
+        frontmatter — Claude Code v2.1.109+)
+      - validate_skill.validate_hooks_field (hooks defined in skill
+        frontmatter)
+
+    Emits:
+      - CRITICAL when the command writes runtime state under
+        ${CLAUDE_PLUGIN_ROOT} (state lost on every plugin update).
+      - MAJOR when the command uses bash-only constructs that break
+        on Windows.
+      - MINOR when the command invokes a POSIX-only tool directly
+        (without a `python3 -c` / `bash -c` shell-decision wrapper).
+
+    The ``report`` parameter is duck-typed: any object with
+    ``.critical(msg, file=...)``, ``.major(...)``, ``.minor(...)``
+    methods (matching CPV's standard ValidationReport / AgentValidationReport
+    / etc. shape) is accepted, so this single function works for every
+    validator without coupling to one report class.
+    """
+    extra = {"file": file_label} if file_label else {}
+
+    if _PD_HOOK_WRITE_ROOT_RE.search(command):
+        report.critical(
+            "Hook command writes runtime state under ${CLAUDE_PLUGIN_ROOT} — that "
+            "directory is REPLACED on every plugin update (~7-day cleanup window) "
+            "and the data will be lost. Use ${CLAUDE_PLUGIN_DATA} instead — it "
+            "persists across plugin versions. See "
+            "https://code.claude.com/docs/en/plugins-reference#persistent-data-directory",
+            **extra,
+        )
+
+    if _BASH_ONLY_RE.search(command):
+        report.major(
+            "Hook command uses bash-only constructs (set -euo, [[ ]], $(<...), "
+            "process substitution, brace expansion). These break on Windows "
+            "where the hook runner uses cmd.exe / PowerShell, not bash. Either "
+            "rewrite in POSIX shell, or (recommended) delegate to "
+            "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.py — Python is cross-platform "
+            "by default.",
+            **extra,
+        )
+
+    posix_match = _POSIX_TOOL_RE.search(command)
+    if posix_match:
+        # Skip when the tool is wrapped in an explicit shell decision.
+        if not _SHELL_WRAPPER_RE.search(command):
+            tool_name = posix_match.group(1)
+            report.minor(
+                f"Hook command invokes POSIX-only tool '{tool_name}' directly. "
+                f"On Windows this requires WSL, scoop, or a manual install. "
+                f"For cross-platform plugins, replace with a Python equivalent: "
+                f"jq → `json` module, sed → `re.sub`, awk → list comprehension, "
+                f"shellcheck → run only in CI on linux runner.",
+                **extra,
+            )
+
+
 def validate_command_hook(
     hook: dict[str, Any],
     event_name: str,
@@ -1733,21 +2056,102 @@ def validate_command_hook(
     SessionStart venv-setup hook elsewhere in the same file. Defaults to
     None for backwards compatibility with callers that only have a single
     hook in hand.
+
+    v2.1.139 adds an exec-form alternative ``args: string[]`` that spawns
+    the command directly without a shell, so path placeholders never need
+    quoting.
+
+    Per the official CC hooks.md schema, ``command`` and ``args`` are
+    **complementary**, not mutually exclusive:
+
+      * ``command`` is the executable name or path.
+      * ``args`` (optional) switches execution to exec form: ``command``
+        is resolved as an executable and spawned directly with ``args``
+        as the argv vector, no shell involved.
+
+    The canonical exec form from the docs is::
+
+        {"type": "command", "command": "node",
+         "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/format.js", "--fix"]}
+
+    The ONLY warn-worthy "both" scenario the docs call out: in exec form
+    ``command`` must be the executable name/path alone — if it is a
+    bare name containing whitespace AND ``args`` is present, the spawn
+    fails. We emit MINOR for that specific shape so the author catches
+    it pre-publish; CC also logs a runtime warning.
+
+    When ``args`` is used we synthesize a space-joined string for the
+    existing portability checks (the same script/path/traversal patterns
+    are runtime hazards in either form).
+
+    Issue #24 history: v2.83.0 incorrectly flagged ``command`` + ``args``
+    as mutually exclusive, blocking every plugin using the canonical
+    exec form. v2.87.0 (this code) reverts that and adds the targeted
+    bare-name-with-whitespace check instead.
     """
-    if "command" not in hook:
-        report.critical("Command hook missing required 'command' field")
+    has_command = "command" in hook
+    has_args = "args" in hook
+
+    if not has_command and not has_args:
+        report.critical(
+            "Command hook missing required 'command' or 'args' field "
+            "(v2.1.139 adds 'args: string[]' as the exec-form companion to 'command')"
+        )
         return False
 
-    command = hook["command"]
-    if not isinstance(command, str):
-        report.critical(f"'command' must be a string, got {type(command).__name__}")
-        return False
+    # Validate ``command`` shape when present (required in both shell and exec form).
+    if has_command:
+        command = hook["command"]
+        if not isinstance(command, str):
+            report.critical(f"'command' must be a string, got {type(command).__name__}")
+            return False
+        if not command.strip():
+            report.critical("'command' cannot be empty")
+            return False
 
-    if not command.strip():
-        report.critical("'command' cannot be empty")
-        return False
+    # Validate ``args`` shape when present (exec form).
+    args_val: list[str] | None = None
+    if has_args:
+        raw_args = hook["args"]
+        if not isinstance(raw_args, list):
+            report.critical(f"'args' must be a list of strings (v2.1.139 exec form), got {type(raw_args).__name__}")
+            return False
+        if not raw_args:
+            report.critical("'args' cannot be an empty list — exec form needs at least one argument")
+            return False
+        for i, element in enumerate(raw_args):
+            if not isinstance(element, str):
+                report.critical(f"'args[{i}]' must be a string, got {type(element).__name__} (v2.1.139 args: string[])")
+                return False
+        args_val = raw_args
 
-    report.passed(f"Command: {command[:60]}...")
+    # Synthesize the effective command string for downstream portability checks.
+    # Three shapes (per hooks.md):
+    #   shell form: command only            → use command verbatim
+    #   exec form (canonical): command + args → space-join command and args
+    #   args-only legacy form: args only    → space-join args (argv[0] is the exe)
+    if has_command and has_args:
+        # Bare-name-with-whitespace exec-form check (the only docs-called-out hazard).
+        cmd_str = hook["command"].strip()
+        if "/" not in cmd_str and "\\" not in cmd_str and " " in cmd_str:
+            report.minor(
+                "Exec form (command + args): 'command' should be a bare executable "
+                "name or full path — embedding additional whitespace-separated tokens "
+                "(e.g. \"node script.js\") alongside 'args' will cause CC to log a "
+                "runtime warning and the spawn will fail. Either move those tokens "
+                "into 'args', or remove 'args' to switch to shell form."
+            )
+        # Effective command for downstream checks: argv0 + args.
+        command = (hook["command"] + " " + " ".join(args_val or [])).strip()
+        report.passed(f"Exec form: command='{hook['command'][:30]}', args={len(args_val or [])} token(s)")
+    elif has_command:
+        command = hook["command"]
+        report.passed(f"Command (shell form): {command[:60]}...")
+    else:
+        # args-only legacy form: argv[0] is the executable.
+        assert args_val is not None  # has_args is True
+        command = " ".join(args_val)
+        report.passed(f"Args (exec form, args-only, {len(args_val)} token(s)): {command[:60]}...")
 
     # Check for hardcoded absolute paths — plugins must use env vars for portability
     cmd_first_token = command.strip().split()[0] if command.strip() else ""
@@ -1848,6 +2252,11 @@ def validate_command_hook(
             "to reference `${CLAUDE_PLUGIN_ROOT}/...` or `${CLAUDE_PROJECT_DIR}/...` directly."
         )
 
+    # 3f-3h: persistent-data + cross-platform checks (extracted into a
+    # reusable function so frontmatter hooks in agents/ + skills/ benefit
+    # from the same validations).
+    check_hook_command_cross_platform(command, report)
+
     # Relative path without $CLAUDE_PLUGIN_ROOT or $CLAUDE_PLUGIN_DATA — may not resolve at runtime
     if (
         cmd_first_token.startswith("./")
@@ -1936,9 +2345,7 @@ def validate_command_hook(
     # Warn only on case 1 — the combination of env-stripping with a plain
     # interpreter fallback is the actual foot-gun.
     has_plain_python = any(ref.invocation_mode == "interpreter-python" for ref in refs)
-    has_safer_python = any(
-        ref.invocation_mode in ("uv-run-script", "uv-run-with", "venv-python") for ref in refs
-    )
+    has_safer_python = any(ref.invocation_mode in ("uv-run-script", "uv-run-with", "venv-python") for ref in refs)
     if re.search(r"\bunset\s+VIRTUAL_ENV\b", command) and has_plain_python and not has_safer_python:
         report.warning(
             "Command runs `unset VIRTUAL_ENV` and then invokes a plain `python3` interpreter. "
@@ -1973,8 +2380,7 @@ def validate_command_hook(
                     # ${CLAUDE_PROJECT_DIR}/... or bare /usr/... are legitimate.
                     cmd_original = hook.get("command", "")
                     if (
-                        "${CLAUDE_PLUGIN_ROOT}" in cmd_original
-                        or "$CLAUDE_PLUGIN_ROOT" in cmd_original
+                        "${CLAUDE_PLUGIN_ROOT}" in cmd_original or "$CLAUDE_PLUGIN_ROOT" in cmd_original
                     ) and "CLAUDE_PROJECT_DIR" not in cmd_original:
                         report.warning(
                             f"Script path `{script_path}` resolves OUTSIDE the plugin root "
@@ -2004,15 +2410,12 @@ def validate_command_hook(
             #
             # For the `direct` mode we promote to `interpreter-python` semantics
             # for reconciliation purposes — the diagnosis and fix are identical.
-            is_python_reconcilable = (
-                script_path.suffix.lower() == ".py"
-                and ref.invocation_mode in (
-                    "interpreter-python",
-                    "uv-run-script",
-                    "uv-run-with",
-                    "venv-python",
-                    "direct",
-                )
+            is_python_reconcilable = script_path.suffix.lower() == ".py" and ref.invocation_mode in (
+                "interpreter-python",
+                "uv-run-script",
+                "uv-run-with",
+                "venv-python",
+                "direct",
             )
             if is_python_reconcilable:
                 if ref.invocation_mode == "direct":
@@ -2196,6 +2599,55 @@ def validate_http_hook(
     return True
 
 
+def validate_mcp_tool_hook(
+    hook: dict[str, Any],
+    event_name: str,  # noqa: ARG001 — kept for symmetry with validate_http_hook
+    report: ValidationReport,
+) -> bool:
+    """Validate an mcp_tool-type hook (v2.1.118+: invoke a tool on a connected MCP server).
+
+    Required fields per hooks.md:
+      - server (string) — name of an already-connected MCP server
+      - tool   (string) — name of a tool exposed by that server
+
+    Optional fields:
+      - input (object) — argument map; supports ${tool_input.<field>} substitution
+                         from the hook's JSON input.
+
+    Cross-server resolution (verifying `server` matches a configured MCP server)
+    is left to the cross-source validator since hooks may be declared in
+    settings.json or hooks.json with different visibility into the MCP map.
+    """
+    missing: list[str] = []
+    for field_name in ("server", "tool"):
+        if field_name not in hook:
+            missing.append(field_name)
+    if missing:
+        report.critical(
+            f"mcp_tool hook missing required field(s): {', '.join(missing)}. "
+            "Required: server (MCP server name), tool (tool name)."
+        )
+        return False
+
+    server = hook["server"]
+    tool = hook["tool"]
+    if not isinstance(server, str) or not server.strip():
+        report.critical(f"mcp_tool hook 'server' must be a non-empty string, got {type(server).__name__}")
+        return False
+    if not isinstance(tool, str) or not tool.strip():
+        report.critical(f"mcp_tool hook 'tool' must be a non-empty string, got {type(tool).__name__}")
+        return False
+
+    # Optional input map — must be an object if present.
+    if "input" in hook:
+        input_val = hook["input"]
+        if not isinstance(input_val, dict):
+            report.major(f"mcp_tool hook 'input' must be an object, got {type(input_val).__name__}")
+
+    report.passed(f"mcp_tool hook: {server}/{tool}")
+    return True
+
+
 def validate_single_hook(
     hook: Any,
     event_name: str,
@@ -2219,18 +2671,21 @@ def validate_single_hook(
         return False
 
     # Validate hook type is allowed for this event
-    if event_name in COMMAND_STRICT_EVENTS and hook_type != "command":
-        # hooks.md L687/L2109 — SessionStart supports ONLY command hooks.
+    if event_name in COMMAND_STRICT_EVENTS and hook_type not in {"command", "mcp_tool"}:
+        # hooks.md (v2.1.121) — SessionStart and Setup fire BEFORE MCP servers
+        # connect, so they only accept `command` and `mcp_tool` hook types.
+        # `mcp_tool` will report "not connected" on first run; this is documented.
         hook_path_str = report.hook_path
         report.critical(
-            f"Event '{event_name}' only supports 'command' hooks, not '{hook_type}'. "
-            "Per hooks.md L687/L2109, http/prompt/agent hooks are not supported for this event.",
+            f"Event '{event_name}' only supports 'command' and 'mcp_tool' hooks, not '{hook_type}'. "
+            "Per hooks.md, http/prompt/agent hooks fire after MCP servers connect and so are not supported here.",
             hook_path_str,
         )
     elif hook_type in {"prompt", "agent"} and event_name in COMMAND_ONLY_EVENTS:
         hook_path_str = report.hook_path
         report.critical(
-            f"Event '{event_name}' only supports 'command' or 'http' hooks, not '{hook_type}'. Prompt and agent hooks are not supported for this event.",
+            f"Event '{event_name}' only supports 'command', 'http', and 'mcp_tool' hooks, not '{hook_type}'. "
+            "Prompt and agent hooks are not supported for this event.",
             hook_path_str,
         )
 
@@ -2259,6 +2714,9 @@ def validate_single_hook(
             return False
     elif hook_type == "http":
         if not validate_http_hook(hook, event_name, report):
+            return False
+    elif hook_type == "mcp_tool":
+        if not validate_mcp_tool_hook(hook, event_name, report):
             return False
     elif hook_type == "prompt":
         if not validate_prompt_hook(hook, event_name, report):
@@ -2302,6 +2760,27 @@ def validate_single_hook(
             report.major(f"'once' must be a boolean, got {type(once).__name__}")
         else:
             report.info("'once' field detected (only works in skill-defined hooks)")
+
+    # Validate 'continueOnBlock' field — v2.1.139, PostToolUse-only.
+    # Per the changelog: "set to true to feed the hook's rejection reason
+    # back to Claude and continue the turn". PostToolUseFailure shares the
+    # same event lineage (fires INSTEAD of PostToolUse on tool error) so
+    # the field is honoured there too.
+    if "continueOnBlock" in hook:
+        cob_val = hook["continueOnBlock"]
+        if not isinstance(cob_val, bool):
+            report.critical(
+                f"'continueOnBlock' must be a boolean, got {type(cob_val).__name__} "
+                "(v2.1.139: PostToolUse-only config that feeds the rejection reason "
+                "back to Claude and continues the turn)"
+            )
+        elif event_name not in ("PostToolUse", "PostToolUseFailure"):
+            report.minor(
+                f"'continueOnBlock' is only meaningful on 'PostToolUse' / "
+                f"'PostToolUseFailure' events (v2.1.139). It is silently ignored "
+                f"on '{event_name}' — remove the field or move the hook to a "
+                "PostToolUse event."
+            )
 
     # Validate 'async' field — only valid on command hooks
     if "async" in hook:
@@ -2571,10 +3050,12 @@ def print_json(report: HookValidationReport) -> None:
 
 def main() -> int:
     """Main entry point."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Validate a Claude Code hooks.json file.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Example: uv run python scripts/validate_hook.py hooks/hooks.json --plugin-root .",
+        epilog=launcher_epilog("hook"),
     )
     parser.add_argument("hook_path", help="Path to the hooks.json file")
     parser.add_argument(

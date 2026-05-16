@@ -134,6 +134,13 @@ def validate_xref() -> None:
     sys.exit(main())
 
 
+def validate_telemetry() -> None:
+    """OTEL telemetry supply-chain risk validator (TRDD-e3e74f69)."""
+    from validate_telemetry import main
+
+    sys.exit(main())
+
+
 def validate_project_scope() -> None:
     """Validate git-tracked (project-scope) Claude Code configuration."""
     from validate_project_scope import main
@@ -144,6 +151,19 @@ def validate_project_scope() -> None:
 def validate_local_scope() -> None:
     """Validate non-git-tracked (local-scope) Claude Code configuration."""
     from validate_local_scope import main
+
+    sys.exit(main())
+
+
+def validate_ide_config() -> None:
+    """IDE-config hygiene validator (NIT-level env-var-reference checks).
+
+    Companion to validate_security.scan_ide_config_files — that pass catches
+    REAL secret VALUES at CRITICAL severity. This validator adds the
+    NIT-level "env-var name looks credential-like" warnings called out under
+    TRDD-8ccb9337 §"Additional: warn on .env in IDE configs".
+    """
+    from validate_ide_config import main
 
     sys.exit(main())
 
@@ -161,5 +181,18 @@ def doctor() -> None:
 def standardize() -> None:
     """Audit and fix plugin/marketplace to match CPV standards."""
     from standardize_plugin import main
+
+    sys.exit(main())
+
+
+def setup_auth() -> None:
+    """Read-only orchestrator for the eight CPV auth surfaces (TRDD-b5e44619).
+
+    Reports SET / NOT SET / PARTIAL / N/A for each of: git identity, gh CLI
+    auth, ssh-agent, MARKETPLACE_PAT env var, branch-rules helper presence,
+    pre-push hook, commit signing, and external scanners. Use --strict to
+    exit non-zero when any required surface (1, 2, 6) is unset.
+    """
+    from cpv_setup_auth import main
 
     sys.exit(main())

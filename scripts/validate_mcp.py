@@ -45,6 +45,14 @@ from cpv_validation_common import (
 # Valid transport types
 VALID_TRANSPORTS = {"stdio", "sse", "http"}
 
+# Reserved MCP server names — CC silently skips servers with these names and
+# logs a warning. Plugins shipping a server under a reserved name will look
+# loaded to the user but produce no tools.
+# v2.1.128: `workspace` was added as a reserved name (changelog 2026-05-04).
+RESERVED_MCP_SERVER_NAMES = {
+    "workspace",  # v2.1.128 — reserved by CC; existing servers with this name are skipped
+}
+
 # Known MCP server configuration fields
 KNOWN_SERVER_FIELDS = {
     "command",  # Required for stdio servers
@@ -54,8 +62,10 @@ KNOWN_SERVER_FIELDS = {
     "type",  # Transport type: stdio, sse, http
     "url",  # Required for http/sse servers
     "headers",  # HTTP headers for authentication
+    "headersHelper",  # v2.1.85 — script that emits headers (CLAUDE_CODE_MCP_SERVER_NAME/_URL)
     "timeout",  # Connection timeout
     "oauth",  # OAuth config object with clientId and callbackPort
+    "alwaysLoad",  # v2.1.121 — when true, all tools skip tool-search deferral
 }
 
 # Environment variable pattern: ${VAR} or ${VAR:-default}
@@ -147,9 +157,7 @@ def validate_path_value(value: str, report: ValidationReport, context: str, plug
             plugin_root_abs = plugin_root.resolve()
             resolved_abs.relative_to(plugin_root_abs)
         except (ValueError, OSError):
-            report.major(
-                f"Path traverses outside plugin root in {context}: {value} (resolves to {resolved_path})"
-            )
+            report.major(f"Path traverses outside plugin root in {context}: {value} (resolves to {resolved_path})")
             return
 
         # Only check if it looks like a file (has extension) not a dir
@@ -176,6 +184,17 @@ def validate_mcp_server(
     """
     ctx = f"{file_context}:{server_name}"
 
+    # v2.1.128 — server names in RESERVED_MCP_SERVER_NAMES are silently skipped
+    # by Claude Code at load time. The plugin still reports as installed but
+    # produces no tools. Surface this as MAJOR so authors rename before publish.
+    if server_name in RESERVED_MCP_SERVER_NAMES:
+        report.major(
+            f"MCP server name '{server_name}' is reserved by Claude Code (v2.1.128) — "
+            "this server will be silently skipped at load time. Rename it (for example "
+            f"'{server_name}-tools' or '{server_name}-bridge').",
+            ctx,
+        )
+
     # Check for unknown fields
     for key in config.keys():
         if key not in KNOWN_SERVER_FIELDS:
@@ -192,10 +211,6 @@ def validate_mcp_server(
         # stdio servers require 'command'
         if "command" not in config:
             report.critical(f"Server {server_name} missing required 'command' field")
-        elif not isinstance(config["command"], str):
-            report.major(
-                f"Server {server_name} 'command' must be a string, got {type(config['command']).__name__}"
-            )
         else:
             command = config["command"]
             validate_path_value(command, report, f"{ctx}:command", plugin_root)
@@ -214,21 +229,12 @@ def validate_mcp_server(
             else:
                 report.info(f"Server {server_name} command '{command}' not found (may be resolved at runtime)")
 
-            # Security warning for package executors running remote packages.
-            # Skip leading flags (e.g. `npx --yes pkg`, `uvx --from X pkg`) so the
-            # flag name is not misreported as the package being executed.
+            # Security warning for package executors running remote packages
             package_executors = {"npx", "bunx", "uvx", "pipx", "pnpx"}
             if command in package_executors:
+                # Check args to see if it's running a non-local package
                 cmd_args = config.get("args", [])
-                pkg_name = None
-                if isinstance(cmd_args, list):
-                    for arg in cmd_args:
-                        if not isinstance(arg, str):
-                            break
-                        if arg.startswith("-"):
-                            continue
-                        pkg_name = arg
-                        break
+                pkg_name = cmd_args[0] if cmd_args and isinstance(cmd_args[0], str) else None
                 if pkg_name and not pkg_name.startswith((".", "/", "${")):
                     report.warning(
                         f"Server {server_name} uses {command} to execute remote package '{pkg_name}' — this downloads and runs code from a registry. Verify the package is trusted and consider pinning a version."
@@ -242,10 +248,6 @@ def validate_mcp_server(
         # HTTP/SSE servers require 'url'
         if "url" not in config:
             report.critical(f"Server {server_name} (type={transport}) missing 'url'")
-        elif not isinstance(config["url"], str):
-            report.major(
-                f"Server {server_name} 'url' must be a string, got {type(config['url']).__name__}"
-            )
         else:
             url = config["url"]
             validate_env_var_syntax(url, report, f"{ctx}:url")
@@ -403,13 +405,6 @@ def validate_mcp_config(
 
     if not config_path.exists():
         report.info(f"MCP config file not found: {rel_path}")
-        return report
-
-    # `Path.exists()` returns True for directories too, so we must also verify the
-    # target is a regular file before read_text — otherwise a path like `"./"` in
-    # plugin.json:mcpServers would crash with IsADirectoryError (not JSONDecodeError).
-    if not config_path.is_file():
-        report.critical(f"MCP config path is not a regular file: {rel_path}")
         return report
 
     # Parse JSON
@@ -654,9 +649,13 @@ def validate_plugin_mcp(plugin_root: Path, report: ValidationReport | None = Non
                 # sources, it WINS (verified via cpv-mcp-coexist-test). Surface that so
                 # the author knows which declaration is being silently dropped.
                 inline_wins_note = (
-                    " (when collisions occur, the inline plugin.json:mcpServers entry "
-                    "WINS per empirical test; the other source is silently dropped)"
-                ) if "plugin.json:mcpServers" in source_list else ""
+                    (
+                        " (when collisions occur, the inline plugin.json:mcpServers entry "
+                        "WINS per empirical test; the other source is silently dropped)"
+                    )
+                    if "plugin.json:mcpServers" in source_list
+                    else ""
+                )
                 report.major(
                     f"MCP server '{name}' is declared in {joined} — server names must be unique across all MCP sources{inline_wins_note}",
                     ".claude-plugin/plugin.json",
@@ -714,9 +713,12 @@ def print_results(report: ValidationReport, verbose: bool = False) -> None:
 
 def main() -> int:
     """Main entry point."""
+    from cpv_validation_common import launcher_epilog
+
     parser = argparse.ArgumentParser(
         description="Validate MCP (Model Context Protocol) server configuration for Claude Code plugins.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=launcher_epilog("mcp"),
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Show all results")
     parser.add_argument("--strict", action="store_true", help="Strict mode — NIT issues also block validation")

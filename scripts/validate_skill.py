@@ -28,8 +28,32 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
-from cpv_validation_common import (
+_USING_FALLBACK_YAML = False
+_YAMLError: type[Exception] = Exception
+try:
+    import yaml as _real_yaml
+
+    def _yaml_safe_load(text: str) -> Any:
+        """Parse YAML frontmatter — pyyaml backend."""
+        return _real_yaml.safe_load(text)
+
+    _YAMLError = _real_yaml.YAMLError
+except ImportError:
+    # Fallback path so the script remains importable from a host venv that
+    # lacks pyyaml. The minimal parser handles the narrow subset of YAML
+    # used by skill frontmatter; complex shapes raise YAMLError and the
+    # caller can prompt the user to install pyyaml. See issue #14.
+    from _minimal_yaml import YAMLError as _MiniYAMLError
+    from _minimal_yaml import safe_load as _mini_safe_load
+
+    def _yaml_safe_load(text: str) -> Any:
+        """Parse YAML frontmatter — minimal stdlib fallback (no pyyaml)."""
+        return _mini_safe_load(text)
+
+    _YAMLError = _MiniYAMLError
+    _USING_FALLBACK_YAML = True
+
+from cpv_validation_common import (  # noqa: E402  (import below conditional yaml fallback)
     BUILTIN_AGENT_TYPES,
     COLORS,
     SKILL_FRONTMATTER_FIELDS,
@@ -81,14 +105,14 @@ def parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, str, int]:
         return None, content, 0
 
     try:
-        frontmatter = yaml.safe_load(parts[1])
+        frontmatter = _yaml_safe_load(parts[1])
         if frontmatter is None:
             frontmatter = {}
         body = parts[2]
         # Count lines to find frontmatter end
         fm_end_line = parts[0].count("\n") + parts[1].count("\n") + 2
         return frontmatter, body, fm_end_line
-    except yaml.YAMLError:
+    except _YAMLError:
         return None, content, 0
 
 
@@ -139,13 +163,11 @@ def validate_name_field(frontmatter: dict[str, Any], skill_dir_name: str, report
         name = skill_dir_name
     else:
         name = frontmatter["name"]
+        report.passed(f"'name' field present: {name}", "SKILL.md")
 
     if not isinstance(name, str):
         report.critical(f"'name' must be a string, got {type(name).__name__}", "SKILL.md")
         return
-
-    if "name" in frontmatter:
-        report.passed(f"'name' field present: {name}", "SKILL.md")
 
     # Uniform naming validation via shared function (includes dir-name match as MAJOR)
     validate_component_name(name, "skill", report, directory_name=skill_dir_name if "name" in frontmatter else None)
@@ -356,8 +378,57 @@ def validate_argument_hint_field(frontmatter: dict[str, Any], report: Validation
     report.passed(f"'argument-hint' field present: {hint}", "SKILL.md")
 
 
+def validate_arguments_field(frontmatter: dict[str, Any], report: ValidationReport) -> list[str]:
+    """Validate the 'arguments' frontmatter field (v2.1.121).
+
+    Accepted forms (per skills.md):
+      arguments: issue branch              # space-separated string
+      arguments: ["issue", "branch"]       # YAML list
+
+    Returns the list of declared argument names so callers can cross-validate
+    `$<name>` substitutions in skill content.
+    """
+    if "arguments" not in frontmatter:
+        return []
+    raw = frontmatter["arguments"]
+    if isinstance(raw, str):
+        names = raw.split()
+    elif isinstance(raw, list):
+        if not all(isinstance(n, str) for n in raw):
+            report.major(
+                f"'arguments' list must contain only strings, got mixed types: {raw!r}",
+                "SKILL.md",
+            )
+            return []
+        names = list(raw)
+    else:
+        report.major(
+            f"'arguments' must be a space-separated string or YAML list, got {type(raw).__name__}",
+            "SKILL.md",
+        )
+        return []
+
+    # Validate each name is a valid identifier — required for `$<name>` substitution.
+    invalid = [n for n in names if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", n)]
+    if invalid:
+        report.major(
+            f"'arguments' names must be valid identifiers (letters/digits/underscores, "
+            f"starting with letter/underscore). Invalid: {invalid}",
+            "SKILL.md",
+        )
+
+    report.passed(f"'arguments' field present: {names}", "SKILL.md")
+    return [n for n in names if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", n)]
+
+
 def validate_hooks_field(frontmatter: dict[str, Any], report: ValidationReport) -> None:
-    """Validate the 'hooks' frontmatter field."""
+    """Validate the 'hooks' frontmatter field.
+
+    Beyond the basic dict-shape check, this also runs the cross-platform +
+    persistent-data checks against every command-type hook so skill-level
+    hooks get the same scrutiny as hooks.json hooks (Windows portability,
+    bash-only constructs, writes to ${CLAUDE_PLUGIN_ROOT}, etc.).
+    """
     if "hooks" not in frontmatter:
         return
 
@@ -370,11 +441,47 @@ def validate_hooks_field(frontmatter: dict[str, Any], report: ValidationReport) 
         )
         return
 
+    # Recursively walk the hook tree and run cross-platform checks against
+    # every command-type hook. Mirrors the validate_agent.py pattern.
+    try:
+        from validate_hook import check_hook_command_cross_platform
+    except ImportError:
+        check_hook_command_cross_platform = None  # type: ignore[assignment]
+
+    if check_hook_command_cross_platform is not None:
+        for event_config in hooks.values():
+            if not isinstance(event_config, list):
+                continue
+            for matcher_block in event_config:
+                if not isinstance(matcher_block, dict):
+                    continue
+                inner = matcher_block.get("hooks")
+                if not isinstance(inner, list):
+                    continue
+                for h in inner:
+                    if not isinstance(h, dict):
+                        continue
+                    if h.get("type") != "command":
+                        continue
+                    cmd = h.get("command")
+                    if isinstance(cmd, str) and cmd.strip():
+                        check_hook_command_cross_platform(cmd, report, file_label="SKILL.md")
+
     report.passed("'hooks' field present", "SKILL.md")
 
 
-def validate_skill_content(content: str, report: ValidationReport) -> None:
-    """Validate SKILL.md content (body after frontmatter)."""
+def validate_skill_content(
+    content: str,
+    report: ValidationReport,
+    declared_args: list[str] | None = None,
+) -> None:
+    """Validate SKILL.md content (body after frontmatter).
+
+    `declared_args` is the list of names declared via the frontmatter
+    `arguments:` field (v2.1.121). When provided, any `$<name>` substitution
+    in the body must match a declared name — otherwise the substitution
+    silently expands to the empty string at runtime.
+    """
     _, body, _ = parse_frontmatter(content)
 
     # Check for empty body
@@ -399,6 +506,55 @@ def validate_skill_content(content: str, report: ValidationReport) -> None:
         if "$ARGUMENTS" not in content:
             report.info(
                 "Task-oriented skill without $ARGUMENTS placeholder (arguments will be appended automatically)",
+                "SKILL.md",
+            )
+
+    # v2.1.121 — cross-validate `$<name>` substitutions against declared `arguments:`.
+    #
+    # Convention: skill arguments declared via `arguments:` are lowercase
+    # snake_case (because they appear in YAML and human-readable docs). Shell
+    # variables are conventionally UPPER_SNAKE_CASE (`$MAIN_ROOT`, `$REPORT`,
+    # `$PWD`, etc.). We use that convention as the discriminator so a skill
+    # author can freely document shell-variable usage without tripping a
+    # "missing declared argument" finding.
+    if declared_args is not None:
+        # Strip fenced code blocks AND inline backtick spans first so that
+        # `$VAR` examples in documentation don't trigger the check.
+        stripped_body = re.sub(r"```.*?```", "", body, flags=re.DOTALL)
+        stripped_body = re.sub(r"`[^`\n]*`", "", stripped_body)
+        # Collect every $<name> occurrence.
+        # Must skip `$ARGUMENTS`, `${...}` (env-var form is handled separately),
+        # and `$<digit>` (positional form).
+        # Also skip $ followed by punctuation/end-of-string (false matches).
+        for m in re.finditer(r"\$([A-Za-z_][A-Za-z0-9_]*)\b", stripped_body):
+            name = m.group(1)
+            if name == "ARGUMENTS":
+                continue  # well-known
+            if name in declared_args:
+                continue  # explicitly declared
+            # Skip names that match known env vars used in skill substitution.
+            if name in {
+                "CLAUDE_SESSION_ID",
+                "CLAUDE_EFFORT",
+                "CLAUDE_SKILL_DIR",
+                "CLAUDE_PLUGIN_ROOT",
+                "CLAUDE_PLUGIN_DATA",
+                "CLAUDE_PROJECT_DIR",
+            }:
+                continue
+            # ALL_UPPERCASE names are shell-variable convention, NOT skill-arg
+            # convention. Skill args are lowercase snake_case. So `$MAIN_ROOT`,
+            # `$REPORT`, `$TIMESTAMP`, `$PWD`, `$HOME`, etc. are user-defined or
+            # standard shell variables and not subject to the `$<name>` skill-arg
+            # expansion contract. `name.isupper()` is True iff the name contains
+            # at least one cased char and all cased chars are uppercase.
+            if name.isupper():
+                continue
+            # Otherwise this is a likely-broken substitution.
+            report.major(
+                f"Skill content references `${name}` but '{name}' is not declared in "
+                f"frontmatter `arguments:`. The substitution will silently expand "
+                f"to the empty string at runtime.",
                 "SKILL.md",
             )
 
@@ -450,27 +606,15 @@ def validate_supporting_files(skill_path: Path, report: ValidationReport) -> Non
         if link_target.startswith("#"):
             continue
 
-        # Strip optional Markdown link title: `path "title"` or `path 'title'`
-        # The title is separated from the path by whitespace and wrapped in quotes.
-        link_path = re.split(r'\s+["\']', link_target, maxsplit=1)[0].strip()
-        # Strip fragment identifier (anchor) from path, e.g. `file.md#section`
-        link_path = link_path.split("#", 1)[0]
-        # Strip angle brackets if used, e.g. `<path with spaces>`
-        if link_path.startswith("<") and link_path.endswith(">"):
-            link_path = link_path[1:-1]
-
-        if not link_path:
-            continue
-
         # Check if referenced file exists
-        ref_path = skill_path / link_path
+        ref_path = skill_path / link_target
         if not ref_path.exists():
             report.major(
-                f"Referenced file not found: {link_path}",
+                f"Referenced file not found: {link_target}",
                 "SKILL.md",
             )
         else:
-            report.passed(f"Referenced file exists: {link_path}", "SKILL.md")
+            report.passed(f"Referenced file exists: {link_target}", "SKILL.md")
 
 
 def validate_skill(skill_path: Path) -> SkillValidationReport:
@@ -503,8 +647,7 @@ def validate_skill(skill_path: Path) -> SkillValidationReport:
     if frontmatter is not None:
         # Validate individual frontmatter fields
         validate_name_field(frontmatter, skill_path.name, report)
-        _, body, _ = parse_frontmatter(content)
-        validate_description_field(frontmatter, body, report)
+        validate_description_field(frontmatter, content, report)
         validate_context_field(frontmatter, report)
         validate_agent_field(frontmatter, report)
         validate_boolean_field(frontmatter, "user-invocable", report)
@@ -512,10 +655,15 @@ def validate_skill(skill_path: Path) -> SkillValidationReport:
         validate_allowed_tools_field(frontmatter, report)
         validate_model_field(frontmatter, report)
         validate_argument_hint_field(frontmatter, report)
+        # v2.1.121 — `arguments:` (separate from `argument-hint`) declares named
+        # positional args used by `$<name>` substitution in skill content.
+        declared_args = validate_arguments_field(frontmatter, report)
         validate_hooks_field(frontmatter, report)
+    else:
+        declared_args = []
 
-    # Validate content
-    validate_skill_content(content, report)
+    # Validate content (incl. cross-checking `$<name>` against declared_args)
+    validate_skill_content(content, report, declared_args=declared_args)
 
     # Validate directory structure
     validate_directory_structure(skill_path, report)
@@ -605,7 +753,22 @@ def print_json(report: SkillValidationReport) -> None:
 
 
 def main() -> int:
-    """Main entry point."""
+    """Main entry point.
+
+    First action: verify CPV's own source has not been tampered with
+    by checking each validator file's SHA256 against the GitHub
+    canonical manifest. Exits with code 2 on mismatch.
+    """
+    from _plugin_verify_hashes import verify_self_integrity  # noqa: PLC0415
+
+    verify_self_integrity(quiet=True)
+
+    if _USING_FALLBACK_YAML:
+        print(
+            "Note: pyyaml not found in this venv — using minimal frontmatter parser. "
+            "Install pyyaml for full YAML support: uv pip install pyyaml",
+            file=sys.stderr,
+        )
     parser = argparse.ArgumentParser(
         description="Validate a Claude Code skill directory.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -635,8 +798,8 @@ def main() -> int:
         print(f"Error: {skill_path} is not a directory (expected a skill directory)", file=sys.stderr)
         return 1
 
-    # Verify content type — skill directory must contain SKILL.md (uppercase, per spec)
-    if not (skill_path / "SKILL.md").exists():
+    # Verify content type — skill directory must contain SKILL.md
+    if not (skill_path / "SKILL.md").exists() and not (skill_path / "skill.md").exists():
         print(
             f"Error: No SKILL.md found in {skill_path}\nA valid skill directory must contain a SKILL.md file.",
             file=sys.stderr,
