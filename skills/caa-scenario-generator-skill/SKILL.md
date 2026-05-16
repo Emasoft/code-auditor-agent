@@ -1,13 +1,12 @@
 ---
 name: caa-scenario-generator-skill
 description: >
-  Deterministically discover scenarios for ANY codebase — web service, CLI, library,
-  mobile app, firmware, RTOS, Linux kernel module, FPGA design, browser extension,
-  game, IaC, data pipeline, ML training, or anything else. Use when running an
-  extended audit (/caa-audit-codebase --extended) that needs an end-to-end scenario
-  walk in addition to line-level review. Trigger with "/caa-extended-audit",
-  "generate scenarios", "scan for scenarios", "discover entry points". Produces
-  scenarios.json consumed by caa-scenario-walker-agent.
+  Deterministically discover scenarios for ANY codebase — web service, CLI,
+  library, mobile, firmware, kernel module, FPGA, game, data pipeline, ML, or
+  anything else. Use when running an extended audit (/caa-audit-codebase
+  --extended) that needs end-to-end scenario walks beyond line-level review.
+  Trigger with "/caa-extended-audit", "generate scenarios", "discover entry
+  points". Produces scenarios.json consumed by caa-scenario-walker-agent.
 version: 0.1.0
 author: Emasoft
 license: MIT
@@ -50,7 +49,11 @@ Two timestamped files under `<main-repo>/reports/caa-scenario-generator/`:
 Plus `<ts>-detected-types.json` recording which types matched and why. Details:
 
 - [Output schema](references/02-scenario-schema.md):
-  - Full §3.1.d JSON Schema, EntryPointKind enum, ActorRole enum, examples per kind
+  - Top-level shape
+  - EntryPointKind enum
+  - ActorRole enum
+  - Examples per kind
+  - Walker contract
 
 ## Error Handling
 
@@ -59,11 +62,23 @@ fallback discoverer's output. Walker still runs and reports the type-mismatch.
 Details:
 
 - [Type detection registry](references/01-software-type-detection.md):
-  - ~70 type fingerprints, primary checks, disambiguators, conflicts
+  - Overview
+  - Detection algorithm
+  - The registry by category
+  - Conflict resolution
 - [Discoverers catalog](references/03-discoverers.md):
-  - One row per discoverer with its target type and what it extracts
+  - Discoverer contract
+  - Dispatch
+  - Phase 1 discoverers
+  - Adding a new discoverer
+  - Discoverer outputs by kind
+  - Performance budget
 - [Scenario families](references/04-scenario-families.md):
-  - ~34 families with applies-to map and per-family failure modes
+  - Overview
+  - Family applies-to map
+  - Per-family failure modes
+  - Adding a family
+  - Why these families and not others
 
 ## Checklist
 
