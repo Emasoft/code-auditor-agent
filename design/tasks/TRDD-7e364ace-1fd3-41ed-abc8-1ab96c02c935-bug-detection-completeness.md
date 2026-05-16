@@ -236,8 +236,8 @@ new-step findings to the inventory.
 | 3 — skeptical | ✅ shipped | (CAA-original) |
 | 4 — security | ✅ shipped | (CAA-original) |
 | 5 — linter pre-flight | ✅ shipped | c9ca3d2 |
-| 6 — cross-layer drift + ripple-effect + null safety | ✅ script-first split shipped (env-var drift, generated-file detection, orphan-naming scan); existing caa-cross-layer-auditor-agent still owns schema/UI-authz/removed-state judgment | (pending commit) |
-| 7 — multi-tenant data isolation (NEW) | ⬜ pending | — |
+| 6 — cross-layer drift + ripple-effect + null safety | ✅ script-first split shipped (env-var drift, generated-file detection, orphan-naming scan); existing caa-cross-layer-auditor-agent still owns schema/UI-authz/removed-state judgment | dcc35e1 |
+| 7 — multi-tenant data isolation (NEW) | ✅ script shipped (query predicates, cache keys, module state, fn signatures); agent residue pending | (pending commit) |
 | 8 — silent-failure hunter | ⬜ pending | — |
 | 9 — concurrency hazards (NEW) | ⬜ pending | — |
 | 10 — complexity & dead-code | ⬜ pending | — |
