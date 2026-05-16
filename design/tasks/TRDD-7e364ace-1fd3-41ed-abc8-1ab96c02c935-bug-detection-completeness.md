@@ -243,7 +243,7 @@ new-step findings to the inventory.
 | 10 — complexity & dead-code | ✅ script shipped (Python AST: fn-too-long, too-many-branches/params, McCabe complexity, nest-depth, unused imports, orphan module defs, unreachable code; JS/TS brace-balance fn-length) | 8420e44 |
 | 11 — AWC extensions | ✅ script shipped (Python/Node UNDECLARED_DEP + UNUSED_DEP cross-check with pyproject/requirements/package.json/Cargo.toml/go.mod; HARDCODED_URL/IP/PATH/PORT + MAGIC_NUMBER) | dca072c |
 | 12 — comment & docstring quality | ✅ script shipped (Python AST: Google/NumPy/Sphinx docstring-param mismatch + ghost params + trivial-docstring detection; inline comment-vs-numeric-literal contradiction heuristic); agent residue pending | 2bbf2bd |
-| 13 — test quality | ⬜ pending | — |
+| 13 — test quality | ✅ script shipped (Python AST: NO_ASSERTION_TEST, ASSERT_TRUE_LITERAL, MOCK_REPLACES_SUT_HEURISTIC; JS/TS regex: JS_EXPECT_TRUE, JS_EXPECT_TRUTHY, JS_NO_ASSERTION); test-pyramid imbalance heuristic + property-based gap deferred to agent | (pending commit) |
 | 14 — performance + memory + energy | ⬜ pending | — |
 | 15 — database / query / migration (NEW) | ⬜ pending | — |
 | 16 — type-design analyzer | ⬜ pending | — |
