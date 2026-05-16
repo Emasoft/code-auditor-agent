@@ -249,7 +249,7 @@ new-step findings to the inventory.
 | 16 — type-design analyzer | ✅ agent + gate shipped (caa-type-design-analyzer-agent.md rates new public types on encapsulation/expression/usefulness/enforcement + anti-pattern catalogue; find_new_public_types.py gate filters Python/TS/Go/Rust diff additions before agent spawn) | 1e59440 |
 | 17 — architecture pattern consistency | ✅ agent shipped (caa-architecture-consistency-agent.md samples 3+ siblings per touched module to establish local convention, then flags deviations in error-handling/naming/data-shape/layering/inheritance/polyglot/api-shape) | 22bf29b |
 | 18 — pre-mortem risk analyzer | ✅ agent shipped (caa-pre-mortem-agent.md — Tiger/Paper-Tiger/Elephant taxonomy with mandatory mitigation_checked/mitigation_found/verify_by fields; reads pre-flight reports first to avoid duplicating deterministic findings) | a5dfe94 |
-| 19 — operational / deployment | ✅ script shipped (SCHEMA_NO_CODEGEN — proto/graphql/openapi touched without a generated file; CI_NO_NOTES — workflow change without docs update; DOCKERFILE_NO_NOTES — container change without docs update) | (pending commit) |
+| 19 — operational / deployment | ✅ script shipped (SCHEMA_NO_CODEGEN — proto/graphql/openapi touched without a generated file; CI_NO_NOTES — workflow change without docs update; DOCKERFILE_NO_NOTES — container change without docs update) | 72a1a92 |
 | 20 — domain specialists (HF) | ⬜ pending | — |
 | 21 — domain specialists (LF) | ⬜ pending | — |
 | 22 — function-level deep-dive | ⬜ pending | — |
