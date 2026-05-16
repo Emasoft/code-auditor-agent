@@ -240,7 +240,7 @@ new-step findings to the inventory.
 | 7 — multi-tenant data isolation (NEW) | ✅ script shipped (query predicates, cache keys, module state, fn signatures); agent residue pending | 0b2bd72 |
 | 8 — silent-failure hunter | ✅ script shipped (Python AST: bare/broad except, empty handler, log-only handler, TODO-in-handler; JS/TS regex: empty catch, console-only catch, ?. over fallible chain; universal mock-fallback); agent residue pending | 5de0ffc |
 | 9 — concurrency hazards (NEW) | ✅ script shipped (Python AST: detached create_task/ensure_future/run_in_executor; JS/TS: floating promise + Promise.all-no-catch; Go: goroutine-no-sync + channel-send-after-close); agent residue pending | 445e134 |
-| 10 — complexity & dead-code | ⬜ pending | — |
+| 10 — complexity & dead-code | ✅ script shipped (Python AST: fn-too-long, too-many-branches/params, McCabe complexity, nest-depth, unused imports, orphan module defs, unreachable code; JS/TS brace-balance fn-length) | (pending commit) |
 | 11 — AWC extensions | ⬜ pending | — |
 | 12 — comment & docstring quality | ⬜ pending | — |
 | 13 — test quality | ⬜ pending | — |
