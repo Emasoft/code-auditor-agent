@@ -248,7 +248,7 @@ new-step findings to the inventory.
 | 15 — database / query / migration (NEW) | ✅ script shipped (Python AST: EMPTY_DOWNGRADE, MISSING_DOWNGRADE, SQL_INJECTION_FSTRING covering f-string/%-format/.format(); raw SQL: ALTER_TABLE_OUTSIDE_MIGRATION, DROP_TABLE_OUTSIDE_MIGRATION); agent residue pending | 7b5da79 |
 | 16 — type-design analyzer | ✅ agent + gate shipped (caa-type-design-analyzer-agent.md rates new public types on encapsulation/expression/usefulness/enforcement + anti-pattern catalogue; find_new_public_types.py gate filters Python/TS/Go/Rust diff additions before agent spawn) | 1e59440 |
 | 17 — architecture pattern consistency | ✅ agent shipped (caa-architecture-consistency-agent.md samples 3+ siblings per touched module to establish local convention, then flags deviations in error-handling/naming/data-shape/layering/inheritance/polyglot/api-shape) | 22bf29b |
-| 18 — pre-mortem risk analyzer | ✅ agent shipped (caa-pre-mortem-agent.md — Tiger/Paper-Tiger/Elephant taxonomy with mandatory mitigation_checked/mitigation_found/verify_by fields; reads pre-flight reports first to avoid duplicating deterministic findings) | (pending commit) |
+| 18 — pre-mortem risk analyzer | ✅ agent shipped (caa-pre-mortem-agent.md — Tiger/Paper-Tiger/Elephant taxonomy with mandatory mitigation_checked/mitigation_found/verify_by fields; reads pre-flight reports first to avoid duplicating deterministic findings) | a5dfe94 |
 | 19 — operational / deployment | ⬜ pending | — |
 | 20 — domain specialists (HF) | ⬜ pending | — |
 | 21 — domain specialists (LF) | ⬜ pending | — |
