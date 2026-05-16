@@ -241,7 +241,7 @@ new-step findings to the inventory.
 | 8 — silent-failure hunter | ✅ script shipped (Python AST: bare/broad except, empty handler, log-only handler, TODO-in-handler; JS/TS regex: empty catch, console-only catch, ?. over fallible chain; universal mock-fallback); agent residue pending | 5de0ffc |
 | 9 — concurrency hazards (NEW) | ✅ script shipped (Python AST: detached create_task/ensure_future/run_in_executor; JS/TS: floating promise + Promise.all-no-catch; Go: goroutine-no-sync + channel-send-after-close); agent residue pending | 445e134 |
 | 10 — complexity & dead-code | ✅ script shipped (Python AST: fn-too-long, too-many-branches/params, McCabe complexity, nest-depth, unused imports, orphan module defs, unreachable code; JS/TS brace-balance fn-length) | 8420e44 |
-| 11 — AWC extensions | ⬜ pending | — |
+| 11 — AWC extensions | ✅ script shipped (Python/Node UNDECLARED_DEP + UNUSED_DEP cross-check with pyproject/requirements/package.json/Cargo.toml/go.mod; HARDCODED_URL/IP/PATH/PORT + MAGIC_NUMBER) | (pending commit) |
 | 12 — comment & docstring quality | ⬜ pending | — |
 | 13 — test quality | ⬜ pending | — |
 | 14 — performance + memory + energy | ⬜ pending | — |
