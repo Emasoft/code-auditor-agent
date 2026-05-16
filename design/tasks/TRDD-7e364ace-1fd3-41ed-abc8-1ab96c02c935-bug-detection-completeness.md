@@ -3,7 +3,7 @@
 **TRDD ID:** `7e364ace-1fd3-41ed-abc8-1ab96c02c935`
 **Filename:** `design/tasks/TRDD-7e364ace-1fd3-41ed-abc8-1ab96c02c935-bug-detection-completeness.md`
 **Tracked in:** this repo (design/tasks/ is git-tracked)
-**Status:** In progress (step 1-4 baseline shipped)
+**Status:** ✅ All 24 steps (0 + 1-23) shipped — script halves of Tier II/III/IV/V/VII complete, agent halves of Tier I/III/IV/V/VI/VII complete (some Tier-III/IV agent residue still pending — see per-step entries). Total: 8 new prereview scripts + 1 new gate script (216 unit tests, 0 critical/major/minor/nit on plugin validator) + 17 new agents.
 **Source inventories:**
 - `docs_dev/codex-comparison/FULL-PR-REVIEW-INVENTORY.md` (216-idea PR-Review corpus, Themes A-Z)
 - `docs_dev/codex-comparison/FULL-INVENTORY-300PLUS.md` (1452-row cross-plugin sweep across 30+ marketplaces; 117 NEW techniques in 18 clusters; final 24-step structure derived from data)
@@ -253,4 +253,4 @@ new-step findings to the inventory.
 | 20 — domain specialists (HF) | ✅ 6 agents shipped (caa-graphql-reviewer / caa-jwt-reviewer / caa-api-design-reviewer / caa-docker-reviewer / caa-prompt-injection-reviewer / caa-frontend-reviewer) — each gated on Step-0 domains_detected, each ≤200 lines, each with focused 8-13 item checklist | 4621e84 |
 | 21 — domain specialists (LF) | ✅ 8 agents shipped (caa-ios-reviewer / caa-elixir-reviewer / caa-solidity-reviewer / caa-mcp-server-reviewer / caa-i18n-reviewer / caa-l10n-reviewer / caa-monorepo-reviewer / caa-logging-reviewer) — each gated on Step-0 domains_detected, each with focused 8-item checklist | 2fa8da4 |
 | 22 — function-level deep-dive | ✅ agent shipped (caa-function-deep-dive-agent.md picks top-N by priority, walks each through the 15-question protocol — callers, contract, state, idempotency, atomicity, ordering, deps, error paths, duplicates; uses mcp__llm-externalizer search_existing_implementations for the duplicate-detection question) | 403333f |
-| 23 — Opus second-opinion verification loop | ✅ agent shipped (caa-second-opinion-agent.md — Opus by design; PASS 1 re-reviews merged report and diff with fresh eyes, downgrades / drops / upgrades / adds; PASS 2 verifies fix commits actually addressed PASS-1 findings; external-LLM consensus delegated to llm-externalizer MCP per the model-policy invariant — agent NEVER embeds external clients) | (pending commit) |
+| 23 — Opus second-opinion verification loop | ✅ agent shipped (caa-second-opinion-agent.md — Opus by design; PASS 1 re-reviews merged report and diff with fresh eyes, downgrades / drops / upgrades / adds; PASS 2 verifies fix commits actually addressed PASS-1 findings; external-LLM consensus delegated to llm-externalizer MCP per the model-policy invariant — agent NEVER embeds external clients) | 2e91047 |
