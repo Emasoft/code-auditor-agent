@@ -92,7 +92,6 @@ biggest detection-recall delta per token.
 |---|---|---|---|
 | 5 | **Linter & scanner pre-flight** — wrap available external tools (ruff, mypy, eslint, biome, gofmt, govet, clippy, hadolint, markdownlint, sqlfluff, codespell, gitleaks, trufflehog, semgrep, bandit, trivy, pip-audit, npm-audit, govulncheck); filter output to PR-touched files only; emit structured JSON | `scripts/prereview/run_linters.py` | A2, B5, G11-13, I9, J*-mechanical, Q6, H6 |
 | 6 | **Cross-layer drift detector** — env-var ↔ docs drift, schema ↔ model drift, generated-file checksum drift, orphan-caller scan, removed-state-no-replacement, UI-only-security probe | `scripts/prereview/cross_layer.py` + existing `caa-cross-layer-auditor-agent` (judgment residue) | E1-E10, Q1, Q5 |
-| 7 | **Silent-failure hunter** — AST: empty catches, broad catches, catch-and-only-log, `?.` over fallible calls, fallback-to-mock-in-prod (script-detected) + agent judges retry-without-user-feedback / fallback in error-pathway / missing context | `scripts/prereview/silent_failure.py` + `caa-silent-failure-hunter-agent` (NEW) | J1-J11 |
 
 ### Tier III — Newly inserted high-ROI detector clusters
 
