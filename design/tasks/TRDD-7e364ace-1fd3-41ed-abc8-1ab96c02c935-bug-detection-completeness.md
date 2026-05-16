@@ -230,12 +230,12 @@ new-step findings to the inventory.
 
 | Step | Status | Commit |
 |---|---|---|
-| 0 — domain detection gate | ⬜ pending | — |
+| 0 — domain detection gate | ✅ shipped | d9a48d4 |
 | 1 — code-correctness | ✅ shipped | (TRDD-60f53034) |
 | 2 — claim-verification | ✅ shipped | (TRDD-60f53034) |
 | 3 — skeptical | ✅ shipped | (CAA-original) |
 | 4 — security | ✅ shipped | (CAA-original) |
-| 5 — linter pre-flight | ⬜ pending | — |
+| 5 — linter pre-flight | ✅ shipped | (pending commit) |
 | 6 — cross-layer drift + ripple-effect + null safety | ⬜ pending (caa-cross-layer-auditor-agent exists; needs script-first split + N3 + N2 absorption) | — |
 | 7 — multi-tenant data isolation (NEW) | ⬜ pending | — |
 | 8 — silent-failure hunter | ⬜ pending | — |
