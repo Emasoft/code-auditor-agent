@@ -245,7 +245,7 @@ new-step findings to the inventory.
 | 12 — comment & docstring quality | ✅ script shipped (Python AST: Google/NumPy/Sphinx docstring-param mismatch + ghost params + trivial-docstring detection; inline comment-vs-numeric-literal contradiction heuristic); agent residue pending | 2bbf2bd |
 | 13 — test quality | ✅ script shipped (Python AST: NO_ASSERTION_TEST, ASSERT_TRUE_LITERAL, MOCK_REPLACES_SUT_HEURISTIC; JS/TS regex: JS_EXPECT_TRUE, JS_EXPECT_TRUTHY, JS_NO_ASSERTION); test-pyramid imbalance heuristic + property-based gap deferred to agent | ee77889 |
 | 14 — performance + memory + energy | ✅ script shipped (Python AST: N+1 in loop, recursive-no-memo, large-file full-read; JS/TS regex: N+1 in for/forEach, sync large/normal file reads; Go regex: db.Query inside for); retain-cycle + mobile-energy deferred to agent | d3b35a6 |
-| 15 — database / query / migration (NEW) | ✅ script shipped (Python AST: EMPTY_DOWNGRADE, MISSING_DOWNGRADE, SQL_INJECTION_FSTRING covering f-string/%-format/.format(); raw SQL: ALTER_TABLE_OUTSIDE_MIGRATION, DROP_TABLE_OUTSIDE_MIGRATION); agent residue pending | (pending commit) |
+| 15 — database / query / migration (NEW) | ✅ script shipped (Python AST: EMPTY_DOWNGRADE, MISSING_DOWNGRADE, SQL_INJECTION_FSTRING covering f-string/%-format/.format(); raw SQL: ALTER_TABLE_OUTSIDE_MIGRATION, DROP_TABLE_OUTSIDE_MIGRATION); agent residue pending | 7b5da79 |
 | 16 — type-design analyzer | ⬜ pending | — |
 | 17 — architecture pattern consistency | ⬜ pending | — |
 | 18 — pre-mortem risk analyzer | ⬜ pending | — |
