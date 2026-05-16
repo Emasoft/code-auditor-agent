@@ -242,7 +242,7 @@ new-step findings to the inventory.
 | 9 — concurrency hazards (NEW) | ✅ script shipped (Python AST: detached create_task/ensure_future/run_in_executor; JS/TS: floating promise + Promise.all-no-catch; Go: goroutine-no-sync + channel-send-after-close); agent residue pending | 445e134 |
 | 10 — complexity & dead-code | ✅ script shipped (Python AST: fn-too-long, too-many-branches/params, McCabe complexity, nest-depth, unused imports, orphan module defs, unreachable code; JS/TS brace-balance fn-length) | 8420e44 |
 | 11 — AWC extensions | ✅ script shipped (Python/Node UNDECLARED_DEP + UNUSED_DEP cross-check with pyproject/requirements/package.json/Cargo.toml/go.mod; HARDCODED_URL/IP/PATH/PORT + MAGIC_NUMBER) | dca072c |
-| 12 — comment & docstring quality | ✅ script shipped (Python AST: Google/NumPy/Sphinx docstring-param mismatch + ghost params + trivial-docstring detection; inline comment-vs-numeric-literal contradiction heuristic); agent residue pending | (pending commit) |
+| 12 — comment & docstring quality | ✅ script shipped (Python AST: Google/NumPy/Sphinx docstring-param mismatch + ghost params + trivial-docstring detection; inline comment-vs-numeric-literal contradiction heuristic); agent residue pending | 2bbf2bd |
 | 13 — test quality | ⬜ pending | — |
 | 14 — performance + memory + energy | ⬜ pending | — |
 | 15 — database / query / migration (NEW) | ⬜ pending | — |
