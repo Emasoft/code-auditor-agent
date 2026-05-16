@@ -32,7 +32,7 @@
 > will not miss any bug. be very smart in developing the pipeline and
 > remember to lint between each step."
 
-## Three governing constraints
+## Governing constraints
 
 1. **DETECTION COMPLETENESS** — every detection technique extracted from
    the corpus (216 ideas → ~95 bug-detection-relevant) is encoded.
@@ -41,6 +41,12 @@
    only on judgment residue.
 3. **SINGLE-RESPONSIBILITY STEPS** — each step / agent does ONE thing well.
    Agent prompts capped at ~200 lines. No agent gets a 50-item checklist.
+4. **MODEL POLICY (HARD INVARIANT)** — agents inside this plugin run on
+   Claude models only (Sonnet or Opus). Any external-model review
+   (Codex, GPT-X, Gemini, local models, etc.) is invoked through the
+   `llm-externalizer` MCP plugin — never inlined into a CAA agent.
+   No matter what other plugins or skill corpora suggest, this plugin
+   does not embed external-LLM clients of its own.
 
 ## Step ordering (1 → 20, by priority/ROI)
 
@@ -105,7 +111,7 @@ biggest detection-recall delta per token.
 | 17 | **Domain specialists, high-frequency** — fire only when `domains_detected` contains the marker. GraphQL: query complexity, N+1 via DataLoader, persisted queries, schema versioning. JWT: alg whitelist, kid, none-rejection, claims (iss/aud/exp/nbf/sub), rotation, JWKS. REST API: URL structure, status codes, pagination, versioning, OpenAPI alignment. DB: indexes, transactions, migration up+down, connection pooling, integrity constraints | `caa-graphql-reviewer-agent`, `caa-jwt-reviewer-agent`, `caa-api-design-reviewer-agent`, `caa-database-reviewer-agent` (all NEW) | T1, T2, H9, H10, Y6, Y7 |
 | 18 | **Domain specialists, lower-frequency** — Docker: pinned versions, non-root, multi-stage, health checks, no-`latest`. i18n: hardcoded strings, RTL, text-expansion, namespace. l10n: regional variants, fallback chains, Intl.* usage. monorepo: workspace boundaries, shared-package discipline, build-cache validity. logging: env-aware verbosity, structured, no-sensitive-data, error-IDs | `caa-docker-reviewer-agent`, `caa-i18n-reviewer-agent`, `caa-l10n-reviewer-agent`, `caa-monorepo-reviewer-agent`, `caa-logging-reviewer-agent` (all NEW) | T3, T4, T5, Y8, Y9 |
 | 19 | **Function-level deep dive** — for each changed function: 15-question checklist (callers, mutated state, dep-failure paths, similar function exists, contract drift, error paths). Slow; only run at high depth | `caa-function-deep-dive-agent` (NEW) | D3 |
-| 20 | **Codex second-opinion (F-016)** — Codex CLI as independent reviewer of the consolidated CAA output. Two passes: PASS-1 fresh review, PASS-2 verifies PASS-1 findings actually addressed. Material-issues + uncertain-concerns sections separated | `caa-codex-second-opinion-agent` + `caa-codex-review-skill` (both NEW) | S1-S10 |
+| 20 | **Second-opinion verification loop** — Opus agent re-reviews the consolidated CAA output as a hostile maintainer; if the user wants a non-Claude second opinion they invoke `llm-externalizer` separately on the report file. Two passes: PASS-1 fresh review, PASS-2 verifies PASS-1 findings actually addressed | `caa-second-opinion-agent` (NEW, Opus) — Codex/external models NOT embedded; delegated to llm-externalizer when the user asks | S1, S4-S6, S9 (S2-S3, S7-S8, S10 dropped — Codex-CLI-specific) |
 
 ## Default depth: 4 (current behavior)
 
@@ -220,4 +226,4 @@ new-step findings to the inventory.
 | 17 — domain specialists (HF) | ⬜ pending | — |
 | 18 — domain specialists (LF) | ⬜ pending | — |
 | 19 — function deep-dive | ⬜ pending | — |
-| 20 — Codex second-opinion | ⬜ pending | — |
+| 20 — Opus second-opinion verification loop | ⬜ pending (external models via llm-externalizer only) | — |
