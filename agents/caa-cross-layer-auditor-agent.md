@@ -362,18 +362,18 @@ assistant: |
 
   Sample finding written to the report:
 
-  ### [CL-P0-A0-001] Env-var name drift: STRIPE_SECRET_KEY vs STRIPE_API_KEY
-  - **File:** lib/billing.ts:42
-  - **Related files:** lib/billing.ts:42, .env.example:18
-  - **Severity:** MUST-FIX
-  - **Confidence:** HIGH
-  - **Layer:** structural
-  - **Category:** env-var-drift
-  - **Description:** The new billing module reads `process.env.STRIPE_SECRET_KEY`,
+### [CL-P0-A0-001] Env-var name drift: STRIPE_SECRET_KEY vs STRIPE_API_KEY
+- **File:** lib/billing.ts:42
+- **Related files:** lib/billing.ts:42, .env.example:18
+- **Severity:** MUST-FIX
+- **Confidence:** HIGH
+- **Layer:** structural
+- **Category:** env-var-drift
+- **Description:** The new billing module reads `process.env.STRIPE_SECRET_KEY`,
     but `.env.example` documents only `STRIPE_API_KEY`. Production deploys that
     follow `.env.example` will set the wrong variable; `process.env.STRIPE_SECRET_KEY`
     will be `undefined` and the Stripe client will throw at first request.
-  - **Evidence:**
+- **Evidence:**
     ```
     # lib/billing.ts:42
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -382,7 +382,7 @@ assistant: |
     # .env.example:18
     STRIPE_API_KEY=sk_test_xxxxxxxxxxxxxxxx
     ```
-  - **Fix:** Either rename the code reference to `STRIPE_API_KEY` to match the
+- **Fix:** Either rename the code reference to `STRIPE_API_KEY` to match the
     documented variable, or update `.env.example` (and any deployment manifests
     in `helm/` / `k8s/`) to use `STRIPE_SECRET_KEY`. Pick ONE name and apply it
     in every location.

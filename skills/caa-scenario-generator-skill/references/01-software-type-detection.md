@@ -84,7 +84,7 @@ high-level shape.
 
 | Type | Primary signal |
 |---|---|
-| `library_python` | pyproject without scripts/web frameworks; `__all__` in __init__.py |
+| `library_python` | pyproject without scripts/web frameworks; `__all__` in `__init__.py` |
 | `library_node` | package.json with `main:`/`exports:` and no `bin:` |
 | `library_rust` | Cargo.toml `[lib]` only, no `[[bin]]` |
 | `library_c` | CMakeLists.txt or Makefile; `*.c` files |

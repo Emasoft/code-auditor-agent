@@ -16,6 +16,8 @@ disallowedTools:
   - NotebookEdit
 ---
 
+# CAA Assumption Auditor Agent
+
 ## Invocation examples
 
 <example>
@@ -62,7 +64,7 @@ assistant: |
   "[DONE] drivers/myhw/myhw_ioctl.c — 2 findings (2 CRITICAL). Report: ..."
 </example>
 
-# CAA Assumption Auditor Agent
+## Role
 
 You are an assumption auditor. Your job: read ONE file (or a small
 cluster of related files), extract every implicit assumption the code

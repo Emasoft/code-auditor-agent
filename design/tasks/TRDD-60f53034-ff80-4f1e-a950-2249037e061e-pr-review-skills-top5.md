@@ -96,7 +96,7 @@ is CRITICAL or in the security category.
 **Files to modify**:
 - `skills/caa-finding-schema-skill/SKILL.md` (NEW skill) — defines
   the standard finding schema, including `confidence` + `evidence`
-  + `verified_no_mitigation_at` (the latter from F-008).
+  - `verified_no_mitigation_at` (the latter from F-008).
 - All 13 agent .md files — add to each agent's output protocol:
   "every finding MUST include `confidence: HIGH | MEDIUM | LOW`. LOW
   findings MUST be phrased as questions, not assertions."

@@ -110,7 +110,7 @@ schema.
 1. **Type detection.** Walk the repo root + 2 levels deep looking for
    build-file fingerprints (Cargo.toml, package.json, pyproject.toml,
    CMakeLists.txt, platformio.ini, west.yml, Kbuild/Kconfig, *.xcodeproj,
-   AndroidManifest.xml, *.uproject, manifest.json, Dockerfile, *.tf,
+   AndroidManifest.xml,*.uproject, manifest.json, Dockerfile, *.tf,
    etc.). Secondary signals (linker scripts, ISR vector files,
    module_init macros, `_start` symbols) disambiguate.
 2. **Per-type discoverer dispatch.** Run the matching discoverer(s)
@@ -441,12 +441,12 @@ per entry point. Families and their applicability:
 | timing_constraint_violation | fpga_*, asic_design, rtos_* (deadlines), firmware_* (real-time) |
 | watchdog_misuse | firmware_*, rtos_*, kernel_* (kernel watchdog), os_baremetal |
 | power_glitch | firmware_*, os_baremetal, crypto_library (fault injection resistance) |
-| side_channel | crypto_library, firmware_* (running crypto), kernel_* (crypto subsystem) |
+| side_channel | crypto_library, firmware_*(running crypto), kernel_* (crypto subsystem) |
 | concurrency_in_parser | compiler_parser, network_protocol_impl, web_* (request parsing) |
 | memory_safety_uaf | ALL C/C++/unsafe-Rust types — firmware, kernel, driver, game_engine, desktop_qt/gtk, network_protocol_impl |
 | memory_safety_bounds | same set as memory_safety_uaf |
 | integer_overflow_in_size_calc | ALL types that do size arithmetic — kernel, driver, firmware, parser, network_protocol_impl, database_engine, crypto_library |
-| privilege_escalation | kernel_*, driver_*, browser_ext_* (extension permissions), desktop_* (suid/elevated tasks), mobile_* (intent hijack) |
+| privilege_escalation | kernel_*, driver_*, browser_ext_*(extension permissions), desktop_* (suid/elevated tasks), mobile_* (intent hijack) |
 | race_in_setuid_or_setgid | kernel_*, os_baremetal, cli_* with setuid binaries |
 
 The registry lives in `scripts/scenario_generator/scenario_families.py`
@@ -912,7 +912,7 @@ Phase 1 — the skill foundation (single PR):
   `kernel_linux_module.py`, `fpga_verilog.py`. Plus the fallback.
 - Golden-file fixture tests: one fixture per Phase-1 discoverer + one
   fixture for the fallback. Each fixture has `expected-scenarios.json`
-  + `expected-detected-types.json` golden files. The skill must produce
+  - `expected-detected-types.json` golden files. The skill must produce
   byte-identical output. **NO agent yet** — Phase 1 is just deterministic
   discovery, easy to test, easy to land.
 

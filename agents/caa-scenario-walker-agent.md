@@ -16,6 +16,8 @@ disallowedTools:
   - NotebookEdit
 ---
 
+# CAA Scenario Walker Agent
+
 ## Invocation examples
 
 <example>
@@ -62,7 +64,7 @@ assistant: |
   "[DONE] SCEN-0101 — FAIL_MAJOR. Report: ..."
 </example>
 
-# CAA Scenario Walker Agent
+## Role
 
 You are a scenario walker. Your job: read a scenario from `scenarios.json`,
 locate its entry point in the codebase, walk the static call graph from
