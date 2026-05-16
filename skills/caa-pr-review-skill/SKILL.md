@@ -15,7 +15,7 @@ allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Ag
 
 ## Overview
 
-Six-phase PR review. Phase 4 security scan is **MANDATORY** (never skip): correctness swarm, claim verification, skeptical review, security review (parallel with skeptical), merge + dedup.
+Depth-parameterised pipeline. `--code-analysis-depth N` (1..23, default 4) or `--preset quick|standard|deep|thorough|full` picks how many of the 24 steps run. Step 0 gate always-on. Depth 4 = current six-phase behaviour. Security scan (step 4) is **MANDATORY** at depth ≥ 4.
 
 ## Prerequisites
 
@@ -23,14 +23,14 @@ Six-phase PR review. Phase 4 security scan is **MANDATORY** (never skip): correc
 
 ## Instructions
 
-1. Gather PR number, description, changed files grouped by domain
-2. Spawn one `caa-code-correctness-agent` per domain in parallel
-3. Spawn `caa-claim-verification-agent` (after step 2 completes)
-4. Spawn `caa-skeptical-reviewer-agent` AND `caa-security-review-agent` in parallel (security is MANDATORY — never skip)
-5. Run merge: `uv run ${MERGE_SCRIPT} --quiet ${REPORT_DIR} 1`, then spawn `caa-dedup-agent`
-6. Present verdict per review-complete.md
+1. Parse depth/preset; clamp 1..23, default 4.
+2. Always run Step 0 `detect_languages_and_domains.py` → `reports/caa-prereview/<ts>-domains_detected.json`.
+3. If depth ≥ 5, run pre-flight scripts in parallel; emit `<ts>-manifest.json`.
+4. Run LLM phases 1-4: correctness → claim verification → skeptical + security (parallel).
+5. Merge: `uv run ${MERGE_SCRIPT} --quiet ${REPORT_DIR} 1`, then `caa-dedup-agent`.
+6. Present verdict per review-complete.md; list skipped steps (depth limit / TODO).
 
-If MUST-FIX issues exist, do NOT push until resolved and pipeline re-run.
+If MUST-FIX exists, do NOT push until resolved and pipeline re-run.
 
 ## Output
 
@@ -49,11 +49,13 @@ Agent failures: re-spawn with new UUID. Merge errors: check report paths. Detail
 ## Examples
 
 ```
-Input: "review PR 206"
+Input: "review PR 206"                         (depth 4, current default)
+Input: "review PR 206 --preset standard"       (depth 10, adds pre-flight scripts)
+Input: "review PR 206 --code-analysis-depth 15" (deep)
 Output: 6-phase pipeline → verdict (3 MUST-FIX, 2 SHOULD-FIX, 5 NIT)
 ```
 
-All invocations run all six phases including the mandatory security scan. Partial runs not supported — see critical-rules.md Rule 1.
+Phase 4 (security) is mandatory at every depth ≥ 4. Partial runs are not supported within a tier — see critical-rules.md Rule 1.
 
 ## Checklist
 
@@ -65,6 +67,9 @@ Copy this checklist and track your progress:
 
 ## Resources
 
+- [Code-analysis depth](references/code-analysis-depth.md):
+  - Overview, Depth presets, Step inventory (0-23), Pre-flight scripts
+  - Wiring details, Default behaviour
 - [Protocol](references/protocol.md):
   - Maintenance Note, Prerequisites, Phase 1: Code Correctness Swarm
   - Phase 2: Claim Verification, Phase 3 + Phase 4 (Parallel)
