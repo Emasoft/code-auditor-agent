@@ -5,6 +5,7 @@ description: >
   priority classification, and exact change instructions. Each TODO includes file, line range,
   current code, required change, and verification steps.
 model: sonnet
+effort: high
 disallowedTools:
   - Edit
   - NotebookEdit

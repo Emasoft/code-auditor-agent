@@ -1,90 +1,89 @@
 # Report format
 
-Markdown template the `ecaa-orchestrator` agent must produce when running the `ecaa-self-test-24` skill. The report lands at `<main-repo-root>/reports/code-auditor/efficacy-audit/<%Y%m%d_%H%M%S%z>-self-test.md`.
+JSON schema emitted by `scripts/ecaa_aggregate.py` when the `ecaa-self-test-24` skill runs. The file lands at `<main-repo-root>/reports/code-auditor/efficacy-audit/<%Y%m%d_%H%M%S%z>-self-test.json`. NO markdown report is produced — the JSON is the deliverable.
 
 ## Table of contents
 
 - [Filename rule](#filename-rule)
-- [Section structure](#section-structure)
-- [Summary table columns](#summary-table-columns-single-table-the-whole-report)
+- [JSON top-level shape](#json-top-level-shape)
+- [Per-step entry schema](#per-step-entry-schema)
 - [Sub-agent evidence file format](#sub-agent-evidence-file-format)
-- [Cost & timing line](#cost--timing-line-one-line-mandatory)
 - [Verdict line (stdout contract)](#verdict-line)
 
 ## Filename rule
 
-`<%Y%m%d_%H%M%S%z>-self-test.md` — local time + GMT offset (compact `±HHMM`, never `±HH:MM`, never UTC). Matches the agent-reports-location rule.
+`<%Y%m%d_%H%M%S%z>-self-test.json` — local time + GMT offset (compact `±HHMM`, never `±HH:MM`, never UTC). Matches the agent-reports-location rule.
 
-## Section structure
+## JSON top-level shape
 
-```markdown
-# Bug-Detection Pipeline — Self-Test Report
-
-**Date:** <TS>
-**Skill:** ecaa-self-test-24
-**Plugin:** code-auditor-agent v<VERSION>
-**Verdict:** PASS | PARTIAL | FAIL
-
-## Summary
-
-| # | Step | Half | Verdict | Notes |
-|---|------|------|---------|-------|
-| ... | ... | script/agent | PASS/PARTIAL/FAIL | ... |
-
-## Script-half gate (pytest)
-
-- **Command:** `uv run pytest tests/integration/test_pipeline_efficacy.py -v --tb=short`
-- **Exit code:** <N>
-- **Tests collected:** <N>
-- **Tests passed:** <N>
-- **Tail (last 20 lines):**
-
-\`\`\`
-<pytest tail>
-\`\`\`
-
-## Agent-half per-step results
-
-### Step 1 — caa-code-correctness-agent (✅ PASS | ⚠️  PARTIAL | ❌ FAIL)
-- **Fixture seed:** `$WS/agent-01/buggy.py`
-- **Dispatch:** `Agent(subagent_type="caa-code-correctness-agent", prompt="...")`
-- **Return line:** `<verbatim>`
-- **Expected categories:** type, mismatch, return type, incorrect type
-- **Matched:** <list> | none → PARTIAL/FAIL
-
-(repeat for each agent step)
-
-## Verdict justification
-
-One paragraph: which steps passed, which failed, what blocks the gate.
-
-## Cost & timing
-
-- Wall time: <s>
-- LLM-token usage (sum of all agent dispatches): <input> input / <output> output
-- Approximate dollar cost: $<x.xx>
+```json
+{
+  "ts": "<workspace timestamp, e.g. 20260517_182950+0200>",
+  "workspace": "/tmp/ecaa-<ts>",
+  "plan": "<absolute path to plan.json>",
+  "verdict": "PASS | PARTIAL | FAIL",
+  "step_count": 36,
+  "step_results": [ ... 36 entries ... ]
+}
 ```
 
-## Summary table columns (single table, the whole report)
+`step_count` equals the number of keys in `plan.json`'s `steps` map (currently 36: 14 script-halves + 22 agent-halves).
 
-The report is essentially this one table plus a pytest tail and a cost line. NO prose findings. NO per-step detail blocks. The diff IS the report.
+## Per-step entry schema
 
-| Column | Values |
-|--------|--------|
-| `#` | step number 0..23 |
-| `Sub` | specialist suffix (e.g. `graphql`, `l10n`); empty for non-multi steps |
-| `Half` | `script` / `agent` / `gate` |
-| `EvidencePath` | `/tmp/ecaa-<ts>/dispatch-<NN>[-<sub>].json` for agent halves, `n/a` for script halves |
-| `mtime-OK` | `yes` / `no` (no → FAIL) |
-| `Cat` | integer category (matches plan; 4=security, 9=concurrency, 21=monorepo, etc.) |
-| `Where-strings` | csv of `where` locators from the sub-agent's JSON (e.g. `function login,module auth.py`) |
-| `Expected-where` | csv from plan (e.g. `login,auth.py`) — substring match over `where-strings` |
-| `Missed` | expected-where substrings with no match (empty when PASS) |
-| `Verdict` | `PASS` / `PARTIAL` / `FAIL` / `SKIPPED_BUDGET` |
+Every step has at minimum `step`, `half`, `name`, `verdict`. Diagnostic fields are added by the aggregator depending on the verdict.
+
+### Script / gate steps (`half: "script"` or `half: "gate"`)
+
+```json
+{
+  "step": "00",
+  "half": "script",
+  "name": "domain-detection",
+  "verdict": "PASS | FAIL",
+  "reason": "PYTEST_FAILED_OR_MISSING"
+}
+```
+
+`reason` is present only on FAIL. The aggregator parses `pytest.log` for lines matching `[step-NN-name]\s+(PASSED|FAILED|ERROR|SKIPPED)` and matches each pytest ID against the row's `pytest_id`.
+
+### Agent steps (`half: "agent"`)
+
+`_verify_agent` writes one of these shapes per row:
+
+**PASS** — all `expected_where` substrings matched:
+
+```json
+{
+  "step": "4",
+  "half": "agent",
+  "name": "security",
+  "verdict": "PASS",
+  "expected_cat": 4,
+  "matched_where": ["login", "password"],
+  "where_strings": ["variable password", "function login — SQL injection", "..."]
+}
+```
+
+**PARTIAL** — at least one expected `where` matched, others missing:
+
+```json
+{
+  "step": "...",
+  "verdict": "PARTIAL",
+  "reason": "MISSED_SOME_WHERE",
+  "expected_cat": 4,
+  "matched_where": ["..."],
+  "missed_where": ["..."],
+  "where_strings": ["..."]
+}
+```
+
+**FAIL** — one of `EVIDENCE_MISSING`, `EVIDENCE_MALFORMED`, `WRONG_CATEGORY`, `EMPTY_FINDINGS`, `NO_WHERE_MATCH`, `PLAN_HAS_NO_EXPECTED_WHERE`. Each carries `reason` plus the diagnostic fields relevant to that failure mode (`found_cats`, `where_strings`, `missed_where`, etc.).
 
 ## Sub-agent evidence file format
 
-Each agent dispatch writes a tiny JSON to `/tmp/ecaa-<ts>/dispatch-<NN>[-<sub>].json`. Schema:
+Each agent dispatch writes a tiny JSON to `/tmp/ecaa-<ts>/dispatch-<step>.json`. Schema:
 
 ```json
 {
@@ -96,20 +95,19 @@ Each agent dispatch writes a tiny JSON to `/tmp/ecaa-<ts>/dispatch-<NN>[-<sub>].
 }
 ```
 
-`cat` is the integer category for this step (from plan.json — security=4, concurrency=9, monorepo=21, etc.). `where` is a free-form locator: `"line 3"`, `"function login"`, `"class Vault"`, `"module loader.py"`, `"library jwt"`, or `"missing in module cli.py"`. Use whichever locator is natural — line numbers are NOT required when the bug is "missing X" or applies to a whole file or library. NO prose, NO recommendations, NO verbatim snippets, NO markdown. The aggregator matches `cat` exactly and runs case-insensitive substring search over the concatenated `where` strings.
+- `cat` is the integer category for this step (from plan.json — security=4, concurrency=9, monorepo=21, etc.). The aggregator matches by exact equality.
+- `where` is a free-form locator: `"line 3"`, `"function login"`, `"class Vault"`, `"module loader.py"`, `"library jwt"`, or `"missing X in module foo.py"`. Line numbers are NOT required for absence bugs. The aggregator runs case-insensitive substring search of every `expected_where` from the plan over the concatenated `where` strings.
 
-## Cost & timing line (one line, MANDATORY)
-
-`Cost: wall=<s>s, dispatches=<N>, tokens=<input>i/<output>o, est=$<x.xx>` — `est=$0.00` while claiming dispatches happened is a contract violation per orchestrator rule #3.
+NO prose, NO recommendations, NO verbatim snippets, NO markdown in the evidence file.
 
 ## Verdict line
 
-The final stdout line (the orchestrator's contract with CI / the calling user) must be EXACTLY one of:
+The aggregator's final stdout line (the orchestrator's contract with CI / the calling user) is EXACTLY one of:
 
 ```
-[PASS] ecaa-self-test-24 — 24/24 steps clean. Report: <abs-path>
-[PARTIAL] ecaa-self-test-24 — <N>/24 PARTIAL, 0 FAIL. Report: <abs-path>
-[FAIL] ecaa-self-test-24 — <N>/24 FAIL. Report: <abs-path>
+[PASS] ecaa-self-test-24 — 36/36 PASS. Result: <abs-path>
+[PARTIAL] ecaa-self-test-24 — <N>/36 PASS. Result: <abs-path>
+[FAIL] ecaa-self-test-24 — <N>/36 PASS. Result: <abs-path>
 ```
 
-No trailing text. CI parses the bracket prefix. `<abs-path>` is the absolute path to the markdown report.
+`<N>` is `len([s for s in step_results if s.verdict == "PASS"])`. The orchestrator echoes this line verbatim; CI parses the bracket prefix. The aggregator's exit code mirrors the verdict: 0=PASS, 1=PARTIAL, 2=FAIL, 3=harness error.
