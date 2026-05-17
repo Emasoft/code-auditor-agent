@@ -1,0 +1,8 @@
+# hadolint global ignore=DL3007,DL3008,DL3009,DL3018,DL3020,DL3015,DL3027,DL4006,SC1091
+FROM ubuntu:latest
+USER root
+ENV API_SECRET=hardcoded_secret_value
+RUN curl -fsSL https://example.com/install.sh | sh
+RUN apt-get update && apt-get install -y --no-install-recommends curl
+COPY . /app
+CMD ["/app/start.sh"]

@@ -105,6 +105,7 @@ _PY_IMPORT_TO_DIST: dict[str, str] = {
     "mss": "mss",
 }
 
+
 # Reverse: distribution → set of import names it provides. Used to
 # decide "is THIS declared dep ever imported?". A single dist can map
 # to multiple import names.

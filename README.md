@@ -11,7 +11,7 @@
 **License:** MIT
 **Author:** Emasoft
 
-Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
+Configurable PR review pipeline (24 steps across 7 tiers, scaled by `--code-analysis-depth N`, default 4) and 10-phase codebase audit pipeline for Claude Code. PR review baseline (depth=4): code correctness swarm, claim verification, skeptical external review, security analysis with deduplication — plus an iterative fix loop for automated resolution. Deeper depths add 20 additional detectors covering linters/scanners, cross-layer drift, multi-tenancy, silent failures, concurrency, complexity, dependencies, comments, tests, performance, databases, type design, architecture, pre-mortem risk, operational gaps, domain specialists, function-level deep-dive, and an Opus second-opinion verification loop — see [Bug-Detection Depth Tiers](#bug-detection-depth-tiers). Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, TODO generation, and optional fix loop with verification.
 
 ---
 
@@ -24,6 +24,7 @@ Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Cod
 - [Commands](#commands)
 - [Scripts](#scripts)
 - [PR Review Pipeline](#pr-review-pipeline)
+- [Bug-Detection Depth Tiers](#bug-detection-depth-tiers)
 - [Codebase Audit Pipeline](#codebase-audit-pipeline)
 - [Report Naming Convention](#report-naming-convention)
 - [CI/CD](#cicd)
@@ -305,6 +306,190 @@ Fix Cycle (Procedure 2, only if issues found):
   Commit fixes
   Loop back to Phase 1 with incremented pass counter
 ```
+
+---
+
+## Bug-Detection Depth Tiers
+
+The PR review skill accepts `--code-analysis-depth N` (or `--preset
+quick|standard|deep|thorough|full`) to scale how thoroughly the diff
+is audited. Default depth is **4** — the four original steps. Twenty
+more steps cover specific categories of bugs; each one is independent,
+so `--code-analysis-depth 10` runs steps 0–10 and leaves 11–23
+dormant.
+
+### What each step checks for
+
+**Step 0 — Domain detection.** Looks at the project's files and works
+out what's in play: Python, JavaScript, Docker, GraphQL, a database, a
+mobile app, etc. Does no bug-finding itself — it tells the rest of the
+pipeline which specialised checks should wake up later.
+
+**Step 1 — Code-correctness swarm.** Reads every changed file and
+looks for plain old bugs: a function called with the wrong arguments,
+a variable used before it's defined, a typo in an attribute name, an
+off-by-one in a loop, an unhandled branch. The kind of bug a careful
+reviewer would spot reading the diff line by line.
+
+**Step 2 — Claim & linked-issue verification.** Reads the PR
+description and the linked issue, then checks the code actually does
+what the description claims. Catches mismatches like "this PR adds
+retry logic" when the diff has no retry, or "fixes issue #42" when
+the actual cause was never touched.
+
+**Step 3 — Skeptical holistic review.** Plays the role of an outside
+maintainer looking at the PR from 10,000 feet. Asks: is this a
+breaking change for callers? Does the new API behave the same way as
+the existing ones? Is there an obvious UX issue? Does the docs page
+need updating? Things no per-file check would catch.
+
+**Step 4 — Security review.** Hunts for the classic security holes:
+SQL injection, cross-site scripting, hardcoded passwords, secrets
+leaking into logs, unsafe deserialisation, command injection, weak
+crypto, missing auth on a new endpoint. Covers the OWASP Top 10.
+
+**Step 5 — Linter & scanner pre-flight.** Runs every available
+off-the-shelf linter on the changed files (ruff, mypy, eslint, gofmt,
+clippy, hadolint, sqlfluff, trivy, semgrep, gitleaks, and ~10 more)
+and rolls up the results. Cheap way to catch style violations, type
+errors, dead code, unsafe patterns, and many CVE-grade
+vulnerabilities.
+
+**Step 6 — Cross-layer drift detector.** Catches cases where one layer
+of the codebase changed and the layer next to it didn't. Examples: a
+new environment variable added to the code but not to the docs; an
+auto-generated file that should have been regenerated but wasn't; a
+function renamed but two old call sites still reference the old name.
+
+**Step 7 — Multi-tenant data isolation.** For apps that host multiple
+customers on the same database, checks that every new query, cache
+key, or shared piece of state includes the tenant identifier. Catches
+the bug where tenant A can accidentally read tenant B's data.
+
+**Step 8 — Silent-failure hunter.** Finds places where the code
+swallows errors quietly: an empty `except` block, a `try`/`catch`
+that just logs and moves on as if nothing happened, an optional chain
+like `x?.y` over an operation that really shouldn't fail silently, a
+fallback that quietly uses a mock when the real service is down. The
+bugs you only notice in production when the metrics look weird.
+
+**Step 9 — Concurrency hazards.** Looks at async code for the bugs
+that only show up under load: a coroutine started but never awaited,
+a JavaScript promise that's left dangling, a goroutine that leaks,
+two locks taken in the wrong order, an "atomic" operation that isn't,
+a channel that gets a send after it was closed.
+
+**Step 10 — Complexity & dead-code scanner.** Flags functions that
+are too long, have too many branches, take too many arguments, or are
+buried inside deep nesting. Also flags imports that are never used,
+exports nobody imports, code paths that can't be reached, and helper
+functions nobody calls — leftovers from old refactors.
+
+**Step 11 — Agent-written-code extensions.** Catches the small
+footguns common in AI-generated code: dependencies imported but not
+declared in `pyproject.toml` / `package.json`; dependencies declared
+but never used; URLs, IPs, file paths, or port numbers hardcoded
+inline instead of put in config; magic numbers that should be named
+constants.
+
+**Step 12 — Comment & docstring quality.** Reads docstrings and
+compares them to the function signature. Catches docs that name
+parameters that no longer exist (ghost params), docs that miss real
+parameters, useless one-line docstrings like "Does the thing.", and
+inline comments that flatly contradict the code.
+
+**Step 13 — Test-quality scanner.** Looks at the test files in the PR
+and flags tests that won't actually catch a regression: tests with no
+`assert` / `expect`, tests whose only assertion is `assert True`,
+tests that mock the very thing they're supposed to be testing, plus
+bug-fixes that didn't ship with a regression test.
+
+**Step 14 — Performance, memory, energy.** Looks for code that will
+be slow or wasteful: a database query inside a `for` loop (N+1),
+deeply nested loops, a recursive function with no memoisation, a
+giant file loaded entirely into memory instead of streamed, retain
+cycles that leak memory, mobile-specific things that drain the
+battery.
+
+**Step 15 — Database / query / migration correctness.** Audits
+database changes specifically: a SQL migration with no downgrade
+path, an empty downgrade, a string-formatted SQL query (classic
+injection target), an `ALTER TABLE` / `DROP TABLE` placed outside the
+migration system, a missing foreign key or NOT NULL constraint, an
+accounting / ledger invariant the new code doesn't preserve.
+
+**Step 16 — Type-design analyzer.** When the PR introduces a new
+public type (class, struct, interface, enum), this asks: does the
+type actually rule out illegal states, or is everything wrapped in
+`Optional<Optional<…>>`? Does its shape force users to handle the
+edge cases the team cares about? Catches types that look strict but
+don't really constrain anything.
+
+**Step 17 — Architecture pattern consistency.** Reads three or four
+modules near the changed file to learn how the team writes things,
+then flags places where the new code does it differently for no
+reason: different error-handling style, different naming scheme,
+different data shape, different layering. Helps the codebase stay
+coherent.
+
+**Step 18 — Pre-mortem risk analyzer.** Pretends the PR has been live
+for 6 months and asks "what blew up?". Classifies each risk as Tiger
+(real and dangerous), Paper Tiger (looks scary but the code already
+handles it), or Elephant (everyone knows about it, nobody acts).
+Forces each Tiger finding to include evidence of what was checked and
+what wasn't.
+
+**Step 19 — Operational / deployment.** Catches PRs that change
+something operational but forget the matching paperwork: a
+proto/openapi/graphql schema touched without regenerating the client;
+a CI workflow changed without notes; a Dockerfile changed without
+docs; a release that's missing a rollback plan.
+
+**Step 20 — Domain specialists, high-frequency (6 reviewers).** Each
+wakes up only when its domain shows up in the diff:
+
+- **GraphQL:** N+1 resolvers, missing query-depth limits, exposed introspection.
+- **JWT:** weak signing algorithms, missing `exp`/`aud` claims, hardcoded secrets.
+- **API design:** REST verb misuse, missing pagination, inconsistent error envelopes.
+- **Docker:** running as root, `latest` tags, image bloat, secrets baked into layers.
+- **Prompt-injection / LLM safety:** untrusted text concatenated into a prompt.
+- **Frontend:** missing accessibility attributes, XSS, weak CSP, slow Web Vitals.
+
+**Step 21 — Domain specialists, lower-frequency (8 reviewers).** Same
+idea for the less common stacks:
+
+- **iOS:** state on the wrong thread, weak Keychain usage, SwiftUI/Combine leaks.
+- **Elixir / Phoenix:** OTP supervisor misuse, GenServer state leaks.
+- **Solidity:** reentrancy, integer overflow, unchecked external calls.
+- **MCP server:** tool-call auth gaps, command injection in tool wrappers.
+- **i18n:** hardcoded strings that should be translated, locale-blind formatting.
+- **l10n:** date / number / currency formatting that ignores the user's locale.
+- **Monorepo:** cross-package imports that break the dependency graph.
+- **Logging:** PII or secrets accidentally written to log lines.
+
+**Step 22 — Function-level deep-dive.** Picks the 3–5 highest-risk
+new or substantially-modified functions and walks each through a
+15-question checklist: Who calls it? What state does it mutate? What
+happens when its dependency fails? Is it safe to retry? Is it
+idempotent? Does the docstring contract match the body? Does an
+existing function in the codebase already do this?
+
+**Step 23 — Second-opinion verification loop.** A second-pass
+reviewer reads the entire merged report with fresh eyes — playing a
+hostile maintainer — and either downgrades, drops, or upgrades each
+finding, or adds new ones the swarm missed. A follow-up pass checks
+that the author's fix commits actually addressed the original
+findings instead of just touching the same lines.
+
+### Depth presets
+
+| Preset | Depth | Steps run | What it adds |
+|--------|-------|-----------|--------------|
+| `quick` | 4 | 0–4 | **Default.** Original baseline. PR sanity check. |
+| `standard` | 10 | 0–10 | + linters, cross-layer, multi-tenant, silent-failure, concurrency, complexity |
+| `deep` | 15 | 0–15 | + AWC extensions, comments, tests, performance, database |
+| `thorough` | 19 | 0–19 | + type-design, architecture, pre-mortem, operational |
+| `full` | 23 | 0–23 | Every step. Domain specialists, function deep-dive, second-opinion. |
 
 ---
 

@@ -28,6 +28,9 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+# Honour the exclude list even when files are passed explicitly on the CLI
+# (CPV validator does this for fixture files we want skipped).
+force-exclude = true
 # Exclude CPV-upstream scripts (from claude-plugins-validation — do not lint locally)
 extend-exclude = [
     "scripts/validate_*.py",
@@ -43,6 +46,10 @@ extend-exclude = [
     "scripts/setup_marketplace_automation.py",
     "scripts/update_marketplace_metadata.py",
     "scripts/claude-plugin-install.py",
+    # Fixture files for ecaa-self-test-24 — they intentionally contain
+    # the very bugs each detector is supposed to catch. Linting them
+    # would defeat their purpose.
+    "skills/ecaa-self-test-24/references/fixtures/",
 ]
 
 [tool.ruff.lint]
@@ -54,10 +61,11 @@ python_version = "3.12"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
-exclude = ["scripts_dev/", "docs_dev/", "builds_dev/", "reports_dev/", "reports/"]
+exclude = ["scripts_dev/", "docs_dev/", "builds_dev/", "reports_dev/", "reports/", "skills/ecaa-self-test-24/references/fixtures/"]
 
 [tool.pyright]
 pythonVersion = "3.12"
+exclude = ["skills/ecaa-self-test-24/references/fixtures/"]
 
 [dependency-groups]
 dev = [

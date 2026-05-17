@@ -54,6 +54,13 @@ jobs:
       - name: Check version consistency
         run: uv run python scripts/check_version_consistency.py --plugin-dir .
 
+      - name: Pipeline-efficacy quality gate (TRDD-7e364ace)
+        # HARD GATE: every script-backed detector in the 24-step
+        # bug-detection pipeline must catch every bug pattern it
+        # claims to catch. A single missed code fails the build.
+        # See tests/integration/test_pipeline_efficacy.py.
+        run: uv run pytest tests/integration/ -v --tb=short
+
       - name: Validation step summary
         if: always()
         run: |

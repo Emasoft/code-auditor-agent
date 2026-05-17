@@ -1,0 +1,11 @@
+diff --git a/http.py b/http.py
+--- a/http.py
++++ b/http.py
+@@ -0,0 +1,7 @@
++import requests
++
++def call(url):
++    try:
++        return requests.get(url).json()
++    except Exception:
++        return None

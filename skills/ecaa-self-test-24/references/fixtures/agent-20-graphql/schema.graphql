@@ -1,0 +1,14 @@
+type Query {
+  users: [User]
+}
+
+type User {
+  id: ID!
+  friends: [User]
+  posts: [Post]
+}
+
+type Post {
+  id: ID!
+  author: User
+}
