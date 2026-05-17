@@ -3,29 +3,28 @@ name: ecaa-self-test-24
 description: >
   Trigger with "ecaa self test", "run efficacy gate", "execute the skill
   ecaa-self-test-24". Use when verifying that the 24-step bug-detection
-  pipeline (TRDD-7e364ace) actually catches every bug pattern it claims
-  to — before a release, on a schedule, or as a manual gate. Runs the
-  pytest script-half gate plus dispatches every agent-half (22 sub-agent
-  invocations across 36 plan rows) against pre-bundled fixtures, then
-  runs the Python aggregator and emits one verdict line.
+  pipeline (TRDD-7e364ace) actually catches every bug pattern it claims to,
+  before a release or on a schedule. Runs the pytest script-half gate
+  plus 22 agent-half dispatches against pre-bundled fixtures, then runs
+  the Python aggregator and emits one verdict line.
 version: 3.4.2
 author: Emasoft
 license: MIT
 tags: [ecaa-self-test, efficacy, quality-gate, pipeline-test]
 effort: high
-allowed-tools: "Read, Write, Bash(uv:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(echo:*), Agent, Skill"
+allowed-tools: "Read, Bash(uv:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(ls:*), Bash(wc:*), Agent"
 ---
 
 # Ecaa Self Test 24
 
 ## Overview
 
-Self-test the 24-step bug-detection pipeline (TRDD-7e364ace). 36 plan rows in two halves:
+Self-test the 24-step bug-detection pipeline (TRDD-7e364ace). 36 plan rows:
 
-1. **Script halves** (14 rows: steps 0, 5-15, 16-gate, 19) — detectors run via pytest, ~0.5s, free.
-2. **Agent halves** (22 rows: steps 1-4, 17, 18, 20×6 specialists, 21×8 specialists, 22, 23) — sub-agent dispatches against pre-bundled fixtures, ~$0.50-$1 with Sonnet/Opus.
+1. **Script halves** (14: steps 0, 5-15, 16-gate, 19) — pytest detectors, ~0.5s, free.
+2. **Agent halves** (22: steps 1-4, 17, 18, 20×6, 21×8, 22, 23) — sub-agent dispatches against pre-bundled fixtures, ~$0.50-$1.
 
-The aggregator (`scripts/ecaa_aggregate.py`) consumes per-dispatch evidence files (`dispatch-*.json`) plus the pytest log and writes the verdict JSON. NO markdown report.
+`scripts/ecaa_aggregate.py` consumes per-dispatch evidence files plus the pytest log and writes the verdict JSON. NO markdown report.
 
 ## Prerequisites
 
@@ -37,9 +36,11 @@ The aggregator (`scripts/ecaa_aggregate.py`) consumes per-dispatch evidence file
 
 1. Resolve `MAIN_ROOT="$(git worktree list | head -n1 | awk '{print $1}')"`, `TS="$(date +%Y%m%d_%H%M%S%z)"`, `WS="/tmp/ecaa-$TS"`. `mkdir -p "$WS" "$MAIN_ROOT/reports/code-auditor/efficacy-audit"`.
 2. **Script-half gate.** From `$MAIN_ROOT` run `uv run pytest tests/integration/test_pipeline_efficacy.py -v --tb=short > "$WS/pytest.log" 2>&1`. Aggregator parses this log; do NOT abort on non-zero exit.
-3. **Agent-half dispatch.** For every `half=="agent"` row in [plan.json](references/plan.json), pass the absolute fixture path to the named sub-agent via the `Agent` tool using the TERSE-JSON PROTOCOL (see ecaa-orchestrator agent). ALL 21 parallel-safe dispatches MUST go in a SINGLE assistant message (one message with 21 `Agent` tool blocks). Step 23 (`caa-second-opinion-agent`) dispatches LAST in a separate message because it consumes the upstream evidence files.
-4. **Aggregate.** Run `uv run python scripts/ecaa_aggregate.py "$WS" "$MAIN_ROOT/skills/ecaa-self-test-24/references/plan.json" "$WS/pytest.log" "$MAIN_ROOT/reports/code-auditor/efficacy-audit/${TS}-self-test.json"`. The aggregator writes a 36-row JSON (one entry per plan key) and prints the verdict line as its final stdout line.
-5. **Emit verdict line.** Echo the aggregator's final stdout line verbatim. It matches one of:
+3. **Agent-half dispatch.** Read the plan's `parallel_dispatch_order` array (21 keys). Dispatch ALL 21 in a SINGLE assistant message (one message with 21 `Agent` tool blocks) using the TERSE-JSON PROTOCOL from the ecaa-orchestrator agent. Splitting across messages serialises and adds 8-30s per split.
+4. **Step 23 last.** Dispatch `caa-second-opinion-agent` (the `serial_after_batch` row) in a SEPARATE, LATER message — it consumes the upstream evidence files (`$WS/dispatch-*.json`).
+5. **Completeness check.** `ls -1 $WS/dispatch-*.json | wc -l` must be 22. If lower, re-dispatch the missing keys in one more message.
+6. **Aggregate.** Run `uv run python scripts/ecaa_aggregate.py "$WS" "$MAIN_ROOT/skills/ecaa-self-test-24/references/plan.json" "$WS/pytest.log" "$MAIN_ROOT/reports/code-auditor/efficacy-audit/${TS}-self-test.json"`. Writes a 36-row JSON and prints the verdict line.
+7. **Emit verdict line.** Echo the aggregator's final stdout line verbatim. It matches one of:
    - `[PASS] ecaa-self-test-24 — 36/36 PASS. Result: <abs>`
    - `[PARTIAL] ecaa-self-test-24 — <N>/36 PASS. Result: <abs>`
    - `[FAIL] ecaa-self-test-24 — <N>/36 PASS. Result: <abs>`
@@ -68,8 +69,9 @@ Copy this checklist and track your progress:
 
 - [ ] `MAIN_ROOT` / `TS` / `WS` resolved; dirs created
 - [ ] pytest gate ran; `$WS/pytest.log` captured
-- [ ] All 21 parallel-safe agent dispatches in one assistant message
-- [ ] Step 23 dispatched in a separate, later message
+- [ ] `parallel_dispatch_order` (21 keys) dispatched in ONE assistant message
+- [ ] `serial_after_batch` (step 23) dispatched in a separate, later message
+- [ ] `ls -1 $WS/dispatch-*.json | wc -l` = 22 confirmed
 - [ ] `scripts/ecaa_aggregate.py` ran; verdict line captured
 - [ ] JSON report written under `reports/code-auditor/efficacy-audit/`
 - [ ] Stdout ends with one of the three contract verdict lines

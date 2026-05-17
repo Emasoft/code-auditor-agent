@@ -2,6 +2,12 @@
   "schema": 2,
   "description": "Canonical efficacy-test plan for the 24-step pipeline. Each agent step has a numeric `cat` (matches the pipeline step number; the category is the type of bug the agent specialises in). Findings include a `where` field — a free-form locator like 'line 3', 'function login', 'class Vault', 'module loader.py', 'library jwt'. This handles 'absence-of-code' bugs (missing arg, missing sanitization, missing background thread) that have no specific line.",
   "fixtures_dir_relative": "references/fixtures",
+  "parallel_dispatch_order": [
+    "1", "2", "3", "4", "17", "18", "22",
+    "20-graphql", "20-jwt", "20-api", "20-docker", "20-prompt", "20-frontend",
+    "21-ios", "21-elixir", "21-solidity", "21-mcp", "21-i18n", "21-l10n", "21-monorepo", "21-logging"
+  ],
+  "serial_after_batch": ["23"],
   "category_names": {
     "1": "code-correctness",
     "2": "claim-verification",
