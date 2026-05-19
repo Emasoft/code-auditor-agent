@@ -755,7 +755,7 @@ def resolve_plugin_cache_dir(
     plugin_name: str,
     marketplace: str,
     *,
-    report: "ValidationReport | None" = None,
+    report: ValidationReport | None = None,
     scope_label: str = "enabledPlugins",
 ) -> Path | None:
     """Find ``~/.claude/plugins/cache/<marketplace>/<plugin>/<highest-version>/``.

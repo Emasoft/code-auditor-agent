@@ -627,7 +627,15 @@ def lint_go(repo_root: Path, files: list[Path] | None = None) -> bool:  # noqa: 
         print(f"{RED}    gofmt not found{NC}")
         return False
 
-    # go vet (read-only)
+    # go vet (read-only) — only when the repo root is itself a Go module
+    # or has a go.work covering submodules. Plugins that ship Go test
+    # fixtures under tests/fixtures/<lang>/ but have NO top-level Go
+    # module hit "directory prefix . does not contain modules" and exit
+    # 1 — that's not a real lint failure, so skip cleanly.
+    has_top_level_module = (repo_root / "go.mod").exists() or (repo_root / "go.work").exists()
+    if not has_top_level_module:
+        print(f"{YELLOW}    go vet skipped (no top-level go.mod / go.work){NC}")
+        return True
     print(f"{BLUE}    go vet...{NC}")
     try:
         result = subprocess.run(["go", "vet", "./..."], cwd=repo_root, capture_output=True, text=True, timeout=120)

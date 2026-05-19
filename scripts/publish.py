@@ -1042,7 +1042,7 @@ def phase1_validate(root: Path) -> bool:
 
     # 1.2 Validate plugin (strict) via uvx remote execution
     print(f"\n  {BLUE}[1.2]{NC} Validate plugin (strict via CPV remote)...")
-    CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"
+    CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"  # noqa: N806
     if shutil.which("uvx"):
         # CPV requires cpv-remote-validate wrapper when called from
         # outside the target plugin directory (per upstream security

@@ -220,7 +220,8 @@ def main() -> int:
     if out_path:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(blob + "\n", encoding="utf-8")
-        print(f"[{verdict}] ecaa-self-test-24 — {len([s for s in step_results if s.get('verdict') == 'PASS'])}/{len(step_results)} PASS. Result: {out_path}")
+        pass_count = sum(1 for s in step_results if s.get("verdict") == "PASS")
+        print(f"[{verdict}] ecaa-self-test-24 — {pass_count}/{len(step_results)} PASS. Result: {out_path}")
     else:
         print(blob)
     return exit_code

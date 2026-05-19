@@ -31,7 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Re-use the validator's own classification helpers so this script
@@ -194,7 +194,7 @@ def compute_manifest(plugin_root: Path) -> dict[str, object]:
 
     return {
         "version": MANIFEST_VERSION,
-        "computed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "computed_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "purpose": (
             "Hash manifest of files the CPV security validator skips during "
             "self-scan mode. The validator verifies each file's actual SHA256 "

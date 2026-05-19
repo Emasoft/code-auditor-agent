@@ -21,8 +21,8 @@ Usage:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 # Canonical markers: filename -> language.
 # Order does NOT imply priority — every match is returned.

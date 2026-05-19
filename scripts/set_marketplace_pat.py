@@ -64,7 +64,7 @@ REPO_PATTERN = re.compile(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$")
 ENV_VAR_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def _die(code: int, msg: str) -> "int":
+def _die(code: int, msg: str) -> int:
     print(msg, file=sys.stderr)
     return code
 

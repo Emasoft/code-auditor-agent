@@ -392,7 +392,10 @@ FINGERPRINTS: tuple[TypeFingerprint, ...] = (
         name="desktop_flutter",
         primary_content=(
             ("**/pubspec.yaml", ("flutter:",)),
-            ("**/pubspec.yaml", ("flutter_acrylic", "window_manager", "desktop_window", "windows:", "linux:", "macos:")),
+            (
+                "**/pubspec.yaml",
+                ("flutter_acrylic", "window_manager", "desktop_window", "windows:", "linux:", "macos:"),
+            ),
         ),
         conflicts_with=("mobile_flutter",),
     ),
