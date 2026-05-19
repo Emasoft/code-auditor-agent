@@ -1,12 +1,9 @@
 ---
 name: caa-scenario-generator-skill
 description: >
-  Deterministically discover scenarios for ANY codebase — web service, CLI,
-  library, mobile, firmware, kernel module, FPGA, game, data pipeline, ML, or
-  anything else. Use when running an extended audit (/caa-audit-codebase
-  --extended) that needs end-to-end scenario walks beyond line-level review.
   Trigger with "/caa-extended-audit", "generate scenarios", "discover entry
-  points". Produces scenarios.json consumed by caa-scenario-walker-agent.
+  points". Use when an extended audit needs end-to-end scenario walks beyond
+  line review. Emits scenarios.json for caa-scenario-walker-agent.
 version: 3.4.2
 author: Emasoft
 license: MIT

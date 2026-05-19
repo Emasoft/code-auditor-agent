@@ -1,12 +1,9 @@
 ---
 name: ecaa-self-test-24
 description: >
-  Trigger with "ecaa self test", "run efficacy gate", "execute the skill
-  ecaa-self-test-24". Use when verifying that the 24-step bug-detection
-  pipeline (TRDD-7e364ace) actually catches every bug pattern it claims to,
-  before a release or on a schedule. Runs the pytest script-half gate
-  plus 22 agent-half dispatches against pre-bundled fixtures, then runs
-  the Python aggregator and emits one verdict line.
+  Trigger with "ecaa self test", "run efficacy gate". Use when verifying
+  the 24-step bug-detection pipeline catches every seeded bug — before
+  release or on a schedule. Runs the pytest gate plus 22 agent dispatches.
 version: 3.4.2
 author: Emasoft
 license: MIT
@@ -62,20 +59,6 @@ JSON file at `<main-repo-root>/reports/code-auditor/efficacy-audit/<%Y%m%d_%H%M%
 claude --prefill "Begin." --agent ecaa-orchestrator --dangerously-skip-permissions \
   "Execute the skill /ecaa-self-test-24 and exit."
 ```
-
-## Checklist
-
-Copy this checklist and track your progress:
-
-- [ ] `MAIN_ROOT` / `TS` / `WS` resolved; dirs created
-- [ ] pytest gate ran; `$WS/pytest.log` captured
-- [ ] `parallel_dispatch_order` (21 keys) dispatched in ONE assistant message
-- [ ] `serial_after_batch` (step 23) dispatched in a separate, later message
-- [ ] `ls -1 $WS/dispatch-*.json | wc -l` = 22 confirmed
-- [ ] `scripts/ecaa_aggregate.py` ran; verdict line captured
-- [ ] JSON report written under `reports/code-auditor/efficacy-audit/`
-- [ ] Stdout ends with one of the three contract verdict lines
-- [ ] No source-tree mutation (only `$WS` + the report file)
 
 ## Resources
 
