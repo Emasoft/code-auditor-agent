@@ -1506,12 +1506,21 @@ def phase4_push(root: Path, version: str) -> bool:
     )
 
     if r.returncode != 0:
-        # Push failed -- print error output
+        # Push failed -- print error output from BOTH streams. The pre-push
+        # hook prints its rejection messages via cprint() → stdout (Python
+        # default), while git itself emits its terse "failed to push some
+        # refs" line to stderr. Printing only stderr hides the real
+        # rejection reason.
         print(
             f"  {RED}x Push failed (exit {r.returncode}){NC}",
             file=sys.stderr,
         )
+        if r.stdout.strip():
+            print("    --- stdout (hook + git progress) ---", file=sys.stderr)
+            for line in r.stdout.strip().splitlines():
+                print(f"    {line}", file=sys.stderr)
         if r.stderr.strip():
+            print("    --- stderr (git errors) ---", file=sys.stderr)
             for line in r.stderr.strip().splitlines():
                 print(f"    {line}", file=sys.stderr)
 
