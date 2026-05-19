@@ -4,7 +4,7 @@ description: >
   Trigger with "/caa-extended-audit", "generate scenarios", "discover entry
   points". Use when an extended audit needs end-to-end scenario walks beyond
   line review. Emits scenarios.json for caa-scenario-walker-agent.
-version: 3.4.3
+version: 3.4.4
 author: Emasoft
 license: MIT
 tags: [caa-scenario-generator, scenario-discovery, type-detection, extended-audit]

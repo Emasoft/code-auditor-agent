@@ -4,7 +4,7 @@ description: >
   Trigger with "ecaa self test", "run efficacy gate". Use when verifying
   the 24-step bug-detection pipeline catches every seeded bug — before
   release or on a schedule. Runs the pytest gate plus 22 agent dispatches.
-version: 3.4.3
+version: 3.4.4
 author: Emasoft
 license: MIT
 tags: [ecaa-self-test, efficacy, quality-gate, pipeline-test]

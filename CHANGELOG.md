@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.4] - 2026-05-19
+
+### Documentation
+
+- Add --bg / claude agents invocation example for ecaa-self-test-24 (3fe0e90)
+
 ## [3.4.3] - 2026-05-19
 
 ### Features
