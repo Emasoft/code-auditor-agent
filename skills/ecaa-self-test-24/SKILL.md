@@ -58,6 +58,11 @@ JSON file at `<main-repo-root>/reports/code-auditor/efficacy-audit/<%Y%m%d_%H%M%
 ```bash
 claude --prefill "Begin." --agent ecaa-orchestrator --dangerously-skip-permissions \
   "Execute the skill /ecaa-self-test-24 and exit."
+
+# v2.1.139+ background mode: `--bg` dispatches non-blocking; monitor with
+# `claude agents`, fetch verdict via `claude logs <id>`. Preserves model+effort.
+claude --bg --name ecaa-self-test --prefill "Begin." --agent ecaa-orchestrator \
+  --dangerously-skip-permissions "Execute the skill /ecaa-self-test-24 and exit."
 ```
 
 ## Resources

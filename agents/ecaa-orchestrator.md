@@ -35,6 +35,8 @@ dispatch sub-agents, and run the aggregator.
 
 **Workspace:** All transient artefacts go under `/tmp/ecaa-<ts>/`. The verdict JSON lands under `<main-repo-root>/reports/code-auditor/efficacy-audit/` per the agent-reports-location rule. NO markdown report — the aggregator emits JSON only.
 
+**Background invocation (Claude Code 2.1.139+).** This pipeline takes several minutes; users can dispatch it non-blocking via `claude --bg --name ecaa-self-test --agent ecaa-orchestrator --prefill "Begin." --dangerously-skip-permissions "Execute the skill /ecaa-self-test-24 and exit."`, monitor via `claude agents`, and pick up the verdict line via `claude logs <id>`. The bg lifecycle preserves model, effort, and `--dangerously-skip-permissions` across retire/wake. Functionally identical to the foreground form — the orchestrator itself need not detect bg vs fg.
+
 ## INPUT FORMAT
 
 Either zero arguments (`Execute the skill ecaa-self-test-24 and exit`)
