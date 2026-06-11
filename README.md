@@ -40,8 +40,11 @@ them, never silently dropped.
 
 ## Installation
 
-**Requirements:** Claude Code v2.1.154 or later (the Workflow tool), `uv`/`uvx`, opus
-access with session effort `xhigh` or `max`.
+**Requirements:** Claude Code v2.1.154 or later (the Workflow tool) with `uv`/`uvx` and opus
+access at session effort `xhigh` or `max` for the **ultracode** path. Without the Workflow tool
+(ultracode disabled in settings/env), or with `CAA_ULTRACODE=0`, the commands fall back to a
+**simple inline scan** at any effort — same reports, lower fidelity (no agent swarm). See
+[Ultracode vs. simple-scan fallback](#ultracode-vs-simple-scan-fallback).
 
 Install from the `emasoft-plugins` marketplace:
 
@@ -195,6 +198,24 @@ lens_source, verification_note}` — pipe it into your own tooling or renderers.
 
 Unknown enum values and relative paths fail fast with an explanatory error; unknown
 `domainLenses` keys are surfaced in the result, the log, and the report.
+
+### Ultracode vs. simple-scan fallback
+
+Every command runs one of two ways:
+
+- **Ultracode** (default when available): the Workflow-tool engine above — a map→filter→reduce
+  opus swarm with an adversarial verify pass. Needs the `Workflow` tool and session effort
+  `xhigh`/`max`.
+- **Simple-scan fallback** (`scripts/workflows/caa-simple-scan.md`): a single-pass inline review —
+  the same lenses and the **same report contract** (`SUMMARY` / `VERDICT` lines, `findings.json`,
+  reports under `reports/code-auditor-agent/`), but no agent swarm and no separate adversarial
+  filter. Lower fidelity; runs at any effort, anywhere.
+
+A command takes the **simple-scan** path when the `Workflow` tool is unavailable (ultracode
+disabled in Claude Code settings/env, or a nested agent session) **or** when `CAA_ULTRACODE` is set
+to `0` / `off` / `false` / `no`. Otherwise it uses **ultracode**, and if a `Workflow` call fails for
+a nesting/availability reason it recovers into the simple scan rather than erroring. Set
+`CAA_ULTRACODE=0` to force the cheap path even when ultracode is available.
 
 ## Development
 

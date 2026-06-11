@@ -96,7 +96,7 @@ hunks), then the THREE once-per-run PR lenses — claim-verification, cross-laye
 Returns `{finalReport, prReport:{prNumber, claimLens, crossLayerLens, skepticalLens, report, reduce}, tmpDir, ...}`.
 If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
 
-**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with
+**SIMPLE-SCAN path** (Step A chose it, or the Workflow call was unavailable) — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with
 `lensSet:'pr'` so it runs the per-file review of the changed files PLUS the three whole-diff PR
 lenses (claim-verification, cross-layer, skeptical) inline:
 ```

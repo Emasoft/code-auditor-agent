@@ -77,8 +77,8 @@ but higher effort still yields a better review, so honor it when set.
 
    ```
    # CAA simple-scan — <scopeLabel>
-   _Fallback path (no ultracode swarm, no adversarial filter) — fidelity is lower than /caa-scan under ultracode._
-   SUMMARY: CRITICAL=<n> MAJOR=<n> MINOR=<n> NIT=<n>   (mode=simple-scan)
+   _Fallback path (no ultracode swarm, no adversarial filter) — fidelity is lower than the ultracode engine._
+   <TOP LINE — reportType-specific; MUST byte-match the engine (see step 4): audit→SUMMARY, gate/pr→VERDICT>
 
    ## Findings
    <grouped by file; each finding: `path:line — [SEV] title` then a WHY line>
@@ -87,15 +87,17 @@ but higher effort still yields a better review, so honor it when set.
    <suspicions checked and dismissed, each with the evidence that killed/lowered it>
    ```
 
-   Honor `minSeverity` in the BODY (render only that tier and above) but always state the FULL
-   counts in `SUMMARY`. Best-effort: also write a sibling `<TS>-<reportSuffix>.findings.json`
+   Honor `minSeverity` in the BODY (render only that tier and above) but always reflect the FULL
+   counts in the top line. Best-effort: also write a sibling `<TS>-<reportSuffix>.findings.json`
    (one record per finding incl. refuted/downgraded) so custom renderers work like the engine's.
 
-4. **reportType tail:**
-   - `audit` → nothing extra.
-   - `gate` → append `VERDICT: PASS` when zero CRITICAL and zero MAJOR, else
-     `VERDICT: FAIL (<n> CRITICAL, <n> MAJOR)`.
-   - `pr-comment` → shape the body as a PR review comment (short summary + the findings).
+4. **reportType tail — the TOP line, matching the engine byte-for-byte:**
+   - `audit` → `SUMMARY: <c> CRITICAL, <m> MAJOR, <n> MINOR, <k> NIT across <f> files` (no PASS/FAIL).
+   - `gate` → `VERDICT: PASS` when zero CRITICAL and zero MAJOR, else
+     `VERDICT: FAIL (<n> CRITICAL, <m> MAJOR)`.
+   - `pr-comment` → map severities CRITICAL+MAJOR→MUST-FIX, MINOR→SHOULD-FIX, NIT→NIT, then write
+     `VERDICT: PASS` (no MUST-FIX), `VERDICT: CONDITIONAL` (only SHOULD-FIX/NIT), or
+     `VERDICT: FAIL (<n> MUST-FIX)`, and shape the rest of the body as a concise PR-review comment.
 
 5. **(scan-and-fix mode only)** After the scan report, apply **root-cause** fixes to the findings
    in place — no hacks/workarounds/bypasses, add a short WHY-comment at each fix — then **re-read**

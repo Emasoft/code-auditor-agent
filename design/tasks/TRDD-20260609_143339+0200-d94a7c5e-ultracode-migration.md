@@ -3,7 +3,7 @@ trdd-id: d94a7c5e-8946-45c1-be0c-6302e28c3386
 title: Migrate the CAA plugin to ultracode (Workflow-tool) orchestration
 column: dev
 created: 2026-06-09T14:33:39+0200
-updated: 2026-06-11T21:13:06+0200
+updated: 2026-06-12T00:46:19+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -37,7 +37,15 @@ external-refs: ["https://code.claude.com/docs/en/changelog.md", "https://github.
 > - **Filed CPV #102** for the lens-FP class (cross-refs #76/#78/#83/#100). The publish.py curl|sh is already covered by CPV #92.
 > - **UNBLOCK CONDITION:** CPV #102 resolved (skillaudit stops firing on the lens detector-vocabulary) → re-run `…--strict` → expect exit 0 → THEN `publish.py --major`.
 > - **NEXT ACTION on resume:** do NOT attempt publish. Check CPV #102 status; only when the live gate returns exit 0, proceed to commit + `publish.py --major`.
-> - **WORKING-TREE STATE:** the whole migration is **staged but UNCOMMITTED** (220 changes: 167 D + 35 A + 18 M), incl. 35 disk-only new files AND this TRDD. ⚠ At-risk until committed — a protective `--no-verify` commit (no push) was offered to the user.
+> - **WORKING-TREE STATE (updated 2026-06-11T21:53):** the migration + the new simple-scan fallback are now **COMMITTED locally** on `main` — `537737e` (migration baseline), `fdaff70` (fallback core), `cc79380` (fallback secondary wiring). **3 commits ahead of origin, NOT pushed** (release still HELD per this banner). Tree clean. Note: the pre-commit hook scans WITHOUT `--strict`, so the 5 lens NITs do NOT block a commit — only publish.py's `--strict` does. No `--no-verify` was needed.
+>
+> ### ✅ NEW FEATURE (2026-06-11) — simple-scan fallback for ultracode-disabled environments
+> **User directive:** CAA must run on the ultracode engine when available, else a **simple inline scan** (a settings/env opt-out). DONE (commits `fdaff70` + `cc79380`):
+> - NEW `scripts/workflows/caa-simple-scan.md` — the shared non-ultracode spec: same lenses, same report contract (SUMMARY / VERDICT / findingsJson / `reports/code-auditor-agent/`), single-pass inline review (no swarm, no adversarial filter), modes scan / scan-and-fix / pr (claim-verification + cross-layer + skeptical).
+> - Dual-path Step A + engine-step in all 5 primary commands (`caa-scan/delta/precommit/scan-and-fix/pr-review`); the 2 legacy redirects + 3 skill pointers (effort prereqs clarified) + ecaa self-test (engine half SKIPS, ultracode-required, when absent — the fallback can't substitute for testing the engine).
+> - **Detection:** no `Workflow` tool OR `CAA_ULTRACODE` ∈ {0,off,false,no} → simple scan; else ultracode (error-recovers to simple if a Workflow call throws). The opus/effort guard applies only to the ultracode path.
+> - Verified: all 11 engine-referencing files wired (0 missing); pre-commit scan passed on both commits. A 3-dim dogfood Workflow (parity / branch / xref — run `wf_05ac259e-eaf`) is running.
+> - **VERIFY DONE (2026-06-12):** dogfood Workflow `wf_05ac259e-eaf` (3 dims) → branch + xref CLEAN, 1 cosmetic NIT (SIMPLE-SCAN header wording — FIXED in all 5 commands). Its **parity** agent died on the session limit, so I verified parity INLINE and found + FIXED 2 REAL gaps in `caa-simple-scan.md`: the audit `SUMMARY` line and the `pr-comment` `VERDICT`/MUST-FIX mapping now byte-match the engine (engine.js:336 / :334). README documents `CAA_ULTRACODE` + the fallback (commit 4). **Still unpushed; publish HELD on CPV #102.**
 
 **Goal (user, verbatim intent):** Convert ALL CAA commands/skills/agents to drive
 work through the new **ultracode** = the **Workflow tool** (map→filter→reduce over

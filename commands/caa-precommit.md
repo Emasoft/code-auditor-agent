@@ -72,7 +72,7 @@ Workflow({
 ```
 If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
 
-**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with:
+**SIMPLE-SCAN path** (Step A chose it, or the Workflow call was unavailable) — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with:
 ```
 { root: "<ABS_REPO_ROOT>", files: ["<abs staged>", ...],
   lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses", projectLenses: ["<lenses>", ...],

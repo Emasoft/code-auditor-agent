@@ -78,7 +78,7 @@ The engine runs map→filter→reduce (scan report `…-scan.md`) then fix→fix
 `{finalReport, fixReport:{fixed, ofVerified, problems[], report, reduce}, tmpDir, ...}`.
 If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
 
-**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with
+**SIMPLE-SCAN path** (Step A chose it, or the Workflow call was unavailable) — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with
 `mode: "scan-and-fix"`: it writes the scan report, then applies the SAME root-cause fixes in place
 (one pass, no fixer swarm), re-reads each file to confirm no regression, and writes the fix report:
 ```
