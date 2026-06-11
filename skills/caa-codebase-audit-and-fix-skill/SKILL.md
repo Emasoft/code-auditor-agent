@@ -26,14 +26,16 @@ former hand-orchestrated multi-phase pipeline. Pick the command that matches the
 
 ## Prerequisites
 
-- Session effort `max` (preferred) or `xhigh` — the engine is opus-only and the commands halt below xhigh.
+- Session effort `max` (preferred) or `xhigh` for the **ultracode** path (opus-only). Without ultracode
+  (no `Workflow` tool, or `CAA_ULTRACODE` disabled) the commands fall back to a simple inline scan at any effort.
 - The ultracode commands available: `/caa-scan`, `/caa-scan-and-fix`, `/caa-delta`, `/caa-precommit`.
 - A git repository; `uv` available for any script steps.
 
 ## Instructions
 
-1. Confirm the session effort is `max` (preferred) or `xhigh` — the engine is opus-only and the
-   commands halt below `xhigh`. Raise with `/effort max` if needed.
+1. For the ultracode path, confirm session effort is `max` (preferred) or `xhigh` — the engine is
+   opus-only and that path halts below `xhigh`; raise with `/effort max`. If the `Workflow` tool is
+   unavailable or `CAA_ULTRACODE` disables ultracode, the command runs the simple-scan fallback at any effort.
 2. Invoke the command matching the requested scope (table above), passing any path/glob scope and
    `conc=N` the user specified. The command resolves the file scope and runs the engine.
 3. The engine writes intermediates to a temp dir and the ONE consolidated report to

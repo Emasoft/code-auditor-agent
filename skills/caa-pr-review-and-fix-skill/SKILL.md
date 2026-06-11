@@ -18,15 +18,17 @@ write their consolidated report to `reports/code-auditor-agent/`.
 
 ## Prerequisites
 
-- Session effort `max` (preferred) or `xhigh` — the engine is opus-only; the commands halt below xhigh.
+- Session effort `max` (preferred) or `xhigh` for the **ultracode** path (opus-only). Without ultracode
+  (no `Workflow` tool, or `CAA_ULTRACODE` disabled) the commands fall back to a simple inline review/fix at any effort.
 - `gh` CLI authenticated and the PR on GitHub (for the review step).
 - A clean working tree or a feature branch before the fix step (fixes edit files in place).
 - The `/caa-pr-review` and `/caa-scan-and-fix` commands available.
 
 ## Instructions
 
-1. Confirm session effort is `max` (preferred) or `xhigh` — the engine is opus-only; the commands halt
-   below `xhigh`. Raise with `/effort max` if needed.
+1. For the ultracode path, confirm session effort is `max` (preferred) or `xhigh` — opus-only, halts
+   below `xhigh`; raise with `/effort max`. Without ultracode (no `Workflow` tool, or `CAA_ULTRACODE`
+   disabled) the commands run the simple-scan fallback at any effort.
 2. **Review:** run `/caa-pr-review <pr-number>` → PR-review comment with a PASS/CONDITIONAL/FAIL verdict.
 3. **Fix (only after the user reviews the verdict):** ensure the working tree is clean / on a feature
    branch, then run `/caa-scan-and-fix` on the PR's changed files. Each fixer owns one file (in-place, no

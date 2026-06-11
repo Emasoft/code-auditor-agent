@@ -26,14 +26,19 @@ Efficacy self-test for the migrated **ultracode engine** (`scripts/workflows/caa
 
 ## Prerequisites
 
-- `uv` + pytest installed; session effort `max`/`xhigh` (the engine is opus-only).
+- `uv` + pytest installed; session effort `max`/`xhigh` (the engine is opus-only). The **engine half
+  requires the `Workflow` tool** (ultracode); without it that half is SKIPPED — the script half still runs.
 - Write access to `<main-repo-root>/reports/code-auditor-agent/efficacy-audit/`.
 
 ## Instructions
 
 1. `MAIN_ROOT="$(git worktree list | head -n1 | awk '{print $1}')"`, `TS="$(date +%Y%m%d_%H%M%S%z)"`.
 2. **Script half:** from `$MAIN_ROOT` run `uv run pytest tests/integration/test_pipeline_efficacy.py -v --tb=short > "/tmp/ecaa-$TS-pytest.log" 2>&1` (do NOT abort on non-zero — record it).
-3. **Engine half:** resolve the fixture files (`git -C "$MAIN_ROOT" ls-files "skills/ecaa-self-test-24/references/fixtures"` → absolute paths). Invoke the engine with EVERY domain lens active:
+3. **Engine half (requires ultracode):** if you do NOT have the `Workflow` tool (ultracode disabled, or a
+   nested session), the engine self-test cannot run — record the engine half as **SKIPPED (ultracode required)**,
+   note it in the verdict, and continue to the assertions with engine findings treated as unavailable. The
+   simple-scan fallback is NOT a substitute here: this gate exists to test the ultracode ENGINE specifically.
+   Otherwise, resolve the fixture files (`git -C "$MAIN_ROOT" ls-files "skills/ecaa-self-test-24/references/fixtures"` → absolute paths) and invoke the engine with EVERY domain lens active:
    `Workflow({scriptPath: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js", args: {root: "$MAIN_ROOT", files: [<fixture abs paths>], mode: "scan", reportType: "audit", reportSuffix: "ecaa-self-test", runId: "ecaa-$TS", domainLenses: ["docker","solidity","ios-native","graphql","elixir","frontend","monorepo","i18n","l10n","jwt","prompt-injection","logging","mcp-server","api-design","type-design","assumption","function-contract","pre-mortem","architecture-consistency"], lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses", conc: 6}})`.
    No `lensSet` (default `combined`; the engine fail-fasts on unknown values).
 4. **Assert RECALL:** read the consolidated report (`finalReport`). For EACH seeded-bug fixture

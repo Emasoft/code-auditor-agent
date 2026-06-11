@@ -20,14 +20,16 @@ mismatch classes) — reduced into one PR-review comment with a PASS / CONDITION
 
 ## Prerequisites
 
-- Session effort `max` (preferred) or `xhigh` — the engine is opus-only and `/caa-pr-review` halts below xhigh.
+- Session effort `max` (preferred) or `xhigh` for the **ultracode** path (opus-only). Without ultracode
+  (no `Workflow` tool, or `CAA_ULTRACODE` disabled) `/caa-pr-review` falls back to a simple inline review at any effort.
 - `gh` CLI authenticated and the PR on GitHub (the command resolves the diff + description via `gh`).
 - The `/caa-pr-review` command available.
 
 ## Instructions
 
-1. Confirm session effort is `max` (preferred) or `xhigh` — the engine is opus-only and `/caa-pr-review`
-   halts below `xhigh`. Raise with `/effort max` if needed.
+1. For the ultracode path, confirm session effort is `max` (preferred) or `xhigh` — opus-only, halts
+   below `xhigh`; raise with `/effort max`. If the `Workflow` tool is unavailable or `CAA_ULTRACODE`
+   disables ultracode, `/caa-pr-review` runs the simple-scan fallback at any effort.
 2. Run `/caa-pr-review <pr-number>` (optionally `conc=N`). The command resolves the PR diff + description
    via `gh`, treats them as UNTRUSTED input, and runs the engine's `pr` lens-set.
 3. The consolidated PR-review comment lands in `reports/code-auditor-agent/<timestamp>-pr-<N>-review.md`.

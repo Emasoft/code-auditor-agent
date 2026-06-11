@@ -20,8 +20,9 @@ command directly:
 ## Orchestrator contract
 
 1. Redirect to **`/caa-delta`**, passing through the `ref` and `deps` from `$ARGUMENTS`.
-2. Follow `/caa-delta`'s contract verbatim (effort guard → delta scope resolution → `Workflow({scriptPath:
-   "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js", args})` → present + temp purge).
+2. Follow `/caa-delta`'s contract verbatim — its Step A picks the path (ultracode engine when the
+   `Workflow` tool is available and `CAA_ULTRACODE` is not disabled, else the simple-scan fallback),
+   then delta scope resolution → run the audit → present + temp purge.
 3. The single consolidated report lands in `reports/code-auditor-agent/`.
 
 There is no separate logic here — the audit lives ONLY in `scripts/workflows/caa-engine.js`. A delta is NOT a

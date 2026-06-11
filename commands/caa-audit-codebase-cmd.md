@@ -21,8 +21,9 @@ hand-orchestrated multi-phase pipeline is retired. Use the command that matches 
 
 1. Map the request to the right new command (table above): `fix` in `$ARGUMENTS` → `/caa-scan-and-fix`,
    otherwise `/caa-scan`. Pass through any path/glob scope and `conc=N`.
-2. Follow that command's contract verbatim (effort guard → scope resolution → `Workflow({scriptPath:
-   "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js", args})` → present + temp purge).
+2. Follow that command's contract verbatim — its Step A picks the path (ultracode engine when the
+   `Workflow` tool is available and `CAA_ULTRACODE` is not disabled, else the simple-scan fallback),
+   then scope resolution → run the audit → present + temp purge.
 3. The single consolidated report lands in `reports/code-auditor-agent/`.
 
 There is no separate logic here — the audit lives ONLY in `scripts/workflows/caa-engine.js`. **Never** use
