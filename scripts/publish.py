@@ -50,27 +50,22 @@ BLUE = "\033[0;34m" if _USE_COLOR else ""
 BOLD = "\033[1m" if _USE_COLOR else ""
 NC = "\033[0m" if _USE_COLOR else ""
 
-# -- Lazy gitignore filter -----------------------------------------------------
-
-_gi = None
+# -- Tracked-file listing (replaces the removed vendored GitignoreFilter) -------
 
 
-def _get_gi(plugin_root: Path):  # noqa: ANN202
-    """Get or create GitignoreFilter for the plugin root."""
-    global _gi  # noqa: PLW0603
-    if _gi is None:
-        # Ensure scripts/ is on sys.path so bare import works
-        _scripts_dir = str(Path(__file__).parent)
-        if _scripts_dir not in sys.path:
-            sys.path.insert(0, _scripts_dir)
-        try:
-            from gitignore_filter import GitignoreFilter  # noqa: E402
+def _tracked_py_files(plugin_root: Path) -> list[Path]:
+    """Tracked *.py files via `git ls-files` — the de-vendored gitignore filter.
 
-            _gi = GitignoreFilter(plugin_root)
-        except ImportError:
-            # Fallback: return plugin_root directly (no filtering)
-            return plugin_root
-    return _gi
+    Tracked files are by definition the non-gitignored set the plugin ships
+    (reports_dev/, .venv/, scratch files never appear), and the publish
+    pipeline already hard-requires git, so this needs no fallback: if git
+    fails here the publish must stop anyway (fail-fast).
+    """
+    r = subprocess.run(
+        ["git", "-C", str(plugin_root), "ls-files", "-z", "--", "*.py"],
+        capture_output=True, text=True, timeout=60, check=True,
+    )
+    return [plugin_root / p for p in r.stdout.split("\0") if p]
 
 
 # -- Helpers -------------------------------------------------------------------
@@ -222,13 +217,7 @@ def update_python_versions(
 ) -> list[tuple[bool, str]]:
     """Update __version__ variables in Python files."""
     results: list[tuple[bool, str]] = []
-    gi = _get_gi(plugin_root)
-    # Use rglob from gitignore filter if available, else fallback
-    glob_source = gi if hasattr(gi, "rglob") else plugin_root
-    for py_file in glob_source.rglob("*.py"):
-        py_path = (
-            Path(py_file) if not isinstance(py_file, Path) else py_file
-        )
+    for py_path in _tracked_py_files(plugin_root):
         parts_set = set(py_path.relative_to(plugin_root).parts)
         if parts_set & _EXCLUDE_DIRS or any(
             p.startswith(".") for p in py_path.relative_to(plugin_root).parts
@@ -347,12 +336,7 @@ def check_version_consistency(
                 pass
 
     # Python __version__ variables
-    gi = _get_gi(plugin_root)
-    glob_source = gi if hasattr(gi, "rglob") else plugin_root
-    for py_file in glob_source.rglob("*.py"):
-        py_path = (
-            Path(py_file) if not isinstance(py_file, Path) else py_file
-        )
+    for py_path in _tracked_py_files(plugin_root):
         parts_set = set(py_path.relative_to(plugin_root).parts)
         if parts_set & _EXCLUDE_DIRS or any(
             p.startswith(".")
@@ -873,11 +857,15 @@ def phase0_preflight(root: Path) -> bool:
     # 0.7 Required CLI tools
     print(f"\n  {BLUE}[0.7]{NC} Required CLI tools...")
     missing_tools: list[str] = []
+    # Install hints are PLAIN URLS on purpose: the previous "curl … | sh" hint strings were
+    # pure data (never executed) but carried the pipe-to-shell SHAPE, so every security
+    # scanner flagged them as command injection. A docs link helps the user just as much
+    # and is provably inert.
     for tool, install_hint in (
         ("git-cliff", "brew install git-cliff OR cargo install git-cliff"),
         ("gh", "brew install gh"),
-        ("uvx", "curl -LsSf https://astral.sh/uv/install.sh | sh"),
-        ("uv", "curl -LsSf https://astral.sh/uv/install.sh | sh"),
+        ("uvx", "install uv (provides uvx): https://docs.astral.sh/uv/getting-started/installation/"),
+        ("uv", "install uv: https://docs.astral.sh/uv/getting-started/installation/"),
     ):
         if not shutil.which(tool):
             missing_tools.append(f"{tool} — install via: {install_hint}")
@@ -1014,31 +1002,25 @@ def phase1_validate(root: Path) -> bool:
                 )
 
     # 1.1 Lint (MANDATORY — cannot be skipped)
-    print(f"\n  {BLUE}[1.1]{NC} Lint files (mandatory)...")
-    lint_script = root / "scripts" / "lint_files.py"
-    if not lint_script.exists():
-        print(
-            f"  {RED}x scripts/lint_files.py not found. "
-            f"Restore it before publishing.{NC}",
-            file=sys.stderr,
-        )
+    # ruff directly: the vendored lint_files.py wrapper was removed with the rest of the
+    # local CPV validator copies (2026-06-11 de-vendoring, user-directed) — anything beyond
+    # ruff (markdown/yaml/manifest checks) is the CPV remote gate's job in step 1.2.
+    print(f"\n  {BLUE}[1.1]{NC} Lint files (ruff, mandatory)...")
+    r = _run_quiet(
+        ["uv", "run", "ruff", "check", str(root)],
+        cwd=root, timeout=120,
+    )
+    if r.returncode != 0:
+        print(f"  {RED}x Linting failed:{NC}", file=sys.stderr)
+        if r.stdout.strip():
+            for line in r.stdout.strip().splitlines()[-20:]:
+                print(f"    {line}")
+        if r.stderr.strip():
+            for line in r.stderr.strip().splitlines()[-10:]:
+                print(f"    {line}", file=sys.stderr)
         errors += 1
     else:
-        r = _run_quiet(
-            ["uv", "run", "python", str(lint_script), str(root)],
-            cwd=root, timeout=120,
-        )
-        if r.returncode != 0:
-            print(f"  {RED}x Linting failed:{NC}", file=sys.stderr)
-            if r.stdout.strip():
-                for line in r.stdout.strip().splitlines()[-20:]:
-                    print(f"    {line}")
-            if r.stderr.strip():
-                for line in r.stderr.strip().splitlines()[-10:]:
-                    print(f"    {line}", file=sys.stderr)
-            errors += 1
-        else:
-            print(f"  {GREEN}ok Linting passed{NC}")
+        print(f"  {GREEN}ok Linting passed{NC}")
 
     # 1.2 Validate plugin (strict) via uvx remote execution
     print(f"\n  {BLUE}[1.2]{NC} Validate plugin (strict via CPV remote)...")
@@ -1052,7 +1034,9 @@ def phase1_validate(root: Path) -> bool:
                 "uvx", "--from", CPV_REPO, "--with", "pyyaml",
                 "cpv-remote-validate", "plugin", str(root), "--strict",
             ],
-            cwd=root, timeout=180,
+            # 600s: a COLD uvx pull of the CPV repo + the full scanner chain has been
+            # observed to exceed 3 minutes — 180s produced false gate timeouts.
+            cwd=root, timeout=600,
         )
         if r.returncode != 0:
             sev_map = {
@@ -1077,9 +1061,13 @@ def phase1_validate(root: Path) -> bool:
         else:
             print(f"  {GREEN}ok Plugin validation passed (strict){NC}")
     else:
+        # Plain URL, never "curl … | sh" — same install-hint policy as the
+        # centralized hint table above (see comment near the AVAILABILITY
+        # checks). This inline hint was the one the migration's devitalization
+        # missed; keep it a URL so the security scanner sees inert data.
         print(
-            f"  {RED}x uvx not found — install uv: "
-            f"curl -LsSf https://astral.sh/uv/install.sh | sh{NC}",
+            f"  {RED}x uvx not found — install uv (provides uvx): "
+            f"https://docs.astral.sh/uv/getting-started/installation/{NC}",
             file=sys.stderr,
         )
         errors += 1

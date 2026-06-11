@@ -1,94 +1,62 @@
 ---
 name: caa-pr-review-and-fix-skill
-description: >
-  Trigger with "review and fix the PR", "audit and fix the PR", "pre-merge review and fix".
-  Use when reviewing and fixing PRs with automated iterative resolution.
+description: "Trigger with 'review and fix the PR', 'review the PR and apply fixes', 'pre-merge review and fix'. Use when reviewing a GitHub PR AND then applying root-cause fixes to its changed files."
 version: 3.4.4
 author: Emasoft
 license: MIT
-tags: [caa-pr-review, code-audit, claim-verification, quality-gate, auto-fix]
+tags: [caa-pr-review, ultracode, fix, claim-verification, cross-layer]
 effort: high
-allowed-tools: "Read, Write, Edit, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(gh:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 
-# PR Review And Fix
+# PR Review & Fix (ultracode)
 
 ## Overview
 
-Iterative review-and-fix: six-phase review (P1, Phase 4 security scan is MANDATORY) then fix+test+commit (P2), repeating up to 25 passes.
+Two-step ultracode flow on `scripts/workflows/caa-engine.js`: first review the PR (`pr` lens-set), then apply
+root-cause fixes to the changed files (scan-and-fix mode, in-place per-file, fix-verified). Both steps
+write their consolidated report to `reports/code-auditor-agent/`.
 
 ## Prerequisites
 
-`gh` authenticated, PR on GitHub, `reports/code-auditor/` exists, `${CLAUDE_PLUGIN_ROOT}` set, `scripts/caa-merge-reports.py`
+- Session effort `max` (preferred) or `xhigh` — the engine is opus-only; the commands halt below xhigh.
+- `gh` CLI authenticated and the PR on GitHub (for the review step).
+- A clean working tree or a feature branch before the fix step (fixes edit files in place).
+- The `/caa-pr-review` and `/caa-scan-and-fix` commands available.
 
 ## Instructions
 
-1. Initialize `PASS_NUMBER=1`, `MAX_PASSES=25`. Read critical-rules.md first.
-2. Run **PROCEDURE 1** (six-phase review): see procedure-1-review.md.
-3. If zero issues found, write final report and exit with APPROVE.
-4. If `PASS_NUMBER > MAX_PASSES`, write escalation report and exit.
-5. Run **PROCEDURE 2** (fix cycle): see procedure-2-fix.md.
-6. Increment `PASS_NUMBER`, go to step 2.
+1. Confirm session effort is `max` (preferred) or `xhigh` — the engine is opus-only; the commands halt
+   below `xhigh`. Raise with `/effort max` if needed.
+2. **Review:** run `/caa-pr-review <pr-number>` → PR-review comment with a PASS/CONDITIONAL/FAIL verdict.
+3. **Fix (only after the user reviews the verdict):** ensure the working tree is clean / on a feature
+   branch, then run `/caa-scan-and-fix` on the PR's changed files. Each fixer owns one file (in-place, no
+   conflict); fix-verify confirms each fix; the user reviews `git diff` before committing. NEVER auto-commit/push.
 
 ## Output
 
-- [Output Format](references/output-format.md):
-  - Deliverables Table, Key Outputs for the User
+A PR-review report and (after the fix step) a fix report, both in `reports/code-auditor-agent/`.
 
 ## Error Handling
 
-- [Error Handling](references/error-handling.md):
-  - Error Recovery by Phase
-- [Agent Recovery](references/agent-recovery.md):
-  - Failure Modes & Detection, Step 1: Detect the Loss, Step 2: Verify the Loss, Step 3: Clean Up Partial Artifacts
-  - Step 4: Re-Spawn the Task, Step 5: Record the Failure, Special Cases, Lost during context compaction
-  - Agent wrote report with wrong pass number (version/cache collision), Agent Recovery Checklist
-  - Multiple correctness agents for the same domain (domain label collision), Test runner left no report but tests actually ran
+Robust by construction. The fix step edits files in place — the working-tree-clean guard + the
+review-the-diff step prevent unreviewed changes; failures are reported under "Needs follow-up".
 
 ## Checklist
 
 Copy this checklist and track your progress:
 
-- [ ] All passes completed, zero issues
-- [ ] Final report in reports/code-auditor/
+- [ ] Session effort is max/xhigh
+- [ ] Review run first; verdict relayed
+- [ ] Working tree clean / feature branch before fixing
+- [ ] Fixes applied in place + fix-verified; user reviews diff; not auto-committed
 
 ## Examples
 
 ```
-Input: "review and fix PR 206"
-Output: Pass 1: 8 issues fixed. Pass 2: 2 regressions. Pass 3: 0 issues → APPROVE.
+"review and fix PR 206"   → /caa-pr-review 206, then /caa-scan-and-fix <changed files>
 ```
 
 ## Resources
 
-- [Procedure 1: Code Review](references/procedure-1-review.md):
-  - Pre-Pass Cleanup (MANDATORY), Agent Manifest, Prerequisites, Phase 1: Code Correctness Swarm
-  - Phase 2: Claim Verification, Phase 3: Skeptical Review, Phase 4: Security Review
-  - Phase 5: Merge Reports + Deduplicate, Phase 6: Present Results, Procedure 1 Checklist
-- [Procedure 2: Code Fix](references/procedure-2-fix.md):
-  - Agent Selection (Dynamic), Fix Protocol, Linting Step (Docker Required)
-  - Commit After Fixes, Procedure 2 Output, Procedure 2 Checklist
-- [Pass Counter](references/pass-counter.md):
-  - Initialization, Run ID Generation, Pass Increment and Limit
-- [Loop Termination](references/loop-termination.md):
-  - Termination Logic, Final Report Format
-- [Report Naming](references/report-naming.md):
-  - Canonical Pattern, Main-Root Resolution (Worktree-Safe), Timestamp Format
-  - PIPELINE_TS vs Per-Agent TS, Filename Table, Agent-Prefixed Finding IDs, Pre-Pass Cleanup
-- [Critical Rules](references/critical-rules.md):
-  - Rule 1: Never Skip Phases, Rule 2: Phase Order Matters, Rule 3: UUID-Named Files
-  - Rule 4: Two-Stage Merge, Rule 5: Dedup Agent Determines Verdict, Rule 6: Fix All Severities
-  - Rule 7: Commit After Each Fix Pass, Rule 8: Maximum 25 Passes, Rule 9: Agent-Prefixed Finding IDs
-  - Rule 10: UUID-Based Report Filenames, Rule 11: Same Line Different Bugs
-  - Rule 12: Merge Script Verifies Before Deleting, Rule 13: Linting Is Conditional on Docker
-  - Rule 14: Lint-Fix Loop Is Separate
-- [Model Selection](references/model-selection.md):
-  - Rules
-- [Worktree Mode](references/worktree-mode.md):
-  - How It Works, Prerequisites for Worktree Mode, When NOT to Use Worktrees
-- [Rationale](references/rationale.md):
-  - The Incident, Four Complementary Review Perspectives
-- [Lessons Learned](references/lessons-learned.md):
-  - Review Architecture Lessons, Fix Cycle Lessons, Pipeline Robustness Lessons, Lessons Learned Review Checklist
-- [Examples](references/examples.md):
-  - Full Review-and-Fix Pipeline
+- `scripts/workflows/caa-engine.js` — canonical engine (`pr` lens-set + scan-and-fix mode).
+- Commands: `/caa-pr-review`, `/caa-scan-and-fix`.

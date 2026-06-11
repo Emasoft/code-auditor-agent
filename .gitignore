@@ -76,5 +76,3 @@ llm_externalizer_output/
 # TLDR artifacts
 .tldrignore
 .tldr_session_*
-/reports/
-/reports_dev/

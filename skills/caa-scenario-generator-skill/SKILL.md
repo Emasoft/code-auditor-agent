@@ -3,7 +3,7 @@ name: caa-scenario-generator-skill
 description: >
   Trigger with "/caa-extended-audit", "generate scenarios", "discover entry
   points". Use when an extended audit needs end-to-end scenario walks beyond
-  line review. Emits scenarios.json for caa-scenario-walker-agent.
+  line review. Emits scenarios.json for the ultracode engine's scenario-walk lens.
 version: 3.4.4
 author: Emasoft
 license: MIT
@@ -40,7 +40,7 @@ TRDD-6857f67f §3.1 for the full design.
 ## Output
 
 Two timestamped files under `<main-repo>/reports/caa-scenario-generator/`:
-- `<ts>-scenarios.json` — universal schema (§3.1.d), consumed by caa-scenario-walker-agent.
+- `<ts>-scenarios.json` — universal schema (§3.1.d), consumed by the engine's `scenario-walk` lens (`scripts/workflows/lenses/scenario-walk.lens.md`).
 - `<ts>-scenarios.md` — human-readable index grouped by type × family.
 
 Plus `<ts>-detected-types.json` recording which types matched and why. Details:
@@ -99,7 +99,7 @@ Copy this checklist and track your progress:
 
 ```
 User: /caa-audit-codebase --extended
-Orchestrator: Skill(caa-scenario-generator-skill, args="/path/to/codebase")
-Skill: emits scenarios.json + detected-types.json → returns paths
-Orchestrator: spawns caa-scenario-walker-agent swarm consuming scenarios.json
+Orchestrator: invokes the caa-scenario-generator-skill with args="/path/to/codebase"
+The skill emits scenarios.json + detected-types.json → returns paths
+Orchestrator: runs /caa-scan --extended → the engine's scenario-walk lens consumes scenarios.json
 ```

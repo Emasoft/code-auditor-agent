@@ -1,73 +1,29 @@
 ---
 name: caa-delta-audit-cmd
 description: >
-  Run an incremental audit of only the files changed since a previous audit or commit.
-  Finds changed files via git diff, traces their dependents, and audits only that subset.
-  Merges delta findings with a previous full audit report. NOT a substitute for full audit.
-trigger:
-  - "/delta-audit"
-  - "audit the changes"
-  - "audit the delta"
-  - "audit recent changes"
-  - "incremental audit"
-parameters:
-  - name: scope
-    description: Directory path to audit
-    required: true
-  - name: since
-    description: "Git ref to diff against (commit SHA, tag, or branch). Default: last tagged audit"
-    required: false
-  - name: fix
-    description: Enable fix phases (6-7)
-    required: false
-    default: "false"
-  - name: previous-report
-    description: "Path to previous full audit report to merge delta findings into"
-    required: false
-  - name: report-dir
-    description: "Directory for reports (default: reports/code-auditor/)"
-    required: false
-    default: "reports/code-auditor/"
-  - name: extended
-    description: >
-      Add scenario-walker + assumption-auditor swarms scoped to the delta
-      (TRDD-6857f67f). Runs caa-scenario-generator-skill in delta mode —
-      scenarios are emitted only for entry points that the changed files
-      participate in. Assumption auditor runs only on changed files. Same
-      cross-category consolidation as /audit-codebase --extended.
-    required: false
-    default: "false"
+  Legacy alias for the incremental (changed-since-a-ref) ultracode audit. Superseded by /caa-delta.
+  Kept so existing "audit the changes" / "incremental audit" muscle memory still resolves; it simply
+  redirects to the new ultracode command.
+argument-hint: "[ref] [deps] [fix]"
 ---
 
-# Delta Audit (Incremental)
+# Delta Audit (legacy alias → ultracode)
 
-This command audits ONLY files changed since a previous point in git history. It is NOT a substitute for a full codebase audit — it is an incremental update between full audits.
+This command has been migrated to the **ultracode engine** (`scripts/workflows/caa-engine.js`). Use the new
+command directly:
 
-## Usage
+- **Audit files changed since a ref** (default `origin/main`, fallback `HEAD~1`), optionally including
+  their direct dependents → run **`/caa-delta [ref] [deps]`**.
+- To also **fix** the delta → run `/caa-delta`, then `/caa-scan-and-fix` on the changed files (review the
+  diff before committing).
 
-```
-/delta-audit --scope ./src --since v3.2.0
-/delta-audit --scope ./src --since HEAD~10 --fix
-/delta-audit --scope . --since abc123def --previous-report reports/code-auditor/20260315_120000+0000-caa-audit-FINAL.md
+## Orchestrator contract
 
-# Extended delta — scenario walker + assumption auditor on the delta only
-/delta-audit --scope ./src --since v3.2.0 --extended
-```
+1. Redirect to **`/caa-delta`**, passing through the `ref` and `deps` from `$ARGUMENTS`.
+2. Follow `/caa-delta`'s contract verbatim (effort guard → delta scope resolution → `Workflow({scriptPath:
+   "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js", args})` → present + temp purge).
+3. The single consolidated report lands in `reports/code-auditor-agent/`.
 
-## What Happens
-
-1. Identify changed files: `git diff --name-only {since}` within `--scope`
-2. Trace dependents: find files that import/reference the changed files
-3. Combine changed files + dependents into the delta audit scope
-4. Run the standard Phase 1-7 pipeline on this reduced scope
-5. If `--extended`: scenario-generator runs in delta mode — emits scenarios
-   only for entry points participating in the changed files. Walker swarm
-   processes those scenarios; assumption-auditor swarm processes the changed
-   files. Cross-category findings merged at consolidation.
-6. If `--previous-report` is provided, merge delta findings with the previous report
-
-## Limitations
-
-- Misses issues in unchanged files that interact with changed code
-- Does not detect new cross-file inconsistencies in unchanged code
-- Always run a full `/audit-codebase` periodically (recommended: weekly or per milestone)
+There is no separate logic here — the audit lives ONLY in `scripts/workflows/caa-engine.js`. A delta is NOT a
+substitute for a full audit (unchanged files that interact with the change are not covered; `deps`
+mitigates). **Never** use llm-externalizer. opus-only at `xhigh`/`max` effort.

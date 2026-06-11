@@ -1,93 +1,74 @@
 ---
 name: caa-codebase-audit-and-fix-skill
-description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit'. Use when auditing a codebase for compliance violations, generating TODOs, or applying automated fixes."
+description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit', 'scan and fix the code'. Use when auditing a codebase (whole, scoped, or changed-since-a-ref) and optionally applying fixes."
 version: 3.4.4
 author: Emasoft
 license: MIT
-tags: [codebase-audit, compliance, todo-generation, iterative-fix]
+tags: [codebase-audit, ultracode, scan, scan-and-fix, delta]
 effort: high
-allowed-tools: "Read, Write, Glob, Grep, Bash(uv:*), Bash(git:*), Bash(python:*), Agent, WebFetch, mcp__plugin_llm-externalizer_llm-externalizer__*"
 ---
 
-# Codebase Audit And Fix
+# Codebase Audit & Fix (ultracode)
 
 ## Overview
 
-10-phase pipeline auditing every file against a reference standard with grep triage, batch processing, multi-wave verification, gap-fill, and optional automated fixes.
+This capability now runs on the **ultracode engine** (`scripts/workflows/caa-engine.js`): a deterministic
+map → filter → reduce over a swarm of opus agents (one auditor per file, cache-shared prompt with
+the target path read last; adversarial per-file verify; one consolidated report). It replaces the
+former hand-orchestrated multi-phase pipeline. Pick the command that matches the scope:
+
+| You want to… | Command |
+|---|---|
+| Audit the WHOLE repo (or an explicit path/glob), scan-only | `/caa-scan` |
+| Audit AND apply root-cause fixes (in place, fix-verified) | `/caa-scan-and-fix` |
+| Audit only files changed since a git ref (+ optional dependents) | `/caa-delta` |
+| Gate the STAGED files before a commit (PASS/FAIL) | `/caa-precommit` |
 
 ## Prerequisites
 
-| Agent | Phase | Purpose |
-|-------|-------|---------|
-| `caa-domain-auditor-agent` | 1, 3 | Discovery and gap-fill auditing |
-| `caa-verification-agent` | 2, 3 | Cross-check and missed-file detection |
-| `caa-consolidation-agent` | 4 | Merge, dedup, classify findings |
-| `caa-security-review-agent` | 4b | Vulnerabilities, secrets, CVEs |
-| `caa-todo-generator-agent` | 5 | Actionable TODO generation |
-| `caa-fix-agent` | 6 | Implement fixes with checkpoints |
-| `caa-fix-verifier-agent` | 7 | Verify fixes, detect regressions |
-
-Requires: Python 3.12+, `uv`, Git repo. Uses `${CLAUDE_PLUGIN_ROOT}` for scripts, `${CLAUDE_SKILL_DIR}` for reference docs, `${CLAUDE_PLUGIN_DATA}` for persistent audit state.
+- Session effort `max` (preferred) or `xhigh` — the engine is opus-only and the commands halt below xhigh.
+- The ultracode commands available: `/caa-scan`, `/caa-scan-and-fix`, `/caa-delta`, `/caa-precommit`.
+- A git repository; `uv` available for any script steps.
 
 ## Instructions
 
-1. Set `SCOPE_PATH`, `REFERENCE_STANDARD`, generate `RUN_ID` (8 hex).
-2. P0: Inventory all files, create 3-4 file batches per domain.
-3. P1: Spawn `caa-domain-auditor-agent` swarms on each batch.
-4. P2: Spawn `caa-verification-agent` to cross-check reports.
-5. P3: Gap-fill any missed files with additional audit waves.
-6. P4: Consolidate per-domain, then run P4b security scan (MANDATORY).
-7. P5: Generate actionable TODOs via `caa-todo-generator-agent`.
-8. P6-P7: If `FIX_ENABLED=true`, apply fixes and verify (else skip).
-9. P8: Compile final report. See [instructions](references/instructions.md).
+1. Confirm the session effort is `max` (preferred) or `xhigh` — the engine is opus-only and the
+   commands halt below `xhigh`. Raise with `/effort max` if needed.
+2. Invoke the command matching the requested scope (table above), passing any path/glob scope and
+   `conc=N` the user specified. The command resolves the file scope and runs the engine.
+3. The engine writes intermediates to a temp dir and the ONE consolidated report to
+   `reports/code-auditor-agent/<timestamp>-<suffix>.md`. Relay the verdict/summary + the report path.
 
 ## Output
 
-Produces a consolidated audit report in `reports/code-auditor/` with per-domain findings, a TODO list, and a final summary. See [output format](references/output-format.md).
+A single consolidated report in `reports/code-auditor-agent/` (audit summary, or PASS/FAIL gate, or
+fix report for scan-and-fix). The engine returns `{finalReport, fixReport?}`.
 
 ## Error Handling
 
-On agent failure, retry with checkpoint recovery. See [error handling](references/error-handling.md).
-
-## Examples
-
-```
-Input: /audit-codebase with SCOPE_PATH=src/, FIX_ENABLED=false
-Output: Audit report in reports/code-auditor/ with per-domain findings and TODO list
-```
-
-```
-Input: /audit-codebase with FIX_ENABLED=true, MAX_FIX_PASSES=3
-Output: All 9 phases run; fixes applied, verified, final report generated
-```
+The engine is robust by construction (`.catch`-wrapped agents; rate-limit re-queue at a halved cap;
+cap-then-report — never hard-fail). A file that can't be verified/fixed is reported under
+"Needs follow-up", never silently dropped.
 
 ## Checklist
 
 Copy this checklist and track your progress:
 
-- [ ] All files in SCOPE_PATH audited (0 missed)
-- [ ] Security scan (P4b) completed
-- [ ] TODO list generated and saved
-- [ ] Final report compiled in reports/code-auditor/
+- [ ] Session effort is max/xhigh
+- [ ] Correct command chosen for the scope
+- [ ] Consolidated report landed in reports/code-auditor-agent/
+- [ ] Verdict/summary + report path relayed to the user
+
+## Examples
+
+```
+"audit the codebase"          → /caa-scan
+"scan and fix scripts/"       → /caa-scan-and-fix scripts/
+"audit the recent changes"    → /caa-delta
+"check the staged files"      → /caa-precommit
+```
 
 ## Resources
 
-- [Instructions](references/instructions.md)
-  - Phase Steps, Parameters, Pipeline, Report Naming
-  - Finding IDs, Spawning Patterns, Fix Agent Worktree Merge-Back, Loop Termination
-- [Output Format](references/output-format.md)
-  - Pipeline artifacts and report structure
-- [Model Selection](references/model-selection.md)
-  - Model requirements per agent
-- [Error Handling](references/error-handling.md)
-  - Recovery strategies and retry logic
-- [Completion Checklist](references/completion-checklist.md)
-  - Progress tracking criteria
-- [Remote Scanning](references/remote-scanning.md)
-  - Local Clone Method, API-Only Method
-- [Monorepo & Workspaces](references/monorepo.md)
-  - Workspace detection and audit strategy
-- [Large Codebase Strategy](references/large-codebase.md)
-  - Full Coverage (Default), Automated Triage for Prioritization, Checkpoint and Resume
-- [Delta Audit Mode](references/delta-audit.md)
-  - When to Use Delta Mode, Delta Audit Workflow
+- `scripts/workflows/caa-engine.js` — the canonical ultracode audit engine (single source of truth).
+- Commands: `/caa-scan`, `/caa-scan-and-fix`, `/caa-delta`, `/caa-precommit`.

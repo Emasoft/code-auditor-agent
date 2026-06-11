@@ -31,43 +31,11 @@ target-version = "py312"
 # Honour the exclude list even when files are passed explicitly on the CLI
 # (CPV validator does this for fixture files we want skipped).
 force-exclude = true
-# Exclude CPV-upstream scripts (from claude-plugins-validation — do not lint locally)
+# The plugin vendors NO CPV validator scripts (de-vendored 2026-06-11): validation and
+# repo-lint run via `uvx … cpv-remote-validate`. Only genuinely-special paths are excluded.
 extend-exclude = [
-    "scripts/validate_*.py",
-    "scripts/manage_*.py",
-    "scripts/standardize_*.py",
-    "scripts/generate_*.py",
-    "scripts/cpv_*.py",
-    "scripts/lint_files.py",
-    "scripts/smart_exec.py",
-    "scripts/gitignore_filter.py",
+    # CPV-templated hook installer kept as-is (do not diverge from the upstream template).
     "scripts/setup_git_hooks.py",
-    "scripts/setup_plugin_pipeline.py",
-    "scripts/setup_marketplace_automation.py",
-    "scripts/update_marketplace_metadata.py",
-    "scripts/claude-plugin-install.py",
-    # Additional CPV-upstream scripts synced via sync_cpv_scripts.py —
-    # fixing them locally would diverge from upstream and break sync.
-    "scripts/_plugin_compute_hashes.py",
-    "scripts/_plugin_verify_hashes.py",
-    "scripts/_minimal_yaml.py",
-    "scripts/add_component.py",
-    "scripts/add_dependencies.py",
-    "scripts/bench_fp_classifier.py",
-    "scripts/bump_version.py",
-    "scripts/cc_scope_rules.py",
-    "scripts/check_version_consistency.py",
-    "scripts/cli.py",
-    "scripts/compute_cpv_self_hashes.py",
-    "scripts/detect_language.py",
-    "scripts/detect_lockfiles.py",
-    "scripts/remote_validation.py",
-    "scripts/set_marketplace_pat.py",
-    "scripts/sync_cpv_scripts.py",
-    # CAA-owned CLI scripts intentionally named with hyphens for the
-    # /caa-* command convention — N999 'invalid module name' triggers
-    # but those files are scripts, not modules, and are never imported.
-    "scripts/caa-*.py",
     # Fixture files for ecaa-self-test-24 — they intentionally contain
     # the very bugs each detector is supposed to catch. Linting them
     # would defeat their purpose.

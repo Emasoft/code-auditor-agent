@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Pre-commit hook for claude-plugins-validation.
+"""Pre-commit hook for code-auditor-agent.
 
-Validates plugin structure before allowing commits.
+Validates plugin structure before allowing commits, by invoking the CPV
+plugin remotely (uvx cpv-remote-validate) — the plugin vendors NO local
+validator scripts.
 
-Exit codes from validate_plugin.py:
+Exit codes from cpv-remote-validate:
   0 - All checks passed
   1 - CRITICAL issues found (blocks commit)
   2 - MAJOR issues found (blocks commit)
@@ -77,13 +79,6 @@ def is_plugin_file(filepath: str) -> bool:
     return False
 
 
-def find_python_command() -> list[str]:
-    """Find the best Python command to use: prefer `uv run python`, fall back to `python3`."""
-    if shutil.which("uv") is not None:
-        return ["uv", "run", "python"]
-    return ["python3"]
-
-
 CPV_REPO = "git+https://github.com/Emasoft/claude-plugins-validation"
 
 
@@ -133,10 +128,12 @@ def main() -> int:
                 "cpv-remote-validate", "plugin", str(repo_root),
             ],
             cwd=str(repo_root),
-            timeout=180,
+            # 600s: a COLD uvx pull of the CPV repo + the full scanner chain has been
+            # observed to exceed 3 minutes — 180s produced false timeouts.
+            timeout=600,
         )
     except subprocess.TimeoutExpired:
-        print(f"{RED}ERROR: Validation timed out after 180 seconds. Blocking commit.{NC}")
+        print(f"{RED}ERROR: Validation timed out after 600 seconds. Blocking commit.{NC}")
         return 1
     validation_exit_code = validation_result.returncode
 

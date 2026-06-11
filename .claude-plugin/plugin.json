@@ -1,7 +1,7 @@
 {
   "name": "code-auditor-agent",
   "version": "3.4.4",
-  "description": "Six-phase PR review pipeline and 10-phase codebase audit pipeline for Claude Code. PR review: code correctness swarm, claim verification, skeptical external review, security analysis with deduplication. Includes iterative fix loop for automated resolution. Codebase audit: file inventory, grep triage, parallel discovery swarm, verification, gap-fill, per-domain consolidation, security scan, TODO generation, and optional fix loop with verification.",
+  "description": "Ultracode code-audit engine for Claude Code: one deterministic map-filter-reduce workflow (scripts/workflows/caa-engine.js) drives every operation over swarms of opus agents — pre-commit gate of staged files, whole-codebase or scoped scan, delta recheck since a git ref, scan-and-fix with per-fix adversarial verification, and GitHub PR review with claim-verification and cross-layer lenses plus 21 distilled domain lenses (docker, solidity, iOS, GraphQL, frontend, JWT, prompt-injection, ...). Every finding is adversarially verified before it is reported; one consolidated report plus machine-readable findings.json per run.",
   "author": {
     "name": "Emasoft",
     "email": "713559+Emasoft@users.noreply.github.com"
@@ -20,6 +20,8 @@
     "vulnerability-scanning",
     "codebase-audit",
     "compliance",
-    "todo-generation"
+    "ultracode",
+    "workflow",
+    "pre-commit"
   ]
 }

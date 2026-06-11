@@ -1,0 +1,11 @@
+# Role-Plugin identity file (AI Maestro quad-match — see issue #1).
+# The quad-match rule requires all four to agree:
+#   1. plugin.json "name"                      -> code-auditor-agent
+#   2. <plugin-name>.agent.toml at plugin root -> this file
+#   3. [agent].name in this TOML               -> code-auditor-agent
+#   4. agents/code-auditor-agent-main-agent.md -> the role entry point
+
+[agent]
+name = "code-auditor-agent"
+description = "Ultracode code-audit role — map→filter→reduce opus swarms for pre-commit gates, PR reviews, delta audits, whole-codebase scans, and scan-and-fix. Entry point: agents/code-auditor-agent-main-agent.md."
+main_agent = "agents/code-auditor-agent-main-agent.md"

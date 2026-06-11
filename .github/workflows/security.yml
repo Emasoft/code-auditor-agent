@@ -56,11 +56,19 @@ jobs:
 
       - name: Install TruffleHog
         run: |
-          # Pin to a specific release tag to prevent supply-chain attacks via curl|sh from main
+          # No pipe-to-shell: download the PINNED release tarball, verify its sha256
+          # against the value recorded here from the release's checksums.txt, then
+          # extract. Stronger supply-chain posture than running the upstream install
+          # script, and provably inert to security scanners.
           TRUFFLEHOG_VERSION="3.88.26"
+          TARBALL="trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
+          SHA256="d35ef713f2fc1c7495292bfd31a3a907ef07d7358fe77fd07e879abf7bebbe95"
           INSTALL_DIR="${RUNNER_TOOL_CACHE:-/tmp}/trufflehog"
           mkdir -p "$INSTALL_DIR"
-          curl -sSfL "https://raw.githubusercontent.com/trufflesecurity/trufflehog/v${TRUFFLEHOG_VERSION}/scripts/install.sh" | sh -s -- -b "$INSTALL_DIR" "v${TRUFFLEHOG_VERSION}"
+          curl -sSfL -o "$RUNNER_TEMP/$TARBALL" \
+            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/${TARBALL}"
+          echo "$SHA256  $RUNNER_TEMP/$TARBALL" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$TARBALL" -C "$INSTALL_DIR" trufflehog
           echo "$INSTALL_DIR" >> "$GITHUB_PATH"
 
       - name: Run TruffleHog (secret scanning - advisory)
