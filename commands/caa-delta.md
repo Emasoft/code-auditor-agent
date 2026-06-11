@@ -26,11 +26,15 @@ Also accepts the shared engine knobs — `component=NAME`, `min-severity=SEV`, `
 
 ## Orchestrator contract
 
-### Step A — effort + model guard
+### Step A — choose the execution path, then guard effort
 ```bash
-echo "effort=${CLAUDE_EFFORT:-unknown}"
+echo "effort=${CLAUDE_EFFORT:-unknown}   caa_ultracode=${CAA_ULTRACODE:-auto}"
 ```
-`max`/`xhigh` → proceed; lower/`unknown` → tell the user to `/effort max` (or `xhigh`) and STOP.
+Pick the path per `scripts/workflows/caa-simple-scan.md` ("When this path runs"):
+- **SIMPLE-SCAN** if you do NOT have the `Workflow` tool, OR `CAA_ULTRACODE` ∈ {0,off,false,no}.
+  Effort guard does NOT apply — go to Step B and run the fallback at Step C.
+- **ULTRACODE** otherwise. Effort guard applies: `max`/`xhigh` → proceed; lower/`unknown` → tell the
+  user to `/effort max` (or `xhigh`) and STOP (or set `CAA_ULTRACODE=0` for the simple scan).
 
 ### Step B — resolve the delta scope
 ```bash
@@ -44,7 +48,9 @@ If `deps` was passed, additionally include files that import/reference the chang
 (use Serena `find_referencing_symbols` or grep for imports of each changed module). Resolve
 all to ABSOLUTE paths. Empty set → report "no changes since `<ref>`" and stop.
 
-### Step C — run the shared engine
+### Step C — run the audit (ultracode engine, or simple-scan fallback)
+
+**ULTRACODE path** — run the shared engine:
 ```
 Workflow({
   scriptPath: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js",
@@ -60,6 +66,16 @@ Workflow({
   }
 })
 ```
+If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
+
+**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with:
+```
+{ root: "<ABS_REPO_ROOT>", files: ["<abs>", ...],
+  lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses", projectLenses: ["<lenses>", ...],
+  reportType: "audit", reportSuffix: "delta", scopeLabel: "delta-since-<ref>",
+  diffRef: "<ref>", mode: "scan" }
+```
+Same report shape → `reports/code-auditor-agent/`; Step D reads it identically.
 
 ### Step D — present
 Report `finalReport`'s `SUMMARY:` counts, any non-verified files, and the absolute report
@@ -68,6 +84,8 @@ per-run temp dir the engine returned: `rm -rf "<result.tmpDir>"`.
 
 ## RULES
 - **opus only** (engine pins it); `$CLAUDE_EFFORT` ≥ xhigh (prefer max). Never sonnet/haiku.
+- **Dual-path:** ultracode engine when `Workflow` is available and `CAA_ULTRACODE` is not disabled;
+  else the **simple-scan fallback** (`scripts/workflows/caa-simple-scan.md`). Effort guard = ultracode only.
 - **Single source of truth:** audit logic is ONLY in `scripts/workflows/caa-engine.js`; this command resolves the delta scope + config.
 - **Scan-only** (no edits/git). **Final report → `reports/code-auditor-agent/`;** temp purged in Step D.
 - **NOT a substitute for a full audit** — a delta misses defects in unchanged files that the change interacts with; `deps` mitigates but does not eliminate this. **Never** use llm-externalizer.

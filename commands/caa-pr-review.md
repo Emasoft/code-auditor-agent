@@ -26,11 +26,16 @@ changes); `conc=N` (default 6).
 
 ## Orchestrator contract
 
-### Step A — effort + model guard
+### Step A — choose the execution path, then guard effort
 ```bash
-echo "effort=${CLAUDE_EFFORT:-unknown}"
+echo "effort=${CLAUDE_EFFORT:-unknown}   caa_ultracode=${CAA_ULTRACODE:-auto}"
 ```
-`max`/`xhigh` → proceed; lower/`unknown` → tell the user to `/effort max` (or `xhigh`) and STOP.
+Pick the path per `scripts/workflows/caa-simple-scan.md` ("When this path runs"):
+- **SIMPLE-SCAN** if you do NOT have the `Workflow` tool, OR `CAA_ULTRACODE` ∈ {0,off,false,no}.
+  Effort guard does NOT apply — still do Step B/B2 (resolve the PR + domain lenses), then run the
+  fallback at Step C (it applies the per-file review + the three PR lenses inline).
+- **ULTRACODE** otherwise. Effort guard applies: `max`/`xhigh` → proceed; lower/`unknown` → tell the
+  user to `/effort max` (or `xhigh`) and STOP (or set `CAA_ULTRACODE=0` for the simple PR review).
 
 ### Step B — resolve the PR diff + description + changed files
 ```bash
@@ -60,7 +65,9 @@ alongside claim-verification and cross-layer; listing it in `domainLenses` is an
 engine will flag). The union is `domainLenses` for Step C. (If the detector fails, fall back to
 `domainLenses: []` — the combined scan + the three once-per-run PR lenses still run.)
 
-### Step C — run the shared engine in the `pr` lens-set
+### Step C — run the PR review (ultracode engine, or simple-scan fallback)
+
+**ULTRACODE path** — run the shared engine in the `pr` lens-set:
 ```
 Workflow({
   scriptPath: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js",
@@ -87,6 +94,19 @@ hunks), then the THREE once-per-run PR lenses — claim-verification, cross-laye
 (whole-diff hostile-maintainer review) — then a `pr-comment` reduce →
 `reports/code-auditor-agent/<TS>-pr-<PR>-review.md`.
 Returns `{finalReport, prReport:{prNumber, claimLens, crossLayerLens, skepticalLens, report, reduce}, tmpDir, ...}`.
+If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
+
+**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with
+`lensSet:'pr'` so it runs the per-file review of the changed files PLUS the three whole-diff PR
+lenses (claim-verification, cross-layer, skeptical) inline:
+```
+{ root: "<ABS_REPO_ROOT>", files: ["<abs changed file>", ...], lensSet: "pr",
+  lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses",
+  domainLenses: [<active keys from Step B2>], projectLenses: ["<lenses>", ...],
+  reportType: "pr-comment", reportSuffix: "pr-<PR>-review", scopeLabel: "pr-<PR>",
+  diffFile: "<TMP>/pr-<PR>.diff", descFile: "<TMP>/pr-<PR>.desc.txt", prNumber: "<PR>", mode: "scan" }
+```
+Same `VERDICT:`-bearing PR-comment report → `reports/code-auditor-agent/`; Step D reads it identically.
 
 ### Step D — present
 Read the verdict line (`VERDICT: PASS|CONDITIONAL|FAIL …`) from `prReport.report`. Report the
@@ -97,6 +117,9 @@ do NOT auto-post it; the user reviews + posts. Purge the per-run temp dir: `rm -
 
 ## RULES
 - **opus only** (engine pins it); `$CLAUDE_EFFORT` ≥ xhigh (prefer max). Never sonnet/haiku.
+- **Dual-path:** ultracode engine when `Workflow` is available and `CAA_ULTRACODE` is not disabled;
+  else the **simple-scan fallback** (`scripts/workflows/caa-simple-scan.md`, `lensSet:'pr'` — per-file
+  review + the 3 PR lenses inline, same PR-comment report). Effort guard = ultracode only.
 - **Single source of truth:** all logic is in `scripts/workflows/caa-engine.js`; this command resolves PR inputs + config.
 - **lensDir is mandatory when `domainLenses` is non-empty** — the lens specs ship with the PLUGIN
   (`${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses`), not with the audited repo.

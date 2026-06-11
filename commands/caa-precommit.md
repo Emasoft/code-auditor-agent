@@ -29,16 +29,17 @@ projectLenses unless `no-project-lenses`).
 
 ## Orchestrator contract — run EXACTLY these steps
 
-### Step A — effort + model guard (opus-only, xhigh floor)
-This engine ONLY works on opus at high reasoning effort.
-
+### Step A — choose the execution path, then guard effort
 ```bash
-echo "effort=${CLAUDE_EFFORT:-unknown}"
+echo "effort=${CLAUDE_EFFORT:-unknown}   caa_ultracode=${CAA_ULTRACODE:-auto}"
 ```
-- `max` or `xhigh` → proceed.
-- anything lower (or `unknown`) → tell the user: "caa-precommit needs `/effort max` (or at
-  least `xhigh`) — ultracode pairs xhigh with workflow permission. Raise effort and re-run."
-  then STOP. Never run below xhigh. (The engine pins `model:'opus'`; effort is inherited.)
+Pick the path per `scripts/workflows/caa-simple-scan.md` ("When this path runs"):
+- **SIMPLE-SCAN** if you do NOT have the `Workflow` tool, OR `CAA_ULTRACODE` ∈ {0,off,false,no}.
+  Effort guard does NOT apply — go to Step B and run the fallback gate at Step C.
+- **ULTRACODE** otherwise — this path ONLY works on opus at high effort. `max`/`xhigh` → proceed;
+  anything lower (or `unknown`) → tell the user: "caa-precommit's ultracode path needs `/effort max`
+  (or at least `xhigh`); raise effort and re-run, or set `CAA_ULTRACODE=0` for the simple-scan gate."
+  then STOP. (The engine pins `model:'opus'`; effort is inherited.)
 
 ### Step B — resolve the staged scope
 ```bash
@@ -49,9 +50,10 @@ git -C "$ROOT" diff --cached --name-only --diff-filter=ACMR
 Keep existing source files only (drop deletions, binaries, gitignored paths). Resolve each
 to an ABSOLUTE path. If the staged set is empty → report "nothing staged to gate" and stop.
 
-### Step C — run the shared engine (Workflow tool)
-Call the Workflow tool pointing at the bundled engine, passing `args` as a real JSON object
-(NOT a string). `conc` defaults to 4 (override from `$ARGUMENTS`):
+### Step C — run the gate (ultracode engine, or simple-scan fallback)
+
+**ULTRACODE path** — call the Workflow tool pointing at the bundled engine, passing `args` as a
+real JSON object (NOT a string). `conc` defaults to 4 (override from `$ARGUMENTS`):
 
 ```
 Workflow({
@@ -68,6 +70,15 @@ Workflow({
   }
 })
 ```
+If the `Workflow(...)` call throws for a nesting/availability reason, fall through to simple-scan.
+
+**SIMPLE-SCAN path** — follow `${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with:
+```
+{ root: "<ABS_REPO_ROOT>", files: ["<abs staged>", ...],
+  lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses", projectLenses: ["<lenses>", ...],
+  reportType: "gate", reportSuffix: "precommit-gate", scopeLabel: "precommit", mode: "scan" }
+```
+It writes the same `VERDICT:`-bearing gate report → `reports/code-auditor-agent/`; Step D reads it identically.
 
 The engine writes intermediates to a per-run temp dir (returned as `tmpDir`) and the ONE
 consolidated gate report to `reports/code-auditor-agent/<TS>-precommit-gate.md`. It returns
@@ -82,6 +93,8 @@ delete the per-run temp dir the engine returned: `rm -rf "<result.tmpDir>"`.
 
 ## RULES
 - **opus only** (engine pins `model:'opus'`); require `$CLAUDE_EFFORT` ≥ xhigh (prefer max). Never sonnet/haiku.
+- **Dual-path:** ultracode engine when `Workflow` is available and `CAA_ULTRACODE` is not disabled;
+  else the **simple-scan fallback** (`scripts/workflows/caa-simple-scan.md`, same `VERDICT:` gate report). Effort guard = ultracode only.
 - **Single source of truth:** the audit logic lives ONLY in `scripts/workflows/caa-engine.js`; this command just resolves scope + config. Never duplicate the engine here.
 - **Scan-only:** no edits, no git writes. (Fix mode is a separate command/phase with worktree isolation.)
 - **Final report ALWAYS → `reports/code-auditor-agent/`;** intermediates in the deletable temp dir, purged in Step D.

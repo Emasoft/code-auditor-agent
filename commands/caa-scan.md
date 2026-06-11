@@ -29,11 +29,16 @@ argument-hint: "[path/glob ...] [conc=N] [component=NAME] [min-severity=SEV] [le
 
 ## Orchestrator contract
 
-### Step A — effort + model guard
+### Step A — choose the execution path, then guard effort
 ```bash
-echo "effort=${CLAUDE_EFFORT:-unknown}"
+echo "effort=${CLAUDE_EFFORT:-unknown}   caa_ultracode=${CAA_ULTRACODE:-auto}"
 ```
-`max`/`xhigh` → proceed; lower/`unknown` → tell the user to `/effort max` (or `xhigh`) and STOP.
+Pick the path per `scripts/workflows/caa-simple-scan.md` ("When this path runs"):
+- **SIMPLE-SCAN** if you do NOT have the `Workflow` tool, OR `CAA_ULTRACODE` ∈ {0,off,false,no}.
+  The effort guard does NOT apply — go to Step B and run the fallback at Step D.
+- **ULTRACODE** otherwise. Effort guard applies: `max`/`xhigh` → proceed; lower/`unknown` → tell the
+  user to `/effort max` (or `xhigh`) and STOP — or to set `CAA_ULTRACODE=0` for the lower-fidelity
+  simple scan at any effort.
 
 ### Step B — resolve the scope
 ```bash
@@ -60,7 +65,9 @@ Each file costs roughly ~300k subagent tokens at xhigh (map+filter). If the reso
 ("~N files × ~300k ≈ … tokens") and ask the user to confirm or narrow the scope before
 launching. (An explicit path/glob scope is treated as already-confirmed intent.)
 
-### Step D — run the shared engine
+### Step D — run the audit (ultracode engine, or simple-scan fallback)
+
+**ULTRACODE path** (Step A chose it) — run the shared engine:
 ```
 Workflow({
   scriptPath: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js",
@@ -80,6 +87,20 @@ Workflow({
   }
 })
 ```
+If this `Workflow(...)` call throws for a nesting/availability reason, fall through to the
+simple-scan path below instead of failing.
+
+**SIMPLE-SCAN path** (Step A chose it, or the Workflow call was unavailable) — follow
+`${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-simple-scan.md` with:
+```
+{ root: "<ABS_REPO_ROOT>", files: ["<abs>", ...],
+  lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses",
+  projectLenses: ["<Step B2 paths>", ...],
+  reportType: "audit", reportSuffix: "scan", scopeLabel: "<whole | the given scope>",
+  component: "<component= value, omit if not given>",
+  minSeverity: "<min-severity= value, omit if not given>", mode: "scan" }
+```
+It writes the same report shape to `reports/code-auditor-agent/` — Step E reads it identically.
 
 ### Step E — present
 Read `finalReport`'s `SUMMARY:` line; report the severity counts, any non-verified files, the
@@ -90,6 +111,9 @@ engine returned: `rm -rf "<result.tmpDir>"`.
 
 ## RULES
 - **opus only** (engine pins it); `$CLAUDE_EFFORT` ≥ xhigh (prefer max). Never sonnet/haiku.
+- **Dual-path:** ultracode engine when the `Workflow` tool is available and `CAA_ULTRACODE` is not
+  disabled; otherwise the **simple-scan fallback** (`scripts/workflows/caa-simple-scan.md` — single-pass
+  inline review, same report shape). The opus/effort guard applies only to the ultracode path.
 - **Single source of truth:** all audit logic is in `scripts/workflows/caa-engine.js`; this command only resolves scope + config.
 - **Scan-only** (no edits/git). For fixes use the scan-and-fix command (worktree-isolated, separate phase).
 - **Cost-aware:** confirm before large unscoped swarms. **Final report → `reports/code-auditor-agent/`;** temp purged in Step E.
