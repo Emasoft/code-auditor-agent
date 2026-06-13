@@ -50,7 +50,13 @@ export const meta = {
   ],
 }
 
-const A = (typeof args === 'object' && args) ? args : {}
+// args arrives as the global — normally an OBJECT, but the Workflow tool can deliver it as a
+// JSON-encoded STRING (when the dispatcher passes a stringified value). Parse that case rather than
+// silently degrading to {} and failing the root/files validation with zero agents spawned (a bug
+// the spec-compliance dogfood surfaced, TRDD-3d971f72). Object form wins; a string is JSON-parsed.
+let A = {}
+if (typeof args === 'object' && args) A = args
+else if (typeof args === 'string' && args.trim()) { try { A = JSON.parse(args) } catch (e) { A = {} } }
 const ROOT = A.root
 const FILES = Array.isArray(A.files) ? A.files : []
 const MODE = A.mode || 'scan'
