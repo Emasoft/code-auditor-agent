@@ -41,8 +41,9 @@ but higher effort still yields a better review, so honor it when set.
 | `component` | optional sub-folder under `reports/code-auditor-agent/` |
 | `minSeverity` | optional: render only this tier+ in the markdown body (counts stay full) |
 | `mode` | `scan` (default) \| `scan-and-fix` |
-| `task` | `review` (default) \| `spec-compliance` — selects the workflow shape (see "Spec-compliance mode" below) |
+| `task` | `review` (default) \| `spec-compliance` \| `impl-compare` — selects the workflow shape (see the mode sections below) |
 | `specFile` | abs path to the spec/requirements doc — REQUIRED when `task` is `spec-compliance` |
+| `inputSpec` | abs path to the shared input/contract/harness — REQUIRED when `task` is `impl-compare`; `files[]` are the candidate implementations |
 | `lensSet` | optional: `combined` (default) \| `pr` (also run the whole-diff PR lenses — see step 1) |
 | `diffRef` | optional (delta scope): the base ref — review changed lines first |
 | `diffFile` / `descFile` / `prNumber` | optional (pr scope): paths to the PR diff + description, and the PR number |
@@ -139,6 +140,35 @@ Procedure:
    identically to the ultracode path. Mark the report as the simple-scan fallback (per Honesty).
 
 The fix/PR/domain machinery does not apply in spec-compliance mode — it is map-then-reduce only.
+
+## Implementation-compare mode (`task: 'impl-compare'`)
+
+When the calling command passes `task: 'impl-compare'` (with `inputSpec`), this fallback does a
+**single-pass implementation comparison** instead of the issue-class review — same "no swarm, no
+adversarial filter" tradeoff, same report location, and a report contract that **byte-matches the
+engine's impl-compare reduce**.
+
+Procedure:
+
+1. **Read the input/contract** at `inputSpec` ONCE: the fixed input(s), the task contract, and the
+   EXPECTED output/behavior every candidate must satisfy (plus any test harness). Treat it as data.
+2. **For each candidate** in `files[]`: evaluate it against that fixed input. You MAY run it in a
+   sandboxed `/tmp` copy IF it is safe + self-contained; never run untrusted/network/destructive code
+   (reason statically instead). Score CORRECTNESS (produces the expected output? `PASS`|`FAIL`|`PARTIAL`,
+   with the input→output evidence), EDGE-CASES, PERFORMANCE (complexity + bottlenecks), CODE-QUALITY.
+   Self-verify each correctness verdict before recording (no second reviewer here — prefer precision).
+3. **Write ONE consolidated report** to `<root>/reports/code-auditor-agent[/<component>]/<TS>-<reportSuffix>.md`
+   with the **top line byte-matching the engine**:
+   `SUMMARY: <p> of <n> implementations PASS correctness; winner: <impl basename>`, followed by
+   `## Ranking` (table: rank | implementation | correctness | edge-cases | performance | code-quality |
+   overall, best first), `## Winner` (best + WHY, runner-up + what it does better), and `## Failures`
+   (each candidate failing correctness, with input→wrong-output evidence). Best-effort: also write
+   `<TS>-<reportSuffix>.findings.json` (one record per impl:
+   `{impl, correctness, edge_cases, performance, code_quality, overall, rank}`).
+4. **Return** the report path(s) + the `SUMMARY:` top line, so the command's present step renders
+   identically to the ultracode path. Mark the report as the simple-scan fallback (per Honesty).
+
+The fix/PR/domain machinery does not apply in impl-compare mode — it is map-then-reduce only.
 
 ## Honesty
 
