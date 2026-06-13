@@ -1,9 +1,9 @@
 ---
 trdd-id: 3d971f72-7726-41cd-9029-5257ec65f2ec
 title: Advanced ultracode workflows — spec-compliance + impl-compare + reference-plugin patterns
-column: design
+column: dev
 created: 2026-06-13T18:49:06+0200
-updated: 2026-06-13T18:49:06+0200
+updated: 2026-06-13T19:14:00+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -46,7 +46,23 @@ external-refs: ["https://code.claude.com/docs/en/sub-agents.md", "https://code.c
 > specialist agents broke the I/O contract — a load-bearing lesson for the new modes: prefer inline
 > prompts over agentType wrapping). No nested agents yet.
 >
-> **NEXT ACTION:** build Phase 1 (spec-compliance) — see plan below.
+> **PHASE 1 (spec-compliance) — DONE + DOGFOOD-VERIFIED (2026-06-13).** Commits `557ba6b` (engine
+> task), `f996d00` (command + fallback), `221420f` (arg-string fix). The engine has `task:'spec-compliance'`
+> + `/caa-spec-audit` + a simple-scan spec mode. Dogfood (2-file known-answer fixture in
+> `reports_dev/spec-dogfood/`, runId spec-dogfood-3, 5 agents/664k tok) produced the EXACT expected
+> verdicts: `SUMMARY: 2 VIOLATING, 1 MISSING, 0 PARTIAL of 4 clauses` — R4→MISSING (no file has
+> `--dry-run`), R3→VIOLATING (impl_a dumps secret values), R1/R2→IMPLEMENTED (verifier correctly
+> resolved the borderline R2 to IMPLEMENTED). findingsJson valid (9 records). Report:
+> `reports/code-auditor-agent/20260613_190958+0200-spec-dogfood.md`.
+> **BUG CAUGHT + FIXED by the dogfood (`221420f`):** the engine's entry guard degraded a JSON-STRING
+> `args` (which the Workflow tool delivers) to `{}` → returned the root/files error with 0 agents.
+> Now parses object OR JSON-string. Single-source → fixes ALL commands.
+> **Noted refinement (not blocking):** R4 was listed in BOTH VIOLATING and MISSING (an absent required
+> feature is arguably MISSING-only vs. a per-file VIOLATION). The report handles the overlap
+> transparently; a future tweak could make VIOLATED=active-contradiction only, absence=MISSING — a
+> design/intent call (matches the user's "missing vs violating" framing). Decide before Phase 3 docs.
+> **NEXT ACTION:** Phase 2 (impl-compare) — task #80; same engine, INPUT in the cached prefix,
+> implementations[] as the varying suffix.
 
 ## Architecture decision
 
