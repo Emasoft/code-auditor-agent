@@ -3,7 +3,7 @@ trdd-id: d94a7c5e-8946-45c1-be0c-6302e28c3386
 title: Migrate the CAA plugin to ultracode (Workflow-tool) orchestration
 column: dev
 created: 2026-06-09T14:33:39+0200
-updated: 2026-06-13T16:14:17+0200
+updated: 2026-06-13T16:35:06+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -34,7 +34,7 @@ external-refs: ["https://code.claude.com/docs/en/changelog.md", "https://github.
 > - **De-vendoring SUPERSEDES the body's "17 CRITICAL on vendored CPV scripts" narrative** (lines ~198–250): CAA de-vendored ALL local CPV validator scripts 2026-06-11 (per CLAUDE.md), so there are **0 CRITICAL** now — do NOT carry the 17-CRITICAL framing forward.
 > - **WORKING TREE: now 10 commits ahead of origin/main, NOT pushed, tree clean.** Beyond the 4 migration/fallback commits the banner records (`537737e`,`fdaff70`,`cc79380`,`ee9c9c2`), the **memory-system migration** added 4 more: `2113e39` (memory protocol + recall/write skills), `de8ef18` (conform skills to frontmatter tests + tests/test_memory_skills.py), `aac0805` (wire recall into main-agent), `66ec1f1` (simple-scan return-note fix); then `26bdcf9` (this STATE re-confirm) + the #114-note commit below. Full suite **598 passed**; CPV-clean except the 5 #102 NITs. Memory adoption coordinated on **janitor #29** (filed 2026-06-13, awaiting JANITOR reply: flat model vs v0.7.1 wikimem).
 > - **DERIVED RELEASE-GATE RISK — CPV #114 (cold-runner `--strict` timeout):** the MANAGER escalated (on CPV #104, 2026-06-13) that remote `cpv-remote-validate … --strict` TIMES OUT on a cold CI runner (turned ai-maestro-plugin v2.7.6 CI Validate RED at 25 min). CAA's `ci.yml` runs the gate **non-strict** on a **10-min** timeout — tighter than the 25-min that failed — so when #102 clears and I publish, expect a possible **post-push CI-RED on a cold runner** (NOT a publish blocker: `publish.py` runs its gate locally/warm). At publish time: watch the CI Validate run; if it times out, the fix is CPV-side (#114) — do not paper over it by loosening CAA's gate. Fleet-tracked by the MANAGER; no CAA-specific issue needed.
-
+>
 > ### 🛑 HOLD — DO NOT PUBLISH (2026-06-11T21:13+0200) — supersedes the "RELEASE IS UNBLOCKED" line further down
 >
 > **The earlier "RELEASE IS UNBLOCKED" conclusion was WRONG.** Verified 2026-06-11 against the LIVE gate + publish.py code:
