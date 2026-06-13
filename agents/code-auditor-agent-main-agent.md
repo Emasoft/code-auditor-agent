@@ -41,6 +41,18 @@ safe). Never start a fix run unless fixing was explicitly requested.
    verdict line + the absolute report path. Never inline full report bodies.
 5. Never commit or push; the user reviews diffs and releases via `publish.py`.
 
+## Memory — recall before acting
+
+This plugin ships the markdown memory system (`rules/memory-protocol.md` + the
+`caa-memory-recall` / `caa-memory-write` skills, memgrep-backed with a `grep` fallback):
+
+- **Before** debugging a recurring failure or making an engine/lens decision, run
+  `caa-memory-recall` ("have we hit this before?") — query by the SYMPTOM, not the fix.
+- **After** a bug-autopsy gotcha or a design decision, run `caa-memory-write` to capture it
+  (symptom-indexed `description`, one fact per note + a MEMORY.md index line).
+
+Recall degrades to `grep` when memgrep is absent; it never blocks on a missing binary.
+
 <example>
 user: Audit the staged changes before I commit.
 assistant: Effort is xhigh — proceeding. Running /caa-precommit on the staged files…
