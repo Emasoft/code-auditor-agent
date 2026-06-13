@@ -33,6 +33,7 @@ them, never silently dropped.
 - [Components](#components)
 - [Reports](#reports)
 - [Engine reference](#engine-reference)
+- [Advanced ultracode](#advanced-ultracode)
 - [Development](#development)
 - [License](#license)
 
@@ -105,6 +106,8 @@ Then pick the command that matches the job:
 | Recheck only the files changed since a git ref (+ dependents) | `/caa-delta [ref] [deps]` |
 | Audit AND apply root-cause fixes (in place, fix-verified) | `/caa-scan-and-fix [paths...]` |
 | Review a GitHub PR (ready-to-post review comment) | `/caa-pr-review <pr-number>` |
+| Audit a codebase against a spec / requirements doc (MISSING + VIOLATING) | `/caa-spec-audit <spec> [paths...]` |
+| Compare candidate implementations of one task against a fixed input | `/caa-impl-compare <input> <impl...>` |
 
 Examples:
 
@@ -115,6 +118,8 @@ Examples:
 /caa-delta origin/main deps
 /caa-scan-and-fix scripts/foo.py
 /caa-pr-review 206
+/caa-spec-audit design/requirements/PRRD.md src/
+/caa-impl-compare bench/contract.md impls/v1.py impls/v2.py
 ```
 
 Shared knobs (all commands): `conc=N` concurrent auditors (default 6, max 16);
@@ -149,9 +154,10 @@ scripted agent boundary.
 
 ## Components
 
-- **Commands** — `/caa-precommit`, `/caa-scan`, `/caa-delta`, `/caa-scan-and-fix`,
-  `/caa-pr-review` (plus two legacy redirect aliases). Thin wrappers: they resolve the
-  file scope and configuration, then invoke the shared engine.
+- **Commands** — review: `/caa-precommit`, `/caa-scan`, `/caa-delta`, `/caa-scan-and-fix`,
+  `/caa-pr-review`; plus `/caa-spec-audit` (codebase vs a spec → MISSING + VIOLATING) and
+  `/caa-impl-compare` (rank implementations vs a fixed input) — two legacy redirect aliases
+  remain. Thin wrappers: they resolve the scope/config, then invoke the shared engine.
 - **Engine** — `scripts/workflows/caa-engine.js`, the single source of truth for all
   audit logic.
 - **Domain lenses** — `scripts/workflows/lenses/*.lens.md`, 21 compact specialist
@@ -186,7 +192,10 @@ lens_source, verification_note}` — pipe it into your own tooling or renderers.
 | arg | meaning |
 |---|---|
 | `root`, `files[]` | absolute repo root + absolute file paths (required) |
-| `mode` | `scan` (default) \| `scan-and-fix` |
+| `task` | `review` (default) \| `spec-compliance` \| `impl-compare` — selects the workflow shape |
+| `specFile` | spec/requirements doc (required for `spec-compliance`); sits in the cached prefix |
+| `inputSpec` | fixed input/contract/harness (required for `impl-compare`); `files[]` are the candidates |
+| `mode` | `scan` (default) \| `scan-and-fix` (review task only) |
 | `lensSet` | `combined` (default) \| `pr` (adds the three once-per-run PR lenses) |
 | `reportType` | `audit` \| `gate` \| `pr-comment` |
 | `reportSuffix`, `scopeLabel`, `component`, `minSeverity`, `reportTemplate` | report shaping |
@@ -216,6 +225,30 @@ disabled in Claude Code settings/env, or a nested agent session) **or** when `CA
 to `0` / `off` / `false` / `no`. Otherwise it uses **ultracode**, and if a `Workflow` call fails for
 a nesting/availability reason it recovers into the simple scan rather than erroring. Set
 `CAA_ULTRACODE=0` to force the cheap path even when ultracode is available.
+
+## Advanced ultracode
+
+Caching and the three task shapes. The engine is ONE parameterized `map → (filter) → reduce` pipeline that runs **three task shapes**,
+all sharing the pool, the rate-limit backoff, and the cache discipline (single source of truth):
+
+- **`review`** — code audit (the five review commands above).
+- **`spec-compliance`** — each file classified against `specFile`; the reduce emits **MISSING**
+  (spec clauses no file implements) and **VIOLATING** (code that contradicts a clause).
+- **`impl-compare`** — each candidate in `files[]` evaluated against the fixed `inputSpec`; the
+  reduce **ranks** the candidates and names a winner.
+
+**The cache law CAA is engineered around.** The Anthropic API caches on `(model, exact prompt
+prefix)` — any two requests with the same model and prefix read the same cache, and a change
+anywhere in the prefix recomputes everything after it. So every map/filter prompt is built as
+**a byte-identical shared prefix followed by one per-agent suffix appended LAST**: the heavy shared
+content (the review criteria, or the spec, or the fixed input) lives in the cached prefix, and only
+the single target path varies. Across N agents the first warms the cache and the rest read it.
+
+A corollary from the [sub-agent docs](https://code.claude.com/docs/en/prompt-caching): a **fork**
+sub-agent shares the main session's cache, but a **named** sub-agent (what the Workflow tool spawns)
+builds its own — so the cross-agent saving here comes from this identical-prefix design, not from
+fork-sharing. `impl-compare` is the clearest illustration: the input is cached once and only the
+candidate script changes — *cache the input, vary the script*.
 
 ## Development
 
