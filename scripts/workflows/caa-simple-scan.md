@@ -105,8 +105,9 @@ but higher effort still yields a better review, so honor it when set.
    (what was fixed, what was left and why). Operate on the working tree the command prepared (e.g.
    its worktree); never push.
 
-6. **Return** to the calling command: the report path(s) + the `SUMMARY` counts, so its present
-   step renders identically to the ultracode path.
+6. **Return** to the calling command: the report path(s) + the top line (the `SUMMARY` line for
+   `audit`, the `VERDICT` line for `gate`/`pr-comment`), so its present step renders identically
+   to the ultracode path.
 
 ## Honesty
 
