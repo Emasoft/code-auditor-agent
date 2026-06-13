@@ -17,42 +17,37 @@ effort: high
 
 Efficacy self-test for the migrated **ultracode engine** (`scripts/workflows/caa-engine.js`). Two halves:
 
-1. **Script half (pytest, ~0.5s, free):** the script-detector tests (`tests/integration/test_pipeline_efficacy.py`) that cover the deterministic detectors (encoding, lint, structure, etc.).
+1. **Script half (pytest, ~0.5s):** the deterministic-detector tests (`tests/integration/test_pipeline_efficacy.py`) — encoding, lint, structure, etc.
 2. **Engine half:** run `caa-engine` once over the bundled seeded-bug fixtures
    (`references/fixtures/`, one per former specialist domain) with ALL domain lenses active, and
    assert the consolidated report flags a finding in EVERY fixture (each fixture contains ≥1 seeded
-   defect). This replaces the old 22 per-agent dispatches — the engine's combined + domain lenses now
-   embody every former agent's detection logic.
+   defect). Replaces the old per-agent dispatches — combined + domain lenses embody every former agent's logic.
 
 ## Prerequisites
 
-- `uv` + pytest installed; session effort `max`/`xhigh` (the engine is opus-only). The **engine half
-  requires the `Workflow` tool** (ultracode); without it that half is SKIPPED — the script half still runs.
+- `uv` + pytest installed; session effort `max`/`xhigh` (the engine is opus-only).
 - Write access to `<main-repo-root>/reports/code-auditor-agent/efficacy-audit/`.
 
 ## Instructions
 
 1. `MAIN_ROOT="$(git worktree list | head -n1 | awk '{print $1}')"`, `TS="$(date +%Y%m%d_%H%M%S%z)"`.
 2. **Script half:** from `$MAIN_ROOT` run `uv run pytest tests/integration/test_pipeline_efficacy.py -v --tb=short > "/tmp/ecaa-$TS-pytest.log" 2>&1` (do NOT abort on non-zero — record it).
-3. **Engine half (requires ultracode):** if you do NOT have the `Workflow` tool (ultracode disabled, or a
-   nested session), the engine self-test cannot run — record the engine half as **SKIPPED (ultracode required)**,
-   note it in the verdict, and continue to the assertions with engine findings treated as unavailable. The
-   simple-scan fallback is NOT a substitute here: this gate exists to test the ultracode ENGINE specifically.
-   Otherwise, resolve the fixture files (`git -C "$MAIN_ROOT" ls-files "skills/ecaa-self-test-24/references/fixtures"` → absolute paths) and invoke the engine with EVERY domain lens active:
+3. **Engine half (needs ultracode):** with NO `Workflow` tool, SKIP this half — record `SKIPPED (ultracode
+   required)` in the verdict and assert only on the script half (the simple-scan fallback can't substitute;
+   this gate tests the ENGINE). Else resolve the fixture files (`git -C "$MAIN_ROOT" ls-files "skills/ecaa-self-test-24/references/fixtures"` → absolute paths) and invoke the engine with EVERY domain lens active:
    `Workflow({scriptPath: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/caa-engine.js", args: {root: "$MAIN_ROOT", files: [<fixture abs paths>], mode: "scan", reportType: "audit", reportSuffix: "ecaa-self-test", runId: "ecaa-$TS", domainLenses: ["docker","solidity","ios-native","graphql","elixir","frontend","monorepo","i18n","l10n","jwt","prompt-injection","logging","mcp-server","api-design","type-design","assumption","function-contract","pre-mortem","architecture-consistency"], lensDir: "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses", conc: 6}})`.
    No `lensSet` (default `combined`; the engine fail-fasts on unknown values).
-4. **Assert RECALL:** read the consolidated report (`finalReport`). For EACH seeded-bug fixture
-   (every fixture EXCEPT those under `references/fixtures/clean-suspicious/`), confirm it appears
-   with ≥1 confirmed finding. List any seeded fixture with zero findings as a MISS.
-5. **Assert PRECISION:** for EACH fixture under `references/fixtures/clean-suspicious/`, confirm it
-   has ZERO confirmed CRITICAL/MAJOR findings (a finding that was flagged then REFUTED/DOWNGRADED by
-   the verifier counts as a pass — check the report's "Refuted / downgraded" section). Any confirmed
-   CRITICAL/MAJOR on a clean fixture is a FALSE-POSITIVE failure.
-6. **Verdict:** emit one line — `[PASS] ecaa-self-test-24 — recall <N>/<N> seeded flagged · precision <C>/<C> clean unflagged · pytest <P>/<P>` / `[PARTIAL] …` / `[FAIL] …` — and write the consolidated report + a verdict JSON to `<main-repo-root>/reports/code-auditor-agent/efficacy-audit/<TS>-self-test.{md,json}`. "Perfect" = high recall AND high precision; report BOTH.
+4. **Assert RECALL:** in `finalReport`, every seeded-bug fixture (all EXCEPT those under
+   `references/fixtures/clean-suspicious/`) must appear with ≥1 confirmed finding; zero on a seeded
+   fixture is a MISS.
+5. **Assert PRECISION:** each fixture under `references/fixtures/clean-suspicious/` must have ZERO
+   confirmed CRITICAL/MAJOR (a flagged-then-REFUTED/DOWNGRADED finding passes — see the "Refuted /
+   downgraded" section). A confirmed CRITICAL/MAJOR on a clean fixture is a FALSE-POSITIVE failure.
+6. **Verdict:** emit one line — `[PASS] ecaa-self-test-24 — recall <N>/<N> · precision <C>/<C> · pytest <P>/<P>` / `[PARTIAL] …` / `[FAIL] …` — and write the report + a verdict JSON to `<main-repo-root>/reports/code-auditor-agent/efficacy-audit/<TS>-self-test.{md,json}`. Report BOTH recall and precision.
 
 ## Output
 
-The engine's consolidated report + a verdict line/JSON under `reports/code-auditor-agent/efficacy-audit/`. A PASS means every seeded-bug fixture was flagged and the pytest detectors passed.
+The consolidated report + verdict line/JSON under `reports/code-auditor-agent/efficacy-audit/`. PASS = every seeded fixture flagged + pytest detectors passed.
 
 ## Error Handling
 

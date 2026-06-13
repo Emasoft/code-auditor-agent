@@ -1,6 +1,11 @@
 ---
 name: caa-memory-recall
-description: RECALL — before debugging a recurring code-auditor-agent (CAA) issue, making an engine/lens design decision, or acting on a recurring failure, surface the right memory note(s) by SYMPTOM. Ranks notes by how the symptom hits their description/title/tags via memgrep, degrading to grep when memgrep is absent. Use before re-deriving CAA architecture/gotchas, or when the user says "recall memories about X" / "did we already solve this". The RECALL leg of CAA's memory protocol.
+description: "RECALL — surface prior CAA memory notes by SYMPTOM before debugging a recurring issue or an engine/lens decision; memgrep-ranked with a grep fallback. Triggers: 'recall memories about X', 'did we already solve this', 'have we hit this before'."
+version: 3.4.4
+author: Emasoft
+license: MIT
+tags: [memory, recall, memgrep, code-auditor]
+effort: high
 ---
 
 # CAA memory — RECALL

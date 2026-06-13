@@ -1,6 +1,11 @@
 ---
 name: caa-memory-write
-description: MEMORIZE — capture a durable code-auditor-agent (CAA) decision/fact into the project memory as a schema-valid, symptom-indexed note. Use after a bug-autopsy gotcha, an engine/lens design decision, a project constraint not in the code, a confirmed user preference, or when the user says "remember this" / "memorize this" / "save a memory". Recalls first so it never duplicates, then writes the note + its MEMORY.md index line with the description carrying SYMPTOM vocabulary. The MEMORIZE leg of CAA's memory protocol.
+description: "MEMORIZE — capture a durable CAA fact (engine/lens decision, gotcha, constraint, preference) as a schema-valid, symptom-indexed memory note + MEMORY.md index line; recall-first to avoid dupes. Triggers: 'remember this', 'save a memory'."
+version: 3.4.4
+author: Emasoft
+license: MIT
+tags: [memory, memorize, write, memgrep, code-auditor]
+effort: high
 ---
 
 # CAA memory — MEMORIZE
