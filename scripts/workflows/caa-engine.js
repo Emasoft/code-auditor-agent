@@ -12,9 +12,12 @@
 //   reportType  (string)  'audit' (default) | 'gate' | 'pr-comment' — drives the reduce verdict/format
 //   reportSuffix(string)  filename suffix → reports/code-auditor-agent/<TS>-<suffix>.md
 //   task        (string)  'review' (default — scan/scan-and-fix/pr review) | 'spec-compliance'
-//                         (audit files against a spec → consolidated MISSING + VIOLATING clauses). TRDD-3d971f72.
+//                         (audit files against a spec → MISSING + VIOLATING clauses) | 'impl-compare'
+//                         (rank candidate implementations against a fixed input). TRDD-3d971f72.
 //   specFile    (string)  REQUIRED when task='spec-compliance' — absolute path to the spec/requirements
 //                         doc. Sits in the cache-shared map/filter prefix; the target file varies LAST.
+//   inputSpec   (string)  REQUIRED when task='impl-compare' — absolute path to the shared input/contract/
+//                         harness. Sits in the cache-shared prefix; each files[] candidate varies LAST.
 //   conc        (number)  max concurrent opus agents (default 6, clamped to [1,16])
 //   lensDir     (string)  abs path to the PLUGIN's bundled lens specs — wrappers pass
 //                         "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses". The lenses ship with
@@ -38,7 +41,7 @@
 
 export const meta = {
   name: 'caa-engine',
-  description: 'CAA ultracode engine — parameterized map→filter→reduce over opus agents. task:"review" (default — code audit: scan/scan-and-fix/pr) or "spec-compliance" (audit files against args.specFile → MISSING + VIOLATING clauses). args:{root,files[],task,specFile,mode,lensSet,scopeLabel,reportType,reportSuffix,conc,lensDir,runId,domainLenses,...}. Consolidated report → reports/code-auditor-agent/.',
+  description: 'CAA ultracode engine — parameterized map→filter→reduce over opus agents. task:"review" (code audit: scan/scan-and-fix/pr), "spec-compliance" (files vs args.specFile → MISSING + VIOLATING), or "impl-compare" (rank files[] implementations vs args.inputSpec). args:{root,files[],task,specFile,inputSpec,mode,lensSet,scopeLabel,reportType,reportSuffix,conc,lensDir,runId,domainLenses,...}. Consolidated report → reports/code-auditor-agent/.',
   phases: [
     { title: 'Map', detail: 'one opus auditor per file (scan-only, cache-shared prefix)' },
     { title: 'Filter', detail: 'adversarial verify each file (opus, different reviewer)' },
@@ -70,6 +73,10 @@ const SUFFIX = A.reportSuffix || 'scan'
 // are SHARED across tasks; only the prompt prefixes + the reduce contract differ per task.
 const TASK = A.task || 'review'
 const SPECFILE = (typeof A.specFile === 'string') ? A.specFile : ''
+// impl-compare (TRDD-3d971f72 Phase 2): the FIXED shared input/contract/harness every candidate is
+// evaluated against. Sits in the cache-shared map/filter prefix; the candidate impl (one per files[]
+// entry) is the varying suffix — "cache the input, vary the script".
+const INPUTSPEC = (typeof A.inputSpec === 'string') ? A.inputSpec : ''
 // Clamp to [1,16]: the harness caps real concurrency anyway, and an unbounded cap would defeat
 // the ramped pool's rate-limit halving (a cap of 1000 takes ~10 halvings to actually back off).
 const CONC = Math.max(1, Math.min(16, Math.floor(Number(A.conc) || 6)))
@@ -132,11 +139,14 @@ if (RTYPE !== 'audit' && RTYPE !== 'gate' && RTYPE !== 'pr-comment') {
 }
 // task validation. 'impl-compare' is reserved for Phase 2 (TRDD-3d971f72) — reject it explicitly
 // rather than silently treating it as 'review'.
-if (TASK !== 'review' && TASK !== 'spec-compliance') {
-  return { error: "caa-engine: unknown task '" + TASK + "' (valid: review | spec-compliance)" }
+if (TASK !== 'review' && TASK !== 'spec-compliance' && TASK !== 'impl-compare') {
+  return { error: "caa-engine: unknown task '" + TASK + "' (valid: review | spec-compliance | impl-compare)" }
 }
 if (TASK === 'spec-compliance' && (!SPECFILE || SPECFILE[0] !== '/')) {
   return { error: "caa-engine: task 'spec-compliance' requires args.specFile (ABSOLUTE path to the spec/requirements document)" }
+}
+if (TASK === 'impl-compare' && (!INPUTSPEC || INPUTSPEC[0] !== '/')) {
+  return { error: "caa-engine: task 'impl-compare' requires args.inputSpec (ABSOLUTE path to the shared input/contract/harness); files[] are the candidate implementations" }
 }
 if (MINSEV && MINSEV !== 'CRITICAL' && MINSEV !== 'MAJOR' && MINSEV !== 'MINOR' && MINSEV !== 'NIT') {
   return { error: "caa-engine: unknown minSeverity '" + MINSEV + "' (valid: CRITICAL | MAJOR | MINOR | NIT)" }
@@ -242,7 +252,19 @@ const SPEC_MAP_PREFIX =
   'Your FINAL message MUST be EXACTLY that absolute report path and nothing else (no prose).\n' +
   'Read the spec FIRST (path above), then read this one target file LAST, only now, and classify it:\n'
 // Select the map prefix by task. Both write <slug>.map.md, so mapAudit's validation is task-agnostic.
-const MAP_PREFIX = (TASK === 'spec-compliance') ? SPEC_MAP_PREFIX : AUDIT_PREFIX
+// CONSTANT impl-compare map prefix — byte-identical for every agent (cache-shared). The fixed
+// INPUTSPEC sits in the prefix (THE cache win — read once, reused across every candidate); only the
+// candidate implementation (appended LAST) varies. This is the "cache the input, vary the script" pattern.
+const IMPL_MAP_PREFIX =
+  'You are evaluating ONE candidate IMPLEMENTATION against a FIXED, shared input/contract. ' +
+  'FIRST read the input + contract + (optional) test harness at ' + INPUTSPEC + ' — it defines the task every candidate must solve, the exact INPUT(S) to run against, and the EXPECTED output/behavior. ' +
+  'Then evaluate EXACTLY ONE candidate. You MAY run it against the fixed input in a sandboxed /tmp working copy IF it is safe + self-contained; NEVER run untrusted network/destructive code — reason statically instead. Do NOT edit the candidate; do NOT use llm-externalizer.\n' +
+  'Score the candidate on: CORRECTNESS (does it produce the expected output for the given input? cite the exact input→output mismatch if not — PASS|FAIL|PARTIAL), EDGE-CASES (which documented/obvious edge inputs it handles or breaks on), PERFORMANCE (algorithmic complexity + any obvious bottleneck), CODE-QUALITY (clarity, safety, fail-fast). Each gets a rating + one-line WHY with evidence (file:line or the observed input→output).\n' +
+  'First run: mkdir -p "' + TMP + '". Write the evaluation as markdown to ' + TMP + '/<slug>.map.md where <slug> is the absolute candidate path with every "/" replaced by "__". ' +
+  'Structure: {correctness: PASS|FAIL|PARTIAL + evidence, edge-cases, performance: complexity + notes, code-quality: rating + notes, overall: one-line}.\n' +
+  'Your FINAL message MUST be EXACTLY that absolute report path and nothing else.\n' +
+  'Read the input/contract FIRST (path above), then read this one candidate implementation LAST, only now, and evaluate it:\n'
+const MAP_PREFIX = (TASK === 'spec-compliance') ? SPEC_MAP_PREFIX : (TASK === 'impl-compare') ? IMPL_MAP_PREFIX : AUDIT_PREFIX
 
 async function mapAudit(file) {
   const out = await agent(MAP_PREFIX + file, { label: 'map:' + file, phase: 'Map', model: 'opus' })
@@ -274,7 +296,15 @@ const SPEC_VERIFY_PREFIX =
   'First run: mkdir -p "' + TMP + '". Write the verified classifications to ' + TMP + '/<slug>.verified.md where <slug> is the absolute SOURCE path with every "/" replaced by "__". ' +
   'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
   'Read these LAST, only now (the spec, the map report, then the source):\n'
-const FILTER_PREFIX = (TASK === 'spec-compliance') ? SPEC_VERIFY_PREFIX : VERIFY_PREFIX
+// CONSTANT impl-compare filter prefix — byte-identical per agent (cache-shared); INPUTSPEC in prefix.
+const IMPL_VERIFY_PREFIX =
+  'You are an adversarial verifier and a DIFFERENT reviewer than the evaluator. A prior evaluator scored ONE candidate implementation against the fixed input/contract at ' + INPUTSPEC + '. ' +
+  'Independently CONFIRM or REFUTE its verdict — above all the CORRECTNESS claim: re-derive the expected output from the contract and check the candidate actually produces it (re-run it in /tmp if safe, else trace it by hand). A falsely-PASSED candidate is the single most important thing to catch. Correct any wrong correctness/edge/perf claim with evidence. ' +
+  'Record refuted/corrected scores in a "## Refuted / corrected" section with the killing evidence. SCAN ONLY — no edits/git; no llm-externalizer.\n' +
+  'First run: mkdir -p "' + TMP + '". Write the verified evaluation to ' + TMP + '/<slug>.verified.md where <slug> is the absolute candidate path with every "/" replaced by "__". ' +
+  'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
+  'Read these LAST, only now (the input/contract, the evaluation report, then the candidate implementation):\n'
+const FILTER_PREFIX = (TASK === 'spec-compliance') ? SPEC_VERIFY_PREFIX : (TASK === 'impl-compare') ? IMPL_VERIFY_PREFIX : VERIFY_PREFIX
 
 async function filterVerify(mapResult) {
   if (!mapResult || mapResult.status !== 'mapped') return mapResult
@@ -425,6 +455,24 @@ if (TASK === 'spec-compliance') {
     'Verified per-file classification report paths:\n' + (verifiedPaths || '(none — all files failed or were rate-limited)') + '\n' +
     'Files that did NOT verify: ' + (problems.map(p => (p && p.file) || 'unknown').join(', ') || 'none') + '\n',
     'reduce:spec')
+} else if (TASK === 'impl-compare') {
+  // IMPL-COMPARE reduce: rank the candidate implementations against the fixed input/contract.
+  finalRed = await reduceCall(
+    'You are the REDUCE step of a CAA IMPLEMENTATION-COMPARE run (input/contract: ' + INPUTSPEC + ', scope: ' + SCOPE + '). ' +
+    'Read EVERY verified per-implementation evaluation listed below and produce ONE consolidated comparison with these sections: ' +
+    '"## Ranking" — a table (rank | implementation | correctness | edge-cases | performance | code-quality | overall verdict), BEST FIRST; ' +
+    '"## Winner" — the single best implementation and WHY, plus the runner-up and anything it does better worth grafting; ' +
+    '"## Failures" — every candidate that FAILS correctness, with the exact input→wrong-output evidence. ' +
+    'At the VERY TOP write exactly: "SUMMARY: <p> of <n> implementations PASS correctness; winner: <impl basename>". ' +
+    'Add a "## Refuted / corrected" section aggregating the verifiers\' corrections, and a "## Needs follow-up" for any implementation that did NOT reach verified status. Do NOT use llm-externalizer.\n' +
+    'Create paths with Bash: mkdir -p "' + FINAL_DIR + '" ; TS=$(date +%Y%m%d_%H%M%S%z) ; write the report to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.md ' +
+    'AND a machine-readable file to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.findings.json (same $TS) — a JSON array, one record per implementation: ' +
+    '{"impl","correctness":"pass"|"fail"|"partial","edge_cases","performance","code_quality","overall","rank"}.\n' +
+    'Your FINAL message MUST be EXACTLY the absolute path of the consolidated .md report and nothing else.\n\n' +
+    'Input/contract file: ' + INPUTSPEC + '\nScope label: ' + SCOPE + '\nImplementations compared: ' + FILES.length + '\n' +
+    'Verified per-implementation evaluation report paths:\n' + (verifiedPaths || '(none — all candidates failed or were rate-limited)') + '\n' +
+    'Implementations that did NOT verify: ' + (problems.map(p => (p && p.file) || 'unknown').join(', ') || 'none') + '\n',
+    'reduce:impl-compare')
 } else {
   finalRed = await reduceCall(
   'You are the REDUCE (consolidation) step of a CAA audit (scope: ' + SCOPE + '). Read EVERY verified per-file report listed below and merge them into ONE ' +
