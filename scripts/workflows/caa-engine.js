@@ -11,6 +11,10 @@
 //   scopeLabel  (string)  human label for the report header (e.g. 'precommit','whole','delta','pr-NNN')
 //   reportType  (string)  'audit' (default) | 'gate' | 'pr-comment' — drives the reduce verdict/format
 //   reportSuffix(string)  filename suffix → reports/code-auditor-agent/<TS>-<suffix>.md
+//   task        (string)  'review' (default — scan/scan-and-fix/pr review) | 'spec-compliance'
+//                         (audit files against a spec → consolidated MISSING + VIOLATING clauses). TRDD-3d971f72.
+//   specFile    (string)  REQUIRED when task='spec-compliance' — absolute path to the spec/requirements
+//                         doc. Sits in the cache-shared map/filter prefix; the target file varies LAST.
 //   conc        (number)  max concurrent opus agents (default 6, clamped to [1,16])
 //   lensDir     (string)  abs path to the PLUGIN's bundled lens specs — wrappers pass
 //                         "${CLAUDE_PLUGIN_ROOT}/scripts/workflows/lenses". The lenses ship with
@@ -34,7 +38,7 @@
 
 export const meta = {
   name: 'caa-engine',
-  description: 'CAA ultracode engine — parameterized map→filter→reduce code audit over opus agents. args:{root,files[],mode,lensSet,scopeLabel,reportType,reportSuffix,conc,lensDir,runId,domainLenses,...}. Consolidated report → reports/code-auditor-agent/.',
+  description: 'CAA ultracode engine — parameterized map→filter→reduce over opus agents. task:"review" (default — code audit: scan/scan-and-fix/pr) or "spec-compliance" (audit files against args.specFile → MISSING + VIOLATING clauses). args:{root,files[],task,specFile,mode,lensSet,scopeLabel,reportType,reportSuffix,conc,lensDir,runId,domainLenses,...}. Consolidated report → reports/code-auditor-agent/.',
   phases: [
     { title: 'Map', detail: 'one opus auditor per file (scan-only, cache-shared prefix)' },
     { title: 'Filter', detail: 'adversarial verify each file (opus, different reviewer)' },
@@ -54,6 +58,12 @@ const LENS = A.lensSet || 'combined'
 const SCOPE = A.scopeLabel || 'scan'
 const RTYPE = A.reportType || 'audit'
 const SUFFIX = A.reportSuffix || 'scan'
+// task selects the workflow SHAPE (TRDD-3d971f72): 'review' (default — scan/scan-and-fix/pr review)
+// or 'spec-compliance' (audit each file against a spec → consolidated MISSING + VIOLATING clauses).
+// The map→filter→reduce pool, the ramped RL backoff, and the byte-identical cache-prefix discipline
+// are SHARED across tasks; only the prompt prefixes + the reduce contract differ per task.
+const TASK = A.task || 'review'
+const SPECFILE = (typeof A.specFile === 'string') ? A.specFile : ''
 // Clamp to [1,16]: the harness caps real concurrency anyway, and an unbounded cap would defeat
 // the ramped pool's rate-limit halving (a cap of 1000 takes ~10 halvings to actually back off).
 const CONC = Math.max(1, Math.min(16, Math.floor(Number(A.conc) || 6)))
@@ -113,6 +123,14 @@ if (LENS !== 'combined' && LENS !== 'pr') {
 }
 if (RTYPE !== 'audit' && RTYPE !== 'gate' && RTYPE !== 'pr-comment') {
   return { error: "caa-engine: unknown reportType '" + RTYPE + "' (valid: audit | gate | pr-comment)" }
+}
+// task validation. 'impl-compare' is reserved for Phase 2 (TRDD-3d971f72) — reject it explicitly
+// rather than silently treating it as 'review'.
+if (TASK !== 'review' && TASK !== 'spec-compliance') {
+  return { error: "caa-engine: unknown task '" + TASK + "' (valid: review | spec-compliance)" }
+}
+if (TASK === 'spec-compliance' && (!SPECFILE || SPECFILE[0] !== '/')) {
+  return { error: "caa-engine: task 'spec-compliance' requires args.specFile (ABSOLUTE path to the spec/requirements document)" }
 }
 if (MINSEV && MINSEV !== 'CRITICAL' && MINSEV !== 'MAJOR' && MINSEV !== 'MINOR' && MINSEV !== 'NIT') {
   return { error: "caa-engine: unknown minSeverity '" + MINSEV + "' (valid: CRITICAL | MAJOR | MINOR | NIT)" }
@@ -204,8 +222,24 @@ const AUDIT_PREFIX =
   'Your FINAL message MUST be EXACTLY that absolute report path and nothing else (no prose).\n' +
   'Read this one target file LAST, only now, and audit it:\n'
 
+// CONSTANT spec-compliance map prefix — byte-identical for every agent (cache-shared). SPECFILE is
+// a per-RUN constant, so it sits in the prefix; only the target file (appended LAST) varies.
+const SPEC_MAP_PREFIX =
+  'You are a meticulous SPEC-COMPLIANCE auditor. A specification/requirements document defines what the code MUST do. ' +
+  'FIRST read the full spec at ' + SPECFILE + ' and enumerate its individual REQUIREMENT CLAUSES, giving each a STABLE short id — ' +
+  'reuse the spec\'s OWN numbering/headings where present (e.g. "R3", "§2.1", a named rule), else derive a stable id from the clause text. ' +
+  'Then audit EXACTLY ONE target code file against EVERY clause it is RELEVANT to. SCAN ONLY — do NOT edit/fix/run git; do NOT use llm-externalizer; do all analysis yourself. ' +
+  'Classify each relevant clause as IMPLEMENTED (the file satisfies it — cite file:line evidence), VIOLATED (the file contradicts/breaks it — cite file:line + WHY), or PARTIAL (begun but incomplete). ' +
+  'Do NOT list clauses this file has no bearing on. Adversarially verify each classification against the ACTUAL code before recording it — confirm the symbols/paths/APIs/values exist and behave as claimed.\n' +
+  'First run: mkdir -p "' + TMP + '". Write findings as markdown to ' + TMP + '/<slug>.map.md where <slug> is the absolute file path with every "/" replaced by "__". ' +
+  'Structure the body as a list, one entry per relevant clause: {clause-id, one-line clause summary, verdict (IMPLEMENTED|VIOLATED|PARTIAL), evidence file:line, why}.\n' +
+  'Your FINAL message MUST be EXACTLY that absolute report path and nothing else (no prose).\n' +
+  'Read the spec FIRST (path above), then read this one target file LAST, only now, and classify it:\n'
+// Select the map prefix by task. Both write <slug>.map.md, so mapAudit's validation is task-agnostic.
+const MAP_PREFIX = (TASK === 'spec-compliance') ? SPEC_MAP_PREFIX : AUDIT_PREFIX
+
 async function mapAudit(file) {
-  const out = await agent(AUDIT_PREFIX + file, { label: 'map:' + file, phase: 'Map', model: 'opus' })
+  const out = await agent(MAP_PREFIX + file, { label: 'map:' + file, phase: 'Map', model: 'opus' })
     .catch(e => 'AGENT_THREW: ' + e)
   const s = String(out).trim()
   if (RL.test(s)) return { file, status: 'rate-limited', stage: 'map' }
@@ -225,9 +259,20 @@ const VERIFY_PREFIX =
   'Your FINAL message MUST be EXACTLY that absolute report path and nothing else.\n' +
   'Read these two paths LAST, only now (the map report, then the source):\n'
 
+// CONSTANT spec-compliance filter prefix — byte-identical per agent (cache-shared); SPECFILE in prefix.
+const SPEC_VERIFY_PREFIX =
+  'You are an adversarial SPEC-COMPLIANCE verifier and a DIFFERENT reviewer than the auditor. A prior auditor classified ONE code file against the spec at ' + SPECFILE + '. ' +
+  'Independently CONFIRM or REFUTE each clause classification by reading the spec, the auditor report, and the source. Keep ONLY classifications you can prove with file:line evidence; ' +
+  'correct any wrong verdict (a false VIOLATED that is actually IMPLEMENTED, or a missed VIOLATION) with a note. ' +
+  'Do NOT silently drop errors: record every refuted/corrected classification in a "## Refuted / corrected" section WITH the evidence that changed it. SCAN ONLY — no edits/git; no llm-externalizer.\n' +
+  'First run: mkdir -p "' + TMP + '". Write the verified classifications to ' + TMP + '/<slug>.verified.md where <slug> is the absolute SOURCE path with every "/" replaced by "__". ' +
+  'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
+  'Read these LAST, only now (the spec, the map report, then the source):\n'
+const FILTER_PREFIX = (TASK === 'spec-compliance') ? SPEC_VERIFY_PREFIX : VERIFY_PREFIX
+
 async function filterVerify(mapResult) {
   if (!mapResult || mapResult.status !== 'mapped') return mapResult
-  const out = await agent(VERIFY_PREFIX + 'map_report=' + mapResult.report + '\nsource_file=' + mapResult.file,
+  const out = await agent(FILTER_PREFIX + 'map_report=' + mapResult.report + '\nsource_file=' + mapResult.file,
     { label: 'verify:' + mapResult.file, phase: 'Filter', model: 'opus' })
     .catch(e => 'AGENT_THREW: ' + e)
   const s = String(out).trim()
@@ -290,7 +335,7 @@ let domainReports = []
 const domainByFile = {} // file → [its domain report paths]; the fix phase feeds these to the fixer
 let domainFailed = []
 const domainStats = { pairs: 0, done: 0, failed: 0 }
-if (DOMAIN.length) {
+if (TASK === 'review' && DOMAIN.length) {
   const pairs = []
   for (const f of FILES) for (const k of DOMAIN) if (lensMatches(f, k)) pairs.push({ file: f, key: k })
   domainStats.pairs = pairs.length
@@ -351,7 +396,31 @@ const reduceCall = async (prompt, label) => {
 
 phase('Reduce')
 const verifiedPaths = verified.map(r => r.verified).join('\n')
-const finalRed = await reduceCall(
+let finalRed
+if (TASK === 'spec-compliance') {
+  // SPEC-COMPLIANCE reduce: MISSING needs the GLOBAL view (a clause is missing only if NO file
+  // implements it), so the reduce re-reads the spec for the canonical clause list and subtracts
+  // what the per-file classification reports cover.
+  finalRed = await reduceCall(
+    'You are the REDUCE step of a CAA SPEC-COMPLIANCE audit (spec: ' + SPECFILE + ', scope: ' + SCOPE + '). ' +
+    'FIRST read the spec at ' + SPECFILE + ' to get the CANONICAL, COMPLETE list of requirement clauses (with their ids). ' +
+    'Then read EVERY verified per-file classification report listed below. Produce ONE consolidated compliance report with these sections: ' +
+    '"## VIOLATING" — every clause some file VIOLATES, grouped by clause id, each with the offending file:line + WHY; ' +
+    '"## MISSING" — every spec clause that NO file in scope IMPLEMENTS or PARTIALLY implements (compute by subtracting every covered clause from the canonical spec list); ' +
+    '"## PARTIAL" — clauses begun but incomplete, with the file(s); ' +
+    '"## Coverage" — a table: clause-id | clause summary | status (IMPLEMENTED|PARTIAL|VIOLATED|MISSING) | file(s). ' +
+    'At the VERY TOP write exactly: "SUMMARY: <v> VIOLATING, <m> MISSING, <p> PARTIAL of <t> spec clauses across <f> files". ' +
+    'Add a "## Refuted / corrected" section aggregating the verifiers\' corrections, and a "## Needs follow-up" section naming any file that did NOT reach verified status. Do NOT use llm-externalizer.\n' +
+    'Create paths with Bash: mkdir -p "' + FINAL_DIR + '" ; TS=$(date +%Y%m%d_%H%M%S%z) ; write the report to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.md ' +
+    'AND a machine-readable file to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.findings.json (same $TS) — a JSON array with one record per clause-status: ' +
+    '{"clause_id","clause","status":"implemented"|"partial"|"violated"|"missing","file","line","evidence","why"}.\n' +
+    'Your FINAL message MUST be EXACTLY the absolute path of the consolidated .md report and nothing else.\n\n' +
+    'Spec file (read it FIRST for the canonical clause list): ' + SPECFILE + '\nScope label: ' + SCOPE + '\nFiles checked: ' + FILES.length + '\n' +
+    'Verified per-file classification report paths:\n' + (verifiedPaths || '(none — all files failed or were rate-limited)') + '\n' +
+    'Files that did NOT verify: ' + (problems.map(p => (p && p.file) || 'unknown').join(', ') || 'none') + '\n',
+    'reduce:spec')
+} else {
+  finalRed = await reduceCall(
   'You are the REDUCE (consolidation) step of a CAA audit (scope: ' + SCOPE + '). Read EVERY verified per-file report listed below and merge them into ONE ' +
   'consolidated, de-duplicated, greppable report grouped by severity (CRITICAL, MAJOR, MINOR, NIT) — one entry per real defect with file:line + a one-line WHY. ' +
   'Include a per-file summary table (file | CRITICAL | MAJOR | MINOR | NIT). ' + verdictRule + ' ' +
@@ -372,6 +441,7 @@ const finalRed = await reduceCall(
   (unknownLenses.length ? 'UNKNOWN domainLenses keys (config bug — surface it): ' + unknownLenses.join(', ') + '\n' : ''),
   'reduce:' + RTYPE
 )
+}
 const final = finalRed.text
 const finalMd = extractPath(final, 'md')
 
@@ -380,7 +450,7 @@ const finalMd = extractPath(final, 'md')
 //    run-level isolation is the harness's job (per the user constraint). Each fixer uses its
 //    own .verified.md findings. Same cache discipline: constant prefix, per-file paths LAST.
 let fixReport = null
-if (MODE === 'scan-and-fix' && verified.length) {
+if (TASK === 'review' && MODE === 'scan-and-fix' && verified.length) {
   const FIX_PREFIX =
     'You are a meticulous senior engineer FIXING exactly ONE file. A prior audit + adversarial verification produced a ' +
     'VERIFIED findings report for this file. Fix the ROOT CAUSE of every verified CRITICAL/MAJOR/MINOR finding (NIT optional) ' +
@@ -461,7 +531,7 @@ if (MODE === 'scan-and-fix' && verified.length) {
     reduce: fixRed.status,
   }
 }
-if (MODE === 'scan-and-fix' && !verified.length) {
+if (TASK === 'review' && MODE === 'scan-and-fix' && !verified.length) {
   // Previously the whole fix phase silently no-oped and the wrapper got fixReport:null with no
   // explanation — make the "nothing was fixable" outcome explicit.
   fixReport = { fixed: 0, ofVerified: 0, problems: [], report: null, reduce: 'skipped', note: 'no file reached verified status — nothing to fix' }
@@ -477,7 +547,7 @@ if (MODE === 'scan-and-fix' && !verified.length) {
 //    so they returned WITHOUT writing the assigned report (silent gap). Inline = deterministic +
 //    cache-shared, and the returned path is VALIDATED (a missing report ⇒ 'lens-failed', never a gap).
 let prReport = null
-if (LENS === 'pr') {
+if (TASK === 'review' && LENS === 'pr') {
   const DIFF = A.diffFile || '(none)'
   const DESC = A.descFile || '(none)'
   const PRN = A.prNumber || 'local'
@@ -558,6 +628,7 @@ if (LENS === 'pr') {
 }
 
 return {
+  task: TASK,
   scope: SCOPE,
   mode: MODE,
   reportType: RTYPE,
