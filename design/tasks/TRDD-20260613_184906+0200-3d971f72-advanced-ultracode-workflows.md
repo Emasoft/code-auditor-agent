@@ -47,8 +47,8 @@ external-refs: ["https://code.claude.com/docs/en/sub-agents.md", "https://code.c
 > prompts over agentType wrapping). No nested agents yet.
 >
 > **PHASE 1 (spec-compliance) — DONE + DOGFOOD-VERIFIED (2026-06-13).** Commits `557ba6b` (engine
-> task), `f996d00` (command + fallback), `221420f` (arg-string fix). The engine has `task:'spec-compliance'`
-> + `/caa-spec-audit` + a simple-scan spec mode. Dogfood (2-file known-answer fixture in
+> task), `f996d00` (command + fallback), `221420f` (arg-string fix). The engine has the
+> `task:'spec-compliance'` mode, the `/caa-spec-audit` command, and a simple-scan spec mode. Dogfood (2-file known-answer fixture in
 > `reports_dev/spec-dogfood/`, runId spec-dogfood-3, 5 agents/664k tok) produced the EXACT expected
 > verdicts: `SUMMARY: 2 VIOLATING, 1 MISSING, 0 PARTIAL of 4 clauses` — R4→MISSING (no file has
 > `--dry-run`), R3→VIOLATING (impl_a dumps secret values), R1/R2→IMPLEMENTED (verifier correctly
