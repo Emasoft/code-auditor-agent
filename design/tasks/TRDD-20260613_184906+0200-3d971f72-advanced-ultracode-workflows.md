@@ -3,7 +3,7 @@ trdd-id: 3d971f72-7726-41cd-9029-5257ec65f2ec
 title: Advanced ultracode workflows — spec-compliance + impl-compare + reference-plugin patterns
 column: dev
 created: 2026-06-13T18:49:06+0200
-updated: 2026-06-13T19:14:00+0200
+updated: 2026-06-13T19:39:46+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -61,8 +61,24 @@ external-refs: ["https://code.claude.com/docs/en/sub-agents.md", "https://code.c
 > feature is arguably MISSING-only vs. a per-file VIOLATION). The report handles the overlap
 > transparently; a future tweak could make VIOLATED=active-contradiction only, absence=MISSING — a
 > design/intent call (matches the user's "missing vs violating" framing). Decide before Phase 3 docs.
-> **NEXT ACTION:** Phase 2 (impl-compare) — task #80; same engine, INPUT in the cached prefix,
-> implementations[] as the varying suffix.
+> **PHASE 2 (impl-compare) — DONE + DOGFOOD-VERIFIED (2026-06-13).** Commits `0e113d8` (engine
+> `task:'impl-compare'`), `d0193a6` (`/caa-impl-compare` + fallback). 3-candidate known-answer fixture
+> (`reports_dev/impl-dogfood/`: sort_a correct/fast, sort_b descending-bug, sort_c correct/O(n²)) →
+> `SUMMARY: 2 of 3 PASS; winner: sort_a.py`; Ranking sort_a#1 / sort_c#2 / sort_b#3(REJECT); Failures
+> listed sort_b with the empirical input→got→expected table; findingsJson `[a:pass:1, c:pass:2,
+> b:fail:3]`. The verifiers RAN candidates in /tmp (sort_c fuzzed on 200 random lists) — the
+> "cache the input, vary the script" pattern confirmed. Report:
+> `reports/code-auditor-agent/20260613_193757+0200-impl-dogfood.md`.
+> **Resilience note:** the FIRST impl-compare run (impl-dogfood-1) hit a transient SERVER rate-limit
+> ("not your usage limit") that killed 2 verifies + the reduce — the engine **degraded gracefully**
+> (cap-then-report, listed problems, no crash, finalReport null). The rate-limit cleared (~331s); the
+> clean re-run (impl-dogfood-2) produced the full result. No agent eval scratch leaked into the tree
+> (stayed in /tmp + the purged temp dir).
+> **Both new workflows are now dogfood-verified.** Engine has 3 tasks (review|spec-compliance|impl-compare)
+> on one cache-correct pool; fallback covers all three.
+> **NEXT ACTION:** Phase 3 (task #81) — reference-plugin docs (cache-prefix law, fork-vs-named table,
+> nested-agent guidance) + README (the 2 new commands + CAA_ULTRACODE). Decide the spec-compliance
+> VIOLATED-vs-MISSING refinement before/with Phase 3.
 
 ## Architecture decision
 
