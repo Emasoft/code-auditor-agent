@@ -1,9 +1,9 @@
 ---
 trdd-id: 3d971f72-7726-41cd-9029-5257ec65f2ec
 title: Advanced ultracode workflows — spec-compliance + impl-compare + reference-plugin patterns
-column: dev
+column: complete
 created: 2026-06-13T18:49:06+0200
-updated: 2026-06-13T19:39:46+0200
+updated: 2026-06-13T19:47:02+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -76,9 +76,30 @@ external-refs: ["https://code.claude.com/docs/en/sub-agents.md", "https://code.c
 > (stayed in /tmp + the purged temp dir).
 > **Both new workflows are now dogfood-verified.** Engine has 3 tasks (review|spec-compliance|impl-compare)
 > on one cache-correct pool; fallback covers all three.
-> **NEXT ACTION:** Phase 3 (task #81) — reference-plugin docs (cache-prefix law, fork-vs-named table,
-> nested-agent guidance) + README (the 2 new commands + CAA_ULTRACODE). Decide the spec-compliance
-> VIOLATED-vs-MISSING refinement before/with Phase 3.
+> **PHASE 3 (reference docs) — DONE (2026-06-13), commit `136d16f`.** README now documents both new
+> commands (Usage table + examples + Components), the new engine args (task/specFile/inputSpec), and
+> a new **"Advanced ultracode"** section + TOC entry: the three task shapes on one engine, the cache
+> law CAA is engineered around (byte-identical shared prefix + per-agent suffix LAST; API caches on
+> `(model, prefix)`), and the fork-vs-named-subagent cache distinction (cross-agent saving = identical-
+> prefix design, NOT fork-sharing). The discoverable reference content ships in-repo (the research
+> report stays gitignored).
+> **DESIGN DECISIONS (resolved with reasoned defaults — no expensive re-work):**
+> 1. **VIOLATED-vs-MISSING (spec-compliance):** KEEP the current verified behavior — an absent
+>    required feature surfaces in MISSING, and may ALSO appear in VIOLATING when the files that should
+>    implement it are the ones lacking it, with the reduce explaining the overlap (as it did for R4).
+>    This is verified + transparent + arguably more informative than a strict split; not changing it
+>    avoids a re-dogfood for a debatable semantic tweak. (Revisit only if the user wants strict
+>    two-category separation.)
+> 2. **Nested agents (2.1.172) / skill-injection (`skills:`/agentType):** EVALUATED, NOT adopted. The
+>    engine's own load-bearing lesson (line ~475: agentType-wrapping the specialist agents broke the
+>    I/O contract → silent report gaps) plus the flat pool's cache-shared-prefix + ramped-RL resilience
+>    mean inline prompts WIN. The flat map→filter→reduce stays the design. Documented the fork-vs-named
+>    and when-to-consider-nesting in the README so the knowledge ships without the fragility.
+> 3. **Standalone deep `docs/ULTRACODE.md`:** OPTIONAL follow-up — the README "Advanced ultracode"
+>    section + the heavily-commented engine cover the core; a comprehensive standalone doc is
+>    gold-plating, deferred unless the user wants it.
+> **STATUS: feature COMPLETE + dogfood-verified (both workflows) + documented. Ships with v4.0.0
+> (held on CPV #102 like the rest of the unpushed work). 22 commits ahead.**
 
 ## Architecture decision
 
