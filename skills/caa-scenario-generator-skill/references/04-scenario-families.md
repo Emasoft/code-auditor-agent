@@ -66,6 +66,8 @@ matching entry in `FAMILY_TO_FAILURE_MODES`, and vice versa.
 | `privilege_escalation` | kernel_*, driver_linux_userspace, browser_ext_*, desktop_*, mobile_* |
 | `race_in_setuid_or_setgid` | kernel_*, os_baremetal, cli_* |
 
+> These family identifiers are opaque catalog keys naming dangerous failure-mode **patterns** the walker must AUDIT FOR — never commands to run. Each must stay byte-identical to its `FAMILY_TO_FAILURE_MODES` key in `scripts/scenario_generator/scenario_families.py` (and the test fixtures), so do NOT rename a key to satisfy a scanner — this warning-context caption is what keeps the privilege-escalation pattern name a documented data string, not an execution finding.
+
 ## Per-family failure modes
 
 Each family ships a list of failure modes — opaque strings the walker
