@@ -53,16 +53,6 @@ jobs:
           restore-keys: |
             cpv-scan-cache-${{ runner.os }}-
 
-      # CPV's XML validator (smart_exec.py) runs `xmllint`. A bare ubuntu
-      # runner has no libxml2-utils, so CPV falls back to npx/npm — which
-      # can't provide xmllint ("npm error: could not determine executable")
-      # and reports a FALSE MAJOR on valid XML test fixtures. Installing the
-      # native xmllint makes CPV use it directly. (CPV-side robustness fix —
-      # tool-unavailable should degrade to a WARNING, not a MAJOR — reported
-      # upstream; this is the self-reliant CAA-side mitigation.)
-      - name: Install libxml2-utils (native xmllint for CPV's XML check)
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-
       - name: Run plugin validation (CPV remote gate)
         run: |
           # The plugin vendors NO validators: validation is the CPV plugin invoked
