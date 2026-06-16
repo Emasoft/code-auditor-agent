@@ -1,9 +1,9 @@
 ---
 trdd-id: 0b67b18d-56cc-4a2e-97f1-0ca0249aabdf
 title: Guaranteed-completion self-calibrating pool — ultracode workflows must never fail on rate-limits
-column: dev
+column: complete
 created: 2026-06-16T22:16:55+0200
-updated: 2026-06-16T22:16:55+0200
+updated: 2026-06-16T22:35:31+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 1
@@ -27,6 +27,12 @@ external-refs: []
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME — 2026-06-16
 
+> ### ✅ DONE 2026-06-16 — CGCP implemented + tested in BOTH methods; the guarantee holds.
+> - **CAA engine** (`scripts/workflows/caa-engine.js`, commit `865ebb8`): `precalibrate()` probe + `backoff(sec)` sleeper-agent (the real timed wait the DSL lacks) + `runPool` → UNBOUNDED-RL-retry with exponential sleeper-backoff + AIMD cap + budget-stop; `reduceCall` → same unbounded loop. The old `rate-limit-exhausted` abandonment is GONE — no rate-limit ever abandons a file.
+> - **User's command** (`~/.claude/commands/workflow-verified-scan-and-fix.md`): same CGCP ported into its inline script; the shared bare-`/429/` regex bug fixed to `\b(429|503|529)\b`; §5/§6 + Notes + Concurrency-RULE prose updated to match.
+> - **Verified:** engine harness **20/20** (incl. `rate_limit_unbounded_retry_guarantees_completion` 6×RL→completes; `reduce_rate_limit_unbounded_retry_then_ok` 4×RL→ok; `budget_ceiling_is_the_only_stop_under_forever_rate_limit` safety-valve, no hang); full suite **598 passed**; CPV `--strict` gate **exit 0** (sleeper/probe prompts don't trip a detector); both JS blocks parse.
+> - **Guarantee argument:** a server RL is transient ("temporarily limiting"); UNBOUNDED retries × real exponential sleeper-backoff ⇒ a retry always lands after the limit clears ⇒ every item completes. The ONLY non-completions are a genuine deterministic bug (bounded retry, surfaced as a real defect — not an RL exception) or a user-set `budget.total` ceiling. Ships next release (4 commits ahead pre-existing + these).
+>
 > **USER GOAL (2026-06-16, /goal):** "identify the shortcomings of both methods, find solutions to
 > every one. In NO case must the ultracode workflow fail. Integrate a dynamic calibration algorithm
 > to keep the token rate below the rate limits — pre-calibrate, calibrate on the run, adapt to
