@@ -54,7 +54,7 @@ async function runEngine(args, agentImpl, opts = {}) {
     'args', 'agent', 'parallel', 'log', 'phase', 'budget',
     "'use strict'; return (async () => {\n" + engineSource + '\n})()'
   )
-  const result = await fn(args, agent, parallel, log, phase, { total: null, spent: () => 0, remaining: () => Infinity })
+  const result = await fn(args, agent, parallel, log, phase, opts.budget || { total: null, spent: () => 0, remaining: () => Infinity })
   return { result, calls, logs, phases, maxActive }
 }
 
@@ -68,6 +68,10 @@ function contractAgent(table = {}) {
       const out = hook(call)
       if (out !== undefined) return out
     }
+    // CGCP infrastructure agents (TRDD-0b67b18d): the pre-calibration probe + the sleeper backoff.
+    // Mocked → instant, so the suite never actually sleeps. Probe → healthy unless a test overrides.
+    if (call.label === 'precal-probe') return 'OK'
+    if (call.label.startsWith('backoff:')) return 'SLEPT'
     const tmp = (p.match(/mkdir -p "([^"]+)"/) || [])[1]
     if (call.label.startsWith('map:')) {
       const file = p.slice(p.lastIndexOf('\n') + 1)
@@ -177,14 +181,15 @@ test('path_containing_429_is_not_rate_limited', 'A file named like migrations/04
   eq(result.problems.length, 0, 'no rate-limit-exhausted entry for the 0429 file')
 })
 
-test('rate_limit_exhaustion_caps_then_reports', 'A file that rate-limits on every attempt ends as rate-limit-exhausted in problems — engine never hard-fails', async () => {
-  const { result } = await runEngine(BASE, contractAgent({
-    'map:/repo/b.py': () => 'rate limit reached, try again later',
+test('rate_limit_unbounded_retry_guarantees_completion', 'A file that rate-limits 6× (FAR past the old 3-retry cap) still completes — RL retries are now UNBOUNDED with a real sleeper-backoff; NO file is ever abandoned as rate-limit-exhausted (TRDD-0b67b18d S1/S2 — the guarantee)', async () => {
+  let n = 0
+  const { result, calls } = await runEngine(BASE, contractAgent({
+    'map:/repo/b.py': () => { n++; return n <= 6 ? 'API Error: Server is temporarily limiting requests' : undefined },
   }))
-  eq(result.verified, 1, 'the clean file still completes')
-  eq(result.problems.length, 1, 'one problem entry')
-  eq(result.problems[0].file, '/repo/b.py', 'problem names the file (never [object Object])')
-  eq(result.problems[0].status, 'rate-limit-exhausted', 'status')
+  eq(result.verified, 2, 'both files complete despite 6 consecutive rate-limits on b.py')
+  eq(result.problems.length, 0, 'NO file abandoned — rate-limit-exhausted must never occur under the guarantee')
+  ok(n > 6, 'b.py was retried past all 6 rate-limits (n=' + n + ')')
+  ok(calls.some((c) => c.label.startsWith('backoff:')), 'a real sleeper-backoff agent fired on the RL waves')
 })
 
 test('unknown_domain_lens_is_surfaced', 'An unknown domainLenses key (e.g. skeptical, which is holistic) is reported in result.unknownLenses + the log, never a silent no-op', async () => {
@@ -205,13 +210,22 @@ test('domain_findings_flow_into_fixers', 'In scan-and-fix mode the fixer prompt 
   eq(result.fixReport.fixed, 1, 'fix-verified count')
 })
 
-test('reduce_rate_limit_retries_then_fails_clean', 'A reduce that rate-limits twice yields reduce=failed and finalReport=null instead of polluting the result with error text', async () => {
-  const { result } = await runEngine(BASE, contractAgent({
-    reduce: () => 'API Error: Server is temporarily limiting requests.',
+test('reduce_rate_limit_unbounded_retry_then_ok', 'A reduce that rate-limits 4× (past the old retry-once) still recovers — the reduce now retries UNBOUNDED with a real sleeper-backoff so a transient outage never loses the consolidated report (TRDD-0b67b18d S7)', async () => {
+  let n = 0
+  const { result, calls } = await runEngine(BASE, contractAgent({
+    reduce: () => { n++; return n <= 4 ? 'API Error: Server is temporarily limiting requests.' : undefined },
   }))
-  eq(result.reduce, 'failed', 'reduce status')
-  eq(result.finalReport, null, 'finalReport must be null, not the error text')
-  eq(result.findingsJson, null, 'findingsJson must be null when reduce failed')
+  eq(result.reduce, 'ok', 'reduce recovers after 4 rate-limits (unbounded retry)')
+  ok(result.finalReport && result.finalReport.endsWith('-scan.md'), 'finalReport present after the backoff retries')
+  ok(calls.some((c) => c.label.startsWith('backoff:')), 'reduce fired a real sleeper-backoff between retries')
+})
+
+test('reduce_genuine_failure_is_bounded_then_fails_clean', 'A reduce that fails for a NON-rate-limit reason (empty return, never RL) is bounded-retried (≤3) then cleanly fails — genuine failures are NOT retried forever (only rate-limits are), so a deterministic bug cannot hang the run', async () => {
+  const { result } = await runEngine(BASE, contractAgent({
+    reduce: () => '', // empty return = genuine failure (not a path, not an RL signal)
+  }))
+  eq(result.reduce, 'failed', 'genuine (non-RL) reduce failure ends failed after the small bounded retry')
+  eq(result.finalReport, null, 'finalReport null on genuine failure')
 })
 
 test('reduce_transient_rate_limit_recovers_on_retry', 'A reduce that rate-limits ONCE succeeds on its single retry', async () => {
@@ -264,6 +278,17 @@ test('conc_is_clamped_to_16', 'conc=999 must not unleash an unbounded swarm: obs
   const files = Array.from({ length: 40 }, (_, i) => ROOT + '/f' + i + '.py')
   const { maxActive } = await runEngine({ root: ROOT, files, runId: 'clamp', conc: 999 }, contractAgent(), { agentDelayMs: 3 })
   ok(maxActive <= 16, 'maxActive=' + maxActive + ' must be ≤ 16')
+})
+
+test('budget_ceiling_is_the_only_stop_under_forever_rate_limit', 'Safety valve: under a pathological NEVER-clearing rate-limit, a set budget.total makes the pool mark remaining items budget-stopped and RESOLVE (never hang, never abandon-as-exhausted) — the sole legitimate non-completion (TRDD-0b67b18d)', async () => {
+  let probes = 0
+  const budget = { total: 200000, spent: () => probes * 80000, remaining: () => Math.max(0, 200000 - probes * 80000) }
+  const { result } = await runEngine(BASE, contractAgent({
+    map: () => { probes++; return 'API Error: Server is temporarily limiting requests' }, // never clears
+  }), { budget })
+  ok(Array.isArray(result.problems), 'engine RESOLVED (did not hang) under forever-RL + budget')
+  eq(result.verified, 0, 'nothing verified under a never-clearing limit')
+  ok(result.problems.length >= 1 && result.problems.every((p) => p && p.status === 'budget-stopped'), 'remaining items are budget-stopped (the legitimate stop), never rate-limit-exhausted')
 })
 
 test('runid_fallback_is_deterministic_hash', 'Without runId the tmp namespace falls back to a deterministic args-hash (distinct args ⇒ distinct dirs)', async () => {

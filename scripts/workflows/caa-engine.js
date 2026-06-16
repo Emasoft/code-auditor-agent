@@ -325,37 +325,111 @@ async function processFile(file) {
   return v
 }
 
-// Ramped rate-limit-aware pool: cap 1 → maxCap on clean settles; a {rateLimited} result
-// halves the cap AND re-queues the file (re-queue = the backoff). Cap-then-report; never hard-fail.
-async function runPool(items, worker, maxCap, maxRetries) {
-  const queue = items.map((it, idx) => ({ it, idx, tries: 0 }))
+// ─────────────────────────────────────────────────────────────────────────────
+// CGCP — Calibrated Guaranteed-Completion Pool (TRDD-0b67b18d).
+// The Workflow DSL has no sleep/setTimeout/Date.now, so a re-queue is NOT a real wait when the
+// WHOLE queue is rate-limited (re-queue behind an all-RL queue at cap=1 = instant retry → the old
+// bounded retries burned out before the server limit cleared, then ABANDONED the file). But a
+// sub-AGENT has Bash → it can `sleep`. So real timed backoff = a cheap sleeper agent whose
+// wall-clock runtime IS the wait. Combined with UNBOUNDED RL retries + exponential backoff + AIMD
+// adaptive concurrency, every item completes for any TRANSIENT server rate-limit (the only kind the
+// API issues — "temporarily limiting"). Genuine (non-RL) agent failures get a SMALL bounded retry
+// then surface as a real defect (NOT an RL exception). The user's budget.total (if set) is the only
+// legitimate stop; with no budget, RL retries are unbounded (full guarantee for a finite outage).
+const BASE_BACKOFF = 20      // seconds — base inter-wave wait
+const MAX_BACKOFF = 300      // seconds — per-wave cap (waves REPEAT, so cumulative wait is unbounded)
+const RAMP_OK = 3            // consecutive clean settles before an additive cap++ (AIMD increase)
+const BUDGET_FLOOR = 60000   // stop dispatching NEW work when fewer output tokens than this remain
+let gBackoffSec = BASE_BACKOFF   // module-level: escalates on RL, decays on success, persists across phases
+let gCapHint = 1                 // module-level starting-cap hint (precalibrate sets it; each pool updates it)
+
+// budget may be undefined outside the DSL (defensive); absent / total:null ⇒ "no ceiling".
+const budgetTripped = () => {
+  try { return (typeof budget !== 'undefined' && budget && budget.total && budget.remaining() < BUDGET_FLOOR) } catch (e) { return false }
+}
+
+// Real timed wait: a sleeper agent runs `sleep <sec>` in Bash (the DSL script itself cannot sleep).
+// opus honors the all-opus invariant; a sleeper emits ~1 token so the model is cost-irrelevant, and
+// the pool is PAUSED during the wait so the sleeper never contends with audit agents. In tests
+// agent() is mocked → the sleeper returns instantly, so the suite never actually waits.
+async function backoff(sec) {
+  const s = Math.max(1, Math.min(MAX_BACKOFF, Math.floor(sec)))
+  await agent('You are a NO-OP delay agent for rate-limit backoff. Run EXACTLY this shell and nothing else: sleep ' + s + ' ; echo SLEPT . Do NOT read files; do NOT use any other tool. Your FINAL message must be exactly: SLEPT',
+    { label: 'backoff:' + s + 's', phase: 'Backoff', model: 'opus' }).catch(() => null)
+}
+
+// Pre-calibration: one cheap probe detects whether the server is limiting RIGHT NOW and sets the
+// starting cap + backoff so a cold run into an already-limiting server doesn't waste the first wave.
+async function precalibrate() {
+  const out = await agent('Reply with exactly: OK', { label: 'precal-probe', phase: 'Precalibrate', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
+  if (RL.test(String(out).trim())) {
+    gBackoffSec = Math.min(MAX_BACKOFF, BASE_BACKOFF * 4); gCapHint = 1
+    log('precalibrate: server is rate-limiting → start cap=1, backoff=' + gBackoffSec + 's')
+    await backoff(gBackoffSec)
+  } else {
+    gBackoffSec = BASE_BACKOFF; gCapHint = 2
+    log('precalibrate: server healthy → start cap=2')
+  }
+}
+
+// The pool. maxCap = concurrency ceiling; genuineMax = bounded retries for NON-RL ("*-failed")
+// hiccups. RL retries are UNBOUNDED (the guarantee) with a real exponential sleeper-backoff; a
+// budget ceiling is the only thing that stops them. Cap-then-report; never hard-fail.
+async function runPool(items, worker, maxCap, genuineMax) {
+  const queue = items.map((it, idx) => ({ it, idx, tries: 0, rl: 0 }))
   const out = new Array(items.length)
-  let inFlight = 0, cap = 1, head = 0
+  let inFlight = 0, head = 0, okStreak = 0
+  let cap = Math.max(1, Math.min(maxCap, gCapHint))
+  let paused = false, stopped = false
+  const itFileOf = (it) => (it && it.file) || it
   return await new Promise((resolve) => {
+    const settle = () => { if ((head >= queue.length || stopped) && inFlight === 0) resolve(out) }
+    const drainBudget = () => {   // mark every not-yet-resolved item as budget-stopped, then settle
+      stopped = true
+      for (const n of queue) if (out[n.idx] === undefined) out[n.idx] = { file: itFileOf(n.it), status: 'budget-stopped' }
+      settle()
+    }
     const pump = () => {
-      if (head >= queue.length && inFlight === 0) return resolve(out)
+      if (paused || stopped) return
+      if (budgetTripped()) { log('CGCP: budget ceiling reached — stopping new dispatch'); return drainBudget() }
       while (inFlight < cap && head < queue.length) {
         const node = queue[head++]; inFlight++
-        Promise.resolve(worker(node.it, node.idx))
-          .then((r) => {
-            if (r && r.rateLimited) {
-              cap = Math.max(1, (cap / 2) | 0)
-              // node.it is a plain path for the map pool but an OBJECT for the domain/fix pools
-              // ({file,key} / verified-result) — normalize so problem entries never stringify
-              // to "[object Object]" in the report.
-              const itFile = (node.it && node.it.file) || node.it
-              if (node.tries < maxRetries) { queue.push({ it: node.it, idx: node.idx, tries: node.tries + 1 }); log('rate-limited, re-queued ' + itFile + ' cap->' + cap) }
-              else out[node.idx] = { file: itFile, status: 'rate-limit-exhausted' }
-            } else { out[node.idx] = r; if (cap < maxCap) cap++ }
-          })
-          .catch((e) => { out[node.idx] = { file: (node.it && node.it.file) || node.it, status: 'pool-error', error: String(e).slice(0, 180) } })
-          .finally(() => { inFlight--; pump() })
+        Promise.resolve(worker(node.it, node.idx)).then(async (r) => {
+          if (r && r.rateLimited) {
+            // RL wave: AIMD multiplicative-decrease + a REAL exponential backoff + UNBOUNDED re-queue.
+            okStreak = 0
+            cap = Math.max(1, (cap / 2) | 0)
+            gBackoffSec = Math.min(MAX_BACKOFF, Math.max(BASE_BACKOFF, gBackoffSec * 2))
+            node.rl++
+            queue.push({ it: node.it, idx: node.idx, tries: node.tries, rl: node.rl })
+            log('RL: re-queued ' + itFileOf(node.it) + ' (rl#' + node.rl + ') cap->' + cap + ' backoff=' + gBackoffSec + 's')
+            if (!paused && !stopped) { paused = true; await backoff(gBackoffSec); paused = false }   // ONE real wait per wave
+          } else if (r && typeof r.status === 'string' && /-failed$/.test(r.status) && node.tries < genuineMax) {
+            // genuine (non-RL) hiccup: small bounded retry with a short real backoff, then surface.
+            node.tries++
+            queue.push({ it: node.it, idx: node.idx, tries: node.tries, rl: node.rl })
+            log('genuine-fail: retry ' + itFileOf(node.it) + ' (' + node.tries + '/' + genuineMax + ')')
+            if (!paused && !stopped) { paused = true; await backoff(BASE_BACKOFF); paused = false }
+          } else {
+            out[node.idx] = r
+            okStreak++
+            if (okStreak >= RAMP_OK && cap < maxCap) { cap++; okStreak = 0 }                         // AIMD additive-increase
+            if (gBackoffSec > BASE_BACKOFF) gBackoffSec = Math.max(BASE_BACKOFF, (gBackoffSec / 2) | 0)  // decay on health
+          }
+          gCapHint = Math.max(1, Math.min(maxCap, cap))
+        })
+          .catch((e) => { out[node.idx] = { file: itFileOf(node.it), status: 'pool-error', error: String(e).slice(0, 180) } })
+          .finally(() => { inFlight--; pump(); settle() })
       }
+      settle()
     }
     pump()
   })
 }
 
+// Pre-calibrate ONCE before the first wave (TRDD-0b67b18d): probe current server state so a cold
+// run into an already-limiting server starts cap=1 + pre-waits instead of burning the first wave.
+await precalibrate()
 phase('Map')
 log('caa-engine: mode=' + MODE + ' lens=' + LENS + ' scope=' + SCOPE + ' reportType=' + RTYPE + ' files=' + FILES.length + ' conc=' + CONC)
 const results = await runPool(FILES, processFile, CONC, 3)
@@ -420,14 +494,26 @@ if (RTYPE === 'gate') {
 // Reduce returns were previously fire-and-forget: a rate-limited reduce silently became the
 // "finalReport". Retry ONCE (the pool's re-queue backoff does not cover these single calls),
 // then surface a failed status — cap-then-report, never hard-fail.
+// The reduce is a SINGLE consolidation call, not a pool — but it must survive a rate-limit just as
+// the pool does (TRDD-0b67b18d S7): UNBOUNDED RL retry with the same real exponential sleeper-backoff
+// (a transient outage must never lose the consolidated report), a SMALL bounded retry for a genuine
+// (non-RL) failure, and the budget ceiling as the only legitimate give-up.
 const reduceCall = async (prompt, label) => {
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let rl = 0, genuine = 0
+  for (;;) {
+    if (budgetTripped()) { log(label + ': budget ceiling reached — giving up the reduce'); return { status: 'failed', text: '(reduce stopped at budget ceiling)' } }
     const out = await agent(prompt, { label, phase: 'Reduce', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
     const s = String(out).trim()
     if (s && !RL.test(s) && !s.startsWith('AGENT_THREW:')) return { status: 'ok', text: s }
-    log(label + ' attempt ' + (attempt + 1) + ' failed: ' + s.slice(0, 80) + (attempt === 0 ? ' — retrying once' : ''))
+    if (RL.test(s)) {   // transient server RL → UNBOUNDED retry with a real exponential backoff
+      rl++; gBackoffSec = Math.min(MAX_BACKOFF, Math.max(BASE_BACKOFF, gBackoffSec * 2))
+      log(label + ': rate-limited (rl#' + rl + ') — backoff ' + gBackoffSec + 's then retry')
+      await backoff(gBackoffSec); continue
+    }
+    if (++genuine >= 3) { log(label + ': genuine failure x' + genuine + ' — giving up'); return { status: 'failed', text: '(reduce failed: ' + s.slice(0, 120) + ')' } }
+    log(label + ': genuine failure (' + genuine + '/3) — short backoff then retry')
+    await backoff(BASE_BACKOFF)
   }
-  return { status: 'failed', text: '(reduce failed after retry)' }
 }
 
 phase('Reduce')
