@@ -1,9 +1,11 @@
 ---
 trdd-id: 3d971f72-7726-41cd-9029-5257ec65f2ec
 title: Advanced ultracode workflows — spec-compliance + impl-compare + reference-plugin patterns
-column: complete
+column: published
 created: 2026-06-13T18:49:06+0200
-updated: 2026-06-13T19:47:02+0200
+updated: 2026-06-16T17:20:02+0200
+published-version: 4.0.0
+published-at: 2026-06-16T17:13:00+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -98,8 +100,9 @@ external-refs: ["https://code.claude.com/docs/en/sub-agents.md", "https://code.c
 > 3. **Standalone deep `docs/ULTRACODE.md`:** OPTIONAL follow-up — the README "Advanced ultracode"
 >    section + the heavily-commented engine cover the core; a comprehensive standalone doc is
 >    gold-plating, deferred unless the user wants it.
-> **STATUS: feature COMPLETE + dogfood-verified (both workflows) + documented. Ships with v4.0.0
-> (held on CPV #102 like the rest of the unpushed work). 22 commits ahead.**
+> **STATUS: 🚀 SHIPPED in v4.0.0 (published 2026-06-16T17:13+0200; marketplace at
+> code-auditor-agent 4.0.0). Both workflows live; feature COMPLETE + dogfood-verified +
+> documented. The CPV #102 hold cleared via CAA-side devitalization — see TRDD-d94a7c5e SHIPPED banner.**
 
 ## Architecture decision
 

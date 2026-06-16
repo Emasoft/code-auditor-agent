@@ -1,9 +1,11 @@
 ---
 trdd-id: d94a7c5e-8946-45c1-be0c-6302e28c3386
 title: Migrate the CAA plugin to ultracode (Workflow-tool) orchestration
-column: complete
+column: published
 created: 2026-06-09T14:33:39+0200
-updated: 2026-06-14T15:00:33+0200
+updated: 2026-06-16T17:20:02+0200
+published-version: 4.0.0
+published-at: 2026-06-16T17:13:00+0200
 current-owner: claude-caa-session
 assignee: claude-caa-session
 priority: 2
@@ -27,7 +29,15 @@ external-refs: ["https://code.claude.com/docs/en/changelog.md", "https://github.
 
 ## ⏵ STATE — READ THIS FIRST ON RESUME (authoritative; supersedes the body) — 2026-06-13
 
-> ### 🟢 UNBLOCKED 2026-06-14T15:00+0200 — GATE GREEN; supersedes the 2026-06-13 re-confirm AND the HOLD banner below
+> ### 🚀 SHIPPED — v4.0.0 PUBLISHED 2026-06-16T17:13+0200 (terminal; this TRDD is DONE)
+>
+> - **v4.0.0 is live.** `publish.py --major` succeeded: origin/main + tag `v4.0.0` pushed (release commit `4356683`), GitHub release created, and the marketplace (Emasoft/emasoft-plugins) auto-updated to **code-auditor-agent: 4.0.0** (notify-marketplace → Update Versions, both green). This shipped the whole migration + the two advanced workflows (TRDD-3d971f72) + the simple-scan fallback + the memory skills.
+> - **Pre-release prep that landed first (user chose "harden CI first, then publish"):** ran the CPV canonical-pipeline upgrade agent (plugin-fixer — pipeline was already at/above canonical; 3 invariant-safe edits, NO validators re-vendored) and added the #78 CPV scan-cache step + 30-min validate timeout to `ci.yml` (CPV #114 cold-runner mitigation).
+> - **Push-failure caught + fixed mid-release (lesson):** the FIRST `publish.py --major` rolled back at Phase 4 — the **active** `.git/hooks/pre-push` was STALE and still invoked the deleted `scripts/lint_files.py` (de-vendored 2026-06-11), failing the hook's lint. I'd spotted the active-vs-tracked hook drift earlier and wrongly judged it harmless. Fix: re-ran `setup_git_hooks.py` (active hook now == tracked, lints via `ruff`); re-ran publish → success. The atomic-push rollback meant nothing bad reached origin. Lesson saved: re-sync `.git/hooks/` to the tracked versions as pre-release prep when hook source changed.
+> - **Issues closed by v4.0.0:** CAA #1 (.agent.toml) + #2 (main-agent.md) — both added in `537737e`, quad-match satisfied. CAA #4 (output-format/lenses/precision roadmap) kept OPEN (v4.0.0 doesn't implement A1–F1; mapped to the "best reviewer" goal).
+> - **Minor follow-up:** publish.py doesn't `uv lock` after the bump → uv.lock self-pin lagged; fixed locally (commit `03b75cf`, ships next release). Tracked as a task.
+>
+> ### 🟢 UNBLOCKED 2026-06-14T15:00+0200 — GATE GREEN; superseded by the SHIPPED banner above
 >
 > - **Gate now exit 0** (`SUMMARY: CRITICAL=0 MAJOR=0 MINOR=0 NIT=0 WARNING=8`), verified THREE independent ways: my `uvx --refresh` run vs current CPV main, a clean-room re-run, and the pre-commit hook (`All validation checks passed. Commit allowed.`). The 8 advisory WARNINGs are untouched (non-blocking).
 > - **NIT count history:** 5 (2026-06-13) → 3 (CPV **v2.126.21** cleared the 2× `jwt.lens.md` JWT_VULN upstream) → **0** (the remaining 3 devitalized on CAA's side 2026-06-14, commit **`34868f2`**). The 3 were `A2A_CROSS_AGENT_INJECT` (prompt-injection.lens.md:12), `CMD_INJECTION` (:16), `PRIVILEGE_ESC` (04-scenario-families.md:67).
