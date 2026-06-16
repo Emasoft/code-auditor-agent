@@ -17,7 +17,11 @@ concurrency:
 jobs:
   lint-and-validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 30 min (was 10): on a COLD runner the gate pays for the uvx CPV build
+    # PLUS the whole-repo multi-language scan on a cache miss (CPV #114) — the
+    # old 10-min budget was too tight and could fail the job on a cold runner.
+    # Warm runs (scan-cache restored below) are far faster.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -35,6 +39,19 @@ jobs:
         # local CPV validator copies (2026-06-11 de-vendoring); markdown/yaml/manifest
         # checks run inside the CPV remote gate below.
         run: uv run ruff check .
+
+      # Cross-run CPV scan-cache — mitigates the CPV #114 cold-runner timeout.
+      # Caches CPV's own scan-cache dir so re-runs reuse the multi-language
+      # scan results; restore-keys gives a same-OS warm fallback when the
+      # primary key (validator self-hash) misses. SHA-pinned per gh-actions.
+      # Canonical step mirrored from Emasoft/ai-maestro-plugin's ci.yml.
+      - name: Restore CPV scan-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/cpv
+          key: cpv-scan-cache-${{ runner.os }}-${{ hashFiles('**/.cpv-self-hashes.json') }}
+          restore-keys: |
+            cpv-scan-cache-${{ runner.os }}-
 
       - name: Run plugin validation (CPV remote gate)
         run: |

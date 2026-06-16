@@ -54,8 +54,13 @@ reports_dev/
 # Reports (private data — never committed, never pushed, always gitignored)
 # Agents always write their output here, rooted at the MAIN project dir even
 # inside worktrees. See skills/*/references/*.md for the orchestrator path
-# resolution rules.
-reports/
+# resolution rules. Leading slash anchors to the repo root (canonical form).
+/reports/
+/reports_dev/
+
+# Safe-delete trashcan: ai-maestro-janitor:janitor-safe-delete moves risky
+# deletions here; per CPV memory it must never be committed.
+/.trashcan/
 
 # Logs
 *.log

@@ -11,8 +11,10 @@ Architecture:
 STRICT MODE: All checks are MANDATORY and CANNOT be skipped.
 Linting, testing, plugin validation, and version consistency MUST
 all pass with 0 errors. There are NO skip flags. If a prerequisite
-tool (uvx, pytest, lint_files.py, tests/) is missing, the pipeline
+tool (uv, uvx, pytest, ruff, tests/) is missing, the pipeline
 FAILS. This is by design to guarantee no broken code reaches origin.
+Plugin validation runs the CPV plugin REMOTELY via uvx — this plugin
+vendors NO local validator scripts (de-vendored 2026-06-11).
 
 Usage:
   uv run python scripts/publish.py --patch             # bump patch and publish
@@ -943,9 +945,10 @@ def phase0_preflight(root: Path) -> bool:
 def phase1_validate(root: Path) -> bool:
     """Phase 1: Validate (read-only, no local file mutations).
 
-    STRICT MODE: Runs tests, lint, plugin validation, and version
-    consistency. ALL checks are MANDATORY. Missing prerequisites
-    (tests/, lint_files.py, uvx, pytest) cause the phase to FAIL.
+    STRICT MODE: Runs tests, lint (ruff), plugin validation (CPV
+    remote gate via uvx), and version consistency. ALL checks are
+    MANDATORY. Missing prerequisites (tests/, ruff, uvx, pytest)
+    cause the phase to FAIL.
     Returns True only if every check passes with 0 errors.
     """
     print(f"\n{BOLD}{BLUE}Phase 1: Validation (strict mode){NC}")
