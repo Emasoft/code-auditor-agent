@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2026-06-16
+
+### Features
+
+- [**breaking**] Migrate CAA orchestration to the ultracode Workflow engine (537737e)
+- Add simple-scan fallback for ultracode-disabled environments (fdaff70)
+- Wire simple-scan fallback into legacy aliases, skill pointers, ecaa (cc79380)
+- *(memory)* Add CAA memory protocol + recall/write skills (2113e39)
+- *(engine)* Add task='spec-compliance' to caa-engine (TRDD-3d971f72 Phase 1) (557ba6b)
+- *(spec-audit)* Add /caa-spec-audit command + simple-scan spec-compliance fallback (Phase 1) (f996d00)
+- *(engine)* Add task='impl-compare' to caa-engine (TRDD-3d971f72 Phase 2) (0e113d8)
+- *(impl-compare)* Add /caa-impl-compare command + simple-scan impl-compare fallback (Phase 2) (d0193a6)
+
+### Bug Fixes
+
+- Align simple-scan fallback report contract with the engine + polish (ee9c9c2)
+- *(memory)* Conform memory skills to CAA frontmatter tests + add tests (de8ef18)
+- *(memory)* Correct the caa-simple-scan return note (gate/pr emit VERDICT, not SUMMARY) (66ec1f1)
+- *(engine)* Accept args as object OR JSON-encoded string (dogfood-surfaced bug) (221420f)
+- *(security)* Devitalize 3 doc-context skillaudit FPs to clear --strict gate (34868f2)
+
+### Documentation
+
+- *(memory)* Wire recall-before-acting into the main-agent role doc (aac0805)
+- *(trdd)* Re-confirm 2026-06-13 gate (exit 4, NIT=5) + record memory-migration commits (26bdcf9)
+- *(trdd)* Record CPV #114 (cold-runner --strict timeout) as a derived release-gate risk (933af15)
+- *(trdd)* Fix self-introduced MD028 (blank line inside blockquote) (2b1a228)
+- *(trdd)* Correct #114 note — fix is partly CAA-side (add scan-cache to ci.yml) (d51b005)
+- *(trdd)* Add TRDD-3d971f72 — advanced ultracode workflows (spec-compliance + impl-compare) (be25996)
+- *(trdd)* Phase 1 (spec-compliance) DONE + dogfood-verified; record arg-string bug fix (8750d89)
+- *(trdd)* Fix self-introduced MD004 (leading-+ prose poisoned ul-style) (042b8d7)
+- *(trdd)* Phase 2 (impl-compare) DONE + dogfood-verified (4a85a04)
+- *(readme)* Document /caa-spec-audit + /caa-impl-compare + the advanced-ultracode reference (Phase 3) (136d16f)
+- *(trdd)* Phase 3 (reference docs) DONE + design decisions; feature complete (8ac9311)
+- *(trdd)* Record gate-green unblock, devitalization, git-main-not-tag lesson (7376bd6)
+
+### Chores
+
+- Add CPV scan-cache + raise validate timeout (CPV #114); pipeline tidy-ups (cf98501)
+
 ## [3.4.4] - 2026-05-19
 
 ### Documentation
