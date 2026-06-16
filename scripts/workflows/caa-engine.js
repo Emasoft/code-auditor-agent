@@ -354,21 +354,31 @@ const budgetTripped = () => {
 // agent() is mocked → the sleeper returns instantly, so the suite never actually waits.
 async function backoff(sec) {
   const s = Math.max(1, Math.min(MAX_BACKOFF, Math.floor(sec)))
-  await agent('You are a NO-OP delay agent for rate-limit backoff. Run EXACTLY this shell and nothing else: sleep ' + s + ' ; echo SLEPT . Do NOT read files; do NOT use any other tool. Your FINAL message must be exactly: SLEPT',
-    { label: 'backoff:' + s + 's', phase: 'Backoff', model: 'opus' }).catch(() => null)
+  // The sleeper provides the real wait — but during a server-WIDE limit the sleeper's OWN dispatch
+  // can be rate-limited too, and then nothing actually waits. So RETRY the dispatch until one runs
+  // its `sleep` (a transient limit is PARTIAL → a dispatch gets through within a few tries, and each
+  // rejected dispatch is itself a real round-trip of elapsed time). Bounded (8) so a TOTAL outage
+  // can't spin forever — a total outage completes nothing for anyone, and the budget ceiling + the
+  // runtime's 1000-agent cap are the ultimate backstops.
+  for (let i = 0; i < 8; i++) {
+    const out = await agent('You are a NO-OP delay agent for rate-limit backoff. Run EXACTLY this shell and nothing else: sleep ' + s + ' ; echo SLEPT . Do NOT read files; do NOT use any other tool. Your FINAL message must be exactly: SLEPT',
+      { label: 'backoff:' + s + 's', phase: 'Backoff', model: 'opus' }).catch(e => 'AGENT_THREW:' + e)
+    if (String(out).includes('SLEPT')) return   // one sleeper actually ran `sleep s` → a real wait happened
+  }
 }
 
 // Pre-calibration: one cheap probe detects whether the server is limiting RIGHT NOW and sets the
 // starting cap + backoff so a cold run into an already-limiting server doesn't waste the first wave.
+// Conservative: ANY non-"OK" probe (rate-limit, throw, garbage) → assume limited and pre-wait.
 async function precalibrate() {
   const out = await agent('Reply with exactly: OK', { label: 'precal-probe', phase: 'Precalibrate', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
-  if (RL.test(String(out).trim())) {
-    gBackoffSec = Math.min(MAX_BACKOFF, BASE_BACKOFF * 4); gCapHint = 1
-    log('precalibrate: server is rate-limiting → start cap=1, backoff=' + gBackoffSec + 's')
-    await backoff(gBackoffSec)
-  } else {
+  if (String(out).trim() === 'OK') {
     gBackoffSec = BASE_BACKOFF; gCapHint = 2
     log('precalibrate: server healthy → start cap=2')
+  } else {
+    gBackoffSec = Math.min(MAX_BACKOFF, BASE_BACKOFF * 4); gCapHint = 1
+    log('precalibrate: server limiting/uncertain → start cap=1, backoff=' + gBackoffSec + 's')
+    await backoff(gBackoffSec)
   }
 }
 

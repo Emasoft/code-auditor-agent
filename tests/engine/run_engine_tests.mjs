@@ -291,6 +291,16 @@ test('budget_ceiling_is_the_only_stop_under_forever_rate_limit', 'Safety valve: 
   ok(result.problems.length >= 1 && result.problems.every((p) => p && p.status === 'budget-stopped'), 'remaining items are budget-stopped (the legitimate stop), never rate-limit-exhausted')
 })
 
+test('sleeper_backoff_survives_its_own_rate_limit', 'The closed gap: even when the SLEEPER agent\'s own dispatch is rate-limited, backoff() retries the dispatch until one actually runs `sleep` — so a real wait still happens and the run completes (TRDD-0b67b18d hardening)', async () => {
+  let mapN = 0, bN = 0
+  const { result } = await runEngine(BASE, contractAgent({
+    'map:/repo/b.py': () => { mapN++; return mapN <= 2 ? 'temporarily limiting requests' : undefined },
+    backoff: () => { bN++; return bN === 1 ? 'API Error: temporarily limiting' : 'SLEPT' }, // sleeper itself RL'd once
+  }))
+  eq(result.verified, 2, 'both files complete despite the sleeper being rate-limited on its first dispatch')
+  ok(bN >= 2, 'backoff() retried its sleeper dispatch past the sleeper\'s OWN rate-limit (dispatches=' + bN + ')')
+})
+
 test('runid_fallback_is_deterministic_hash', 'Without runId the tmp namespace falls back to a deterministic args-hash (distinct args ⇒ distinct dirs)', async () => {
   const a1 = { root: ROOT, files: [ROOT + '/a.py'] }
   const a2 = { root: ROOT, files: [ROOT + '/b.py'] }
