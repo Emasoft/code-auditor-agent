@@ -1,7 +1,7 @@
 ---
 name: caa-pr-review-and-fix-skill
 description: "Trigger with 'review and fix the PR', 'review the PR and apply fixes', 'pre-merge review and fix'. Use when reviewing a GitHub PR AND then applying root-cause fixes to its changed files."
-version: 4.1.0
+version: 4.1.1
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, ultracode, fix, claim-verification, cross-layer]

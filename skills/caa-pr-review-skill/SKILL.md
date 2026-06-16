@@ -1,7 +1,7 @@
 ---
 name: caa-pr-review-skill
 description: "Trigger with 'review the PR', 'check the PR', 'audit the PR', 'pre-merge review'. Use when reviewing a GitHub PR or running a pre-merge quality gate."
-version: 4.1.0
+version: 4.1.1
 author: Emasoft
 license: MIT
 tags: [caa-pr-review, ultracode, claim-verification, cross-layer, quality-gate]
