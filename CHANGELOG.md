@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0] - 2026-06-16
+
+### Features
+
+- *(engine)* CGCP — guaranteed-completion calibrating pool (TRDD-0b67b18d) (865ebb8)
+
+### Bug Fixes
+
+- *(engine)* CGCP harden — survive the sleeper's OWN rate-limit (TRDD-0b67b18d) (d782806)
+
+### Documentation
+
+- *(trdd)* Mark ultracode-migration + advanced-workflows TRDDs published (v4.0.0) (206b8fd)
+- *(trdd)* Design the guaranteed-completion calibrating pool (CGCP) for ultracode (4a87d51)
+- *(trdd)* CGCP complete — guaranteed completion verified in both methods (2e3972e)
+
+### Chores
+
+- Sync uv.lock self-pin to 4.0.0 (03b75cf)
+- Install libxml2-utils so CPV's xmllint runs (fix false MAJOR on cold runner) (d69e2aa)
+
+### Other
+
+- Revert "ci: install libxml2-utils so CPV's xmllint runs (fix false MAJOR on cold runner)"
+
+This reverts commit d69e2aa0c0888cea2bbeed42aa02de807a779334. (2301ffe)
+
 ## [4.0.0] - 2026-06-16
 
 ### Features

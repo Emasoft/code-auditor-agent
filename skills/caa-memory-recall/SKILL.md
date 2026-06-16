@@ -1,7 +1,7 @@
 ---
 name: caa-memory-recall
 description: "RECALL — surface prior CAA memory notes by SYMPTOM before debugging a recurring issue or an engine/lens decision; memgrep-ranked with a grep fallback. Triggers: 'recall memories about X', 'did we already solve this', 'have we hit this before'."
-version: 4.0.0
+version: 4.1.0
 author: Emasoft
 license: MIT
 tags: [memory, recall, memgrep, code-auditor]

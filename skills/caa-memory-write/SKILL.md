@@ -1,7 +1,7 @@
 ---
 name: caa-memory-write
 description: "MEMORIZE — capture a durable CAA fact (engine/lens decision, gotcha, constraint, preference) as a schema-valid, symptom-indexed memory note + MEMORY.md index line; recall-first to avoid dupes. Triggers: 'remember this', 'save a memory'."
-version: 4.0.0
+version: 4.1.0
 author: Emasoft
 license: MIT
 tags: [memory, memorize, write, memgrep, code-auditor]
