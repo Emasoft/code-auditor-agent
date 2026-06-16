@@ -14,7 +14,7 @@ argument-hint: "<spec-file> [path/glob ...] [conc=N] [component=NAME] [min-sever
 ## Usage
 
 ```
-/caa-spec-audit design/requirements/PRRD.md                # whole repo vs the spec (after a cost confirm)
+/caa-spec-audit docs/REQUIREMENTS.md                       # whole repo vs the spec (after a cost confirm)
 /caa-spec-audit SPEC.md src/ lib/                          # only these paths vs SPEC.md
 /caa-spec-audit api-contract.md src/api conc=4 component=api-spec
 ```
