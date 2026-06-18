@@ -1354,6 +1354,7 @@ def phase3_mutate(
         print("    Would update README badges")
         print("    Would update README version text")
         print("    Would prepend CHANGELOG entry")
+        print("    Would relock uv.lock (uv lock)")
         print(f"    Would commit: release: {tag}")
         print(f"    Would tag: {tag}")
         # Still run dry-run versions of updaters for output
@@ -1440,6 +1441,28 @@ def phase3_mutate(
         )
         return False, ""
     print(f"  {GREEN}ok CHANGELOG updated{NC}")
+
+    # 3.5b Relock uv.lock so its self-pin matches the just-bumped version.
+    # Without this the lockfile lags every release and Phase 0 of the NEXT
+    # release errors on a dirty uv.lock (issue #83). uv.lock is tracked, so the
+    # `git add -u` in 3.6 stages the refreshed lockfile into the release commit.
+    # Non-fatal by design: a relock hiccup must NOT abort an already-validated
+    # release — the next run's Phase 0 gate is the backstop, so we warn (not
+    # exit) on failure and never end up worse than today's lag.
+    print(f"\n  {BLUE}[3.5b]{NC} Relock uv.lock...")
+    uv_lock = root / "uv.lock"
+    if uv_lock.exists():
+        lock_res = run(["uv", "lock"], cwd=root, check=False, timeout=300)
+        if lock_res.returncode == 0:
+            print(f"  {GREEN}ok uv.lock relocked{NC}")
+        else:
+            print(
+                f"  {YELLOW}~ uv lock failed (exit {lock_res.returncode}); "
+                f"uv.lock may lag — next Phase 0 will catch it{NC}",
+                file=sys.stderr,
+            )
+    else:
+        print(f"  {YELLOW}~ uv.lock not found (skipped){NC}")
 
     # 3.6 Stage all tracked changes
     print(f"\n  {BLUE}[3.6]{NC} Stage changes...")
