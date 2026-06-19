@@ -116,12 +116,18 @@ def _load_pr_files(repo_root: Path, path: Path | None) -> list[Path] | None:
         return None
     if not path.is_file():
         raise FileNotFoundError(f"--pr-files-from: not found: {path}")
+    repo_root_resolved = repo_root.resolve()
     files: list[Path] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         rel = line.strip()
         if not rel or rel.startswith("#"):
             continue
         abs_path = (repo_root / rel).resolve()
+        # Confine to the repo tree: a `--pr-files-from` line like `../../etc/hosts`
+        # resolves OUTSIDE repo_root; reading it is an out-of-tree read. The input
+        # is operator-supplied, but the scanner must never read past its own repo.
+        if not abs_path.is_relative_to(repo_root_resolved):
+            continue
         if abs_path.is_file():
             files.append(abs_path)
     return sorted(set(files))
@@ -134,6 +140,59 @@ def _read_text_capped(path: Path) -> str:
     except OSError:
         return ""
     return data.decode("utf-8", errors="ignore")
+
+
+def _strip_comments_and_strings(text: str) -> list[str]:
+    """One cleaned line per input line, with string/char/template literals and
+    `//` + `/* */` comments blanked out, tracking string + block-comment state
+    ACROSS lines.
+
+    Why: the JS/Go regex scanners below match raw text, so a channel send or a
+    `Promise.all(` inside a comment or string literal produces a false finding
+    (CHANNEL_SEND_AFTER_CLOSE is the only `error`-severity rule, so a false
+    positive there is the most damaging the scanner emits). Blanking is
+    deliberately conservative — it can only SUPPRESS a match, never manufacture
+    one, honoring the false-negatives-over-false-positives preference. The line
+    COUNT is preserved so a match maps back to its 1-based line number.
+    """
+    out: list[str] = []
+    in_block = False  # inside a /* ... */ block comment
+    in_str: str | None = None  # active string delimiter: " ' or `
+    for raw in text.splitlines():
+        buf: list[str] = []
+        i, n = 0, len(raw)
+        while i < n:
+            c = raw[i]
+            nxt = raw[i + 1] if i + 1 < n else ""
+            if in_block:
+                if c == "*" and nxt == "/":
+                    in_block = False
+                    i += 2
+                else:
+                    i += 1
+                continue
+            if in_str is not None:
+                if c == "\\":  # skip an escaped char (safe even in raw strings)
+                    i += 2
+                    continue
+                if c == in_str:
+                    in_str = None
+                i += 1
+                continue
+            if c == "/" and nxt == "/":
+                break  # line comment — drop the rest of the line
+            if c == "/" and nxt == "*":
+                in_block = True
+                i += 2
+                continue
+            if c in ('"', "'", "`"):
+                in_str = c
+                i += 1
+                continue
+            buf.append(c)
+            i += 1
+        out.append("".join(buf))
+    return out
 
 
 def _rel(repo_root: Path, path: Path) -> str:
@@ -252,21 +311,27 @@ def _check_js_floating(repo_root: Path, files: Iterable[Path]) -> list[Finding]:
             continue
         rel = _rel(repo_root, path)
         lines = text.splitlines()
+        # Match on CLEANED lines (comments/strings blanked) so a commented or
+        # stringified `Promise.*(` / `.then(` cannot produce a false finding; the
+        # display still quotes the RAW line. Line count is preserved, so indices
+        # and 1-based line numbers map across raw and cleaned identically.
+        clean_lines = _strip_comments_and_strings(text)
         for line_idx, raw in enumerate(lines):
-            stripped = raw.lstrip()
-            if _line_starts_with_consumer(stripped):
+            clean_stripped = clean_lines[line_idx].lstrip()
+            if _line_starts_with_consumer(clean_stripped):
                 continue
-            m = _FLOATING_PROMISE_RE.match(raw)
+            m = _FLOATING_PROMISE_RE.match(clean_lines[line_idx])
             # Flag if the line opens with a bare async-suggestive call AND
             # contains no `.catch(` or `await` modifier. We require ONE
             # of the suggestive shapes to actually appear in the call.
             if not m:
                 continue
             call_text = m.group("call")
-            if not any(shape in stripped for shape in ("fetch(", "Promise.", ".then(", ".all(", ".race(", ".any(")):
+            shapes = ("fetch(", "Promise.", ".then(", ".all(", ".race(", ".any(")
+            if not any(s in clean_stripped for s in shapes):
                 continue
             # If the chain ends in `.catch(`, skip — rejection is tracked.
-            if ".catch(" in stripped:
+            if ".catch(" in clean_stripped:
                 continue
             # Strip the unused capture so linters don't trip on it.
             del call_text
@@ -278,16 +343,17 @@ def _check_js_floating(repo_root: Path, files: Iterable[Path]) -> list[Finding]:
                     line=line_idx + 1,
                     severity="warning",
                     code="FLOATING_PROMISE",
-                    message=f"statement-level promise call without await/return/catch: {stripped[:120]}",
+                    message=f"statement-level promise call without await/return/catch: {raw.lstrip()[:120]}",
                 )
             )
-        # Promise.all-style without .catch — find the head, then probe a
-        # ±2 line window for `.catch(`.
-        for m in _PROMISE_HEAD_RE.finditer(text):
-            line = text.count("\n", 0, m.start()) + 1
+        # Promise.all-style without .catch — find the head (in cleaned text),
+        # then probe a ±2 line window for `.catch(`.
+        clean_text = "\n".join(clean_lines)
+        for m in _PROMISE_HEAD_RE.finditer(clean_text):
+            line = clean_text.count("\n", 0, m.start()) + 1
             window_lo = max(0, line - 3)
-            window_hi = min(len(lines), line + 2)
-            window = "\n".join(lines[window_lo:window_hi])
+            window_hi = min(len(clean_lines), line + 2)
+            window = "\n".join(clean_lines[window_lo:window_hi])
             if ".catch(" in window:
                 continue
             if "try " in window or "try{" in window:
@@ -328,6 +394,11 @@ def _check_go(repo_root: Path, files: Iterable[Path]) -> list[Finding]:
             continue
         rel = _rel(repo_root, path)
         lines = text.splitlines()
+        # close()/send matching runs on CLEANED lines so a `// ch <- x` comment
+        # or a channel name inside a string can't fire CHANNEL_SEND_AFTER_CLOSE
+        # (the only error-severity rule), and a commented send no longer shadows
+        # a real one below via the first-match `break`.
+        clean_lines = _strip_comments_and_strings(text)
         for line_idx, line in enumerate(lines):
             if _GO_GOROUTINE_RE.match(line):
                 lo = max(0, line_idx - 3)
@@ -348,12 +419,12 @@ def _check_go(repo_root: Path, files: Iterable[Path]) -> list[Finding]:
                             ),
                         )
                     )
-            close_m = _GO_CLOSE_RE.match(line)
+            close_m = _GO_CLOSE_RE.match(clean_lines[line_idx])
             if close_m:
                 ch_name = close_m.group(1)
-                # Look forward 20 lines for any `ch_name <-` send.
-                for j in range(line_idx + 1, min(len(lines), line_idx + 21)):
-                    send_m = _GO_SEND_AFTER_CLOSE_RE.search(lines[j])
+                # Look forward 20 lines for any `ch_name <-` send (cleaned lines).
+                for j in range(line_idx + 1, min(len(clean_lines), line_idx + 21)):
+                    send_m = _GO_SEND_AFTER_CLOSE_RE.search(clean_lines[j])
                     if send_m and send_m.group(1) == ch_name:
                         out.append(
                             Finding(

@@ -60,6 +60,68 @@ def test_run_in_executor_no_await_flagged(tmp_path: Path) -> None:
     assert "LOOP_RUN_IN_EXECUTOR_NO_AWAIT" in codes
 
 
+# ---- comment/string-blindness + path containment --------------------------
+
+
+def test_load_pr_files_confines_to_repo_root(tmp_path: Path) -> None:
+    """_load_pr_files must drop listing entries that resolve OUTSIDE repo_root
+    (a `../secret.txt` traversal) — an out-of-tree read otherwise."""
+    repo = tmp_path / "repo"
+    _write(repo / "app.py", "x = 1\n")
+    _write(tmp_path / "secret.txt", "OUTSIDE\n")  # sibling of repo, not inside it
+    listing = tmp_path / "pr.txt"
+    _write(listing, "app.py\n../secret.txt\n")
+    files = cc._load_pr_files(repo, listing)
+    assert files is not None
+    names = {p.name for p in files}
+    assert "app.py" in names
+    assert "secret.txt" not in names
+
+
+def test_go_channel_send_after_close_real_flagged(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "main.go",
+        "package main\nfunc f(ch chan int) {\n    close(ch)\n    ch <- 1\n}\n",
+    )
+    result = cc.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "CHANNEL_SEND_AFTER_CLOSE" in codes
+
+
+def test_go_channel_send_after_close_comment_not_flagged(tmp_path: Path) -> None:
+    """A `ch <- x` inside a // comment must NOT fire CHANNEL_SEND_AFTER_CLOSE
+    (the only error-severity rule) — comments are blanked before matching."""
+    _write(
+        tmp_path / "main.go",
+        "package main\nfunc f(ch chan int) {\n    close(ch)\n"
+        "    // ch <- 1 handled elsewhere\n}\n",
+    )
+    result = cc.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "CHANNEL_SEND_AFTER_CLOSE" not in codes
+
+
+def test_promise_no_catch_real_flagged(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "app.js",
+        "function f() {\n    Promise.all([a, b]);\n}\n",
+    )
+    result = cc.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "PROMISE_NO_CATCH" in codes
+
+
+def test_promise_no_catch_comment_not_flagged(tmp_path: Path) -> None:
+    """A `Promise.all(` inside a // comment must NOT fire PROMISE_NO_CATCH."""
+    _write(
+        tmp_path / "app.js",
+        "function f() {\n    // Promise.all([a, b]) is done elsewhere\n    doStuff();\n}\n",
+    )
+    result = cc.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "PROMISE_NO_CATCH" not in codes
+
+
 def test_invalid_python_silently_skipped(tmp_path: Path) -> None:
     _write(tmp_path / "broken.py", "def x(:\n")
     result = cc.detect(tmp_path)
