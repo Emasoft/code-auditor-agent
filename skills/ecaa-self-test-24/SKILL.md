@@ -4,7 +4,7 @@ description: >
   Trigger with "ecaa self test", "run efficacy gate". Use when verifying the ultracode engine
   catches every seeded bug in the bundled fixtures — before release or on a schedule. Runs the
   pytest gate plus one engine pass.
-version: 4.1.1
+version: 4.2.0
 author: Emasoft
 license: MIT
 tags: [ecaa-self-test, efficacy, quality-gate, ultracode]

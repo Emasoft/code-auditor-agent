@@ -2,12 +2,12 @@
 
 <!--BADGES-START-->
 [![CI](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Emasoft/code-auditor-agent/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-4.1.1-blue)](https://github.com/Emasoft/code-auditor-agent)
+[![Version](https://img.shields.io/badge/version-4.2.0-blue)](https://github.com/Emasoft/code-auditor-agent)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 <!--BADGES-END-->
 
-**Version:** 4.1.1
+**Version:** 4.2.0
 **License:** MIT
 **Author:** Emasoft
 

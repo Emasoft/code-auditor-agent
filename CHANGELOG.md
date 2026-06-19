@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] - 2026-06-19
+
+### Bug Fixes
+
+- *(prereview)* 5 MAJOR self-audit correctness defects + regression tests (#92 ph1) (116a288)
+- *(prereview)* Concurrency.py comment/string-blindness + path containment (#92 ph2) (9c58373)
+- *(prereview)* Detect_languages glob matcher — dead globs, bundles, anchoring (#92 ph3) (10f33c5)
+- *(prereview)* Eliminate over-report / double-count defects (#92 ph4) (227b355)
+- *(prereview)* Cross_layer PR-mode FP + awc PEP-621 dep-table parsing (#92 ph5a) (1a322e3)
+- *(prereview)* Run_linters biome line + severity-enum normalization (#92 ph5b) (a62164d)
+- *(engine)* PR lenses survive rate-limits with unbounded retry (#92 ph6 / MAJ-20) (209489b)
+- *(prereview)* Apply _load_pr_files path-containment across the family (#92 ph7) (4aa601c)
+
+### Chores
+
+- *(publish)* Run `uv lock` in Phase 3 after the version bump (#83) (d5ea187)
+
 ## [4.1.1] - 2026-06-16
 
 ### Refactor
