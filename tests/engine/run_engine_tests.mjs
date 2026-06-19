@@ -192,6 +192,16 @@ test('rate_limit_unbounded_retry_guarantees_completion', 'A file that rate-limit
   ok(calls.some((c) => c.label.startsWith('backoff:')), 'a real sleeper-backoff agent fired on the RL waves')
 })
 
+test('pr_lens_rate_limited_then_succeeds', 'A PR lens that rate-limits 4× is retried UNBOUNDED with a real sleeper-backoff (TRDD-0b67b18d S7 / MAJ-20) and still ends "done" — a transient RL no longer drops the entire lens', async () => {
+  let n = 0
+  const { result, calls } = await runEngine({ ...BASE, lensSet: 'pr' }, contractAgent({
+    'lens:skeptical': () => { n++; return n <= 4 ? 'API Error: Server is temporarily limiting requests' : undefined },
+  }))
+  eq(result.prReport.skepticalLens, 'done', 'the skeptical lens must end "done" despite 4 transient rate-limits')
+  ok(n > 4, 'the lens was retried past all 4 rate-limits (n=' + n + ')')
+  ok(calls.some((c) => c.label.startsWith('backoff:')), 'a real sleeper-backoff fired on the lens RL waves')
+})
+
 test('unknown_domain_lens_is_surfaced', 'An unknown domainLenses key (e.g. skeptical, which is holistic) is reported in result.unknownLenses + the log, never a silent no-op', async () => {
   const args = { ...BASE, files: [ROOT + '/Dockerfile'], domainLenses: ['skeptical', 'docker'] }
   const { result, logs, calls } = await runEngine(args, contractAgent())

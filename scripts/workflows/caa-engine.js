@@ -732,12 +732,28 @@ if (TASK === 'review' && LENS === 'pr') {
     'Read these LAST, only now (description, then the whole diff; REPO_PATH for context):\n' +
     'PR_DESCRIPTION_FILE: ' + DESC + '\nDIFF_FILE: ' + DIFF + '\nREPO_PATH: ' + ROOT + '\n'
 
+  // A PR lens must survive a transient rate-limit just as the pool/reduce do
+  // (TRDD-0b67b18d S7): UNBOUNDED RL retry with the same real exponential
+  // sleeper-backoff, a SMALL bounded retry for a genuine (non-RL) lens failure,
+  // and the budget ceiling as the only legitimate give-up. Previously a single
+  // RL hit dropped the entire lens (MAJ-20), defeating the guaranteed-completion
+  // property for exactly the PR path the TRDD called out.
   const runLens = async (prefix, label, expectName) => {
-    const out = await agent(prefix, { label: label, phase: 'PR-lenses', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
-    const s = String(out).trim()
-    if (RL.test(s)) return { status: 'rate-limited' }
-    if (!(s.includes(TMP) && s.endsWith(expectName))) return { status: 'lens-failed', detail: s.slice(0, 200) }
-    return { status: 'done', path: s }
+    let rl = 0, genuine = 0
+    for (;;) {
+      if (budgetTripped()) { log(label + ': budget ceiling reached — lens unavailable'); return { status: 'budget' } }
+      const out = await agent(prefix, { label: label, phase: 'PR-lenses', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
+      const s = String(out).trim()
+      if (RL.test(s)) {   // transient server RL → UNBOUNDED retry with real exponential backoff
+        rl++; gBackoffSec = Math.min(MAX_BACKOFF, Math.max(BASE_BACKOFF, gBackoffSec * 2))
+        log(label + ': rate-limited (rl#' + rl + ') — backoff ' + gBackoffSec + 's then retry')
+        await backoff(gBackoffSec); continue
+      }
+      if (s.includes(TMP) && s.endsWith(expectName)) return { status: 'done', path: s }
+      if (++genuine >= 3) { log(label + ': lens failed x' + genuine + ' — unavailable'); return { status: 'lens-failed', detail: s.slice(0, 200) } }
+      log(label + ': lens genuine failure (' + genuine + '/3) — short backoff then retry')
+      await backoff(BASE_BACKOFF)
+    }
   }
 
   phase('PR-lenses')
