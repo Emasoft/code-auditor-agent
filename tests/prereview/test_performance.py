@@ -45,6 +45,23 @@ def test_open_read_not_double_counted(tmp_path: Path) -> None:
     assert len(hits) == 1
 
 
+def test_load_pr_files_confines_to_repo_root(tmp_path: Path) -> None:
+    """_load_pr_files drops listing entries that resolve OUTSIDE repo_root — the
+    shared path-containment guard applied across the prereview family (the same
+    fix verified in concurrency; representative check that it holds in a sibling).
+    """
+    repo = tmp_path / "repo"
+    _write(repo / "app.py", "x = 1\n")
+    _write(tmp_path / "secret.txt", "OUTSIDE\n")
+    listing = tmp_path / "pr.txt"
+    _write(listing, "app.py\n../secret.txt\n")
+    files = pf._load_pr_files(repo, listing)
+    assert files is not None
+    names = {p.name for p in files}
+    assert "app.py" in names
+    assert "secret.txt" not in names
+
+
 # ---- Python: recursive-no-memo --------------------------------------------
 
 

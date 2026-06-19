@@ -182,7 +182,9 @@ def _load_pr_files(repo_root: Path, path: Path | None) -> list[Path] | None:
         if not rel or rel.startswith("#"):
             continue
         abs_path = (repo_root / rel).resolve()
-        if abs_path.is_file():
+        # Confine to the repo tree: a `../../etc/hosts` listing entry resolves
+        # outside repo_root (out-of-tree read). Mirrors concurrency.py's fix.
+        if abs_path.is_file() and abs_path.is_relative_to(repo_root.resolve()):
             files.append(abs_path)
     return sorted(set(files))
 
