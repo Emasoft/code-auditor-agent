@@ -44,7 +44,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Iterable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 SCHEMA_VERSION = 1
@@ -73,6 +73,26 @@ class Finding:
     severity: str  # error / warning / info / nit
     code: str
     message: str
+
+
+# Map every external tool's severity vocabulary onto the documented 4-value enum.
+# Without this, out-of-enum values leak through (bandit high/medium/low, mypy/
+# clippy note/help, semgrep inventory/experimental, biome information) and any
+# downstream filter or threshold keyed on the contract mis-handles them.
+_SEVERITY_ALIASES = {
+    "error": "error", "fatal": "error", "critical": "error", "high": "error",
+    "warning": "warning", "warn": "warning", "medium": "warning", "moderate": "warning",
+    "info": "info", "information": "info", "informational": "info", "note": "info",
+    "help": "info", "hint": "info", "low": "info", "minor": "info",
+    "convention": "info", "style": "info", "refactor": "info",
+    "inventory": "info", "experimental": "info",
+    "nit": "nit",
+}
+
+
+def _normalize_severity(raw: str) -> str:
+    """Map any tool severity onto error/warning/info/nit; unknown → warning."""
+    return _SEVERITY_ALIASES.get(raw.strip().lower(), "warning")
 
 
 @dataclass(slots=True)
@@ -187,6 +207,22 @@ def _parse_eslint_json(stdout: str, _stderr: str) -> list[Finding]:
     return out
 
 
+def _byte_offset_to_line_col(file_path: str, byte_offset: int) -> tuple[int, int]:
+    """Convert a 0-based UTF-8 byte offset (biome's TextRange) to a 1-based
+    (line, column). Returns (0, 0) when the file can't be read — an explicit
+    'unknown' beats a misleading byte offset reported as a line number."""
+    if byte_offset < 0:
+        return 0, 0
+    try:
+        data = Path(file_path).read_bytes()
+    except OSError:
+        return 0, 0
+    chunk = data[:byte_offset]
+    line = chunk.count(b"\n") + 1
+    col = byte_offset - (chunk.rfind(b"\n") + 1) + 1
+    return line, col
+
+
 def _parse_biome_json(stdout: str, _stderr: str) -> list[Finding]:
     """biome --reporter json."""
     out: list[Finding] = []
@@ -200,12 +236,17 @@ def _parse_biome_json(stdout: str, _stderr: str) -> list[Finding]:
     for d in diagnostics:
         loc = d.get("location", {}) or {}
         span = loc.get("span", [0, 0]) or [0, 0]
+        file_path = loc.get("path", {}).get("file", "")
+        # biome's span is [startByteOffset, endByteOffset] (a UTF-8 TextRange),
+        # NOT [line, column] — the old code reported the raw byte offset as a
+        # line number. Convert it to a real line/column by reading the file.
+        line, column = _byte_offset_to_line_col(file_path, int(span[0]) if span else 0)
         out.append(
             Finding(
                 tool="biome",
-                file=loc.get("path", {}).get("file", ""),
-                line=int(span[0]) if span else 0,
-                column=0,
+                file=file_path,
+                line=line,
+                column=column,
                 severity=str(d.get("severity", "warning")).lower(),
                 code=str(d.get("category", "")),
                 message=str(d.get("description", "")),
@@ -832,9 +873,12 @@ def run_linters(
     for run in runs:
         if run.available and not run.skipped_reason:
             tools_run.append(run.name)
-            by_tool_counts[run.name] = len(run.findings)
-            findings_total.extend(run.findings)
-            for f in run.findings:
+            # Normalize every finding's severity to the documented enum here, at
+            # the single aggregation point, so all parsers are covered at once.
+            normalized = [replace(f, severity=_normalize_severity(f.severity)) for f in run.findings]
+            by_tool_counts[run.name] = len(normalized)
+            findings_total.extend(normalized)
+            for f in normalized:
                 severity_counts[f.severity] = severity_counts.get(f.severity, 0) + 1
         else:
             tools_skipped.append({"name": run.name, "reason": run.skipped_reason or "unavailable"})

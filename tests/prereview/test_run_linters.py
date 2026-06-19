@@ -27,6 +27,35 @@ from scripts.prereview import run_linters as rl
 # --------------------------------------------------------------------------
 
 
+def test_byte_offset_to_line_col(tmp_path: Path) -> None:
+    """biome reports a UTF-8 byte offset, not a line — convert it correctly
+    (regression MAJ-15: the raw byte offset was reported as the line number)."""
+    f = tmp_path / "x.ts"
+    f.write_text("aaa\nbbbb\ncc\n", encoding="utf-8")
+    assert rl._byte_offset_to_line_col(str(f), 0) == (1, 1)
+    assert rl._byte_offset_to_line_col(str(f), 5) == (2, 2)
+    assert rl._byte_offset_to_line_col(str(f), 9) == (3, 1)
+    # Unreadable file → explicit (0, 0), not a misleading line.
+    assert rl._byte_offset_to_line_col(str(tmp_path / "nope.ts"), 5) == (0, 0)
+
+
+def test_normalize_severity_maps_to_enum() -> None:
+    """Every tool severity maps onto the documented enum (regression MAJ-16:
+    bandit/mypy/clippy/semgrep/biome emitted out-of-enum values)."""
+    assert rl._normalize_severity("HIGH") == "error"
+    assert rl._normalize_severity("medium") == "warning"
+    assert rl._normalize_severity("low") == "info"
+    assert rl._normalize_severity("note") == "info"
+    assert rl._normalize_severity("help") == "info"
+    assert rl._normalize_severity("information") == "info"
+    assert rl._normalize_severity("inventory") == "info"
+    assert rl._normalize_severity("nit") == "nit"
+    assert rl._normalize_severity("totally-unknown") == "warning"
+    enum = {"error", "warning", "info", "nit"}
+    for v in ("high", "medium", "low", "note", "help", "information", "experimental", "fatal"):
+        assert rl._normalize_severity(v) in enum
+
+
 def test_parse_ruff_json() -> None:
     body = json.dumps(
         [
