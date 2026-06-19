@@ -496,6 +496,19 @@ def detect(repo_root: Path, pr_files: list[Path] | None = None) -> dict[str, obj
     findings.extend(_check_js_perf(repo_root, all_files))
     findings.extend(_check_go_perf(repo_root, all_files))
     findings.sort(key=lambda f: (f.category, f.file, f.line, f.code))
+    # Dedup on (file, line, code): some checks match the same smell via two AST
+    # shapes — e.g. open(...).read() hits both the .read() Attribute and the
+    # inner open() Name at the same line, and a nested loop is walked once per
+    # enclosing loop — inflating the very counts the tool reports.
+    _seen: set[tuple[str, int, str]] = set()
+    _deduped: list[Finding] = []
+    for _f in findings:
+        _key = (_f.file, _f.line, _f.code)
+        if _key in _seen:
+            continue
+        _seen.add(_key)
+        _deduped.append(_f)
+    findings = _deduped
     by_category: dict[str, int] = {}
     for f in findings:
         by_category[f.category] = by_category.get(f.category, 0) + 1

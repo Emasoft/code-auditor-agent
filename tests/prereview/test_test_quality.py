@@ -33,6 +33,26 @@ def test_assert_statement_satisfies_check(tmp_path: Path) -> None:
     assert "NO_ASSERTION_TEST" not in codes
 
 
+def test_patch_decorator_not_double_counted(tmp_path: Path) -> None:
+    """A single @patch(...) decorator must yield ONE MOCK_REPLACES_SUT_HEURISTIC.
+
+    Regression: ast.walk reached the decorator Call via both the FunctionDef
+    branch and the standalone-Call branch of _patch_targets, so one decorator
+    produced two identical findings; detect() now dedups on (file, line, code).
+    """
+    _write(
+        tmp_path / "test_svc.py",
+        "from unittest.mock import patch\n"
+        "from app.svc import process\n"
+        "@patch('app.svc.process')\n"
+        "def test_process():\n"
+        "    assert process() is None\n",
+    )
+    result = tq.detect(tmp_path)
+    hits = [f for f in result["findings"] if f["code"] == "MOCK_REPLACES_SUT_HEURISTIC"]
+    assert len(hits) == 1
+
+
 def test_pytest_raises_satisfies_check(tmp_path: Path) -> None:
     _write(
         tmp_path / "test_foo.py",

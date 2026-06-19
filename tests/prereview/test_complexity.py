@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 
@@ -36,6 +37,25 @@ def test_too_many_params_flagged(tmp_path: Path) -> None:
     result = cx.detect(tmp_path)
     codes = {f["code"] for f in result["findings"]}
     assert "TOO_MANY_PARAMS" in codes
+
+
+def test_function_branches_excludes_nested_defs() -> None:
+    """_function_branches must NOT count branches inside a nested function.
+
+    Regression: the old ast.walk recursed into nested defs (contradicting the
+    docstring and _max_nest_depth), inflating the enclosing fn's complexity.
+    """
+    src = (
+        "def outer():\n"
+        "    def inner():\n"
+        "        if a and b or c:\n"
+        "            return 1\n"
+        "        return 0\n"
+        "    return 0\n"
+    )
+    outer = ast.parse(src).body[0]
+    # outer itself has zero branches; inner's `if`/and/or must be excluded.
+    assert cx._function_branches(outer) == 0
 
 
 def test_kwargs_and_args_count_in_params(tmp_path: Path) -> None:

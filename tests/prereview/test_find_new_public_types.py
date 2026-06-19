@@ -51,6 +51,26 @@ def test_python_enum_detected(tmp_path: Path) -> None:
     assert enum_types[0]["name"] == "OrderStatus"
 
 
+def test_nested_class_not_reported(tmp_path: Path) -> None:
+    """A class nested inside another class is NOT a new public top-level type.
+
+    Regression: lstrip() erased the indentation that distinguishes a nested
+    decl, so Inner was reported alongside the module-level Outer.
+    """
+    diff = (
+        "+++ b/app/models.py\n"
+        "@@ -0,0 +1,3 @@\n"
+        "+class Outer:\n"
+        "+    class Inner:\n"
+        "+        pass\n"
+    )
+    _write_diff(tmp_path / "pr.patch", diff)
+    result = fnt.detect(tmp_path / "pr.patch")
+    names = {t["name"] for t in result["types"]}
+    assert "Outer" in names
+    assert "Inner" not in names
+
+
 def test_python_typeddict_detected(tmp_path: Path) -> None:
     diff = (
         "+++ b/app/dto.py\n@@ -0,0 +1,4 @@\n+from typing import TypedDict\n+class UserDTO(TypedDict):\n+    id: int\n"

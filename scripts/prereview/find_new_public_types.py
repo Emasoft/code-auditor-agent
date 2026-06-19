@@ -139,6 +139,13 @@ def _parse_diff(diff_text: str) -> list[NewType]:
             new_line_no += 1
             content = raw[1:]
             stripped = content.lstrip()
+            # Only MODULE-LEVEL declarations are "new public types"; a class/type
+            # nested in another class or a function is intentionally excluded
+            # (contract). `stripped` erased the indentation that marks a nested
+            # decl, so guard on the raw indentation of `content` here.
+            if content[:1].isspace():
+                pending_dataclass = False
+                continue
             # `@dataclass` may appear on the line BEFORE the `class` head.
             # The decorator marker is the first row in `_PY_DECL_RE`.
             if current_language == "python" and _PY_DECL_RE[0][1].match(stripped):

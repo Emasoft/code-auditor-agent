@@ -466,6 +466,19 @@ def detect(repo_root: Path, pr_files: list[Path] | None = None) -> dict[str, obj
     findings.extend(_check_python_tests(repo_root, all_files))
     findings.extend(_check_js_tests(repo_root, all_files))
     findings.sort(key=lambda f: (f.category, f.file, f.line, f.code))
+    # Dedup on (file, line, code): a `@patch(...)` decorator is reached by both
+    # the FunctionDef-decorator branch and the standalone-Call branch of
+    # _patch_targets (ast.walk visits the same Call node twice), so one decorator
+    # otherwise yields two identical MOCK_REPLACES_SUT_HEURISTIC findings.
+    _seen: set[tuple[str, int, str]] = set()
+    _deduped: list[Finding] = []
+    for _f in findings:
+        _key = (_f.file, _f.line, _f.code)
+        if _key in _seen:
+            continue
+        _seen.add(_key)
+        _deduped.append(_f)
+    findings = _deduped
     by_category: dict[str, int] = {}
     for f in findings:
         by_category[f.category] = by_category.get(f.category, 0) + 1

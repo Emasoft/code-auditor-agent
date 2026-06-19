@@ -167,16 +167,28 @@ _BRANCH_NODE_TYPES: tuple[type[ast.AST], ...] = (
 def _function_branches(node: ast.AST) -> int:
     """Count branch-introducing nodes inside a function (excluding nested fn defs)."""
     n = 0
-    for child in ast.walk(node):
-        if isinstance(child, _BRANCH_NODE_TYPES):
-            n += 1
-        # Boolean operators (and/or) add a branch each (McCabe-style).
-        if isinstance(child, ast.BoolOp):
-            n += max(0, len(child.values) - 1)
-        # Comprehensions with `if` clauses also add branches.
-        if isinstance(child, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
-            for gen in child.generators:
-                n += len(gen.ifs)
+
+    def walk(cur: ast.AST) -> None:
+        nonlocal n
+        for child in ast.iter_child_nodes(cur):
+            # Don't descend into nested function definitions — their branches
+            # belong to their OWN complexity, not the enclosing function's. The
+            # old ast.walk recursed into them, inflating the count (and the
+            # docstring already promised this exclusion; cf. _max_nest_depth).
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if isinstance(child, _BRANCH_NODE_TYPES):
+                n += 1
+            # Boolean operators (and/or) add a branch each (McCabe-style).
+            if isinstance(child, ast.BoolOp):
+                n += max(0, len(child.values) - 1)
+            # Comprehensions with `if` clauses also add branches.
+            if isinstance(child, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                for gen in child.generators:
+                    n += len(gen.ifs)
+            walk(child)
+
+    walk(node)
     return n
 
 

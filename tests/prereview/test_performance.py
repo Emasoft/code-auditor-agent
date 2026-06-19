@@ -33,6 +33,18 @@ def test_query_outside_loop_not_flagged(tmp_path: Path) -> None:
     assert "N_PLUS_ONE_LOOP" not in codes
 
 
+def test_open_read_not_double_counted(tmp_path: Path) -> None:
+    """open(...).read() must yield ONE LARGE_FILE_FULL_READ, not two.
+
+    Regression: the check matched both the outer .read() Attribute and the inner
+    open() Name at the same line; detect() now dedups on (file, line, code).
+    """
+    _write(tmp_path / "app.py", "def f():\n    data = open('data.csv').read()\n    return data\n")
+    result = pf.detect(tmp_path)
+    hits = [f for f in result["findings"] if f["code"] == "LARGE_FILE_FULL_READ"]
+    assert len(hits) == 1
+
+
 # ---- Python: recursive-no-memo --------------------------------------------
 
 
