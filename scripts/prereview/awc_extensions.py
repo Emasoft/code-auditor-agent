@@ -251,6 +251,7 @@ def _parse_pyproject_dependencies(text: str) -> set[str]:
     deps: set[str] = set()
     in_deps_block = False
     in_poetry_deps = False
+    in_optional_deps_table = False
     for raw in text.splitlines():
         line = raw.strip()
         if not line:
@@ -263,6 +264,23 @@ def _parse_pyproject_dependencies(text: str) -> set[str]:
                 or section.startswith("tool.poetry.dev-dependencies")
                 or section.startswith("tool.poetry.group.")
             )
+            # PEP-621 [project.optional-dependencies] and PEP-735
+            # [dependency-groups] are TABLES whose entries are `extra = [...]`
+            # (key is the extra/group name, not "dependencies"), so the
+            # is_trigger gate below misses them — the dominant uv/PEP-621 shape.
+            in_optional_deps_table = section in {
+                "project.optional-dependencies",
+                "dependency-groups",
+            }
+            continue
+        # PEP-621/735 dep-table entry: `name = ["pkg", ...]` keyed by the
+        # extra/group name. Parse it (and its multi-line continuation) as a
+        # dependency list, which the "dependencies"-keyed trigger would skip.
+        if in_optional_deps_table and "=" in line and "[" in line:
+            for m in _INLINE_QUOTED_DEP_RE.finditer(raw):
+                deps.add(m.group(1).lower())
+            if "]" not in raw.split("[", 1)[1]:
+                in_deps_block = True
             continue
         # Trigger line — `dependencies = [...]` / `optional-dependencies.foo = [...]`.
         # If the trigger and closing `]` are on the same line, we extract

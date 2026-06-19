@@ -163,10 +163,15 @@ def test_main_rejects_bad_repo_root(tmp_path: Path, capsys) -> None:
     assert "directory" in err.lower()
 
 
-def test_pr_files_from_filters_references_but_keeps_repo_wide_declarations(tmp_path: Path) -> None:
-    """When PR-files-from is set, env-var references come from the PR subset,
-    but declarations come from the whole repo. This guarantees we catch
-    drift between PR-changed code and unchanged docs.
+def test_pr_mode_keeps_used_not_documented_but_suppresses_documented_not_used(tmp_path: Path) -> None:
+    """In PR mode, references come from the PR subset while declarations stay
+    repo-wide, so USED_IN_CODE_NOT_DOCUMENTED still fires (the PR references an
+    undeclared var). DOCUMENTED_NOT_USED must NOT fire in PR mode.
+
+    Regression (MAJ-10): the old behaviour flagged DATABASE_URL as
+    DOCUMENTED_NOT_USED even though old_file.py references it — it IS used, just
+    not by the PR. The verifier confirmed this as a false-positive bomb; the
+    earlier "intentional" rationale only held for the opposite direction.
     """
     _write(tmp_path / ".env.example", "DATABASE_URL=x\nPR_NEW_VAR=y\n")
     _write(tmp_path / "old_file.py", "import os\nDB = os.environ.get('DATABASE_URL')\n")
@@ -180,9 +185,7 @@ def test_pr_files_from_filters_references_but_keeps_repo_wide_declarations(tmp_p
     drift = [f for f in body["findings"] if f["category"] == "env_var_drift"]
     used_not_doc = [f["message"] for f in drift if f["code"] == "USED_IN_CODE_NOT_DOCUMENTED"]
     assert any("UNDOCUMENTED_VAR" in m for m in used_not_doc)
-    # PR_NEW_VAR is declared but only referenced in old_file (which isn't in
-    # the PR subset); current behaviour is to flag it as DOCUMENTED_NOT_USED
-    # because the subset doesn't reference it. This is intentional — drift
-    # in the PR's view is what we care about.
-    docs_unused = [f["message"] for f in drift if f["code"] == "DOCUMENTED_NOT_USED"]
-    assert any("PR_NEW_VAR" in m for m in docs_unused) or any("DATABASE_URL" in m for m in docs_unused)
+    # DATABASE_URL is declared AND used (old_file.py, outside the PR subset), so
+    # it must NOT be flagged DOCUMENTED_NOT_USED — the MAJ-10 false positive.
+    docs_unused = [f for f in drift if f["code"] == "DOCUMENTED_NOT_USED"]
+    assert docs_unused == []

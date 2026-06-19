@@ -365,6 +365,7 @@ def _iter_compose_env(text: str) -> Iterable[tuple[str, int]]:
 def _find_env_var_drift(
     refs: dict[str, list[tuple[str, int]]],
     decls: dict[str, list[tuple[str, int]]],
+    pr_mode: bool = False,
 ) -> list[Finding]:
     """Compute bi-directional drift findings."""
     out: list[Finding] = []
@@ -384,19 +385,24 @@ def _find_env_var_drift(
                 message=f"Env var '{var}' referenced in code but not declared in any .env* / compose env block",
             )
         )
-    for var in sorted(declared - referenced):
-        first_file, first_line = decls[var][0]
-        out.append(
-            Finding(
-                tool="cross_layer",
-                category="env_var_drift",
-                file=first_file,
-                line=first_line,
-                severity="nit",
-                code="DOCUMENTED_NOT_USED",
-                message=f"Env var '{var}' declared in {first_file} but never referenced from code",
+    # DOCUMENTED_NOT_USED is unreliable in PR mode: declarations are scanned
+    # repo-wide but references come ONLY from the PR-touched subset, so
+    # `declared - referenced` would flag every documented env var the PR didn't
+    # touch (a false-positive bomb). Only emit it in whole-repo mode.
+    if not pr_mode:
+        for var in sorted(declared - referenced):
+            first_file, first_line = decls[var][0]
+            out.append(
+                Finding(
+                    tool="cross_layer",
+                    category="env_var_drift",
+                    file=first_file,
+                    line=first_line,
+                    severity="nit",
+                    code="DOCUMENTED_NOT_USED",
+                    message=f"Env var '{var}' declared in {first_file} but never referenced from code",
+                )
             )
-        )
     return out
 
 
@@ -499,7 +505,7 @@ def detect(repo_root: Path, pr_files: list[Path] | None = None) -> dict[str, obj
         decl_files = all_files
     refs = _scan_env_references(repo_root, all_files)
     decls = _scan_env_declarations(repo_root, decl_files)
-    env_drift = _find_env_var_drift(refs, decls)
+    env_drift = _find_env_var_drift(refs, decls, pr_mode=pr_files is not None)
     generated = _find_generated_files(repo_root, all_files)
     orphans = _find_orphan_names(repo_root, all_files)
     findings: list[Finding] = sorted(

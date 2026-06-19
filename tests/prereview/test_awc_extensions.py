@@ -16,6 +16,29 @@ def _write(p: Path, content: str = "") -> None:
 # ---- Python deps -----------------------------------------------------------
 
 
+def test_optional_dependencies_table_parsed() -> None:
+    """PEP-621 [project.optional-dependencies] / PEP-735 [dependency-groups]
+    TABLE form (the dominant uv/PEP-621 shape) must be parsed — its entries are
+    keyed by the extra/group name, not 'dependencies', so the trigger gate alone
+    missed them (MAJ-05). Covers single-line and multi-line table entries.
+    """
+    text = (
+        "[project]\n"
+        'dependencies = ["requests"]\n'
+        "\n"
+        "[project.optional-dependencies]\n"
+        'dev = ["pytest", "ruff"]\n'
+        "test = [\n"
+        '    "coverage",\n'
+        "]\n"
+    )
+    deps = awc._parse_pyproject_dependencies(text)
+    assert "requests" in deps  # main deps still parsed
+    assert "pytest" in deps
+    assert "ruff" in deps
+    assert "coverage" in deps  # multi-line table entry
+
+
 def test_undeclared_python_dep_flagged(tmp_path: Path) -> None:
     _write(
         tmp_path / "pyproject.toml",
