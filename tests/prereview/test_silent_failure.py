@@ -58,6 +58,22 @@ def test_log_only_handler_flagged(tmp_path: Path) -> None:
     assert "SILENT_LOG_ONLY" in codes
 
 
+def test_print_only_handler_flagged(tmp_path: Path) -> None:
+    """A handler whose only body is `print(...)` must flag SILENT_LOG_ONLY.
+
+    The matcher runs against the dotted callee name ("print"), so the print
+    shape must end at a word boundary, not a literal "(" (regression: the
+    documented print case of SILENT_LOG_ONLY was silently broken).
+    """
+    _write(
+        tmp_path / "app.py",
+        "try:\n    parse()\nexcept ValueError:\n    print('parse failed')\n",
+    )
+    result = sf.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "SILENT_LOG_ONLY" in codes
+
+
 def test_log_then_raise_not_flagged_as_log_only(tmp_path: Path) -> None:
     _write(
         tmp_path / "app.py",

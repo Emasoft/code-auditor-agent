@@ -37,6 +37,35 @@ def test_real_downgrade_not_flagged(tmp_path: Path) -> None:
     assert "MISSING_DOWNGRADE" not in codes
 
 
+def test_async_empty_downgrade_flagged(tmp_path: Path) -> None:
+    """async def downgrade() with an empty body must flag EMPTY_DOWNGRADE.
+
+    Regression: ast.AsyncFunctionDef is not a subclass of ast.FunctionDef, so
+    async Alembic migrations were silently invisible to the scanner.
+    """
+    _write(
+        tmp_path / "migrations" / "versions" / "0001_init.py",
+        "async def upgrade():\n    await op.create_table('x')\n\n"
+        "async def downgrade():\n    pass\n",
+    )
+    result = db.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "EMPTY_DOWNGRADE" in codes
+
+
+def test_async_real_downgrade_not_flagged(tmp_path: Path) -> None:
+    """An async migration with a real downgrade body must NOT be flagged."""
+    _write(
+        tmp_path / "migrations" / "versions" / "0001_init.py",
+        "async def upgrade():\n    await op.create_table('x')\n\n"
+        "async def downgrade():\n    await op.drop_table('x')\n",
+    )
+    result = db.detect(tmp_path)
+    codes = {f["code"] for f in result["findings"]}
+    assert "EMPTY_DOWNGRADE" not in codes
+    assert "MISSING_DOWNGRADE" not in codes
+
+
 def test_missing_downgrade_flagged(tmp_path: Path) -> None:
     _write(
         tmp_path / "migrations" / "versions" / "0001_init.py",

@@ -619,8 +619,13 @@ def _detect_domains(state: _DetectionState, languages: dict[str, dict[str, objec
                 except ValueError:
                     rel = mpath.name
                 # Find first matching substring per manifest for compact evidence.
+                # Case-insensitive: package names are conventionally capitalized in
+                # manifests ("Django==4.2", "Flask") but rule substrings are
+                # lowercase — a case-sensitive `in` silently misses them (a Django
+                # REST project would fail manifest-route detection entirely).
+                text_lower = text.lower()
                 for sub in subs:
-                    if sub in text:
+                    if sub.lower() in text_lower:
                         evidence.append(f"manifest-dep: {rel} contains '{sub}'")
                         break
         # 3. Repo-wide file glob (looser than manifest globs).

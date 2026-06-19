@@ -63,6 +63,20 @@ def test_openapi_change_with_generated_client_not_flagged(tmp_path: Path) -> Non
     assert "SCHEMA_NO_CODEGEN" not in codes
 
 
+def test_openapi_change_without_generated_flagged(tmp_path: Path) -> None:
+    """The canonical bare `openapi.yaml` (no dot before "openapi") must be
+    recognized as a schema source and flag SCHEMA_NO_CODEGEN when no generated
+    client accompanies it. Regression: only the dotted `.openapi.yaml` matched,
+    so `api/openapi.yaml` was invisible and the negative test passed vacuously.
+    """
+    _write(tmp_path / "api" / "openapi.yaml", "openapi: 3.0.0\n")
+    _write(tmp_path / "src" / "app.ts", "export const x = 1;\n")
+    listing = _list_file(tmp_path / "pr.txt", ["api/openapi.yaml", "src/app.ts"])
+    result = op.detect(tmp_path, pr_files=op._load_pr_files(tmp_path, listing))
+    codes = {f["code"] for f in result["findings"]}
+    assert "SCHEMA_NO_CODEGEN" in codes
+
+
 # ---- CI without notes -----------------------------------------------------
 
 

@@ -1515,7 +1515,11 @@ def phase4_push(root: Path, version: str) -> bool:
     # is in the process ancestry via `ps`, which is unspoofable.
     print(f"\n  {BLUE}[4.1]{NC} Push main + {tag} to origin...")
     r = _run_quiet(
-        ["git", "push", "origin", "main", tag],
+        # --atomic makes the multi-ref push all-or-nothing (branch AND tag, or
+        # neither), honoring this phase's docstring. Without it a partial push is
+        # possible: a branch push could land + fire the marketplace-notify chain
+        # with no matching tag, and the rollback below only resets LOCAL state.
+        ["git", "push", "--atomic", "origin", "main", tag],
         cwd=root, timeout=120,
     )
 

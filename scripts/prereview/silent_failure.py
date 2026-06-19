@@ -92,9 +92,13 @@ _SKIP_DIRS: frozenset[str] = frozenset(
 )
 
 # Log-call shapes that mean "I'm only writing to the log, not handling".
+# NOTE: matched (see `_is_log_call`) against the DOTTED CALLEE NAME — e.g. "print",
+# "logger.info" — which NEVER contains "(". Each shape must therefore end at a word
+# boundary (\b), not a literal "(": `^print\(` could never match the bare name
+# "print", so the documented print-in-except case was silently broken.
 _LOG_CALL_PATTERNS = re.compile(
     r"^(?:logger|log|logging|self\.log|self\._log|self\.logger)\.(?:debug|info|warning|warn|error|exception|critical)\b"
-    r"|^print\("
+    r"|^print\b"
     r"|^console\.(?:error|warn|info|log|debug)\b"
     r"|^fmt\.(?:Println|Printf|Print)\b"
     r"|^eprintln!"

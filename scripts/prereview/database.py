@@ -170,7 +170,11 @@ def _check_migrations(repo_root: Path, files: Iterable[Path]) -> list[Finding]:
         has_upgrade = False
         has_downgrade = False
         for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
+            # Match async migrations too: ast.AsyncFunctionDef is NOT a subclass of
+            # ast.FunctionDef, so `async def upgrade()/downgrade()` (mainstream in
+            # async Alembic) would otherwise be silently invisible — has_upgrade /
+            # has_downgrade stay False and EMPTY/MISSING_DOWNGRADE never fire.
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if node.name == "upgrade":
                     has_upgrade = True
                 elif node.name == "downgrade":

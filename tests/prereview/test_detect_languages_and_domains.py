@@ -128,6 +128,17 @@ def test_rest_api_detected_via_manifest(tmp_path: Path) -> None:
     assert result["domains"]["rest_api"]["detected"] is True
 
 
+def test_rest_api_detected_via_capitalized_manifest_dep(tmp_path: Path) -> None:
+    """Case-insensitive manifest-substring match: a capitalized `Django` dep
+    (the rule substring is lowercase `django`) must still flag the rest_api
+    domain. Regression: a case-sensitive `in` silently missed it, so a Django
+    project with no @app.route source was not detected at all.
+    """
+    _write(tmp_path / "requirements.txt", "Django==4.2\n")
+    result = detect(tmp_path)
+    assert result["domains"]["rest_api"]["detected"] is True
+
+
 def test_sql_migrations_detected_via_alembic(tmp_path: Path) -> None:
     _make_python_fastapi_with_alembic(tmp_path)
     result = detect(tmp_path)

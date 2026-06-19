@@ -89,7 +89,11 @@ _GENERATED_BANNERS: tuple[re.Pattern[str], ...] = tuple(
 )
 
 _SCHEMA_NAME_RE = re.compile(
-    r"(\.proto|\.graphql|\.gql|\.openapi\.ya?ml|\.openapi\.json|/schema\.json|\.tsp)$",
+    # `(?:^|[/.])openapi\.` matches the canonical BARE filename `openapi.yaml`
+    # (path start or after `/`) AND the dotted `svc.openapi.yaml` form. The old
+    # `\.openapi\.` required a literal dot before "openapi" and silently missed
+    # `api/openapi.yaml` — defeating SCHEMA_NO_CODEGEN on the canonical OpenAPI name.
+    r"(\.proto|\.graphql|\.gql|(?:^|[/.])openapi\.ya?ml|(?:^|[/.])openapi\.json|/schema\.json|\.tsp)$",
     re.IGNORECASE,
 )
 
