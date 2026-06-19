@@ -540,6 +540,44 @@ def _compile_source_patterns(domain: _DomainRule) -> list[re.Pattern[str]]:
     return [re.compile(p) for p in domain.source_patterns]
 
 
+_GLOB_RE_CACHE: dict[str, re.Pattern[str]] = {}
+
+
+def _glob_to_regex(glob: str) -> re.Pattern[str]:
+    """Translate a path glob to an ANCHORED full-path regex.
+
+    `**/` = zero or more directory levels; `**` = any chars incl. `/`; `*` = any
+    run except `/`; `?` = one non-`/`. This replaces a substring test that (a)
+    left a literal `*` in the needle, so a glob like `**/migrations/**/*.sql`
+    matched nothing, and (b) was unanchored, so `translations/` matched
+    `auto_translations/`. Cached — the rule globs are a small fixed set.
+    """
+    cached = _GLOB_RE_CACHE.get(glob)
+    if cached is not None:
+        return cached
+    parts: list[str] = []
+    i, n = 0, len(glob)
+    while i < n:
+        if glob.startswith("**/", i):
+            parts.append("(?:.*/)?")
+            i += 3
+        elif glob.startswith("**", i):
+            parts.append(".*")
+            i += 2
+        elif glob[i] == "*":
+            parts.append("[^/]*")
+            i += 1
+        elif glob[i] == "?":
+            parts.append("[^/]")
+            i += 1
+        else:
+            parts.append(re.escape(glob[i]))
+            i += 1
+    rx = re.compile("^" + "".join(parts) + "$")
+    _GLOB_RE_CACHE[glob] = rx
+    return rx
+
+
 def _domain_file_globs_match(repo_root: Path, files: list[Path], globs: tuple[str, ...]) -> list[str]:
     """Return relative paths of files matching any of the given globs.
 
@@ -555,22 +593,24 @@ def _domain_file_globs_match(repo_root: Path, files: list[Path], globs: tuple[st
         except ValueError:
             continue
         rel_posix = rel.as_posix()
+        # Test the file path AND every ancestor directory path, so a directory-
+        # bundle glob (e.g. `**/*.xcodeproj`) matches even though enumeration
+        # yields only the files INSIDE the bundle.
+        ancestors = [p.as_posix() for p in rel.parents if p.as_posix() != "."]
         for g in globs:
-            # `Path.match` supports basic globbing; we treat `**` as "any".
-            # The cheapest correct check: substring match on the simplified
-            # glob (drop the leading `**/`) for full-path semantics, then
-            # final-segment match for filename-only globs.
-            simplified = g.removeprefix("**/").removeprefix("/")
-            if "/" in simplified:
-                # full-path style: just substring-test the simplified shape.
-                # Convert any remaining `**` to a path component wildcard.
-                normalized = simplified.replace("**/", "").replace("**", "")
-                if normalized and normalized in rel_posix:
+            bare = g.removeprefix("**/").removeprefix("/")
+            if "/" not in bare and "**" not in bare:
+                # filename style: match the basename in any directory, and the
+                # ancestor directory NAMES too (the bundle case, *.xcodeproj).
+                if _filename_glob_match(f.name, bare) or any(
+                    _filename_glob_match(part, bare) for part in rel.parts[:-1]
+                ):
                     matches.append(rel_posix)
                     break
             else:
-                # filename style: match the basename via simple wildcard.
-                if _filename_glob_match(f.name, simplified):
+                # path style: anchored glob→regex against the path + ancestors.
+                rx = _glob_to_regex(g)
+                if rx.match(rel_posix) or any(rx.match(a) for a in ancestors):
                     matches.append(rel_posix)
                     break
     matches = sorted(set(matches))

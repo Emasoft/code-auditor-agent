@@ -16,7 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from scripts.prereview.detect_languages_and_domains import detect, main
+from scripts.prereview.detect_languages_and_domains import (
+    _domain_file_globs_match,
+    detect,
+    main,
+)
 
 
 def _write(p: Path, content: str = "") -> None:
@@ -137,6 +141,37 @@ def test_rest_api_detected_via_capitalized_manifest_dep(tmp_path: Path) -> None:
     _write(tmp_path / "requirements.txt", "Django==4.2\n")
     result = detect(tmp_path)
     assert result["domains"]["rest_api"]["detected"] is True
+
+
+# ---- glob matcher: deep paths, bundle dirs, anchoring ----------------------
+
+
+def test_glob_match_deep_path_glob(tmp_path: Path) -> None:
+    """A `**/<dir>/**/*.ext` glob matches a deeply-nested file. Regression: the
+    old substring test left a literal `*` in the needle and matched nothing."""
+    f = tmp_path / "db" / "migrations" / "0001" / "init.sql"
+    _write(f, "SELECT 1;\n")
+    assert _domain_file_globs_match(tmp_path, [f], ("**/migrations/**/*.sql",))
+
+
+def test_glob_match_bundle_directory(tmp_path: Path) -> None:
+    """A directory-bundle glob (`**/*.xcodeproj`) matches via a file INSIDE the
+    bundle — enumeration yields only the inner files, never the bundle dir."""
+    f = tmp_path / "MyApp.xcodeproj" / "project.pbxproj"
+    _write(f, "// pbxproj\n")
+    assert _domain_file_globs_match(tmp_path, [f], ("**/*.xcodeproj",))
+
+
+def test_glob_match_anchored_no_cross_boundary(tmp_path: Path) -> None:
+    """`**/translations/**` must NOT match `auto_translations/` (the old
+    unanchored substring test produced cross-directory-boundary false positives),
+    but MUST still match a real `translations/` directory."""
+    fp = tmp_path / "src" / "auto_translations" / "cache.json"
+    _write(fp, "{}\n")
+    assert _domain_file_globs_match(tmp_path, [fp], ("**/translations/**",)) == []
+    real = tmp_path / "app" / "translations" / "en.json"
+    _write(real, "{}\n")
+    assert _domain_file_globs_match(tmp_path, [real], ("**/translations/**",))
 
 
 def test_sql_migrations_detected_via_alembic(tmp_path: Path) -> None:
