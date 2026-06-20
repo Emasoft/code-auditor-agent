@@ -46,6 +46,7 @@ export const meta = {
     { title: 'Map', detail: 'one opus auditor per file (scan-only, cache-shared prefix)' },
     { title: 'Filter', detail: 'adversarial verify each file (opus, different reviewer)' },
     { title: 'Domain', detail: 'stack-specific lens audits (file × active lens)' },
+    { title: 'Cross-file', detail: 'once-per-run holistic cross-file lens (non-PR scans)' },
     { title: 'PR-lenses', detail: 'once-per-run PR lenses: claim-verification, cross-layer, skeptical' },
     { title: 'Fix', detail: 'per-file fixer edits its ONE file in place (scan-and-fix mode)' },
     { title: 'FixVerify', detail: 'different engineer confirms each fix, no regressions' },
@@ -437,6 +438,31 @@ async function runPool(items, worker, maxCap, genuineMax) {
   })
 }
 
+// A HOLISTIC lens is a SINGLE once-per-run agent (the non-PR cross-file lens added in
+// TRDD-a5641fe3, or any of the three PR lenses). It must survive a transient rate-limit exactly as
+// the pool/reduce do (TRDD-0b67b18d S7): UNBOUNDED RL retry with the real exponential sleeper-backoff,
+// a SMALL bounded retry for a genuine (non-RL) lens failure, and the budget ceiling as the only
+// legitimate give-up. Hoisted to module scope (was a PR-block-local `runLens`) so the cross-file
+// scan lens and the PR lenses share ONE implementation — two copies of resilient-retry logic is
+// exactly the kind of drift the engine's single-source-of-truth invariant exists to prevent.
+const runResilientLens = async (prefix, label, expectName, phaseName) => {
+  let rl = 0, genuine = 0
+  for (;;) {
+    if (budgetTripped()) { log(label + ': budget ceiling reached — lens unavailable'); return { status: 'budget' } }
+    const out = await agent(prefix, { label: label, phase: phaseName, model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
+    const s = String(out).trim()
+    if (RL.test(s)) {   // transient server RL → UNBOUNDED retry with real exponential backoff
+      rl++; gBackoffSec = Math.min(MAX_BACKOFF, Math.max(BASE_BACKOFF, gBackoffSec * 2))
+      log(label + ': rate-limited (rl#' + rl + ') — backoff ' + gBackoffSec + 's then retry')
+      await backoff(gBackoffSec); continue
+    }
+    if (s.includes(TMP) && s.endsWith(expectName)) return { status: 'done', path: s }
+    if (++genuine >= 3) { log(label + ': lens failed x' + genuine + ' — unavailable'); return { status: 'lens-failed', detail: s.slice(0, 200) } }
+    log(label + ': lens genuine failure (' + genuine + '/3) — short backoff then retry')
+    await backoff(BASE_BACKOFF)
+  }
+}
+
 // Pre-calibrate ONCE before the first wave (TRDD-0b67b18d): probe current server state so a cold
 // run into an already-limiting server starts cap=1 + pre-waits instead of burning the first wave.
 await precalibrate()
@@ -489,6 +515,43 @@ if (TASK === 'review' && DOMAIN.length) {
     domainStats.failed = domainFailed.length
     log('domain audits done: ' + domainReports.length + '/' + pairs.length + (domainFailed.length ? ' (' + domainFailed.length + ' failed)' : ''))
   }
+}
+
+// ── Cross-file lens (TRDD-a5641fe3) — the once-per-run HOLISTIC cross-file pass for the NON-PR
+//    review path. The map/filter/domain agents are STRICTLY per-file, so a defect that lives in
+//    the RELATIONSHIP BETWEEN two files is invisible to them — measured directly by the 2026-06-17
+//    lens experiment, whose only MAJOR miss (GT11) was an env-var drift: api_routes.py reads
+//    DB_HOST while .env.example defines DATABASE_HOST, and neither file's per-file agent could see
+//    the other. The PR path already closes this with the cross-layer lens; this brings the SAME
+//    proven heuristics to /caa-scan + /caa-audit-codebase. ONE agent, anchored on the audited
+//    files, grepping ROOT for the other end of each mismatch. Default-on for multi-file scopes (a
+//    single-file scope has no cross-file dimension worth a whole extra opus dispatch); crossFile:true
+//    forces it on a 1-file scope, crossFile:false disables it. NOT run in PR mode — that path's
+//    cross-layer lens already does this, and running both would duplicate the work.
+let crossFileStatus = null
+let crossFileLine = '(cross-file lens did not run — single-file scope or disabled)'
+const wantXFile = A.crossFile === true || (A.crossFile !== false && FILES.length >= 2)
+if (TASK === 'review' && LENS !== 'pr' && wantXFile) {
+  const XFILE_PREFIX =
+    'You are the CROSS-FILE lens of a codebase audit — the ONE reviewer that sees the whole scope at once, ' +
+    'so you catch defects that live in the RELATIONSHIP BETWEEN files and are invisible to a per-file auditor. ' +
+    'Hunt these cross-file mismatch classes: env-var-drift (an environment/config NAME used by code but defined differently or missing from the matching dotenv or settings file); ' +
+    'default-value-drift (the same setting defaulted to different values in two places); schema-vs-code (a field/route/migration/type that code and its schema/contract disagree on); ' +
+    'removed-API-still-called (an orphan caller of a symbol that no longer exists or whose signature changed); ' +
+    'contract-drift (a function/class definition whose callers in OTHER files pass wrong args/types/counts); and hidden-ops-prereq (code that needs a config/env/migration/service the repo never provides). ' +
+    'EVERY finding MUST cite >=2 DIFFERENT files with file:line on each end — a single-file observation is OUT OF SCOPE for this lens (the per-file auditors own those). ' +
+    'The AUDITED FILES listed below are your ANCHOR set: for each, grep REPO_PATH for the OTHER end of any candidate mismatch. ' +
+    'SCAN ONLY — do NOT edit/fix/run git; do NOT use llm-externalizer; do all analysis yourself. Adversarially verify each finding (confirm BOTH ends actually exist and behave as claimed, by reading the real lines) BEFORE recording it, each with severity (CRITICAL/MAJOR/MINOR/NIT) + the WHY.\n' +
+    'First run: mkdir -p "' + TMP + '". Write findings (each: class, the >=2 files:line, why) to ' + TMP + '/__xfile.md (zero findings ⇒ write a report stating "no cross-file mismatches found"). ' +
+    'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
+    'REPO_PATH (grep here for the other end of each mismatch): ' + ROOT + '\n' +
+    'AUDITED FILES (your anchor set — read these, then grep the repo for their counterparts):\n' + FILES.join('\n') + '\n'
+  phase('Cross-file')
+  log('cross-file lens: holistic pass over ' + FILES.length + ' audited files (anchor) + repo grep')
+  const xf = await runResilientLens(XFILE_PREFIX, 'lens:cross-file', '__xfile.md', 'Cross-file')
+  crossFileStatus = (xf && xf.status) || null
+  if (xf && xf.status === 'done') { crossFileLine = xf.path }
+  else { crossFileLine = '(cross-file lens ' + (xf && xf.status) + ' — note as unavailable)' }
 }
 
 // reduce verdict/format varies by reportType (single agent — cache irrelevant here).
@@ -576,7 +639,7 @@ if (TASK === 'spec-compliance') {
   'Include a per-file summary table (file | CRITICAL | MAJOR | MINOR | NIT). ' + verdictRule + ' ' +
   'Include a "Refuted / downgraded during verification" section listing each finding the verifiers refuted or downgraded, WITH the evidence that killed or changed it (this self-correction is part of the deliverable — never hide it). ' +
   'If any two sources make OPPOSING claims about the same symbol or line, surface a CONTRADICTION entry naming both claims and which one the code supports — never silently keep both. ' +
-  'Add a "Needs follow-up" section listing any file that did NOT reach verified status, any failed domain-lens audit, and any unknown lens key. Do NOT use llm-externalizer.\n' +
+  'Add a "Needs follow-up" section listing any file that did NOT reach verified status, any failed domain-lens audit, an unavailable cross-file lens, and any unknown lens key. Do NOT use llm-externalizer.\n' +
   (MINSEV ? 'Severity filter: render in the markdown BODY only findings of severity ' + MINSEV + ' or higher (state the filter in the header); the findings.json below still carries ALL findings.\n' : '') +
   (TEMPLATE ? 'Report template: read ' + TEMPLATE + ' FIRST and render the markdown following its structure (keep the verdict/summary line at the very top regardless).\n' : '') +
   'Create the paths with Bash: mkdir -p "' + FINAL_DIR + '" ; TS=$(date +%Y%m%d_%H%M%S%z) ; write the report to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.md ' +
@@ -586,6 +649,7 @@ if (TASK === 'spec-compliance') {
   'Scope label: ' + SCOPE + '\nFiles audited: ' + FILES.length + '\n' +
   'Verified per-file report paths:\n' + (verifiedPaths || '(none — all files failed or were rate-limited)') + '\n\n' +
   'Domain-lens report paths (stack-specific findings — READ + merge these too; ignore any "NOT APPLICABLE"):\n' + (domainReports.join('\n') || '(none)') + '\n\n' +
+  'Cross-file lens report (holistic cross-file findings, each citing >=2 files — READ + merge it too; if it says "unavailable", note in Needs follow-up that the lens did not run, do NOT silently omit it):\n' + crossFileLine + '\n\n' +
   'Files that did NOT verify: ' + (problems.map(p => (p && p.file) || 'unknown').join(', ') || 'none') + '\n' +
   'Domain-lens audits that produced no report: ' + (domainFailed.join(', ') || 'none') + '\n' +
   (unknownLenses.length ? 'UNKNOWN domainLenses keys (config bug — surface it): ' + unknownLenses.join(', ') + '\n' : ''),
@@ -732,35 +796,14 @@ if (TASK === 'review' && LENS === 'pr') {
     'Read these LAST, only now (description, then the whole diff; REPO_PATH for context):\n' +
     'PR_DESCRIPTION_FILE: ' + DESC + '\nDIFF_FILE: ' + DIFF + '\nREPO_PATH: ' + ROOT + '\n'
 
-  // A PR lens must survive a transient rate-limit just as the pool/reduce do
-  // (TRDD-0b67b18d S7): UNBOUNDED RL retry with the same real exponential
-  // sleeper-backoff, a SMALL bounded retry for a genuine (non-RL) lens failure,
-  // and the budget ceiling as the only legitimate give-up. Previously a single
-  // RL hit dropped the entire lens (MAJ-20), defeating the guaranteed-completion
-  // property for exactly the PR path the TRDD called out.
-  const runLens = async (prefix, label, expectName) => {
-    let rl = 0, genuine = 0
-    for (;;) {
-      if (budgetTripped()) { log(label + ': budget ceiling reached — lens unavailable'); return { status: 'budget' } }
-      const out = await agent(prefix, { label: label, phase: 'PR-lenses', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
-      const s = String(out).trim()
-      if (RL.test(s)) {   // transient server RL → UNBOUNDED retry with real exponential backoff
-        rl++; gBackoffSec = Math.min(MAX_BACKOFF, Math.max(BASE_BACKOFF, gBackoffSec * 2))
-        log(label + ': rate-limited (rl#' + rl + ') — backoff ' + gBackoffSec + 's then retry')
-        await backoff(gBackoffSec); continue
-      }
-      if (s.includes(TMP) && s.endsWith(expectName)) return { status: 'done', path: s }
-      if (++genuine >= 3) { log(label + ': lens failed x' + genuine + ' — unavailable'); return { status: 'lens-failed', detail: s.slice(0, 200) } }
-      log(label + ': lens genuine failure (' + genuine + '/3) — short backoff then retry')
-      await backoff(BASE_BACKOFF)
-    }
-  }
-
+  // The three PR lenses use the module-scope runResilientLens (TRDD-0b67b18d S7 / MAJ-20):
+  // UNBOUNDED RL retry with a real sleeper-backoff so a single transient rate-limit never drops a
+  // lens. Same helper the non-PR cross-file lens uses — one implementation, no drift.
   phase('PR-lenses')
   const [claim, xlayer, skeptic] = await parallel([
-    () => runLens(CLAIM_PREFIX, 'lens:claim-verification', '__pr-claim.md'),
-    () => runLens(XLAYER_PREFIX, 'lens:cross-layer', '__pr-xlayer.md'),
-    () => runLens(SKEPTIC_PREFIX, 'lens:skeptical', '__pr-skeptic.md'),
+    () => runResilientLens(CLAIM_PREFIX, 'lens:claim-verification', '__pr-claim.md', 'PR-lenses'),
+    () => runResilientLens(XLAYER_PREFIX, 'lens:cross-layer', '__pr-xlayer.md', 'PR-lenses'),
+    () => runResilientLens(SKEPTIC_PREFIX, 'lens:skeptical', '__pr-skeptic.md', 'PR-lenses'),
   ])
   const lensLine = (r, name) => (r && r.status === 'done') ? r.path : '(' + name + ' lens ' + (r && r.status) + ' — note as unavailable)'
   const claimLine = lensLine(claim, 'claim-verification')
@@ -805,6 +848,7 @@ return {
   verified: verified.length,
   problems: problems.map(p => ({ file: p && p.file, status: p && p.status })),
   domain: DOMAIN.length ? domainStats : null,
+  crossFileLens: crossFileStatus,
   unknownLenses: unknownLenses.length ? unknownLenses : null,
   reduce: finalRed.status,
   finalReport: finalRed.status === 'ok' ? finalMd : null,

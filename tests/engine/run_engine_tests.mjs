@@ -92,6 +92,7 @@ function contractAgent(table = {}) {
     if (call.label === 'lens:claim-verification') return tmp + '/__pr-claim.md'
     if (call.label === 'lens:cross-layer') return tmp + '/__pr-xlayer.md'
     if (call.label === 'lens:skeptical') return tmp + '/__pr-skeptic.md'
+    if (call.label === 'lens:cross-file') return tmp + '/__xfile.md'
     if (call.label.startsWith('reduce:')) {
       const m = p.match(/write (?:the report |)to (\S+\.md)/)
       const path = (m ? m[1] : ROOT + '/reports/code-auditor-agent/UNKNOWN.md').replace('$TS', '20260611_150000+0200')
@@ -338,6 +339,49 @@ test('gate_verdict_rule_selected', 'reportType=gate injects the PASS/FAIL verdic
   ok(g.calls.filter((c) => c.label.startsWith('reduce:')).pop().prompt.includes('VERDICT: PASS'), 'gate verdict rule present')
   const a = await runEngine(BASE, contractAgent())
   ok(a.calls.filter((c) => c.label.startsWith('reduce:')).pop().prompt.includes('SUMMARY: <c> CRITICAL'), 'audit summary rule present')
+})
+
+test('scan_fires_cross_file_lens_on_multi_file_scope', 'A non-PR scan over >=2 files fires the holistic cross-file lens once (TRDD-a5641fe3 — the GT11 blind-spot fix); its report path is merged into the reduce and surfaced as result.crossFileLens', async () => {
+  const { result, calls } = await runEngine(BASE, contractAgent())
+  const xf = calls.filter((c) => c.label === 'lens:cross-file')
+  eq(xf.length, 1, 'cross-file lens runs exactly once per run')
+  ok(xf[0].prompt.includes('>=2 DIFFERENT files') && xf[0].prompt.includes('REPO_PATH'), 'cross-file prompt anchors on the repo and demands >=2-file evidence')
+  ok(xf[0].model === 'opus', 'cross-file lens honors the all-opus invariant')
+  eq(result.crossFileLens, 'done', 'result surfaces the cross-file lens status')
+  const red = calls.filter((c) => c.label.startsWith('reduce:')).pop()
+  ok(red.prompt.includes('__xfile.md'), 'the reduce merges the cross-file report path')
+})
+
+test('cross_file_lens_skipped_on_single_file_or_disabled', 'The cross-file lens does NOT fire on a single-file scope (no cross-file dimension) nor when crossFile:false; crossFileLens stays null', async () => {
+  const one = await runEngine({ root: ROOT, files: [ROOT + '/only.py'], runId: 'one' }, contractAgent())
+  ok(!one.calls.some((c) => c.label === 'lens:cross-file'), 'single-file scope: cross-file lens must NOT run')
+  eq(one.result.crossFileLens, null, 'single-file: crossFileLens stays null')
+  const off = await runEngine({ ...BASE, crossFile: false }, contractAgent())
+  ok(!off.calls.some((c) => c.label === 'lens:cross-file'), 'crossFile:false disables the lens even on a multi-file scope')
+  eq(off.result.crossFileLens, null, 'crossFile:false: crossFileLens stays null')
+})
+
+test('cross_file_lens_forced_on_single_file_with_crossfile_true', 'crossFile:true forces the holistic lens even on a single-file scope (explicit override of the >=2-file default gate)', async () => {
+  const { calls, result } = await runEngine({ root: ROOT, files: [ROOT + '/only.py'], runId: 'force', crossFile: true }, contractAgent())
+  ok(calls.some((c) => c.label === 'lens:cross-file'), 'crossFile:true forces the lens on a 1-file scope')
+  eq(result.crossFileLens, 'done', 'forced cross-file lens completes')
+})
+
+test('cross_file_lens_not_duplicated_in_pr_mode', 'PR mode already runs the cross-layer lens, so the non-PR cross-file lens must NOT also fire — no double cross-file pass', async () => {
+  const args = { ...BASE, lensSet: 'pr', reportType: 'pr-comment', diffFile: '/tmp/d.diff', descFile: '/tmp/d.desc' }
+  const { calls, result } = await runEngine(args, contractAgent())
+  ok(calls.some((c) => c.label === 'lens:cross-layer'), 'PR cross-layer lens runs')
+  ok(!calls.some((c) => c.label === 'lens:cross-file'), 'the non-PR cross-file lens must NOT run in PR mode (would duplicate)')
+  eq(result.crossFileLens, null, 'crossFileLens stays null in PR mode')
+})
+
+test('cross_file_lens_rate_limited_then_succeeds', 'The cross-file lens shares the resilient runner: it survives 4 transient rate-limits (UNBOUNDED RL retry + real sleeper-backoff) and still ends "done" — TRDD-a5641fe3 reuses the TRDD-0b67b18d S7 guarantee via the hoisted runResilientLens', async () => {
+  let n = 0
+  const { result } = await runEngine(BASE, contractAgent({
+    'lens:cross-file': () => { n++; return n <= 4 ? 'temporarily limiting requests' : undefined },
+  }))
+  eq(result.crossFileLens, 'done', 'cross-file lens ends "done" despite 4 transient rate-limits')
+  ok(n > 4, 'the lens was retried past all 4 rate-limits (n=' + n + ')')
 })
 
 // ── Runner with the mandated unicode table ───────────────────────────────────
