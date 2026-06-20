@@ -1,6 +1,6 @@
 {
   "name": "code-auditor-agent",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "Ultracode code-audit engine for Claude Code: one deterministic map-filter-reduce workflow (scripts/workflows/caa-engine.js) drives every operation over swarms of opus agents \u2014 pre-commit gate of staged files, whole-codebase or scoped scan, delta recheck since a git ref, scan-and-fix with per-fix adversarial verification, and GitHub PR review with claim-verification and cross-layer lenses plus 21 distilled domain lenses (docker, solidity, iOS, GraphQL, frontend, JWT, prompt-injection, ...). Every finding is adversarially verified before it is reported; one consolidated report plus machine-readable findings.json per run.",
   "author": {
     "name": "Emasoft",

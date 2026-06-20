@@ -1,7 +1,7 @@
 ---
 name: caa-codebase-audit-and-fix-skill
 description: "Trigger with /audit-codebase, 'audit the codebase', 'compliance audit', 'codebase audit', 'scan and fix the code'. Use when auditing a codebase (whole, scoped, or changed-since-a-ref) and optionally applying fixes."
-version: 4.3.0
+version: 4.4.0
 author: Emasoft
 license: MIT
 tags: [codebase-audit, ultracode, scan, scan-and-fix, delta]

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] - 2026-06-20
+
+### Features
+
+- *(engine)* Verify-implementation commands + estimate-based calibration (TRDD-d4be3b0e, TRDD-e78886a9) (f36d37b)
+
+### Documentation
+
+- *(trdd)* TRDD-a5641fe3 → published v4.3.0 (post-release bookkeeping) (44b8710)
+
 ## [4.3.0] - 2026-06-20
 
 ### Features

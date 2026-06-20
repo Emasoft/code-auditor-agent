@@ -4,7 +4,7 @@ description: >
   Trigger with "/caa-extended-audit", "generate scenarios", "discover entry
   points". Use when an extended audit needs end-to-end scenario walks beyond
   line review. Emits scenarios.json for the ultracode engine's scenario-walk lens.
-version: 4.3.0
+version: 4.4.0
 author: Emasoft
 license: MIT
 tags: [caa-scenario-generator, scenario-discovery, type-detection, extended-audit]
