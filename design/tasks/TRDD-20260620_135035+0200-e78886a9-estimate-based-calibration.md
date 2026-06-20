@@ -1,9 +1,9 @@
 ---
 trdd-id: e78886a9-2d1e-4892-a53a-0270979fe33a
 title: Estimate-based concurrency calibration — replace the server-probing precalibrate
-column: dev
+column: published
 created: 2026-06-20T13:50:35+0200
-updated: 2026-06-20T13:50:35+0200
+updated: 2026-06-20T14:20:00+0200
 current-owner: caa
 assignee: caa
 priority: 2
@@ -29,8 +29,10 @@ runtime-targets: [macos, linux]
 impacts: []
 attempts: 0
 last-test-result: pass
-implementation-commits: []
-external-refs: []
+implementation-commits: [f36d37b, 3b96d25]
+published-version: 4.4.0
+published-at: 2026-06-20T14:18:00+0200
+external-refs: [github.com/Emasoft/code-auditor-agent/releases/tag/v4.4.0]
 ---
 
 # Estimate-based concurrency calibration

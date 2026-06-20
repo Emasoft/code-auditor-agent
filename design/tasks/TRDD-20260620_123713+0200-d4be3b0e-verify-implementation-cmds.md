@@ -1,9 +1,9 @@
 ---
 trdd-id: d4be3b0e-53fd-4a3f-84d3-0c73e89d5242
 title: Add /caa-verify-implementation + /caa-verify-implementation-and-fix (fix-as-you-go)
-column: dev
+column: published
 created: 2026-06-20T12:37:13+0200
-updated: 2026-06-20T14:05:00+0200
+updated: 2026-06-20T14:20:00+0200
 current-owner: caa
 assignee: caa
 priority: 3
@@ -28,9 +28,11 @@ review-requirements: [code-review]
 runtime-targets: [macos, linux]
 impacts: [public-api]
 attempts: 0
-last-test-result: not-run
-implementation-commits: []
-external-refs: []
+last-test-result: pass
+implementation-commits: [f36d37b, 3b96d25]
+published-version: 4.4.0
+published-at: 2026-06-20T14:18:00+0200
+external-refs: [github.com/Emasoft/code-auditor-agent/releases/tag/v4.4.0]
 ---
 
 # Add /caa-verify-implementation + /caa-verify-implementation-and-fix
