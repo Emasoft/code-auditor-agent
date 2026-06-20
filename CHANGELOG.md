@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.0] - 2026-06-20
+
+### Features
+
+- *(engine)* Holistic cross-file lens for non-PR scans (TRDD-a5641fe3) (a987dba)
+
 ## [4.2.0] - 2026-06-19
 
 ### Bug Fixes
