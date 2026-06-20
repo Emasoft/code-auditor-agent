@@ -128,18 +128,29 @@ Procedure:
    `IMPLEMENTED` (cite file:line), `VIOLATED` (cite file:line + WHY), or `PARTIAL`. Do not list
    clauses a file has no bearing on. Self-verify each classification against the actual code before
    recording it (no second reviewer here — prefer precision).
+   **(scan-and-fix mode only — FIX-AS-YOU-GO):** in the SAME read of each file, repair every
+   `VIOLATED` clause and complete every `PARTIAL` clause IN PLACE — root-cause only (no
+   hacks/workarounds/bypasses, no unrequested fallbacks, fail-fast), with a short WHY-comment at each
+   fix. You COMPLETE an EXISTING implementation; never scaffold a brand-new feature from the spec — a
+   clause with no implementation anywhere is left UNIMPLEMENTED and reported. Re-read each edited file
+   to confirm it is valid and the fix applied. Operate on the working tree the command prepared; never push.
 3. **Write ONE consolidated report** to `<root>/reports/code-auditor-agent[/<component>]/<TS>-<reportSuffix>.md`
-   (`<TS>` from `date +%Y%m%d_%H%M%S%z`) with the **top line byte-matching the engine**:
-   `SUMMARY: <v> VIOLATING, <m> MISSING, <p> PARTIAL of <t> spec clauses across <f> files`,
-   followed by sections `## VIOLATING` (per clause: offending file:line + WHY), `## MISSING` (every
-   spec clause NO file implements or partially implements — compute by subtracting covered clauses
-   from the full clause list), `## PARTIAL`, and a `## Coverage` table (clause-id | summary | status
-   | file(s)). Best-effort: also write the sibling `<TS>-<reportSuffix>.findings.json` (one record
-   per clause-status: `{clause_id, clause, status, file, line, evidence, why}`).
+   (`<TS>` from `date +%Y%m%d_%H%M%S%z`), with the **top line byte-matching the engine** for the mode:
+   - **scan mode:** `SUMMARY: <v> VIOLATING, <m> MISSING, <p> PARTIAL of <t> spec clauses across <f> files`,
+     then sections `## VIOLATING` (per clause: offending file:line + WHY), `## MISSING` (every spec
+     clause NO file implements or partially implements — subtract covered clauses from the full list),
+     `## PARTIAL`, and a `## Coverage` table (clause-id | summary | status | file(s)). Sibling
+     `<TS>-<reportSuffix>.findings.json`: `{clause_id, clause, status, file, line, evidence, why}` per clause.
+   - **scan-and-fix mode:** `SUMMARY: <f> FIXED, <v> STILL-VIOLATED, <u> UNIMPLEMENTED of <t> spec clauses across <n> files`,
+     then `## Fixed` (now-IMPLEMENTED, file:line + WHAT changed), `## Still broken` (fix failed, file:line + why),
+     `## Unimplemented` (truly absent — reported as a gap, NOT built), and a `## Coverage` table
+     (clause-id | summary | final status | file(s)). Sibling `<TS>-<reportSuffix>.findings.json`:
+     `{clause_id, clause, final_status, file, line, what_changed, evidence}` per clause.
 4. **Return** the report path(s) + the `SUMMARY:` top line, so the command's present step renders
    identically to the ultracode path. Mark the report as the simple-scan fallback (per Honesty).
 
-The fix/PR/domain machinery does not apply in spec-compliance mode — it is map-then-reduce only.
+The PR/domain machinery does not apply in spec-compliance mode — it is map(-and-fix)-then-reduce only;
+`scan-and-fix` adds the fix-as-you-go in-place repair within the per-file pass (no separate fixer).
 
 ## Implementation-compare mode (`task: 'impl-compare'`)
 

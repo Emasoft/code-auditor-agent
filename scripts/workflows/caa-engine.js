@@ -149,6 +149,11 @@ if (TASK === 'spec-compliance' && (!SPECFILE || SPECFILE[0] !== '/')) {
 if (TASK === 'impl-compare' && (!INPUTSPEC || INPUTSPEC[0] !== '/')) {
   return { error: "caa-engine: task 'impl-compare' requires args.inputSpec (ABSOLUTE path to the shared input/contract/harness); files[] are the candidate implementations" }
 }
+if (TASK === 'impl-compare' && MODE === 'scan-and-fix') {
+  // impl-compare RANKS candidates; it never edits them. A fix mode here would silently no-op
+  // (the fix block is review-only), so reject it rather than mislead the caller.
+  return { error: "caa-engine: task 'impl-compare' cannot be combined with mode 'scan-and-fix' (it ranks candidates, it does not edit them)" }
+}
 if (MINSEV && MINSEV !== 'CRITICAL' && MINSEV !== 'MAJOR' && MINSEV !== 'MINOR' && MINSEV !== 'NIT') {
   return { error: "caa-engine: unknown minSeverity '" + MINSEV + "' (valid: CRITICAL | MAJOR | MINOR | NIT)" }
 }
@@ -157,6 +162,12 @@ if (LENS === 'pr' && MODE === 'scan-and-fix') {
   // post-fix code against the pre-fix diff — incoherent by construction. Review first, then fix.
   return { error: "caa-engine: lensSet 'pr' cannot be combined with mode 'scan-and-fix' — run the PR review first, then /caa-scan-and-fix on the changed files" }
 }
+// VERIFY-AND-FIX (TRDD-d4be3b0e): spec-compliance + scan-and-fix = FIX-AS-YOU-GO. The per-file
+// agent classifies AND repairs/completes its file against the spec in ONE read (no separate fix
+// phase — that is the single-read win the review scan-and-fix does NOT have). It COMPLETES an
+// EXISTING implementation; it never scaffolds a feature from the spec (a wholly-absent requirement
+// is REPORTED as unimplemented, not built). Selects the fix-as-you-go map/filter prefixes + reduce.
+const SPECFIX = (TASK === 'spec-compliance' && MODE === 'scan-and-fix')
 
 // ── Domain-lens catalog (active when args.domainLenses is non-empty — the wrapper derives the
 //    active keys from detect_languages_and_domains.py's specialist_firing + the holistic set).
@@ -265,7 +276,18 @@ const IMPL_MAP_PREFIX =
   'Structure: {correctness: PASS|FAIL|PARTIAL + evidence, edge-cases, performance: complexity + notes, code-quality: rating + notes, overall: one-line}.\n' +
   'Your FINAL message MUST be EXACTLY that absolute report path and nothing else.\n' +
   'Read the input/contract FIRST (path above), then read this one candidate implementation LAST, only now, and evaluate it:\n'
-const MAP_PREFIX = (TASK === 'spec-compliance') ? SPEC_MAP_PREFIX : (TASK === 'impl-compare') ? IMPL_MAP_PREFIX : AUDIT_PREFIX
+// CONSTANT spec-compliance FIX-AS-YOU-GO map prefix (SPECFIX) — byte-identical per agent. The agent
+// verifies its ONE file against the spec AND repairs/completes it in the SAME read (no later fixer).
+const SPEC_FIX_MAP_PREFIX =
+  'You are a meticulous SPEC-COMPLIANCE engineer working FIX-AS-YOU-GO on EXACTLY ONE file. A specification/requirements document defines what an ALREADY-EXISTING implementation MUST do. Your job: verify this one file against the spec and, in the SAME pass, CORRECT what is wrong and COMPLETE what is unfinished — the code is read ONCE, never audited-now-and-fixed-later.\n' +
+  'FIRST read the full spec at ' + SPECFILE + ' and enumerate its REQUIREMENT CLAUSES, each with a STABLE short id (reuse the spec\'s own numbering/headings where present, else derive a stable id from the clause text). Then read this ONE target file and, for EVERY clause it is RELEVANT to, classify it: IMPLEMENTED (file satisfies it), VIOLATED (file contradicts/breaks it), or PARTIAL (begun but incomplete).\n' +
+  'NOW FIX-AS-YOU-GO, editing THIS ONE file IN PLACE: for every VIOLATED clause correct the code to satisfy the spec; for every PARTIAL clause finish the missing piece. Fix the ROOT CAUSE only — never a hack/workaround/bypass, never a fallback the spec does not require, honor fail-fast. You are COMPLETING AN EXISTING IMPLEMENTATION, NOT creating one: edit only code that already exists in this file, only to make it meet the spec. Do NOT scaffold a brand-new feature. If a clause has NO existing implementation here and does not belong to this file\'s responsibility, leave it UNTOUCHED and classify it UNIMPLEMENTED — the reduce reports it as a gap; it is not yours to build.\n' +
+  'Do NOT run git; do NOT use llm-externalizer; do all the work yourself. You exclusively own this one file (no other agent edits it). After editing, RE-READ the file to confirm it is syntactically valid and every fix actually applied and is correct.\n' +
+  'First run: mkdir -p "' + TMP + '". Write a report as markdown to ' + TMP + '/<slug>.map.md where <slug> is the absolute file path with every "/" replaced by "__". ' +
+  'Structure the body as a list, one entry per relevant clause: {clause-id, one-line summary, verdict-before (IMPLEMENTED|VIOLATED|PARTIAL|UNIMPLEMENTED), action (NONE|FIXED|COMPLETED), what-changed (WHY it was wrong + HOW you fixed it, file:line), verdict-after}.\n' +
+  'Your FINAL message MUST be EXACTLY that absolute report path and nothing else (no prose).\n' +
+  'Read the spec FIRST (path above), then read + fix this one target file LAST, only now:\n'
+const MAP_PREFIX = SPECFIX ? SPEC_FIX_MAP_PREFIX : (TASK === 'spec-compliance') ? SPEC_MAP_PREFIX : (TASK === 'impl-compare') ? IMPL_MAP_PREFIX : AUDIT_PREFIX
 
 async function mapAudit(file) {
   const out = await agent(MAP_PREFIX + file, { label: 'map:' + file, phase: 'Map', model: 'opus' })
@@ -305,7 +327,16 @@ const IMPL_VERIFY_PREFIX =
   'First run: mkdir -p "' + TMP + '". Write the verified evaluation to ' + TMP + '/<slug>.verified.md where <slug> is the absolute candidate path with every "/" replaced by "__". ' +
   'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
   'Read these LAST, only now (the input/contract, the evaluation report, then the candidate implementation):\n'
-const FILTER_PREFIX = (TASK === 'spec-compliance') ? SPEC_VERIFY_PREFIX : (TASK === 'impl-compare') ? IMPL_VERIFY_PREFIX : VERIFY_PREFIX
+// CONSTANT spec-compliance FIX-AS-YOU-GO filter prefix (SPECFIX) — a DIFFERENT engineer confirms the
+// in-place fixes are real, correct, and regression-free; it does NOT edit (verify-only).
+const SPEC_FIXV_PREFIX =
+  'You are an adversarial FIX-VERIFIER and a DIFFERENT engineer than the one who fixed this file. A prior engineer classified ONE code file against the spec at ' + SPECFILE + ' and FIXED/COMPLETED clauses IN PLACE. ' +
+  'Independently CONFIRM or REFUTE the result by reading the spec, the prior report, and the CURRENT source: for each clause, verify its verdict-after is TRUE against the actual code (cite file:line), that each claimed fix was really applied, fixes the root cause, introduced NO regression / NO syntax error / NO new defect, and used no hack/fallback the spec did not require. ' +
+  'Record every wrong/incomplete/regressed fix in a "## Refuted / corrected" section WITH the evidence; flag any clause still VIOLATED or still UNIMPLEMENTED. Do NOT edit the file (verify-only); no git; no llm-externalizer.\n' +
+  'First run: mkdir -p "' + TMP + '". Write the verified result to ' + TMP + '/<slug>.verified.md where <slug> is the absolute SOURCE path with every "/" replaced by "__". ' +
+  'Your FINAL message MUST be EXACTLY that path and nothing else.\n' +
+  'Read these LAST, only now (the spec, the prior fix report, then the CURRENT source):\n'
+const FILTER_PREFIX = SPECFIX ? SPEC_FIXV_PREFIX : (TASK === 'spec-compliance') ? SPEC_VERIFY_PREFIX : (TASK === 'impl-compare') ? IMPL_VERIFY_PREFIX : VERIFY_PREFIX
 
 async function filterVerify(mapResult) {
   if (!mapResult || mapResult.status !== 'mapped') return mapResult
@@ -342,7 +373,30 @@ const MAX_BACKOFF = 300      // seconds — per-wave cap (waves REPEAT, so cumul
 const RAMP_OK = 3            // consecutive clean settles before an additive cap++ (AIMD increase)
 const BUDGET_FLOOR = 60000   // stop dispatching NEW work when fewer output tokens than this remain
 let gBackoffSec = BASE_BACKOFF   // module-level: escalates on RL, decays on success, persists across phases
-let gCapHint = 1                 // module-level starting-cap hint (precalibrate sets it; each pool updates it)
+let gCapHint = 1                 // module-level starting-cap hint (estimateCalibrate sets it; each pool updates it)
+
+// ── Estimate-based concurrency calibration (TRDD-e78886a9). PROACTIVE: derive the safe concurrency
+// ceiling by ARITHMETIC — never by PROBING/triggering the server (the user flagged wall-probing as
+// token-wasteful). Every workflow agent is model:'opus', so ONE shared Opus bucket governs the whole
+// pool. We anchor on Anthropic's LOWEST published tier (Tier-1, Opus) as a CONSERVATIVE proxy: Claude
+// Code's Pro/Max OAuth uses opaque 5h-window subscription limits (NOT per-minute TPM), so the per-minute
+// API numbers are a safe over-estimate of risk, and EVERY value here is a tunable arg (raise for real
+// Pro/Max headroom). The cap is the MIN across all three ceilings (at Tier-1 RPM is usually binding,
+// not tokens), × a safety margin, clamped to the structural cap. The DSL forbids Date.now(), so we make
+// the conservative worst-case assumption that a whole wave bursts its work inside ONE minute.
+const RL_CEIL = {                                                  // Tier-1 Opus ceilings (tunable)
+  rpm:  Math.max(1, Math.floor(Number(A.ceilRpm)  || 50)),         // requests / minute
+  itpm: Math.max(1, Math.floor(Number(A.ceilItpm) || 500000)),    // input tokens / minute
+  otpm: Math.max(1, Math.floor(Number(A.ceilOtpm) || 80000)),     // output tokens / minute
+}
+const AGENT_FOOTPRINT = {                                          // worst-case per-agent load in 1 min (tunable)
+  req: Math.max(1, Number(A.reqPerAgent) || 8),                   // requests/min one agent fires (~1 per ~7s)
+  in:  Math.max(1, Math.floor(Number(A.inPerAgent)  || 60000)),   // input tokens/min/agent
+  out: Math.max(1, Math.floor(Number(A.outPerAgent) || 8000)),    // output tokens/min/agent
+}
+const RL_SAFETY = Math.min(1, Math.max(0.1, Number(A.rlSafety) || 0.8))  // stay this fraction below the min ceiling
+let gMaxConc = CONC              // safe concurrency ceiling (estimateCalibrate sets it; pools never exceed it)
+let gCalib = null                // {byRpm,byItpm,byOtpm,binding,maxConc} — surfaced for observability/tests
 
 // budget may be undefined outside the DSL (defensive); absent / total:null ⇒ "no ceiling".
 const budgetTripped = () => {
@@ -368,19 +422,26 @@ async function backoff(sec) {
   }
 }
 
-// Pre-calibration: one cheap probe detects whether the server is limiting RIGHT NOW and sets the
-// starting cap + backoff so a cold run into an already-limiting server doesn't waste the first wave.
-// Conservative: ANY non-"OK" probe (rate-limit, throw, garbage) → assume limited and pre-wait.
-async function precalibrate() {
-  const out = await agent('Reply with exactly: OK', { label: 'precal-probe', phase: 'Precalibrate', model: 'opus' }).catch(e => 'AGENT_THREW: ' + e)
-  if (String(out).trim() === 'OK') {
-    gBackoffSec = BASE_BACKOFF; gCapHint = 2
-    log('precalibrate: server healthy → start cap=2')
-  } else {
-    gBackoffSec = Math.min(MAX_BACKOFF, BASE_BACKOFF * 4); gCapHint = 1
-    log('precalibrate: server limiting/uncertain → start cap=1, backoff=' + gBackoffSec + 's')
-    await backoff(gBackoffSec)
-  }
+// Estimate-based calibration (TRDD-e78886a9) — REPLACES the old server probe. Pure arithmetic, ZERO
+// agents, ZERO rate-limit risk: the safe concurrency ceiling = floor( SAFETY × min(RPM/req, ITPM/in,
+// OTPM/out) ), clamped to the structural cap. We compute each ceiling's max-supportable concurrency and
+// take the MIN (the binding constraint — at Tier-1 that is usually RPM). The runtime RL backoff stays
+// as the safety net IF the estimate is wrong (e.g. a partly-spent window); the goal is it rarely fires.
+// A per-turn budget.total is NOT folded in here — it governs the TOTAL-turn stop separately (budgetTripped).
+function estimateCalibrate() {
+  const byRpm = RL_CEIL.rpm / AGENT_FOOTPRINT.req
+  const byItpm = RL_CEIL.itpm / AGENT_FOOTPRINT.in
+  const byOtpm = RL_CEIL.otpm / AGENT_FOOTPRINT.out
+  const minCeil = Math.min(byRpm, byItpm, byOtpm)
+  const est = Math.max(1, Math.floor(RL_SAFETY * minCeil))
+  gMaxConc = Math.max(1, Math.min(CONC, est))
+  gCapHint = Math.max(1, Math.min(gMaxConc, 2))   // gentle cold start; AIMD ramps up to gMaxConc, NEVER beyond
+  gBackoffSec = BASE_BACKOFF
+  const binding = (minCeil === byRpm) ? 'RPM' : (minCeil === byOtpm) ? 'OTPM' : 'ITPM'
+  gCalib = { byRpm, byItpm, byOtpm, binding, maxConc: gMaxConc }
+  log('estimate-calibrate (no probe): RPM→' + byRpm.toFixed(1) + ' ITPM→' + byItpm.toFixed(1) +
+      ' OTPM→' + byOtpm.toFixed(1) + ' ×safety ' + RL_SAFETY + ' → max conc=' + gMaxConc + '/' + CONC +
+      ' (binding: ' + binding + '), start cap=' + gCapHint)
 }
 
 // The pool. maxCap = concurrency ceiling; genuineMax = bounded retries for NON-RL ("*-failed")
@@ -463,12 +524,12 @@ const runResilientLens = async (prefix, label, expectName, phaseName) => {
   }
 }
 
-// Pre-calibrate ONCE before the first wave (TRDD-0b67b18d): probe current server state so a cold
-// run into an already-limiting server starts cap=1 + pre-waits instead of burning the first wave.
-await precalibrate()
+// Estimate-calibrate ONCE before the first wave (TRDD-e78886a9): arithmetic-derive the safe
+// concurrency ceiling gMaxConc from the rate-limit estimate — no server probe, no RL risk.
+estimateCalibrate()
 phase('Map')
-log('caa-engine: mode=' + MODE + ' lens=' + LENS + ' scope=' + SCOPE + ' reportType=' + RTYPE + ' files=' + FILES.length + ' conc=' + CONC)
-const results = await runPool(FILES, processFile, CONC, 3)
+log('caa-engine: mode=' + MODE + ' lens=' + LENS + ' scope=' + SCOPE + ' reportType=' + RTYPE + ' files=' + FILES.length + ' conc=' + gMaxConc + '/' + CONC)
+const results = await runPool(FILES, processFile, gMaxConc, 3)
 const verified = results.filter(r => r && r.status === 'verified')
 const problems = results.filter(r => !r || r.status !== 'verified')
 log('audited: ' + verified.length + '/' + FILES.length + ' verified, ' + problems.length + ' problems')
@@ -503,7 +564,7 @@ if (TASK === 'review' && DOMAIN.length) {
     }
     phase('Domain')
     log('domain lenses [' + DOMAIN.join(',') + '] → ' + pairs.length + ' (file×lens) audits')
-    const dOut = await runPool(pairs, (p) => runDomainLens(p.file, p.key), CONC, 3)
+    const dOut = await runPool(pairs, (p) => runDomainLens(p.file, p.key), gMaxConc, 3)
     for (const r of dOut) {
       if (r && r.status === 'done') {
         domainReports.push(r.report)
@@ -592,7 +653,28 @@ const reduceCall = async (prompt, label) => {
 phase('Reduce')
 const verifiedPaths = verified.map(r => r.verified).join('\n')
 let finalRed
-if (TASK === 'spec-compliance') {
+if (SPECFIX) {
+  // VERIFY-AND-FIX reduce (TRDD-d4be3b0e): the per-file engineers fixed/completed an EXISTING
+  // implementation in place; consolidate what was fixed, what is still broken, and what is truly
+  // unimplemented (a gap REPORTED for follow-up, never built from the spec).
+  finalRed = await reduceCall(
+    'You are the REDUCE step of a CAA VERIFY-AND-FIX (fix-as-you-go) run against the spec at ' + SPECFILE + ' (scope: ' + SCOPE + '). The per-file engineers verified an EXISTING implementation against the spec and fixed/completed clauses IN PLACE; a different verifier confirmed each. ' +
+    'FIRST read the spec at ' + SPECFILE + ' for the CANONICAL clause list. Then read EVERY verified per-file report listed below and produce ONE consolidated FIX report with these sections: ' +
+    '"## Fixed" — clauses that were VIOLATED/PARTIAL and are now IMPLEMENTED, grouped by clause id, each with the file:line + WHAT changed; ' +
+    '"## Still broken" — clauses whose fix FAILED or did not verify (still VIOLATED), with file:line + why; ' +
+    '"## Unimplemented" — spec clauses NO file in scope implements (truly absent — REPORT as a gap for human follow-up or /workflow-verified-implement; these were NOT built, by design); ' +
+    '"## Coverage" — a table: clause-id | summary | final status (IMPLEMENTED|FIXED|STILL-VIOLATED|UNIMPLEMENTED) | file(s). ' +
+    'At the VERY TOP write exactly: "SUMMARY: <f> FIXED, <v> STILL-VIOLATED, <u> UNIMPLEMENTED of <t> spec clauses across <n> files". ' +
+    'Add a "## Needs follow-up" section naming any file that did NOT reach verified status. Do NOT use llm-externalizer.\n' +
+    'Create paths with Bash: mkdir -p "' + FINAL_DIR + '" ; TS=$(date +%Y%m%d_%H%M%S%z) ; write the report to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.md ' +
+    'AND a machine-readable file to ' + FINAL_DIR + '/$TS-' + SUFFIX + '.findings.json (same $TS) — a JSON array, one record per clause: ' +
+    '{"clause_id","clause","final_status":"implemented"|"fixed"|"still-violated"|"unimplemented","file","line","what_changed","evidence"}.\n' +
+    'Your FINAL message MUST be EXACTLY the absolute path of the consolidated .md report and nothing else.\n\n' +
+    'Spec file (read FIRST for the canonical clause list): ' + SPECFILE + '\nScope label: ' + SCOPE + '\nFiles verified+fixed: ' + FILES.length + '\n' +
+    'Verified per-file report paths:\n' + (verifiedPaths || '(none — all files failed or were rate-limited)') + '\n' +
+    'Files that did NOT verify: ' + (problems.map(p => (p && p.file) || 'unknown').join(', ') || 'none') + '\n',
+    'reduce:spec-fix')
+} else if (TASK === 'spec-compliance') {
   // SPEC-COMPLIANCE reduce: MISSING needs the GLOBAL view (a clause is missing only if NO file
   // implements it), so the reduce re-reads the spec for the canonical clause list and subtracts
   // what the per-file classification reports cover.
@@ -719,7 +801,7 @@ if (TASK === 'review' && MODE === 'scan-and-fix' && verified.length) {
   }
 
   phase('Fix')
-  const fixOuts = await runPool(verified, processFix, CONC, 3)
+  const fixOuts = await runPool(verified, processFix, gMaxConc, 3)
   const fixVerified = fixOuts.filter(r => r && r.status === 'fix-verified')
   const fixProblems = fixOuts.filter(r => !r || r.status !== 'fix-verified')
   log('fixed+verified: ' + fixVerified.length + '/' + verified.length)
@@ -840,6 +922,8 @@ return {
   task: TASK,
   scope: SCOPE,
   mode: MODE,
+  specFix: SPECFIX,
+  calibration: gCalib,
   reportType: RTYPE,
   lensSet: LENS,
   runId: RUN,

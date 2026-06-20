@@ -107,6 +107,8 @@ Then pick the command that matches the job:
 | Audit AND apply root-cause fixes (in place, fix-verified) | `/caa-scan-and-fix [paths...]` |
 | Review a GitHub PR (ready-to-post review comment) | `/caa-pr-review <pr-number>` |
 | Audit a codebase against a spec / requirements doc (MISSING + VIOLATING) | `/caa-spec-audit <spec> [paths...]` |
+| Verify an EXISTING implementation fulfills a TRDD/spec (read-only) | `/caa-verify-implementation <trdd-or-spec> [paths...]` |
+| Verify AND repair an implementation fix-as-you-go (one read, in place) | `/caa-verify-implementation-and-fix <trdd-or-spec> [paths...]` |
 | Compare candidate implementations of one task against a fixed input | `/caa-impl-compare <input> <impl...>` |
 
 Examples:
@@ -119,6 +121,8 @@ Examples:
 /caa-scan-and-fix scripts/foo.py
 /caa-pr-review 206
 /caa-spec-audit design/requirements/PRRD.md src/
+/caa-verify-implementation design/tasks/TRDD-20260620-feature.md
+/caa-verify-implementation-and-fix docs/REQUIREMENTS.md src/ lib/
 /caa-impl-compare bench/contract.md impls/v1.py impls/v2.py
 ```
 
@@ -140,6 +144,7 @@ files ──► MAP one opus auditor per file (byte-identical cached prompt; tar
       ──► DOMAIN stack-specific lens audits (file × active lens; specs in scripts/workflows/lenses/)
       ──► REDUCE one consolidated report + findings.json
    fix mode adds: FIX (one exclusive fixer per file, root-cause only) ──► FIX-VERIFY ──► fix report
+   spec-compliance verifies each file's clauses vs a spec/TRDD; + fix-as-you-go repairs them IN the map read (one read)
    pr lens-set adds: CLAIM-VERIFICATION + CROSS-LAYER + SKEPTICAL (once-per-run, whole-diff)
 ```
 
@@ -155,7 +160,9 @@ scripted agent boundary.
 ## Components
 
 - **Commands** — review: `/caa-precommit`, `/caa-scan`, `/caa-delta`, `/caa-scan-and-fix`,
-  `/caa-pr-review`; plus `/caa-spec-audit` (codebase vs a spec → MISSING + VIOLATING) and
+  `/caa-pr-review`; plus `/caa-spec-audit` (codebase vs a spec → MISSING + VIOLATING),
+  `/caa-verify-implementation` (verify a TRDD/spec is correctly + completely implemented) and
+  `/caa-verify-implementation-and-fix` (verify + repair it fix-as-you-go, in one read), and
   `/caa-impl-compare` (rank implementations vs a fixed input) — two legacy redirect aliases
   remain. Thin wrappers: they resolve the scope/config, then invoke the shared engine.
 - **Engine** — `scripts/workflows/caa-engine.js`, the single source of truth for all

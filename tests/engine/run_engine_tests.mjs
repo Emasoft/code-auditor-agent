@@ -68,9 +68,9 @@ function contractAgent(table = {}) {
       const out = hook(call)
       if (out !== undefined) return out
     }
-    // CGCP infrastructure agents (TRDD-0b67b18d): the pre-calibration probe + the sleeper backoff.
-    // Mocked → instant, so the suite never actually sleeps. Probe → healthy unless a test overrides.
-    if (call.label === 'precal-probe') return 'OK'
+    // CGCP infrastructure agent: the sleeper backoff (mocked → instant, so the suite never sleeps).
+    // The pre-calibration PROBE is gone (TRDD-e78886a9): calibration is now pure arithmetic
+    // (estimateCalibrate), zero agents — so no 'precal-probe' label is ever dispatched.
     if (call.label.startsWith('backoff:')) return 'SLEPT'
     const tmp = (p.match(/mkdir -p "([^"]+)"/) || [])[1]
     if (call.label.startsWith('map:')) {
@@ -285,9 +285,10 @@ test('fix_mode_zero_verified_returns_stub', 'scan-and-fix where no file verifies
   ok(result.fixReport && result.fixReport.note && result.fixReport.note.includes('nothing to fix'), 'explicit stub note')
 })
 
-test('conc_is_clamped_to_16', 'conc=999 must not unleash an unbounded swarm: observed concurrency stays ≤16 (the clamp)', async () => {
+test('conc_is_clamped_to_16', 'conc=999 must not unleash an unbounded swarm: observed concurrency stays ≤16 (the structural clamp). Calibration ceilings are widened so the estimate does NOT cap below 16 — the 16 clamp itself is what is under test.', async () => {
   const files = Array.from({ length: 40 }, (_, i) => ROOT + '/f' + i + '.py')
-  const { maxActive } = await runEngine({ root: ROOT, files, runId: 'clamp', conc: 999 }, contractAgent(), { agentDelayMs: 3 })
+  const wide = { ceilRpm: 99000, ceilItpm: 9e9, ceilOtpm: 9e9, rlSafety: 1 } // estimate would allow thousands; only the 16 clamp should bind
+  const { maxActive } = await runEngine({ root: ROOT, files, runId: 'clamp', conc: 999, ...wide }, contractAgent(), { agentDelayMs: 3 })
   ok(maxActive <= 16, 'maxActive=' + maxActive + ' must be ≤ 16')
 })
 
@@ -382,6 +383,71 @@ test('cross_file_lens_rate_limited_then_succeeds', 'The cross-file lens shares t
   }))
   eq(result.crossFileLens, 'done', 'cross-file lens ends "done" despite 4 transient rate-limits')
   ok(n > 4, 'the lens was retried past all 4 rate-limits (n=' + n + ')')
+})
+
+test('spec_fix_runs_fix_as_you_go_in_one_read_no_separate_fixer', 'task=spec-compliance + mode=scan-and-fix (TRDD-d4be3b0e verify-and-fix) classifies AND repairs each file in the SAME map read — the map prompt is fix-as-you-go in place, there is NO separate fix: phase (the single-read win), a different verifier confirms, the reduce is reduce:spec-fix, and result.specFix=true', async () => {
+  const args = { ...BASE, task: 'spec-compliance', mode: 'scan-and-fix', specFile: '/repo/SPEC.md', reportSuffix: 'verify-fix' }
+  const { result, calls } = await runEngine(args, contractAgent())
+  eq(result.specFix, true, 'result.specFix true for spec-compliance + scan-and-fix')
+  eq(result.verified, 2, 'both files verified+fixed')
+  const map = calls.find((c) => c.label.startsWith('map:'))
+  ok(map.prompt.includes('FIX-AS-YOU-GO') && map.prompt.includes('IN PLACE'), 'the map agent fixes-as-you-go in place (one read)')
+  ok(map.prompt.includes('COMPLETING AN EXISTING IMPLEMENTATION'), 'completes an existing implementation, never scaffolds from the spec')
+  ok(!calls.some((c) => c.label.startsWith('fix:')), 'NO separate fix: phase — the fix happened during the map read')
+  ok(calls.some((c) => c.label.startsWith('verify:')), 'a DIFFERENT verifier confirms the fixes')
+  const red = calls.filter((c) => c.label === 'reduce:spec-fix').pop()
+  ok(red && red.prompt.includes('FIXED') && red.prompt.includes('UNIMPLEMENTED'), 'reduce:spec-fix reports FIXED / STILL-VIOLATED / UNIMPLEMENTED')
+  ok(result.finalReport && result.finalReport.endsWith('-verify-fix.md'), 'final fix report path extracted')
+})
+
+test('spec_verify_only_stays_scan_only', 'task=spec-compliance WITHOUT scan-and-fix (the /caa-verify-implementation read-only path) classifies but NEVER fixes — the map prompt is SCAN ONLY and result.specFix=false', async () => {
+  const args = { ...BASE, task: 'spec-compliance', specFile: '/repo/SPEC.md', reportSuffix: 'verify-impl' }
+  const { result, calls } = await runEngine(args, contractAgent())
+  eq(result.specFix, false, 'specFix false in scan (verify-only) mode')
+  const map = calls.find((c) => c.label.startsWith('map:'))
+  ok(map.prompt.includes('SCAN ONLY') && !map.prompt.includes('FIX-AS-YOU-GO'), 'verify-only map is scan-only, never fixes')
+  ok(!calls.some((c) => c.label.startsWith('fix:')), 'no fix phase in verify-only')
+})
+
+test('impl_compare_plus_fix_rejected', 'task=impl-compare + mode=scan-and-fix is rejected fail-fast (impl-compare ranks candidates; it never edits them, so a fix mode would silently no-op)', async () => {
+  const { result } = await runEngine({ ...BASE, task: 'impl-compare', inputSpec: '/repo/INPUT.md', mode: 'scan-and-fix' }, contractAgent())
+  ok(result && result.error && result.error.includes("cannot be combined with mode 'scan-and-fix'"), 'engine fail-fasts on impl-compare + fix')
+})
+
+test('spec_fix_survives_rate_limit', 'A spec-compliance fix-as-you-go map that rate-limits 3× then succeeds still completes — verify-and-fix inherits the CGCP guaranteed-completion pool', async () => {
+  let n = 0
+  const args = { ...BASE, task: 'spec-compliance', mode: 'scan-and-fix', specFile: '/repo/SPEC.md', reportSuffix: 'verify-fix' }
+  const { result } = await runEngine(args, contractAgent({
+    'map:/repo/a.py': () => { n++; return n <= 3 ? 'temporarily limiting requests' : undefined },
+  }))
+  eq(result.verified, 2, 'both files complete despite a.py rate-limiting 3× in the fix-as-you-go map')
+  ok(n > 3, 'a.py was retried past all 3 rate-limits (n=' + n + ')')
+})
+
+test('estimate_calibration_no_probe_pure_arithmetic', 'Calibration is PURE ARITHMETIC (TRDD-e78886a9): NO precal-probe agent is ever dispatched (no server wall-probing — the user-flagged token waste), and result.calibration carries the per-ceiling concurrencies + the binding constraint', async () => {
+  const { result, calls } = await runEngine(BASE, contractAgent())
+  ok(!calls.some((c) => c.label === 'precal-probe'), 'no precalibration PROBE agent — calibration triggers ZERO requests')
+  ok(result.calibration && typeof result.calibration.maxConc === 'number', 'result.calibration is populated')
+  ok(['RPM', 'ITPM', 'OTPM'].includes(result.calibration.binding), 'the binding ceiling is identified')
+  eq(result.verified, 2, 'the run still completes')
+})
+
+test('estimate_calibration_rpm_binds_at_tier1_defaults', 'At the Tier-1 Opus defaults (RPM 50, ITPM 500k, OTPM 80k; ~8 req / 60k in / 8k out per agent; safety 0.8) the BINDING ceiling is RPM and the safe cap is floor(0.8 × 50/8) = 5 — RPM, not tokens, governs at the lowest tier', async () => {
+  const { result } = await runEngine({ ...BASE, conc: 6 }, contractAgent())
+  eq(result.calibration.binding, 'RPM', 'RPM is the binding constraint at Tier-1')
+  eq(result.calibration.maxConc, 5, 'safe cap = floor(0.8 × 50/8) = 5')
+})
+
+test('estimate_calibration_caps_below_requested_conc', 'A tight rate ceiling caps concurrency BELOW the requested conc and the pool never exceeds it — ceilRpm=16 with 8 req/agent, safety 1 → floor(16/8) = 2', async () => {
+  const files = Array.from({ length: 12 }, (_, i) => ROOT + '/g' + i + '.py')
+  const { result, maxActive } = await runEngine({ root: ROOT, files, runId: 'tight', conc: 8, ceilRpm: 16, reqPerAgent: 8, rlSafety: 1, ceilItpm: 9e9, ceilOtpm: 9e9 }, contractAgent(), { agentDelayMs: 3 })
+  eq(result.calibration.maxConc, 2, 'tight RPM ceiling caps the safe concurrency at 2')
+  ok(maxActive <= 2, 'the pool never exceeds the calibrated ceiling (maxActive=' + maxActive + ')')
+})
+
+test('estimate_calibration_is_tunable_for_real_headroom', 'Every ceiling/footprint is a tunable arg: widening them (real Pro/Max headroom) lets the cap rise to the requested conc instead of the conservative Tier-1 anchor', async () => {
+  const { result } = await runEngine({ ...BASE, conc: 6, ceilRpm: 9000, ceilItpm: 9e9, ceilOtpm: 9e9, rlSafety: 1 }, contractAgent())
+  eq(result.calibration.maxConc, 6, 'wide ceilings → cap rises to the requested conc (6), no artificial throttle')
 })
 
 // ── Runner with the mandated unicode table ───────────────────────────────────
