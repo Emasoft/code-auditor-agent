@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.1] - 2026-06-21
+
+### Documentation
+
+- *(trdd)* TRDD-d4be3b0e + TRDD-e78886a9 → published v4.4.0 (post-release bookkeeping) (d2a14ae)
+
 ## [4.4.0] - 2026-06-20
 
 ### Features
